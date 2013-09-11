@@ -4,7 +4,7 @@
   @ ensures !(\forall integer i; 0 <= i < n ==> A[i] != elem) ==> \result == 1;
   @ ensures \forall integer i; 0 <= i < n ==> A[i] != elem ==> \result == 0;
   @*/
-int Bsearch( int* A, int n, int elem)
+int binary_search( int* A, int n, int elem)
 { /* error undetected by path testing : low = 1 ; */
   int low, high, mid, ret ;
   low = 0 ;

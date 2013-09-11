@@ -1,7 +1,7 @@
 
 
 module Self = Plugin.Register (struct
-  let name = "PCVA"
+  let name = "pcva"
   let shortname = "pcva"
   let help = ""
 end)
