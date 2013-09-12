@@ -24,8 +24,12 @@ let print_in_file prj filename =
 let run() =
   if Options.Enabled.get() then
     begin
+      (* Settings *)
       Kernel.Unicode.set false;
-      (* Map locs to properties *)
+
+      (* Bijection :
+	 unique_identifier <--> property
+      *)
       let property_id = ref 0 in
       Property_status.iter (fun property ->
 	let pos1,_ = Property.location property in
@@ -38,12 +42,17 @@ let run() =
 	    property_id := !property_id + 1
 	  end
       );
+
       Datatype.Int.Hashtbl.iter (fun prop_id prop ->
-	Options.Self.feedback "loc: %a (id: %i)" 
+	Options.Self.debug ~level:1 "loc: %a (id: %i)" 
 	  Printer.pp_location (Property.location prop) prop_id
       ) Prop_id.id_to_prop_tbl;
+
+
+
       (* do something *)
       print_in_file (Project.current()) "toto.c"
+
     end
 
 

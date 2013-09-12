@@ -227,12 +227,12 @@ class pcva_printer () = object (self)
 
     match stmt.skind with
     | Loop(_,b,l,_,_) ->
-      Format.fprintf fmt "%a@[<v 2>while (1) {"
+      Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
 	(fun fmt -> self#line_directive fmt) l;
       List.iter (fun s -> s fmt) !begin_loop;
       Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
       List.iter (fun s -> s fmt) !end_loop;
-      Format.fprintf fmt "} @]"
+      Format.fprintf fmt "}@\n @]"
 	
 
     | _ -> self#stmtkind next fmt stmt.skind
@@ -242,16 +242,72 @@ class pcva_printer () = object (self)
   method private fundecl fmt f =
     (* declaration. *)
     let was_ghost = is_ghost in
+    let entry_point_name =
+      Kernel_function.get_name (fst(Globals.entry_point())) in
+    let kf = Globals.Functions.find_by_name f.svar.vname in
+    let behaviors = Annotations.behaviors kf in
+    let pc_assert_exception fmt pred msg id =
+      Format.fprintf fmt
+	"@[<v 2>if(!(%a))@[<hv>pathcrawler_assert_exception(\"%s\", %i);@]@]"
+	self#predicate pred msg id
+    in
     let entering_ghost = f.svar.vghost && not was_ghost in
     Format.fprintf fmt "@[%t%a@\n@[<v 2>"
       (if entering_ghost then fun fmt -> Format.fprintf fmt "/*@@ ghost@ " 
        else ignore)
       self#vdecl f.svar;
-    (* We take care of locals in blocks. *)
-    (*List.iter (fprintf fmt "@\n%a;" self#vdecl) f.slocals ;*)
     (* body. *)
     if entering_ghost then is_ghost <- true;
+    Format.fprintf fmt "@[<h 2>{@\n";
+
+    (* BEGIN precond *)
+    if f.svar.vname <> entry_point_name then
+      begin
+	List.iter (fun b ->
+	  let assumes = b.b_assumes in
+	  let requires = b.b_requires in
+	  let assumes fmt =
+	    Format.fprintf fmt "@[<v 2>if (";
+	    List.iter (fun a ->
+	      Format.fprintf fmt "%a &&" self#predicate a.ip_content
+	    ) assumes;
+	    Format.fprintf fmt " 1 )"
+	  in
+	  List.iter (fun pred ->
+	    let prop = Property.ip_of_requires kf Kglobal b pred in
+	    let id = Prop_id.to_id prop in
+	    assumes fmt;
+	    pc_assert_exception fmt pred.ip_content "Pre-condition!" id;
+	    Format.fprintf fmt "@]"
+	  ) requires
+	) behaviors
+      end;
+    (* END precond *)
+
     self#block ~braces:true fmt f.sbody;
+    
+    (* BEGIN postcond *)
+    List.iter (fun b ->
+      let assumes = b.b_assumes in
+      let ensures = b.b_post_cond in
+      let assumes fmt =
+	Format.fprintf fmt "@[<v 2>if (";
+	List.iter (fun a ->
+	  Format.fprintf fmt "%a &&" self#predicate a.ip_content
+	) assumes;
+	Format.fprintf fmt " 1 )"
+      in
+      List.iter (fun (tk,pred) ->
+	let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
+	let id = Prop_id.to_id prop in
+	assumes fmt;
+	pc_assert_exception fmt pred.ip_content "Post-condition!" id;
+	Format.fprintf fmt "@]"
+      ) ensures
+    ) behaviors;
+    (* END postcond *)
+
+    Format.fprintf fmt "}@]@\n";
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
       (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
