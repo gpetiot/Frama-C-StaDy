@@ -118,6 +118,8 @@ class pcva_printer () = object (self)
       let x, y = self#extract_exps e in
       Format.fprintf fmt "pathcrawler_dimentions(%a) > %a"
 	self#exp x self#exp y
+    | Pforall(logic_vars,pred) -> assert false
+    | Pexists(logic_vars,pred) -> assert false
     | _ -> super#predicate fmt pred
 
   method private predicate_named fmt pred_named =
@@ -252,6 +254,43 @@ class pcva_printer () = object (self)
 	self#predicate pred msg id
     in
     let entering_ghost = f.svar.vghost && not was_ghost in
+
+    (* BEGIN precond (entry-point) *)
+    if f.svar.vname = entry_point_name then
+      begin
+	let x,y,z =
+	  match f.svar.vtype with
+	  | TFun(_,x,y,z) -> x,y,z
+	  | _ -> assert false
+	in
+	Format.fprintf fmt "@[%a {@\n@["
+	  (self#typ
+	     (Some (fun fmt ->
+	       Format.fprintf fmt "%s_precond "entry_point_name)))
+	  (TFun(intType,x,y,z));
+	List.iter (fun b ->
+	  let assumes = b.b_assumes in
+	  let requires = b.b_requires in
+	  let assumes fmt =
+	    Format.fprintf fmt "@[<v 2>if (";
+	    List.iter (fun a ->
+	      Format.fprintf fmt "%a &&" self#predicate a.ip_content
+	    ) assumes;
+	    Format.fprintf fmt " 1 )"
+	  in
+	  List.iter (fun pred ->
+	    assumes fmt;
+	    Format.fprintf fmt
+	      "@[<v 2>if(!(%a))@[<hv>return 0;@]@]"
+	      self#predicate pred.ip_content;
+	    Format.fprintf fmt "@]"
+	  ) requires
+	) behaviors;
+	Format.fprintf fmt "return 1;@\n";
+	Format.fprintf fmt "@]}@]@\n@\n"
+      end;
+    (* END precond (entry-point) *)
+
     Format.fprintf fmt "@[%t%a@\n@[<v 2>"
       (if entering_ghost then fun fmt -> Format.fprintf fmt "/*@@ ghost@ " 
        else ignore)
@@ -260,7 +299,7 @@ class pcva_printer () = object (self)
     if entering_ghost then is_ghost <- true;
     Format.fprintf fmt "@[<h 2>{@\n";
 
-    (* BEGIN precond *)
+    (* BEGIN precond (not entry-point) *)
     if f.svar.vname <> entry_point_name then
       begin
 	List.iter (fun b ->
@@ -282,7 +321,7 @@ class pcva_printer () = object (self)
 	  ) requires
 	) behaviors
       end;
-    (* END precond *)
+    (* END precond (not entry-point) *)
 
     self#block ~braces:true fmt f.sbody;
     
