@@ -120,6 +120,16 @@ class pcva_printer () = object (self)
 	self#exp x self#exp y
     | Pforall(logic_vars,pred) -> assert false
     | Pexists(logic_vars,pred) -> assert false
+    | Pimplies(pred1,pred2) ->
+      Format.fprintf fmt "(!(%a) || %a)"
+	self#predicate_named pred1
+	self#predicate_named pred2
+    | Piff(pred1,pred2) ->
+      Format.fprintf fmt "( ( !(%a) || %a ) && ( !(%a) || %a ) )"
+	self#predicate_named pred1
+	self#predicate_named pred2
+	self#predicate_named pred2
+	self#predicate_named pred1
     | _ -> super#predicate fmt pred
 
   method private predicate_named fmt pred_named =
