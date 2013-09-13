@@ -80,6 +80,7 @@ class pcva_printer ~first_pass () = object (self)
   method private term_to_type t =
     match t.term_type with
     | Ctype ty -> ty
+    | Linteger -> longType
     | _ -> failwith "term_to_type"
 
   method private term_to_exp_node t = match t.term_node with
@@ -113,6 +114,7 @@ class pcva_printer ~first_pass () = object (self)
     let offset = self#term_offset_to_offset tof in
     StartOf (lhost, offset)
   | TLogic_coerce (_, t) -> self#term_to_exp_node t
+  | Trange(_,Some x) -> self#term_to_exp_node x
   | _ -> raise (TermUnsupported t)
     
   method private term_to_exp t =
@@ -225,8 +227,8 @@ class pcva_printer ~first_pass () = object (self)
     | Pvalid_read(_,term) ->
       let e = self#term_to_exp term in
       let x, y = self#extract_exps e in
-      Format.fprintf fmt "pathcrawler_dimentions(%a) > %a"
-	self#exp x self#exp y
+      Format.fprintf fmt "((%a) >= 0 && (pathcrawler_dimension(%a) > (%a)))"
+	self#exp y self#exp x self#exp y
     | Pforall(logic_vars,pred) ->
       begin
 	if (List.length logic_vars) > 1 then
@@ -523,11 +525,14 @@ class pcva_printer ~first_pass () = object (self)
 	  let assumes = b.b_assumes in
 	  let requires = b.b_requires in
 	  let assumes fmt =
-	    Format.fprintf fmt "@[<v 2>if (";
-	    List.iter (fun a ->
-	      Format.fprintf fmt "%a &&" self#predicate a.ip_content
-	    ) assumes;
-	    Format.fprintf fmt " 1 )"
+	    if assumes <> [] then
+	      begin
+		Format.fprintf fmt "@[<v 2>if (";
+		List.iter (fun a ->
+		  Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		) assumes;
+		Format.fprintf fmt " 1 )"
+	      end
 	  in
 	  List.iter (fun pred ->
 	    assumes fmt;
@@ -557,11 +562,14 @@ class pcva_printer ~first_pass () = object (self)
 	  let assumes = b.b_assumes in
 	  let requires = b.b_requires in
 	  let assumes fmt =
-	    Format.fprintf fmt "@[<v 2>if (";
-	    List.iter (fun a ->
-	      Format.fprintf fmt "%a &&" self#predicate a.ip_content
-	    ) assumes;
-	    Format.fprintf fmt " 1 )"
+	    if assumes <> [] then
+	      begin
+		Format.fprintf fmt "@[<v 2>if (";
+		List.iter (fun a ->
+		  Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		) assumes;
+		Format.fprintf fmt " 1 )"
+	      end
 	  in
 	  List.iter (fun pred ->
 	    let prop = Property.ip_of_requires kf Kglobal b pred in
@@ -581,11 +589,14 @@ class pcva_printer ~first_pass () = object (self)
       let assumes = b.b_assumes in
       let ensures = b.b_post_cond in
       let assumes fmt =
-	Format.fprintf fmt "@[<v 2>if (";
-	List.iter (fun a ->
-	  Format.fprintf fmt "%a &&" self#predicate a.ip_content
-	) assumes;
-	Format.fprintf fmt " 1 )"
+	if assumes <> [] then
+	  begin
+	    Format.fprintf fmt "@[<v 2>if (";
+	    List.iter (fun a ->
+	      Format.fprintf fmt "%a &&" self#predicate a.ip_content
+	    ) assumes;
+	    Format.fprintf fmt " 1 )"
+	  end
       in
       List.iter (fun (tk,pred) ->
 	let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
