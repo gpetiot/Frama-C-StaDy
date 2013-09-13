@@ -255,7 +255,11 @@ class pcva_printer ~first_pass () = object (self)
 	      let args = String.sub args 1 ((String.length args)-1) in
 	      let typed_args = List.map (fun v ->
 		Format.fprintf
-		  Format.str_formatter "%a %s" (self#typ None) v.vtype v.vname;
+		  Format.str_formatter "%a"
+		  (self#typ
+		     (Some (fun fmt ->
+		       Format.fprintf fmt "%s" v.vname)))
+		  v.vtype;
 		Format.flush_str_formatter()
 	      ) vars in
 	      let typed_args =
@@ -264,7 +268,7 @@ class pcva_printer ~first_pass () = object (self)
 		String.sub typed_args 1 ((String.length typed_args)-1) in
 	      let fct_forall fmt =
 		Format.fprintf fmt
-		  "int forall_%i (%s) { %a %s = %a%s; while(%s %a %a) { if(!(%a)) return 0; %s ++;} return 1; }@\n@\n"
+		  "int forall_%i (%s) {\n  %a %s = %a%s;\n  while(%s %a %a) {\n    if(!(%a))\n      return 0;\n    %s ++;\n  }\n  return 1;\n}\n\n"
 		  !quantif_pred_cpt typed_args (self#typ None)
 		  (to_c_type lv.lv_type) lv.lv_name self#term t1
 		  (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
@@ -318,7 +322,11 @@ class pcva_printer ~first_pass () = object (self)
 	      let args = String.sub args 1 ((String.length args)-1) in
 	      let typed_args = List.map (fun v ->
 		Format.fprintf
-		  Format.str_formatter "%a %s" (self#typ None) v.vtype v.vname;
+		  Format.str_formatter "%a"
+		  (self#typ
+		     (Some (fun fmt ->
+		       Format.fprintf fmt "%s" v.vname)))
+		  v.vtype;
 		Format.flush_str_formatter()
 	      ) vars in
 	      let typed_args =
@@ -327,7 +335,7 @@ class pcva_printer ~first_pass () = object (self)
 		String.sub typed_args 1 ((String.length typed_args)-1) in
 	      let fct_exists fmt =
 		Format.fprintf fmt
-		  "int exists_%i (%s) { %a %s = %a%s; while(%s %a %a) { if(%a) return 1; %s ++;} return 0; }@\n@\n"
+		  "int exists_%i (%s) {\n  %a %s = %a%s;\n  while(%s %a %a) {\n    if(%a)\n      return 1;\n    %s ++;\n  }\n  return 0;\n}\n\n"
 		  !quantif_pred_cpt typed_args (self#typ None)
 		  (to_c_type lv.lv_type) lv.lv_name self#term t1
 		  (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
