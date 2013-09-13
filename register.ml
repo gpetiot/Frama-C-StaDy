@@ -10,9 +10,14 @@ open Lexing
 (* outputs the AST of a project in a file *)
 let print_in_file prj filename =
   Project.on prj (fun () ->
+    (* first pass: prepare the quantifiers predicates, ignore the output *)
+    let fmt = Format.make_formatter (fun _ _ _ -> ()) (fun () -> ()) in
+    Pcva_printer.First_pass.pp_file fmt (Ast.get());
+
+    (* second pass: print the instrumented quantif, output in a file *)
     let out = open_out filename in
     let fmt = Format.formatter_of_out_channel out in
-    Pcva_printer.pp_file fmt (Ast.get());
+    Pcva_printer.Second_pass.pp_file fmt (Ast.get());
     flush out;
     close_out out
   ) ()

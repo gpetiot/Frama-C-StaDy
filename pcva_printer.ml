@@ -2,6 +2,7 @@
 open Cil
 open Cil_types
 open Lexing
+open Cil_datatype
 
 
 
@@ -11,7 +12,10 @@ let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
 
 
-
+let quantif_pred_cpt = ref 0
+let quantif_pred_queue :
+    ((Format.formatter -> unit) * (Format.formatter -> unit)) Queue.t =
+  Queue.create ()
   
 
 exception PredUnsupported of predicate named
@@ -19,8 +23,15 @@ exception TermUnsupported of term
 
 
 
-
-class pcva_printer () = object (self)
+(*
+  first pass:
+     - computes the output for \forall and \exists predicates
+     - stores it somewhere
+  second pass:
+     - print the quantif-functions in the beginning of the file
+     - print the function call where the predicate was used
+*)
+class pcva_printer ~first_pass () = object (self)
   inherit Printer.extensible_printer () as super
 
   val mutable current_function = None
@@ -108,7 +119,95 @@ class pcva_printer () = object (self)
     | _ -> failwith (Pretty_utils.sfprintf "%a" Printer.pp_exp exp)
 
 
+
+  method private vars_of_term_node t =
+    match t with
+    | TLval (TVar tv,_)
+    | TAddrOf(TVar tv,_)
+    | TStartOf(TVar tv,_) ->
+      begin try	[Extlib.the tv.lv_origin] with _ -> [] end
+    | TSizeOfE t1
+    | TAlignOfE t1
+    | TUnOp(_,t1)
+    | Tat(t1,_)
+    | Tbase_addr(_,t1)
+    | Toffset(_,t1)
+    | Tblock_length(_,t1)
+    | TLogic_coerce(_,t1)
+    | TCoerce(t1,_)
+    | TCastE(_,t1) -> self#vars_of_term t1
+    | TBinOp(_,t1,t2) ->
+      List.rev_append (self#vars_of_term t1) (self#vars_of_term t2)
+    | Tif(t1,t2,t3) ->
+      List.rev_append (self#vars_of_term t1)
+	(List.rev_append (self#vars_of_term t2) (self#vars_of_term t3))
+    | _ -> []
+
+  method private vars_of_term t =
+    self#vars_of_term_node t.term_node
+
+  method private vars_of_predicate p =
+    match p with
+    | Prel(_,t1,t2)
+    | Pfresh(_,_,t1,t2) ->
+      List.rev_append (self#vars_of_term t1) (self#vars_of_term t2)
+    | Pvalid_read(_,t1)
+    | Pvalid(_,t1)
+    | Pinitialized(_,t1)
+    | Pallocable(_,t1)
+    | Pfreeable(_,t1) -> self#vars_of_term t1
+    | Pand(p1,p2)
+    | Por(p1,p2)
+    | Pxor(p1,p2)
+    | Pimplies(p1,p2)
+    | Piff(p1,p2)
+    | Pif(_,p1,p2) ->
+      List.rev_append
+	(self#vars_of_predicate_named p1)
+	(self#vars_of_predicate_named p2)
+    | Pnot(p1)
+    | Pforall(_,p1)
+    | Pexists(_,p1) -> self#vars_of_predicate_named p1
+    | _ -> []
+
+  method private vars_of_predicate_named p =
+    self#vars_of_predicate p.content
+
   method private predicate fmt pred =
+    (* generate guards for logic vars, e.g.:
+       [0 <= a <= 10; x <= b <= y] *)
+    let rec aux acc vars p = 
+      match p.content with
+      | Pand({ content = Prel((Rlt | Rle) as r1, t11, t12) },
+	     { content = Prel((Rlt | Rle) as r2, t21, t22) }) ->
+	let rec terms t12 t21 = match t12.term_node, t21.term_node with
+	  | TLval(TVar x1, TNoOffset), TLval(TVar x2, TNoOffset) -> 
+	    let v, vars = match vars with
+	      | [] -> assert false
+	      | v :: tl -> 
+		match v.lv_type with
+		| Ctype ty when isIntegralType ty -> v, tl
+		| Linteger -> v, tl
+		| Ltype _ as ty when Logic_const.is_boolean_type ty ->
+		  v, tl
+		| Ctype _ | Ltype _ | Lvar _ | Lreal | Larrow _ -> 
+		  assert false
+	    in
+	    if Logic_var.equal x1 x2 && Logic_var.equal x1 v then
+	      (t11, r1, x1, r2, t22) :: acc, vars
+	    else
+	      assert false
+	  | TLogic_coerce(_, t12), _ -> terms t12 t21 
+	  | _, TLogic_coerce(_, t21) -> terms t12 t21
+	  | TLval _, _ -> assert false
+	  | _, _ -> assert false
+	in
+	terms t12 t21
+      | Pand(p1, p2) -> 
+	let acc, vars = aux acc vars p1 in
+	aux acc vars p2
+      | _ -> assert false
+    in
     match pred with
     | Ptrue -> Format.fprintf fmt "1"
     | Pfalse -> Format.fprintf fmt "0"
@@ -118,8 +217,77 @@ class pcva_printer () = object (self)
       let x, y = self#extract_exps e in
       Format.fprintf fmt "pathcrawler_dimentions(%a) > %a"
 	self#exp x self#exp y
-    | Pforall(logic_vars,pred) -> assert false
-    | Pexists(logic_vars,pred) -> assert false
+    | Pforall(logic_vars,pred) ->
+      begin
+	if (List.length logic_vars) > 1 then
+	  failwith "\\forall quantification on many variables unsupported!";
+	match pred.content with
+	| Pimplies(hyps,goal) ->
+
+	  
+	  if first_pass then
+	    let guards, vars = aux [] logic_vars hyps in
+	    if vars <> [] then
+	      failwith "Unguarded variables in \\forall !"
+	    else
+	      let t1,r1,lv,r2,t2 = List.hd guards in
+	      let vars = self#vars_of_predicate_named pred in (* pour l'appel *)
+	      let logic_var = List.hd logic_vars in
+	      let vars = List.filter
+		(fun v -> v.vname <> logic_var.lv_name) vars in
+	      let to_c_type = function
+		| Ctype t -> t
+		| Linteger -> longType
+		| _ -> assert false in
+	      let args = List.map (fun v -> v.vname) vars in
+	      let args = List.fold_left (fun x y -> x^","^y) "" args in
+	      let args = String.sub args 1 ((String.length args)-1) in
+	      let typed_args = List.map (fun v ->
+		Format.fprintf
+		  Format.str_formatter "%a %s" (self#typ None) v.vtype v.vname;
+		Format.flush_str_formatter()
+	      ) vars in
+	      let typed_args =
+		List.fold_left (fun x y -> x^","^y) "" typed_args in
+	      let typed_args =
+		String.sub typed_args 1 ((String.length args)-1) in
+	      let fct_forall fmt =
+		Format.fprintf fmt
+		  "int forall_%i (%s) { %a %s = %a%s; while(%s %a %a) { if(!(%a)) return 0; %s ++;} return 1; }@\n@\n"
+		  !quantif_pred_cpt typed_args (self#typ None)
+		  (to_c_type lv.lv_type) lv.lv_name self#term t1
+		  (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
+		  lv.lv_name self#relation r2 self#term t2
+		  self#predicate_named goal lv.lv_name
+	      in
+	      let call_forall fmt =
+		Format.fprintf fmt
+		  "(forall_%i(%s))"
+		  !quantif_pred_cpt args
+	      in
+	      (* the ref quantif_pred_cpt has to be incremented before each
+		 printing of these functions *)
+	      Queue.add (fct_forall, call_forall) quantif_pred_queue
+	  else
+	    begin
+	      let _,call_forall = Queue.take quantif_pred_queue in
+	      call_forall fmt;
+	      quantif_pred_cpt := !quantif_pred_cpt + 1
+	    end
+
+	  
+
+	| _ -> assert false
+      end
+    | Pexists(logic_vars,pred) ->
+      begin
+	if (List.length logic_vars) > 1 then
+	  failwith "\\exists quantification on many variables unsupported!";
+	if first_pass then
+	  ()
+	else
+	  ()
+      end
     | Pimplies(pred1,pred2) ->
       Format.fprintf fmt "(!(%a) || %a)"
 	self#predicate_named pred1
@@ -276,7 +444,7 @@ class pcva_printer () = object (self)
 	Format.fprintf fmt "@[%a {@\n@["
 	  (self#typ
 	     (Some (fun fmt ->
-	       Format.fprintf fmt "%s_precond "entry_point_name)))
+	       Format.fprintf fmt "%s_precond" entry_point_name)))
 	  (TFun(intType,x,y,z));
 	List.iter (fun b ->
 	  let assumes = b.b_assumes in
@@ -485,11 +653,23 @@ class pcva_printer () = object (self)
       if s <> "//" then
 	Format.fprintf fmt "%s@\n" s
 
+
+  method file fmt f =
+    Queue.iter (fun (a,_) ->
+      a fmt;
+      quantif_pred_cpt := !quantif_pred_cpt + 1;
+    ) quantif_pred_queue;
+    quantif_pred_cpt := 0;
+    super#file fmt f
 end
 
 
-include Printer_builder.Make(struct class printer = pcva_printer end)
+module First_pass =
+  Printer_builder.Make
+    (struct class printer = pcva_printer ~first_pass:true end)
 
-
+module Second_pass =
+  Printer_builder.Make
+    (struct class printer = pcva_printer ~first_pass:false end)
  
 
