@@ -18,6 +18,16 @@ let quantif_pred_queue :
   Queue.create ()
   
 
+let no_repeat l =
+  let rec aux acc = function
+    | [] -> acc
+    | h :: t when List.mem h acc -> aux acc t
+    | h :: t -> aux (h :: acc) t
+  in
+  aux  [] l
+
+
+
 exception PredUnsupported of predicate named
 exception TermUnsupported of term
 
@@ -232,6 +242,7 @@ class pcva_printer ~first_pass () = object (self)
 	    else
 	      let t1,r1,lv,r2,t2 = List.hd guards in
 	      let vars = self#vars_of_predicate_named pred in (* pour l'appel *)
+	      let vars = no_repeat vars in
 	      let logic_var = List.hd logic_vars in
 	      let vars = List.filter
 		(fun v -> v.vname <> logic_var.lv_name) vars in
@@ -250,7 +261,7 @@ class pcva_printer ~first_pass () = object (self)
 	      let typed_args =
 		List.fold_left (fun x y -> x^","^y) "" typed_args in
 	      let typed_args =
-		String.sub typed_args 1 ((String.length args)-1) in
+		String.sub typed_args 1 ((String.length typed_args)-1) in
 	      let fct_forall fmt =
 		Format.fprintf fmt
 		  "int forall_%i (%s) { %a %s = %a%s; while(%s %a %a) { if(!(%a)) return 0; %s ++;} return 1; }@\n@\n"
@@ -277,16 +288,70 @@ class pcva_printer ~first_pass () = object (self)
 
 	  
 
-	| _ -> assert false
+	| _ -> failwith "\\forall not of the form \\forall ...; a ==> b;"
       end
     | Pexists(logic_vars,pred) ->
-      begin
+       begin
 	if (List.length logic_vars) > 1 then
 	  failwith "\\exists quantification on many variables unsupported!";
-	if first_pass then
-	  ()
-	else
-	  ()
+	match pred.content with
+	| Pand(hyps,goal) ->
+
+	  
+	  if first_pass then
+	    let guards, vars = aux [] logic_vars hyps in
+	    if vars <> [] then
+	      failwith "Unguarded variables in \\exists !"
+	    else
+	      let t1,r1,lv,r2,t2 = List.hd guards in
+	      let vars = self#vars_of_predicate_named pred in (* pour l'appel *)
+	      let vars = no_repeat vars in
+	      let logic_var = List.hd logic_vars in
+	      let vars = List.filter
+		(fun v -> v.vname <> logic_var.lv_name) vars in
+	      let to_c_type = function
+		| Ctype t -> t
+		| Linteger -> longType
+		| _ -> assert false in
+	      let args = List.map (fun v -> v.vname) vars in
+	      let args = List.fold_left (fun x y -> x^","^y) "" args in
+	      let args = String.sub args 1 ((String.length args)-1) in
+	      let typed_args = List.map (fun v ->
+		Format.fprintf
+		  Format.str_formatter "%a %s" (self#typ None) v.vtype v.vname;
+		Format.flush_str_formatter()
+	      ) vars in
+	      let typed_args =
+		List.fold_left (fun x y -> x^","^y) "" typed_args in
+	      let typed_args =
+		String.sub typed_args 1 ((String.length typed_args)-1) in
+	      let fct_exists fmt =
+		Format.fprintf fmt
+		  "int exists_%i (%s) { %a %s = %a%s; while(%s %a %a) { if(%a) return 1; %s ++;} return 0; }@\n@\n"
+		  !quantif_pred_cpt typed_args (self#typ None)
+		  (to_c_type lv.lv_type) lv.lv_name self#term t1
+		  (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
+		  lv.lv_name self#relation r2 self#term t2
+		  self#predicate_named goal lv.lv_name
+	      in
+	      let call_exists fmt =
+		Format.fprintf fmt
+		  "(exists_%i(%s))"
+		  !quantif_pred_cpt args
+	      in
+	      (* the ref quantif_pred_cpt has to be incremented before each
+		 printing of these functions *)
+	      Queue.add (fct_exists, call_exists) quantif_pred_queue
+	  else
+	    begin
+	      let _,call_exists = Queue.take quantif_pred_queue in
+	      call_exists fmt;
+	      quantif_pred_cpt := !quantif_pred_cpt + 1
+	    end
+
+	  
+
+	| _ -> failwith "\\exists not of the form \\exists ...; a && b;"
       end
     | Pimplies(pred1,pred2) ->
       Format.fprintf fmt "(!(%a) || %a)"
