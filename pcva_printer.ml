@@ -16,6 +16,7 @@ let quantif_pred_cpt = ref 0
 let quantif_pred_queue :
     ((Format.formatter -> unit) * (Format.formatter -> unit)) Queue.t =
   Queue.create ()
+let postcond = ref None
   
 
 let no_repeat l =
@@ -25,11 +26,6 @@ let no_repeat l =
     | h :: t -> aux (h :: acc) t
   in
   aux  [] l
-
-
-
-exception PredUnsupported of predicate named
-exception TermUnsupported of term
 
 
 
@@ -66,70 +62,18 @@ class pcva_printer ~first_pass () = object (self)
       self#vdecl v
       (if display_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
 
-  method private term_lhost_to_lhost = function
-  | TVar lv -> Var (Extlib.the lv.lv_origin)
-  | TResult _ -> failwith "term_lhost_to_lhost"
-  | TMem te -> Mem (self#term_to_exp te)
 
-  method private term_offset_to_offset = function
-  | TNoOffset  -> NoOffset
-  | TField (fi, toff) -> Field (fi, (self#term_offset_to_offset toff))
-  | TModel _ -> failwith "term_offset_to_offset"
-  | TIndex(te,teo)-> Index(self#term_to_exp te,self#term_offset_to_offset teo)
-
-  method private term_to_type t =
-    match t.term_type with
-    | Ctype ty -> ty
-    | Linteger -> longType
-    | _ -> failwith "term_to_type"
-
-  method private term_to_exp_node t = match t.term_node with
-  | TConst (Integer (bigint, so)) -> Const (CInt64 (bigint, IInt, so))
-  | TConst (LStr str) -> Const (CStr str)
-  | TConst (LWStr il) -> Const (CWStr il)
-  | TConst (LChr c) -> Const (CChr c)
-  | TConst (LReal {r_nearest=f}) -> Const (CReal (f, FFloat, None))
-  | TConst (LEnum e) -> Const (CEnum e)
-  | TLval (tl, tof) ->
-    let lhost = self#term_lhost_to_lhost tl in
-    let offset = self#term_offset_to_offset tof in
-    Lval (lhost, offset)
-  | TSizeOf ty -> SizeOf ty
-  | TSizeOfE te -> SizeOfE (self#term_to_exp te)
-  | TSizeOfStr str -> SizeOfStr str
-  | TAlignOf ty -> AlignOf ty
-  | TAlignOfE te -> AlignOfE (self#term_to_exp te)
-  | TUnOp (unop, te) -> UnOp (unop, (self#term_to_exp te),
-			      (self#term_to_type te))
-  | TBinOp (binop, t1, t2) ->
-    BinOp (binop, (self#term_to_exp t1), (self#term_to_exp t2),
-	   (self#term_to_type t1))
-  | TCastE (ty, te) -> CastE (ty, (self#term_to_exp te))
-  | TAddrOf (tl, tof) ->
-    let lhost = self#term_lhost_to_lhost tl in
-    let offset = self#term_offset_to_offset tof in
-    AddrOf (lhost, offset)
-  | TStartOf (tl, tof) ->
-    let lhost = self#term_lhost_to_lhost tl in
-    let offset = self#term_offset_to_offset tof in
-    StartOf (lhost, offset)
-  | TLogic_coerce (_, t) -> self#term_to_exp_node t
-  | Trange(_,Some x) -> self#term_to_exp_node x
-  | _ -> raise (TermUnsupported t)
-    
-  method private term_to_exp t =
-    new_exp ~loc:(t.term_loc) (self#term_to_exp_node t)
-
-  (* exp -> (exp * exp) *)
-  method private extract_exps exp =
-    let loc = exp.eloc in
-    match exp.enode with
-    | Lval (Var v, NoOffset) -> evar v, zero ~loc
-    | BinOp (PlusPI,x,y,_)
-    | BinOp (IndexPI,x,y,_) -> x,y
-    | BinOp (MinusPI,x,y,_) -> x,(new_exp ~loc (UnOp(Neg,y,intType)))
-    | _ -> failwith (Pretty_utils.sfprintf "%a" Printer.pp_exp exp)
-
+  (* to change a \valid to a pathcrawler_dimension *)
+  method private extract_terms t =
+    let loc = t.term_loc in
+    match t.term_node with
+    | TLval _ -> t, lzero ~loc ()
+    | TBinOp (PlusPI,x,y)
+    | TBinOp (IndexPI,x,y) -> x,y
+    | TBinOp (MinusPI,x,y) ->
+      x, term_of_exp_info loc (TUnOp(Neg,y)) {exp_type=t.term_type; exp_name=[]}
+    | _ ->
+      failwith (Pretty_utils.sfprintf "unsupported term: %a" Printer.pp_term t)
 
 
   method private vars_of_term_node t =
@@ -225,10 +169,9 @@ class pcva_printer ~first_pass () = object (self)
     | Pfalse -> Format.fprintf fmt "0"
     | Pvalid(_,term)
     | Pvalid_read(_,term) ->
-      let e = self#term_to_exp term in
-      let x, y = self#extract_exps e in
+      let x, y = self#extract_terms term in
       Format.fprintf fmt "((%a) >= 0 && (pathcrawler_dimension(%a) > (%a)))"
-	self#exp y self#exp x self#exp y
+	self#term y self#term x self#term y
     | Pforall(logic_vars,pred) ->
       begin
 	if (List.length logic_vars) > 1 then
@@ -373,6 +316,7 @@ class pcva_printer ~first_pass () = object (self)
 	self#predicate_named pred2
 	self#predicate_named pred2
 	self#predicate_named pred1
+    | Pat _ -> failwith "\\at on predicates unsupported!"
     | _ -> super#predicate fmt pred
 
   method private predicate_named fmt pred_named =
@@ -381,6 +325,7 @@ class pcva_printer ~first_pass () = object (self)
       
 
   method private annotated_stmt next fmt stmt =
+    self#stmt_labels fmt stmt;
     let kf = Kernel_function.find_englobing_kf stmt in
     let begin_loop = ref [] in
     let end_loop = ref [] in
@@ -489,7 +434,17 @@ class pcva_printer ~first_pass () = object (self)
       List.iter (fun s -> s fmt) !end_loop;
       Format.fprintf fmt "}@\n @]"
 	
-
+    | Return _ ->
+      begin
+	match !postcond with
+	| Some post_cond ->
+	  begin
+	    post_cond fmt;
+	    postcond := None;
+	    self#stmtkind next fmt stmt.skind
+	  end
+	| None -> self#stmtkind next fmt stmt.skind
+      end
     | _ -> self#stmtkind next fmt stmt.skind
 
 
@@ -553,11 +508,12 @@ class pcva_printer ~first_pass () = object (self)
       self#vdecl f.svar;
     (* body. *)
     if entering_ghost then is_ghost <- true;
-    Format.fprintf fmt "@[<h 2>{@\n";
+    
 
     (* BEGIN precond (not entry-point) *)
     if f.svar.vname <> entry_point_name then
       begin
+	Format.fprintf fmt "@[<h 2>{@\n";
 	List.iter (fun b ->
 	  let assumes = b.b_assumes in
 	  let requires = b.b_requires in
@@ -578,37 +534,49 @@ class pcva_printer ~first_pass () = object (self)
 	    pc_assert_exception fmt pred.ip_content "Pre-condition!" id;
 	    Format.fprintf fmt "@]"
 	  ) requires
-	) behaviors
+	) behaviors;
+	Format.fprintf fmt "}@]@\n"
       end;
     (* END precond (not entry-point) *)
 
-    self#block ~braces:true fmt f.sbody;
     
     (* BEGIN postcond *)
-    List.iter (fun b ->
-      let assumes = b.b_assumes in
-      let ensures = b.b_post_cond in
-      let assumes fmt =
-	if assumes <> [] then
-	  begin
-	    Format.fprintf fmt "@[<v 2>if (";
-	    List.iter (fun a ->
-	      Format.fprintf fmt "%a &&" self#predicate a.ip_content
-	    ) assumes;
-	    Format.fprintf fmt " 1 )"
-	  end
-      in
-      List.iter (fun (tk,pred) ->
-	let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
-	let id = Prop_id.to_id prop in
-	assumes fmt;
-	pc_assert_exception fmt pred.ip_content "Post-condition!" id;
-	Format.fprintf fmt "@]"
-      ) ensures
-    ) behaviors;
+    postcond :=
+      Some (fun fmt ->
+	Format.fprintf fmt "@[<h 2>{@\n";
+	List.iter (fun b ->
+	  let assumes = b.b_assumes in
+	  let ensures = b.b_post_cond in
+	  let assumes fmt =
+	    if assumes <> [] then
+	      begin
+		Format.fprintf fmt "@[<v 2>if (";
+		List.iter (fun a ->
+		  Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		) assumes;
+		Format.fprintf fmt " 1 )"
+	      end
+	  in
+	  List.iter (fun (tk,pred) ->
+	    let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
+	    let id = Prop_id.to_id prop in
+	    assumes fmt;
+	    pc_assert_exception fmt pred.ip_content "Post-condition!" id;
+	    Format.fprintf fmt "@]"
+	  ) ensures
+	) behaviors;
+	Format.fprintf fmt "}@]@\n"
+      );
     (* END postcond *)
+    
+    self#block ~braces:true fmt f.sbody;
+    begin
+      match !postcond with
+      | Some post_cond -> post_cond fmt; postcond := None
+      | None -> ()
+    end;
 
-    Format.fprintf fmt "}@]@\n";
+    
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
       (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
