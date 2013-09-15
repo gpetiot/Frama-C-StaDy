@@ -17,7 +17,13 @@ let quantif_pred_queue :
     ((Format.formatter -> unit) * (Format.formatter -> unit)) Queue.t =
   Queue.create ()
 let postcond = ref None
-  
+
+(* How we handle \at terms (\at predicates are not supported) *)
+let at_term_cpt = ref 0
+
+let at_term_affect_in_function :
+    ((Format.formatter -> unit) Queue.t) Datatype.String.Hashtbl.t =
+  Datatype.String.Hashtbl.create 32
 
 let no_repeat l =
   let rec aux acc = function
@@ -41,6 +47,7 @@ class pcva_printer ~first_pass () = object (self)
   inherit Printer.extensible_printer () as super
 
   val mutable current_function = None
+  val mutable return_var = "__retres"
 
   method private in_current_function vi =
     assert (current_function = None);
@@ -128,6 +135,45 @@ class pcva_printer ~first_pass () = object (self)
 
   method private vars_of_predicate_named p =
     self#vars_of_predicate p.content
+
+
+  method term_node fmt t =
+    let to_c_type = function
+      | Ctype t -> t
+      | Linteger -> longType
+      | _ -> assert false in
+    match t.term_node with
+    | Tat(_, StmtLabel _) -> failwith "\\at on stmt label unsupported!"
+    | Tat(term,LogicLabel(_,stringlabel)) ->
+      if stringlabel = "Old" then
+	if first_pass then
+	  begin
+	    let fct_name = (Extlib.the current_function).vname in
+	    let affects = try
+			    Datatype.String.Hashtbl.find
+			      at_term_affect_in_function fct_name
+	      with _ -> Queue.create() in
+	    Queue.add (fun fmt ->
+	      Format.fprintf fmt "%a = %a;@\n"
+		(self#typ
+		   (Some (fun fmt -> Format.fprintf fmt "term_at_%i"
+		     !at_term_cpt)))
+		(to_c_type term.term_type)
+		self#term
+		term
+	    ) affects;
+	    Datatype.String.Hashtbl.add
+	      at_term_affect_in_function fct_name affects;
+	  end
+	else
+	  begin
+	    Format.fprintf fmt "term_at_%i" !at_term_cpt;
+	    at_term_cpt := !at_term_cpt + 1
+	  end
+      else
+	failwith (Printf.sprintf "\\at label '%s' unsupported!" stringlabel)
+    | _ -> super#term_node fmt t
+    
 
   method private predicate fmt pred =
     (* generate guards for logic vars, e.g.:
@@ -448,7 +494,6 @@ class pcva_printer ~first_pass () = object (self)
     | _ -> self#stmtkind next fmt stmt.skind
 
 
-
   method private fundecl fmt f =
     (* declaration. *)
     let was_ghost = is_ghost in
@@ -502,6 +547,9 @@ class pcva_printer ~first_pass () = object (self)
       end;
     (* END precond (entry-point) *)
 
+
+
+
     Format.fprintf fmt "@[%t%a@\n@[<v 2>"
       (if entering_ghost then fun fmt -> Format.fprintf fmt "/*@@ ghost@ " 
        else ignore)
@@ -509,11 +557,10 @@ class pcva_printer ~first_pass () = object (self)
     (* body. *)
     if entering_ghost then is_ghost <- true;
     
-
+    Format.fprintf fmt "@[<h 2>{@\n";
     (* BEGIN precond (not entry-point) *)
     if f.svar.vname <> entry_point_name then
       begin
-	Format.fprintf fmt "@[<h 2>{@\n";
 	List.iter (fun b ->
 	  let assumes = b.b_assumes in
 	  let requires = b.b_requires in
@@ -534,8 +581,7 @@ class pcva_printer ~first_pass () = object (self)
 	    pc_assert_exception fmt pred.ip_content "Pre-condition!" id;
 	    Format.fprintf fmt "@]"
 	  ) requires
-	) behaviors;
-	Format.fprintf fmt "}@]@\n"
+	) behaviors
       end;
     (* END precond (not entry-point) *)
 
@@ -568,6 +614,23 @@ class pcva_printer ~first_pass () = object (self)
 	Format.fprintf fmt "}@]@\n"
       );
     (* END postcond *)
+
+
+    (* variables for \at terms *)
+    begin
+      if not first_pass then
+	begin
+	  try
+	    let q =
+	      Datatype.String.Hashtbl.find
+		at_term_affect_in_function f.svar.vname
+	    in
+	    let tmp = !at_term_cpt in
+	    Queue.iter (fun e -> e fmt; at_term_cpt := !at_term_cpt + 1) q;
+	    at_term_cpt := tmp
+	  with _ -> ()
+	end
+    end;
     
     self#block ~braces:true fmt f.sbody;
     begin
@@ -575,7 +638,7 @@ class pcva_printer ~first_pass () = object (self)
       | Some post_cond -> post_cond fmt; postcond := None
       | None -> ()
     end;
-
+    Format.fprintf fmt "}@]@\n";
     
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
@@ -713,6 +776,11 @@ class pcva_printer ~first_pass () = object (self)
     ) quantif_pred_queue;
     quantif_pred_cpt := 0;
     super#file fmt f
+
+  method term_lval fmt t =
+    match t with
+    | (TResult _,_) -> Format.fprintf fmt "%s" return_var
+    | _ -> super#term_lval fmt t
 end
 
 
