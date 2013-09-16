@@ -47,7 +47,7 @@ class pcva_printer ~first_pass () = object (self)
   inherit Printer.extensible_printer () as super
 
   val mutable current_function = None
-  val mutable return_var = "__retres"
+  val mutable result_varinfo = None
 
   method private in_current_function vi =
     assert (current_function = None);
@@ -75,6 +75,8 @@ class pcva_printer ~first_pass () = object (self)
     let loc = t.term_loc in
     match t.term_node with
     | TLval _ -> t, lzero ~loc ()
+    | TBinOp (PlusPI,x,{term_node = Trange(_,Some y)})
+    | TBinOp (IndexPI,x,{term_node = Trange(_,Some y)}) -> x,y
     | TBinOp (PlusPI,x,y)
     | TBinOp (IndexPI,x,y) -> x,y
     | TBinOp (MinusPI,x,y) ->
@@ -83,12 +85,35 @@ class pcva_printer ~first_pass () = object (self)
       failwith (Pretty_utils.sfprintf "unsupported term: %a" Printer.pp_term t)
 
 
+  method private vars_of_term_lhost h =
+    match h with
+    | TVar lv -> (try [Extlib.the lv.lv_origin] with _ -> [])
+    | TResult _ ->
+      begin
+	match result_varinfo with
+	| None -> failwith "vars_of_term_lhost: no result_varinfo"
+	| Some v -> [v]
+      end
+    | TMem t -> self#vars_of_term t
+
+  method private vars_of_term_offset o =
+    match o with
+    | TNoOffset -> []
+    | TField (_, t) -> self#vars_of_term_offset t
+    | TModel _ -> []
+    | TIndex (i,t) ->
+      List.rev_append (self#vars_of_term i) (self#vars_of_term_offset t)
+
+  method private vars_of_term_lval t =
+    let h, o = t in
+    List.rev_append (self#vars_of_term_lhost h) (self#vars_of_term_offset o)
+
   method private vars_of_term_node t =
     match t with
-    | TLval (TVar tv,_)
-    | TAddrOf(TVar tv,_)
-    | TStartOf(TVar tv,_) ->
-      begin try	[Extlib.the tv.lv_origin] with _ -> [] end
+    | TLval tv
+    | TAddrOf tv
+    | TStartOf tv ->
+      self#vars_of_term_lval tv
     | TSizeOfE t1
     | TAlignOfE t1
     | TUnOp(_,t1)
@@ -98,7 +123,10 @@ class pcva_printer ~first_pass () = object (self)
     | Tblock_length(_,t1)
     | TLogic_coerce(_,t1)
     | TCoerce(t1,_)
+    | Trange(None,Some t1)
+    | Trange(Some t1,None)
     | TCastE(_,t1) -> self#vars_of_term t1
+    | Trange (Some t1, Some t2)
     | TBinOp(_,t1,t2) ->
       List.rev_append (self#vars_of_term t1) (self#vars_of_term t2)
     | Tif(t1,t2,t3) ->
@@ -142,37 +170,48 @@ class pcva_printer ~first_pass () = object (self)
       | Ctype t -> t
       | Linteger -> longType
       | _ -> assert false in
-    match t.term_node with
-    | Tat(_, StmtLabel _) -> failwith "\\at on stmt label unsupported!"
-    | Tat(term,LogicLabel(_,stringlabel)) ->
-      if stringlabel = "Old" then
-	if first_pass then
-	  begin
-	    let fct_name = (Extlib.the current_function).vname in
-	    let affects = try
-			    Datatype.String.Hashtbl.find
-			      at_term_affect_in_function fct_name
-	      with _ -> Queue.create() in
-	    Queue.add (fun fmt ->
-	      Format.fprintf fmt "%a = %a;@\n"
-		(self#typ
-		   (Some (fun fmt -> Format.fprintf fmt "term_at_%i"
-		     !at_term_cpt)))
-		(to_c_type term.term_type)
-		self#term
-		term
-	    ) affects;
-	    Datatype.String.Hashtbl.add
-	      at_term_affect_in_function fct_name affects;
-	  end
+    try
+      match t.term_node with
+      | Tat(_, StmtLabel _) -> failwith "\\at on stmt label unsupported!"
+      | Tat(term,LogicLabel(_,stringlabel)) ->
+	if stringlabel = "Old" then
+	  if first_pass then
+	    begin
+	      let fct_name = try (Extlib.the current_function).vname
+		with _ ->
+		  failwith
+		    (Pretty_utils.sfprintf
+		       "no current function (term: %a)" Printer.pp_term t)
+	      in
+	      let affects = try
+			      Datatype.String.Hashtbl.find
+				at_term_affect_in_function fct_name
+		with _ -> Queue.create() in
+	      Queue.add (fun fmt ->
+		Format.fprintf fmt "%a = %a;@\n"
+		  (self#typ
+		     (Some (fun fmt -> Format.fprintf fmt "term_at_%i"
+		       !at_term_cpt)))
+		  (to_c_type term.term_type)
+		  self#term
+		  term
+	      ) affects;
+	      Datatype.String.Hashtbl.add
+		at_term_affect_in_function fct_name affects;
+	    end
+	  else
+	    begin
+	      Format.fprintf fmt "term_at_%i" !at_term_cpt;
+	      at_term_cpt := !at_term_cpt + 1
+	    end
 	else
-	  begin
-	    Format.fprintf fmt "term_at_%i" !at_term_cpt;
-	    at_term_cpt := !at_term_cpt + 1
-	  end
-      else
-	failwith (Printf.sprintf "\\at label '%s' unsupported!" stringlabel)
-    | _ -> super#term_node fmt t
+	  failwith (Printf.sprintf "\\at label '%s' unsupported!" stringlabel)
+      | _ -> super#term_node fmt t
+    with
+      _ ->
+	match t.term_node with
+	| Tat(term,LogicLabel _) -> self#term fmt term
+	| _ -> super#term_node fmt t
     
 
   method private predicate fmt pred =
@@ -494,6 +533,15 @@ class pcva_printer ~first_pass () = object (self)
     | _ -> self#stmtkind next fmt stmt.skind
 
 
+  method private compute_result_varinfo f =
+    List.iter (fun stmt ->
+      match stmt.skind with
+      | Return(Some {enode = Lval(Var v,_)},_) ->
+	result_varinfo <- Some v
+      | _ -> ()
+    ) f.sallstmts
+
+
   method private fundecl fmt f =
     (* declaration. *)
     let was_ghost = is_ghost in
@@ -507,6 +555,7 @@ class pcva_printer ~first_pass () = object (self)
 	self#predicate pred msg id
     in
     let entering_ghost = f.svar.vghost && not was_ghost in
+    self#compute_result_varinfo f;
 
     (* BEGIN precond (entry-point) *)
     if f.svar.vname = entry_point_name then
@@ -779,7 +828,12 @@ class pcva_printer ~first_pass () = object (self)
 
   method term_lval fmt t =
     match t with
-    | (TResult _,_) -> Format.fprintf fmt "%s" return_var
+    | (TResult _,_) ->
+      begin
+	match result_varinfo with
+	| None -> failwith "term_lval: no result_varinfo"
+	| Some v -> Format.fprintf fmt "%s" v.vname
+      end
     | _ -> super#term_lval fmt t
 end
 

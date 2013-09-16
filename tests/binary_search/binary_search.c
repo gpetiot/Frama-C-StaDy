@@ -1,6 +1,7 @@
 
 /*@ requires 0 <= n <= 2;
-  @ requires \block_length(A) == n*sizeof(int);
+  @ requires \valid(A+(0..n-1));
+  @ requires \forall int i; 0 <= i < n ==> -100 <= A[i] <= 100;
   @ ensures !(\forall integer i; 0 <= i < n ==> A[i] != elem) ==> \result == 1;
   @ ensures \forall integer i; 0 <= i < n ==> A[i] != elem ==> \result == 0;
   @*/

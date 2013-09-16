@@ -11,7 +11,7 @@ open Lexing
 let print_in_file prj filename =
   Project.on prj (fun () ->
     (* first pass: prepare the quantifiers predicates, ignore the output *)
-    let fmt = Format.make_formatter (fun _ _ _ -> ()) (fun () -> ()) in
+    let fmt = Format.make_formatter (fun _ _ _ -> ()) ignore in
     Pcva_printer.First_pass.pp_file fmt (Ast.get());
 
     (* second pass: print the instrumented quantif, output in a file *)
@@ -55,8 +55,18 @@ let run() =
 
 
 
-      (* do something *)
-      print_in_file (Project.current()) "toto.c"
+      (* Save the result in a file *)
+      print_in_file (Project.current()) (Options.Temp_File.get());
+
+
+      let cmd =
+	Printf.sprintf "frama-c %s -main %s -pc %s"
+	  (Options.Temp_File.get())
+	  (Kernel_function.get_name (fst(Globals.entry_point())))
+	  (Options.PathCrawler_Options.get())
+      in
+      let ret = Sys.command cmd in
+      Options.Self.feedback "code retour: %i" ret
 
     end
 
