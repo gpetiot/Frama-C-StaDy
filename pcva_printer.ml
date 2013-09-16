@@ -71,16 +71,27 @@ class pcva_printer ~first_pass () = object (self)
 
 
   (* to change a \valid to a pathcrawler_dimension *)
+  (* term -> term * term *)
   method private extract_terms t =
     let loc = t.term_loc in
     match t.term_node with
     | TLval _ -> t, lzero ~loc ()
+    | TCastE (_,term)
+    | TCoerce (term,_)
+    | TAlignOfE term -> self#extract_terms term
     | TBinOp (PlusPI,x,{term_node = Trange(_,Some y)})
     | TBinOp (IndexPI,x,{term_node = Trange(_,Some y)}) -> x,y
     | TBinOp (PlusPI,x,y)
     | TBinOp (IndexPI,x,y) -> x,y
     | TBinOp (MinusPI,x,y) ->
       x, term_of_exp_info loc (TUnOp(Neg,y)) {exp_type=t.term_type; exp_name=[]}
+    | TStartOf _ -> t, lzero ~loc ()
+    | TAddrOf (TVar _, TIndex _) ->
+      let tnode = mkTermMem t TNoOffset in
+      let term =
+	term_of_exp_info loc (TLval tnode) {exp_type=t.term_type; exp_name=[]}
+      in
+      self#extract_terms term
     | _ ->
       failwith (Pretty_utils.sfprintf "unsupported term: %a" Printer.pp_term t)
 
@@ -402,6 +413,11 @@ class pcva_printer ~first_pass () = object (self)
 	self#predicate_named pred2
 	self#predicate_named pred1
     | Pat _ -> failwith "\\at on predicates unsupported!"
+    | Pseparated _ ->
+      begin
+	Options.Self.feedback "Predicate ignored: %a" Printer.pp_predicate pred;
+	Format.fprintf fmt "1"
+      end
     | _ -> super#predicate fmt pred
 
   method private predicate_named fmt pred_named =
