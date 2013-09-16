@@ -414,6 +414,7 @@ class pcva_printer ~first_pass () = object (self)
     let kf = Kernel_function.find_englobing_kf stmt in
     let begin_loop = ref [] in
     let end_loop = ref [] in
+    Format.fprintf fmt "{@\n";
     Annotations.iter_code_annot (fun _emitter ca ->
       let prop = Property.ip_of_code_annot_single kf stmt ca in
       let id = Prop_id.to_id prop in
@@ -510,27 +511,30 @@ class pcva_printer ~first_pass () = object (self)
       | _ -> ()
     ) stmt;
 
-    match stmt.skind with
-    | Loop(_,b,l,_,_) ->
-      Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
-	(fun fmt -> self#line_directive fmt) l;
-      List.iter (fun s -> s fmt) !begin_loop;
-      Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
-      List.iter (fun s -> s fmt) !end_loop;
-      Format.fprintf fmt "}@\n @]"
-	
-    | Return _ ->
-      begin
-	match !postcond with
-	| Some post_cond ->
-	  begin
-	    post_cond fmt;
-	    postcond := None;
-	    self#stmtkind next fmt stmt.skind
-	  end
-	| None -> self#stmtkind next fmt stmt.skind
-      end
-    | _ -> self#stmtkind next fmt stmt.skind
+    begin
+      match stmt.skind with
+      | Loop(_,b,l,_,_) ->
+	Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
+	  (fun fmt -> self#line_directive fmt) l;
+	List.iter (fun s -> s fmt) !begin_loop;
+	Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
+	List.iter (fun s -> s fmt) !end_loop;
+	Format.fprintf fmt "}@\n @]"
+      | Return _ ->
+	begin
+	  match !postcond with
+	  | Some post_cond ->
+	    begin
+	      post_cond fmt;
+	      postcond := None;
+	      self#stmtkind next fmt stmt.skind
+	    end
+	  | None -> self#stmtkind next fmt stmt.skind
+	end
+      | _ -> self#stmtkind next fmt stmt.skind
+    end;
+    Format.fprintf fmt "}@\n"
+
 
 
   method private compute_result_varinfo f =
@@ -586,13 +590,11 @@ class pcva_printer ~first_pass () = object (self)
 	  List.iter (fun pred ->
 	    assumes fmt;
 	    Format.fprintf fmt
-	      "@[<v 2>if(!(%a))@[<hv>return 0;@]@]"
-	      self#predicate pred.ip_content;
-	    Format.fprintf fmt "@]"
+	      "{@[<v 2>if(!(%a))@[<hv>return 0;@]@]@]}"
+	      self#predicate pred.ip_content
 	  ) requires
 	) behaviors;
-	Format.fprintf fmt "return 1;@\n";
-	Format.fprintf fmt "@]}@]@\n@\n"
+	Format.fprintf fmt "return 1;@\n@]}@]@\n@\n"
       end;
     (* END precond (entry-point) *)
 

@@ -1,11 +1,11 @@
-/*@ requires 0 <= l <= 3;
-    requires \block_length(table) == l*sizeof(int);
+/*@ requires 0 <= l <= 5;
+    requires \valid(table+(0..l-1));
     ensures
       \forall integer i;
         0 <= i < \old(l)-1 ==>
         *(\old(table)+i) >= *(\old(table)+(i+1));
  */
-void bubblesort(int *table, int l)
+void bubble_sort(int *table, int l)
 {
   int i;
   int temp;
@@ -16,14 +16,10 @@ void bubblesort(int *table, int l)
   while (! fini && (nb < l - 1)) {
     fini = (char)1;
     i = 0;
-    //@ assert 0 <= i <= l-1;
-    //@ assert l-1-i >= 0;
-    //@ ghost int old_variant;
     /*@ loop invariant 0 <= i <= l-1;
       @ loop variant l-1-i;
       @*/
     while (i < l - 1) {
-      //@ ghost old_variant = l-1-i;
       if (*(table + i) < *(table + (i + 1))) {
         fini = (char)0;
         temp = *(table + i);
@@ -31,8 +27,6 @@ void bubblesort(int *table, int l)
         *(table + (i + 1)) = temp;
       }
       i ++;
-      //@ assert 0 <= i <= l-1;
-      //@ assert l-1-i < old_variant;
     }
     nb ++;
   }

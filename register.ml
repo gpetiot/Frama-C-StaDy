@@ -58,15 +58,35 @@ let run() =
       (* Save the result in a file *)
       print_in_file (Project.current()) (Options.Temp_File.get());
 
-
+      let parameters_file = "pcva_test_parameters.pl" in
+      let files =
+	List.fold_left (fun x y -> x ^ " " ^ y) "" (Kernel.Files.get())
+      in
       let cmd =
-	Printf.sprintf "frama-c %s -main %s -pc %s"
-	  (Options.Temp_File.get())
+	Printf.sprintf "frama-c %s -main %s -ap -ap-out %s"
+	  files
 	  (Kernel_function.get_name (fst(Globals.entry_point())))
-	  (Options.PathCrawler_Options.get())
+	  parameters_file
       in
       let ret = Sys.command cmd in
-      Options.Self.feedback "code retour: %i" ret
+      if ret = 0 then
+	begin
+	  Options.Self.feedback "Prolog precondition successfully generated";
+	  let cmd =
+	    Printf.sprintf "frama-c %s -main %s -pc -pc-test-params %s %s"
+	      (Options.Temp_File.get())
+	      (Kernel_function.get_name (fst(Globals.entry_point())))
+	      parameters_file
+	      (Options.PathCrawler_Options.get())
+	  in
+	  let ret = Sys.command cmd in
+	  if ret = 0 then
+	    Options.Self.feedback "PathCrawler successfully executed"
+	  else
+	    Options.Self.feedback "PathCrawler failed: %i" ret
+	end
+      else
+	Options.Self.feedback "Prolog precondition generation failed: %i" ret
 
     end
 
