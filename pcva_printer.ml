@@ -574,7 +574,7 @@ class pcva_printer ~first_pass () = object (self)
     let behaviors = Annotations.behaviors kf in
     let pc_assert_exception fmt pred msg id =
       Format.fprintf fmt
-	"@[<v 2>if(!(%a)) pathcrawler_assert_exception(\"%s\", %i);@]@\n"
+	"@[<v 2>if(!(%a))@\npathcrawler_assert_exception(\"%s\", %i);@]@\n"
 	self#predicate pred msg id
     in
     let entering_ghost = f.svar.vghost && not was_ghost in
@@ -588,7 +588,7 @@ class pcva_printer ~first_pass () = object (self)
 	  | TFun(_,x,y,z) -> x,y,z
 	  | _ -> assert false
 	in
-	Format.fprintf fmt "%a {@[<v 2>@\n"
+	Format.fprintf fmt "%a@\n{@[<v 2>@\n"
 	  (self#typ
 	     (Some (fun fmt ->
 	       Format.fprintf fmt "%s_precond" entry_point_name)))
@@ -596,7 +596,7 @@ class pcva_printer ~first_pass () = object (self)
 	List.iter (fun b ->
 	  let assumes = b.b_assumes in
 	  let requires = b.b_requires in
-	  let assumes fmt =
+	  let assu fmt =
 	    if assumes <> [] then
 	      begin
 		Format.fprintf fmt "@[<v 2>if (";
@@ -607,13 +607,15 @@ class pcva_printer ~first_pass () = object (self)
 	      end
 	  in
 	  List.iter (fun pred ->
-	    assumes fmt;
+	    assu fmt;
 	    Format.fprintf fmt
-	      "{@\n@[<v 2>if(!(%a)) return 0;@]@]@\n}"
+	      "@[<v 2>if(!(%a))@\nreturn 0;@]@\n"
 	      self#predicate pred.ip_content
-	  ) requires
+	  ) requires;
+	  if assumes <> [] then
+	    Format.fprintf fmt "@]"
 	) behaviors;
-	Format.fprintf fmt "return 1;@\n@]}@\n@\n"
+	Format.fprintf fmt "return 1;@]@\n}@\n@\n"
       end;
     (* END precond (entry-point) *)
 
@@ -627,7 +629,9 @@ class pcva_printer ~first_pass () = object (self)
     (* body. *)
     if entering_ghost then is_ghost <- true;
     
-    Format.fprintf fmt "@[<h 2>{@\n";
+    if List.length behaviors > 0 then
+      Format.fprintf fmt "@[<h 2>{@\n";
+
     (* BEGIN precond (not entry-point) *)
     if f.svar.vname <> entry_point_name then
       begin
@@ -667,11 +671,12 @@ class pcva_printer ~first_pass () = object (self)
 	    let assumes fmt =
 	      if assumes <> [] then
 		begin
-		  Format.fprintf fmt "@[<v 2>if (";
+		  Format.fprintf fmt "@[<v 2>if (@[<hv>";
 		  List.iter (fun a ->
-		    Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		    Format.fprintf fmt "@[<hv>%a@] && "
+		      self#predicate a.ip_content
 		  ) assumes;
-		  Format.fprintf fmt " 1 )"
+		  Format.fprintf fmt " 1@])@\n"
 		end
 	    in
 	    List.iter (fun (tk,pred) ->
@@ -679,7 +684,7 @@ class pcva_printer ~first_pass () = object (self)
 	      let id = Prop_id.to_id prop in
 	      assumes fmt;
 	      pc_assert_exception fmt pred.ip_content "Post-condition!" id;
-	      Format.fprintf fmt "@]"
+	      Format.fprintf fmt "@]@\n"
 	    ) ensures
 	  ) behaviors;
 	  Format.fprintf fmt "@]@\n}@\n"
@@ -711,7 +716,9 @@ class pcva_printer ~first_pass () = object (self)
       | Some post_cond -> post_cond fmt; postcond := None
       | None -> ()
     end;
-    Format.fprintf fmt "@.}";
+
+    if List.length behaviors > 0 then
+      Format.fprintf fmt "@.}";
     
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
