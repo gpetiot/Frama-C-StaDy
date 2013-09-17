@@ -430,7 +430,9 @@ class pcva_printer ~first_pass () = object (self)
     let kf = Kernel_function.find_englobing_kf stmt in
     let begin_loop = ref [] in
     let end_loop = ref [] in
-    Format.fprintf fmt "{@\n";
+    let has_code_annots = List.length (Annotations.code_annot stmt) > 0 in
+    if has_code_annots then
+      Format.fprintf fmt "{@[<h 2>@\n";
     Annotations.iter_code_annot (fun _emitter ca ->
       let prop = Property.ip_of_code_annot_single kf stmt ca in
       let id = Prop_id.to_id prop in
@@ -454,7 +456,7 @@ class pcva_printer ~first_pass () = object (self)
       in
       let pc_assert_exception fmt pred msg id =
 	Format.fprintf fmt
-	  "@[<v 2>if(!(%a))@[<hv>pathcrawler_assert_exception(\"%s\", %i);@]@]"
+	  "@[<v 2>if(!(%a)) pathcrawler_assert_exception(\"%s\", %i);@]@\n"
 	  self#predicate_named pred msg id
       in
       match ca with
@@ -512,7 +514,7 @@ class pcva_printer ~first_pass () = object (self)
 	  end
       | AVariant (term,_) ->
 	Format.fprintf fmt
-	  "@[<v 2>if((%a)<0)@[<hv>pathcrawler_assert_exception(\"%s\",%i);@]@]"
+	  "@[<v 2>if((%a)<0) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
 	  self#term term "Variant non positive!" id;
 	begin_loop :=
 	  (fun fmt ->
@@ -521,7 +523,7 @@ class pcva_printer ~first_pass () = object (self)
 	end_loop :=
 	  (fun fmt ->
 	    Format.fprintf fmt
-	      "@[<v 2>if((%a) >= old_variant_%i)@[<hv>pathcrawler_assert_exception(\"%s\",%i);@]@]"
+	      "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
 	      self#term term id "Variant non decreasing!" id)
 	:: !end_loop
       | _ -> ()
@@ -549,7 +551,8 @@ class pcva_printer ~first_pass () = object (self)
 	end
       | _ -> self#stmtkind next fmt stmt.skind
     end;
-    Format.fprintf fmt "}@\n"
+    if has_code_annots then
+      Format.fprintf fmt "@]@\n}"
 
 
 
@@ -571,7 +574,7 @@ class pcva_printer ~first_pass () = object (self)
     let behaviors = Annotations.behaviors kf in
     let pc_assert_exception fmt pred msg id =
       Format.fprintf fmt
-	"@[<v 2>if(!(%a))@[<hv>pathcrawler_assert_exception(\"%s\", %i);@]@]"
+	"@[<v 2>if(!(%a)) pathcrawler_assert_exception(\"%s\", %i);@]@\n"
 	self#predicate pred msg id
     in
     let entering_ghost = f.svar.vghost && not was_ghost in
@@ -585,7 +588,7 @@ class pcva_printer ~first_pass () = object (self)
 	  | TFun(_,x,y,z) -> x,y,z
 	  | _ -> assert false
 	in
-	Format.fprintf fmt "@[%a {@\n@["
+	Format.fprintf fmt "%a {@[<v 2>@\n"
 	  (self#typ
 	     (Some (fun fmt ->
 	       Format.fprintf fmt "%s_precond" entry_point_name)))
@@ -606,11 +609,11 @@ class pcva_printer ~first_pass () = object (self)
 	  List.iter (fun pred ->
 	    assumes fmt;
 	    Format.fprintf fmt
-	      "{@[<v 2>if(!(%a))@[<hv>return 0;@]@]@]}"
+	      "{@\n@[<v 2>if(!(%a)) return 0;@]@]@\n}"
 	      self#predicate pred.ip_content
 	  ) requires
 	) behaviors;
-	Format.fprintf fmt "return 1;@\n@]}@]@\n@\n"
+	Format.fprintf fmt "return 1;@\n@]}@\n@\n"
       end;
     (* END precond (entry-point) *)
 
@@ -655,31 +658,34 @@ class pcva_printer ~first_pass () = object (self)
     
     (* BEGIN postcond *)
     postcond :=
-      Some (fun fmt ->
-	Format.fprintf fmt "@[<h 2>{@\n";
-	List.iter (fun b ->
-	  let assumes = b.b_assumes in
-	  let ensures = b.b_post_cond in
-	  let assumes fmt =
-	    if assumes <> [] then
-	      begin
-		Format.fprintf fmt "@[<v 2>if (";
-		List.iter (fun a ->
-		  Format.fprintf fmt "%a &&" self#predicate a.ip_content
-		) assumes;
-		Format.fprintf fmt " 1 )"
-	      end
-	  in
-	  List.iter (fun (tk,pred) ->
-	    let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
-	    let id = Prop_id.to_id prop in
-	    assumes fmt;
-	    pc_assert_exception fmt pred.ip_content "Post-condition!" id;
-	    Format.fprintf fmt "@]"
-	  ) ensures
-	) behaviors;
-	Format.fprintf fmt "}@]@\n"
-      );
+      if List.length behaviors > 0 then
+	Some (fun fmt ->
+	  Format.fprintf fmt "@[<h 2>{@\n";
+	  List.iter (fun b ->
+	    let assumes = b.b_assumes in
+	    let ensures = b.b_post_cond in
+	    let assumes fmt =
+	      if assumes <> [] then
+		begin
+		  Format.fprintf fmt "@[<v 2>if (";
+		  List.iter (fun a ->
+		    Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		  ) assumes;
+		  Format.fprintf fmt " 1 )"
+		end
+	    in
+	    List.iter (fun (tk,pred) ->
+	      let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
+	      let id = Prop_id.to_id prop in
+	      assumes fmt;
+	      pc_assert_exception fmt pred.ip_content "Post-condition!" id;
+	      Format.fprintf fmt "@]"
+	    ) ensures
+	  ) behaviors;
+	  Format.fprintf fmt "@]@\n}@\n"
+	)
+      else
+	None;
     (* END postcond *)
 
 
@@ -705,7 +711,7 @@ class pcva_printer ~first_pass () = object (self)
       | Some post_cond -> post_cond fmt; postcond := None
       | None -> ()
     end;
-    Format.fprintf fmt "}@]@\n";
+    Format.fprintf fmt "@.}";
     
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
