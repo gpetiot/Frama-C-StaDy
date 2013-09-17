@@ -73,11 +73,17 @@ let run() =
 	begin
 	  Options.Self.feedback "Prolog precondition successfully generated";
 	  let cmd =
-	    Printf.sprintf "frama-c %s -main %s -pc -pc-test-params %s %s"
-	      (Options.Temp_File.get())
-	      (Kernel_function.get_name (fst(Globals.entry_point())))
-	      parameters_file
-	      (Options.PathCrawler_Options.get())
+	    if Sys.file_exists parameters_file then
+	      Printf.sprintf "frama-c %s -main %s -pc -pc-test-params %s %s"
+		(Options.Temp_File.get())
+		(Kernel_function.get_name (fst(Globals.entry_point())))
+		parameters_file
+		(Options.PathCrawler_Options.get())
+	    else
+	      Printf.sprintf "frama-c %s -main %s -pc %s"
+		(Options.Temp_File.get())
+		(Kernel_function.get_name (fst(Globals.entry_point())))
+		(Options.PathCrawler_Options.get())
 	  in
 	  let ret = Sys.command cmd in
 	  if ret = 0 then
