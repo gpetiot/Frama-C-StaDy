@@ -5,6 +5,6 @@ PLUGIN_NAME	= PCVA
 
 
 PLUGIN_CMO	= options prop_id pcva_printer register
-#PLUGIN_GUI_CMO 	= register_gui 
+PLUGIN_GUI_CMO 	= register_gui 
 include $(FRAMAC_SHARE)/Makefile.dynamic
 

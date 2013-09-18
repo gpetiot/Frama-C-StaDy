@@ -93,7 +93,7 @@ let process_assert_violated s =
 (* message du type @FC:NumCase=i
 *)
 let process_numcase n =
-  let filename = List.hd (Kernel.Files.get()) in
+  let filename = Options.Temp_File.get() in
   let tested_func = Kernel_function.get_name (tested_func()) in
   let testcase_fname = "testcases_" ^ (Filename.chop_extension filename) in
   let testcase_fname = Filename.concat testcase_fname tested_func in
@@ -371,13 +371,41 @@ let run() =
       Options.Self.feedback "all-paths: %b" (AllPathsOK.get());
       Options.Self.feedback "%i test cases" (NbCases.get());
 
-      Options.Self.feedback "translated properties:";
+      let t_l = List.fold_left (fun x y ->
+	Printf.sprintf "%s %i" x (Prop_id.to_id y)
+      ) "" translated_properties in
+      Options.Self.feedback "translated properties: %s" t_l;
+
+      
+      (* For some reason, the test case entries are duplicated, so we fix it *)
+      TestFailures.iter (fun x (y,entries) ->
+	TestFailures.replace x (y, Pcva_printer.no_repeat entries)
+      );
+      
+
       List.iter (fun prop ->
 	let id = Prop_id.to_id prop in
 	let str_id = string_of_int id in
 	try
-	  let _c_test_case, _entries = TestFailures.find str_id in
-	  Options.Self.feedback "prop of %i found" id;
+	  let c_test_case, entries = TestFailures.find str_id in
+	  (* change the include of the C test-case -- UGLY *)
+	  let tmp = "__pcva__temp.c" in
+	  let cmd =
+	    Printf.sprintf "sed -e s/%s/%s/ %s > %s"
+	      (Options.Temp_File.get())
+	      (List.hd(Kernel.Files.get()))
+	      c_test_case
+	      tmp
+	  in
+	  let _ = Sys.command cmd in
+	  let cmd = Printf.sprintf "cp %s %s" tmp c_test_case in
+	  let _ = Sys.command cmd in
+
+
+	  List.iter (fun (x,y) ->
+	    Options.Self.debug~level:1 "%s = %s" x y) entries;
+	  Options.Self.debug ~level:1 "------------------";
+	  Options.Self.feedback "prop %i in counter-examples table" id;
 	  let hyps = [] in
 	  let distinct = true in
 	  let status = Property_status.False_if_reachable in
@@ -385,7 +413,7 @@ let run() =
 	with
 	| Not_found ->
 	  (* NK does not agree on this condition *)
-	  if (AllPathsOK.get()) then
+	  (*if (AllPathsOK.get()) then*)
 	    let hyps = [] in
 	    let distinct = true in
 	    let status = Property_status.True in
