@@ -415,7 +415,7 @@ let run() =
 		  let out = "pcva_exec" in
 		  let cmd =
 		    Printf.sprintf
-		      "frama-c %s -e-acsl -then-on e-acsl -print -ocode %s.c"
+		      "frama-c %s -kernel-verbose 0 -e-acsl -then-on e-acsl -print -ocode %s.c"
 		      c_test_case
 		      out
 		  in
@@ -431,7 +431,7 @@ let run() =
 		      out
 		  in
 		  let ret = Sys.command cmd in
-		  Options.Self.feedback "Prop %i: %s" 
+		  Options.Self.feedback "Bug of property %i %s by E-ACSL" 
 		    id
 		    (if ret = 0 then "NOT confirmed" else "confirmed");
 		  if ret = 0 then
