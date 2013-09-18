@@ -13,3 +13,8 @@ let to_id prop =
 
 let to_prop id =
   Datatype.Int.Hashtbl.find id_to_prop_tbl id
+
+
+(* we can only modify the property_status of the properties that have really
+   been translated into pathcrawler_assert_exception *)
+let translated_properties = ref ([] : Property.t list)

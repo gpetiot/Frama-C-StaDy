@@ -6,7 +6,6 @@ open Cil_datatype
 
 
 
-
 let debug_builtins = Kernel.register_category "printer:builtins"
 let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
@@ -469,7 +468,8 @@ class pcva_printer ~first_pass () = object (self)
       let pc_assert_exception fmt pred msg id =
 	Format.fprintf fmt
 	  "@[<v 2>if(!(%a)) pathcrawler_assert_exception(\"%s\", %i);@]@\n"
-	  self#predicate_named pred msg id
+	  self#predicate_named pred msg id;
+	Prop_id.translated_properties := prop :: !Prop_id.translated_properties
       in
       match ca with
       | AAssert (_,pred) ->
@@ -528,6 +528,7 @@ class pcva_printer ~first_pass () = object (self)
 	Format.fprintf fmt
 	  "@[<v 2>if((%a)<0) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
 	  self#term term "Variant non positive!" id;
+	Prop_id.translated_properties := prop :: !Prop_id.translated_properties;
 	begin_loop :=
 	  (fun fmt ->
 	    Format.fprintf fmt "int old_variant_%i = %a;\n" id self#term term)
@@ -536,7 +537,9 @@ class pcva_printer ~first_pass () = object (self)
 	  (fun fmt ->
 	    Format.fprintf fmt
 	      "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
-	      self#term term id "Variant non decreasing!" id)
+	      self#term term id "Variant non decreasing!" id;
+	  Prop_id.translated_properties :=
+	    prop :: !Prop_id.translated_properties)
 	:: !end_loop
       | _ -> ()
     ) stmt;
@@ -665,6 +668,8 @@ class pcva_printer ~first_pass () = object (self)
 	    let id = Prop_id.to_id prop in
 	    assumes fmt;
 	    pc_assert_exception fmt pred.ip_content "Pre-condition!" id;
+	    Prop_id.translated_properties :=
+	      prop :: !Prop_id.translated_properties;
 	    Format.fprintf fmt "@]"
 	  ) requires
 	) behaviors
@@ -696,6 +701,8 @@ class pcva_printer ~first_pass () = object (self)
 	      let id = Prop_id.to_id prop in
 	      assumes fmt;
 	      pc_assert_exception fmt pred.ip_content "Post-condition!" id;
+	      Prop_id.translated_properties :=
+		prop :: !Prop_id.translated_properties;
 	      Format.fprintf fmt "@]@\n"
 	    ) ensures
 	  ) behaviors;

@@ -303,7 +303,8 @@ let run() =
 
       (* Save the result in a file *)
       print_in_file (Project.current()) (Options.Temp_File.get());
-
+      let translated_properties =
+	Pcva_printer.no_repeat !Prop_id.translated_properties in
       	
       let test_params =
 	if Sys.file_exists parameters_file then
@@ -370,19 +371,26 @@ let run() =
       Options.Self.feedback "all-paths: %b" (AllPathsOK.get());
       Options.Self.feedback "%i test cases" (NbCases.get());
 
-
-      TestFailures.iter_sorted (fun id_prop_str (c_test_case, entries) ->
-	let id = int_of_string id_prop_str in
+      Options.Self.feedback "translated properties:";
+      List.iter (fun prop ->
+	let id = Prop_id.to_id prop in
+	let str_id = string_of_int id in
 	try
-	  let prop = Prop_id.to_prop id in
+	  let _c_test_case, _entries = TestFailures.find str_id in
 	  Options.Self.feedback "prop of %i found" id;
 	  let hyps = [] in
 	  let distinct = true in
 	  let status = Property_status.False_if_reachable in
 	  Property_status.emit pcva_emitter ~hyps prop ~distinct status
 	with
-	 _ -> Options.Self.feedback "%i prop not found" id
-      )
+	| Not_found ->
+	  (* NK does not agree on this condition *)
+	  if (AllPathsOK.get()) then
+	    let hyps = [] in
+	    let distinct = true in
+	    let status = Property_status.True in
+	    Property_status.emit pcva_emitter ~hyps prop ~distinct status
+      ) translated_properties
 
     end
 
