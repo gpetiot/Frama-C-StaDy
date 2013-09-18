@@ -388,18 +388,22 @@ let run() =
 	let str_id = string_of_int id in
 	try
 	  let c_test_case, entries = TestFailures.find str_id in
-	  (* change the include of the C test-case -- UGLY *)
-	  let tmp = "__pcva__temp.c" in
-	  let cmd =
-	    Printf.sprintf "sed -e s/%s/%s/ %s > %s"
-	      (Options.Temp_File.get())
-	      (List.hd(Kernel.Files.get()))
-	      c_test_case
-	      tmp
-	  in
-	  let _ = Sys.command cmd in
-	  let cmd = Printf.sprintf "cp %s %s" tmp c_test_case in
-	  let _ = Sys.command cmd in
+	  if c_test_case <> "" then
+	    begin
+	      (* change the include of the C test-case -- UGLY *)
+	      let tmp = "__pcva__temp.c" in
+	      let cmd =
+		Printf.sprintf "sed -e s/%s/%s/ %s > %s"
+		  (Options.Temp_File.get())
+		  (List.hd(Kernel.Files.get()))
+		  c_test_case
+		  tmp
+	      in
+	      let _ = Sys.command cmd in
+	      let cmd = Printf.sprintf "cp %s %s" tmp c_test_case in
+	      let _ = Sys.command cmd in
+	      ()
+	    end;
 
 
 	  List.iter (fun (x,y) ->
