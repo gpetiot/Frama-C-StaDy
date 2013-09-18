@@ -183,6 +183,11 @@ class pcva_printer ~first_pass () = object (self)
       | _ -> assert false in
     try
       match t.term_node with
+      | TConst(Integer(i,_)) ->
+	if (Integer.to_string i) = "-2147483648" then
+	  Format.fprintf fmt "(-2147483467-1)"
+	else
+	  super#term_node fmt t
       | Tat(_, StmtLabel _) -> failwith "\\at on stmt label unsupported!"
       | Tat(term,LogicLabel(_,stringlabel)) ->
 	if stringlabel = "Old" then
@@ -224,6 +229,15 @@ class pcva_printer ~first_pass () = object (self)
 	| Tat(term,LogicLabel _) -> self#term fmt term
 	| _ -> super#term_node fmt t
     
+  method exp fmt e =
+    match e.enode with
+    | UnOp(Neg,{enode=Const(CInt64 (_,_,str))},_) ->
+      begin
+	match str with
+	| Some s when s = "2147483648" -> Format.fprintf fmt "(-2147483467-1)"
+	| _ -> super#exp fmt e
+      end
+    | _ -> super#exp fmt e
 
   method private predicate fmt pred =
     (* generate guards for logic vars, e.g.:
@@ -422,8 +436,6 @@ class pcva_printer ~first_pass () = object (self)
 
   method private predicate_named fmt pred_named =
     self#predicate fmt pred_named.content
-
-      
 
   method private annotated_stmt next fmt stmt =
     self#stmt_labels fmt stmt;
