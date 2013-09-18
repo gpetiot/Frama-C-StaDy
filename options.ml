@@ -24,3 +24,12 @@ module PathCrawler_Options = Self.String (struct
   let arg_name = "options"
   let default = ""
 end)
+
+module Socket_Type = Self.String (struct
+  let option_name = "-pcva-socket"
+  let help = "use internet socket or unix socket or standard i/o"
+  let arg_name = "internet | unix | stdio"
+  let default = "internet"
+end)
+
+let () = Socket_Type.set_possible_values ["internet"; "unix"; "stdio"]
