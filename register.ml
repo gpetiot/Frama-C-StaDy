@@ -381,6 +381,12 @@ let run() =
       TestFailures.iter (fun x (y,entries) ->
 	TestFailures.replace x (y, Pcva_printer.no_repeat entries)
       );
+
+
+      let e_acsl_present = Dynamic.is_plugin_present "E_ACSL" in
+      if not e_acsl_present then
+	Options.Self.feedback
+	  "E-ACSL not found, counter-examples will not be confirmed!";
       
 
       List.iter (fun prop ->
@@ -388,31 +394,64 @@ let run() =
 	let str_id = string_of_int id in
 	try
 	  let c_test_case, entries = TestFailures.find str_id in
-	  if c_test_case <> "" then
-	    begin
+	  let status =
+	    if c_test_case <> "" then
+	      begin
 	      (* change the include of the C test-case -- UGLY *)
-	      let tmp = "__pcva__temp.c" in
-	      let cmd =
-		Printf.sprintf "sed -e s/%s/%s/ %s > %s"
-		  (Options.Temp_File.get())
-		  (List.hd(Kernel.Files.get()))
-		  c_test_case
-		  tmp
-	      in
-	      let _ = Sys.command cmd in
-	      let cmd = Printf.sprintf "cp %s %s" tmp c_test_case in
-	      let _ = Sys.command cmd in
-	      ()
-	    end;
+		let tmp = "__pcva__temp.c" in
+		let cmd =
+		  Printf.sprintf "sed -e s/%s/%s/ %s > %s"
+		    (Options.Temp_File.get())
+		    (List.hd(Kernel.Files.get()))
+		    c_test_case
+		    tmp
+		in
+		let _ = Sys.command cmd in
+		let cmd = Printf.sprintf "cp %s %s" tmp c_test_case in
+		let _ = Sys.command cmd in
+
+		(* confirm the bug by execution using E-ACSL *)
+		if e_acsl_present then
+		  let out = "pcva_exec" in
+		  let cmd =
+		    Printf.sprintf
+		      "frama-c %s -e-acsl -then-on e-acsl -print -ocode %s.c"
+		      c_test_case
+		      out
+		  in
+		  let _ = Sys.command cmd in
+		  let cmd =
+		    Printf.sprintf
+		      "gcc -w %s.c %s %s %s -o %s.out -lgmp && ./%s.out"
+		      out
+		      "/usr/local/share/frama-c/e-acsl/e_acsl.c"
+		      "/usr/local/share/frama-c/e-acsl/memory_model/e_acsl_mmodel.c"
+		      "/usr/local/share/frama-c/e-acsl/memory_model/e_acsl_bittree.c"
+		      out
+		      out
+		  in
+		  let ret = Sys.command cmd in
+		  Options.Self.feedback "Prop %i: %s" 
+		    id
+		    (if ret = 0 then "NOT confirmed" else "confirmed");
+		  if ret = 0 then
+		    Property_status.False_if_reachable
+		  else
+		    Property_status.False_and_reachable
+		else (* e-acsl not found *)
+		  Property_status.False_if_reachable
+	      end
+	    else (* test case not generated *)
+	      Property_status.False_if_reachable
+	  in
 
 
 	  List.iter (fun (x,y) ->
 	    Options.Self.debug~level:1 "%s = %s" x y) entries;
 	  Options.Self.debug ~level:1 "------------------";
-	  Options.Self.feedback "prop %i in counter-examples table" id;
+	  Options.Self.debug ~level:1 "prop %i in counter-examples table" id;
 	  let hyps = [] in
 	  let distinct = true in
-	  let status = Property_status.False_if_reachable in
 	  Property_status.emit pcva_emitter ~hyps prop ~distinct status
 	with
 	| Not_found ->
