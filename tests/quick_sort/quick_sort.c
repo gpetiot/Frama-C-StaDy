@@ -21,12 +21,22 @@ int quick_sort(int *arr, int elements, int* beg, int* end) {
     if (L<R) {
       piv=arr[L];
       if (i==MAX_LEVELS-1)
-      return -1;
+	return -1;
+
+      /*@ loop invariant L <= R;
+	@ loop variant R-L;
+	@*/
       while (L<R) {
+	/*@ loop invariant L <= R;
+	  @ loop variant R-L;
+	  @*/
         while (arr[R]>=piv && L<R)
 	  R--;
 	if (L<R)
 	  arr[L++]=arr[R];
+	/*@ loop invariant L <= R;
+	  @ loop variant R-L;
+	  @*/
         while (arr[L]<=piv && L<R)
 	  L++;
 	if (L<R)

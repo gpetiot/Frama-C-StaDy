@@ -2,34 +2,32 @@
 
 /*@ requires 0 <= LEN <= 5;
     requires \valid(A+(0..LEN-1));
-    ensures
-      \forall integer i;
-        0 <= i && i < \old(LEN)-1 ==> *(\old(A)+i) <= *(\old(A)+(i+1));
+    assigns A[0..LEN-1];
+    ensures \forall integer i; 0 <= i < LEN-1 ==> A[i] <= A[i+1];
  */
 void insertion_sort(int *A, int LEN)
 {
   int i = 0;
 
-  /*@ loop invariant 0 <= i && i <= LEN; */
+  /*@ loop invariant 0 <= i <= LEN;
+    @ loop invariant \forall integer a; 0 <= a < i ==> A[a] <= A[a+1];
+    @ loop assigns i, A[0..LEN-1];
+    @ loop variant LEN-i;
+    @*/
   while (i < LEN) {
 
-    int valueToInsert;
-    int holePos;
-    //@ assert \valid_read(A+i);
-    valueToInsert = *(A + i);
-    holePos = i;
+    int valueToInsert = A[i];
+    int holePos = i;
 
-    /*@ loop invariant 0 <= holePos && holePos <= i; */
-    while (holePos > 0 && valueToInsert < *(A + (holePos - 1))) {
-
-      //@ assert \valid_read(A+(holePos-1));
-      //@ assert \valid(A+holePos);
-      *(A + holePos) = *(A + (holePos - 1));
+    /*@ loop invariant 0 <= holePos <= i;
+      @ loop assigns holePos, A[0..LEN-1];
+      @*/
+    while (holePos > 0 && valueToInsert < A[holePos - 1]) {
+      A[holePos] = A[holePos - 1];
       holePos --;
     }
 
-    //@ assert \valid(A+holePos);
-    *(A + holePos) = valueToInsert;
+    A[holePos] = valueToInsert;
     i ++;
   }
   return;

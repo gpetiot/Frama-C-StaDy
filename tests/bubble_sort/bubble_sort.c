@@ -1,36 +1,30 @@
-/*@ requires 0 <= l <= 5;
-    requires \valid(table+(0..l-1));
-    ensures
-      \forall integer i;
-        0 <= i < \old(l)-1 ==>
-        *(\old(table)+i) >= *(\old(table)+(i+1));
- */
-void bubble_sort(int *table, int l)
-{
-  int i;
-  int temp;
-  int nb;
-  char fini;
-  fini = (char)0;
-  nb = 0;
-  while (! fini && (nb < l - 1)) {
-    fini = (char)1;
-    i = 0;
-    /*@ loop invariant 0 <= i <= l-1;
-      @ loop variant l-1-i;
+
+/*@ requires 0 < n <= 5;
+  @ requires \valid(A+(0..n-1));
+  @ assigns A[0..n-1];
+  @ ensures \forall integer i; 0 <= i < n-1 ==> A[i] <= A[i+1];
+  @*/
+void bubble_sort(int *A, int n) {
+  int j , i ;
+  j = i = 0;
+  /*@ loop invariant A: 0 <= i <= n;
+    @ loop assigns i, j, A[0..n-1];
+    @ loop variant n-i;
+    @*/
+  for ( i =0; i < n ; i ++) {
+    /*@ loop invariant D: 0 <= j <= n-i;
+      @ loop invariant E: \forall integer a; 0 <= a <= j ==> A[a] <= A[j];
+      @ loop assigns j, A[0..n-1];
+      @ loop variant n-i-j-1;
       @*/
-    while (i < l - 1) {
-      if (*(table + i) < *(table + (i + 1))) {
-        fini = (char)0;
-        temp = *(table + i);
-        *(table + i) = *(table + (i + 1));
-        *(table + (i + 1)) = temp;
+    for ( j =0; j < n -i -1; j ++) {
+      if ( A [ j ] > A [ j +1]) {
+	int x = A[j];
+	A[j] = A[j+1];
+	A[j+1] = x;
       }
-      i ++;
     }
-    nb ++;
   }
-  return;
 }
 
 

@@ -174,6 +174,8 @@ class pcva_printer ~first_pass () = object (self)
   method private vars_of_predicate_named p =
     self#vars_of_predicate p.content
 
+  method term fmt t =
+    self#term_node fmt t
 
   method term_node fmt t =
     let to_c_type = function

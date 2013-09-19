@@ -462,13 +462,29 @@ let run() =
 	    let distinct = true in
 	    let status = Property_status.True in
 	    Property_status.emit pcva_emitter ~hyps prop ~distinct status
-      ) translated_properties
+      ) translated_properties;
+
+
+      (* cleaning *)
+      Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
+      Property.Hashtbl.clear Prop_id.prop_to_id_tbl;
+      Prop_id.translated_properties := [];
+      Pcva_printer.quantif_pred_cpt := 0;
+      Queue.clear Pcva_printer.quantif_pred_queue;
+      Pcva_printer.postcond := None;
+      Pcva_printer.at_term_cpt := 0;
+      Datatype.String.Hashtbl.clear Pcva_printer.at_term_affect_in_function
 
     end
 
 
 
+let extern_run () =
+  Options.Enabled.set true;
+  run ()
 
+let extern_run = Dynamic.register ~plugin:"PCVA" ~journalize:true "run_pcva"
+  (Datatype.func Datatype.unit Datatype.unit) extern_run
 
 
   
