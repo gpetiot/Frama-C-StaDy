@@ -10,16 +10,11 @@ void BottomUpMerge(int* A, int iLeft, int iRight, int iEnd, int* B) {
     @*/
   for (j = iLeft; j < iEnd; j++) {
     /* If left list head exists and is <= existing right list head */
-    //@ assert \valid_read(A+i0);
-    //@ assert \valid_read(A+i1);
-    //@ assert \valid(B+j);
-    printf("i1 = %i\n", i1);
     if (i0 < iRight && (i1 >= iEnd || A[i0] <= A[i1])) {
       B[j] = A[i0];
       i0 = i0 + 1;
     }
     else {
-      printf("A[i1] = %i\n", A[i1]);
       B[j] = A[i1];
       i1 = i1 + 1;
     }
@@ -30,13 +25,11 @@ void BottomUpMerge(int* A, int iLeft, int iRight, int iEnd, int* B) {
 void CopyArray(int* A, int* B, int n) {
   int i;
   /*@ loop invariant 0 <= i <= n;
-    @ loop invariant \forall integer k; 0 <= k < i ==> A[k] == B[k];
+    @ //loop invariant \forall integer k; 0 <= k < i ==> A[k] == B[k];
     @ loop assigns A[0..n-1], i;
     @ loop variant n-i;
     @*/
   for(i = 0; i < n; i++) {
-    //@ assert \valid_read(B+i);
-    //@ assert \valid(A+i);
     A[i] = B[i];
   }
 }

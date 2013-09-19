@@ -31,7 +31,7 @@ void merge_arrays (int t1[], int t2[], int t3[], int l1, int l2) {
   /*@ loop invariant 0 <= i <= l1;
       loop invariant 0 <= k <= l1+l2;
       loop invariant k == i+j;
-      loop variant l1-j;
+      loop variant l1-i;
   */
   while (i < l1) {
     t3[k] = t1[i];
