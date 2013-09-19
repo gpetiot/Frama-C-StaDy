@@ -321,6 +321,7 @@ let run() =
 	  (Options.Socket_Type.get())
 	  (Options.PathCrawler_Options.get())
       in
+      Options.Self.feedback "cmd: %s" cmd;
 
 
       (* open socket with the generator *)
