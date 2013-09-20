@@ -24,7 +24,6 @@ int binary_search( int* A, int n, int elem)
         high = mid - 1;
     }  
   mid = (low + high) / 2 ;
-  // assert 0 <= mid < n;
   /* error: should be: if( ( ret != 1)  && ( elem == A[mid]) ) */
   /*if( ( ret != 1)  && ( elem != A[mid]) )*/
   if( ( ret != 1)  && ( elem == A[mid]) )

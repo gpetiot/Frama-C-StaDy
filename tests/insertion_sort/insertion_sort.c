@@ -17,12 +17,12 @@ void insertion_sort(int t[], int n) {
     // assuming t[0..i-1] is sorted, insert t[i] at the right place
     mv = t[i]; 
     j = i;
+    // look for the right index j to put t[i]
     /*@ loop invariant 0 <= j <= i;
       @ loop invariant \forall integer k; j <= k < i ==> t[k] > mv;
       @ loop assigns j, t[0..n-1];
       @ loop variant j;
       @*/
-    // look for the right index j to put t[i]
     for (; j > 0; j--) {
       if (t[j-1] <= mv) break;
       t[j] = t[j-1];

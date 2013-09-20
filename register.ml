@@ -23,7 +23,7 @@ open Lexing
 
 
 module TestFailures = State_builder.Hashtbl
-  (Datatype.String.Hashtbl)
+  (Property.Hashtbl)
   (Datatype.Pair
      (Datatype.String) (* C testcase filename *)
      (Datatype.List
@@ -69,7 +69,8 @@ let update_status_last_assert() =
   if !current_assert_line <> -1 then
     let line = string_of_int !current_assert_line in
     let str = line (*^ "#" ^ !current_assert_pred*) in
-    TestFailures.add str (!current_c_testcase, !current_entries);
+    let prop = Prop_id.to_prop (int_of_string str) in
+    TestFailures.add prop (!current_c_testcase, !current_entries);
     current_assert_line := -1;
     current_c_testcase := "";
     current_entries := []
@@ -288,12 +289,6 @@ let run() =
 	  end
       );
 
-      Datatype.Int.Hashtbl.iter (fun prop_id prop ->
-	Options.Self.debug ~level:1 "loc: %a (id: %i)" 
-	  Printer.pp_location (Property.location prop) prop_id
-      ) Prop_id.id_to_prop_tbl;
-
-
 
       (* Translate some parts of the pre-condition in Prolog *)
       Annot_Precond.generate_test_parameters();
@@ -314,7 +309,7 @@ let run() =
       in
       let cmd =
 	Printf.sprintf
-	  "frama-c %s -main %s -pc -pc-validate-asserts %s -pc-com %s %s"
+	  "frama-c %s -main %s -pc -pc-validate-asserts %s -pc-com %s -pc-no-xml %s"
 	  (Options.Temp_File.get())
 	  (Kernel_function.get_name (fst(Globals.entry_point())))
 	  test_params
@@ -391,10 +386,8 @@ let run() =
       
 
       List.iter (fun prop ->
-	let id = Prop_id.to_id prop in
-	let str_id = string_of_int id in
 	try
-	  let c_test_case, entries = TestFailures.find str_id in
+	  let c_test_case, entries = TestFailures.find prop in
 	  let status =
 	    if c_test_case <> "" then
 	      begin
@@ -416,7 +409,7 @@ let run() =
 		  let out = "pcva_exec" in
 		  let cmd =
 		    Printf.sprintf
-		      "frama-c %s -kernel-verbose 0 -e-acsl -then-on e-acsl -print -ocode %s.c"
+		      "frama-c %s -rte -rte-verbose 0 -then -val -value-verbose 0 -then -e-acsl -then-on e-acsl -print -ocode %s.c"
 		      c_test_case
 		      out
 		  in
@@ -433,7 +426,7 @@ let run() =
 		  in
 		  let ret = Sys.command cmd in
 		  Options.Self.feedback "Bug of property %i %s by E-ACSL" 
-		    id
+		    (Prop_id.to_id prop)
 		    (if ret = 0 then "NOT confirmed" else "confirmed");
 		  if ret = 0 then
 		    Property_status.False_if_reachable
@@ -450,7 +443,8 @@ let run() =
 	  List.iter (fun (x,y) ->
 	    Options.Self.debug~level:1 "%s = %s" x y) entries;
 	  Options.Self.debug ~level:1 "------------------";
-	  Options.Self.debug ~level:1 "prop %i in counter-examples table" id;
+	  Options.Self.debug ~level:1 "prop %i in counter-examples table"
+	    (Prop_id.to_id prop);
 	  let hyps = [] in
 	  let distinct = true in
 	  Property_status.emit pcva_emitter ~hyps prop ~distinct status

@@ -30,9 +30,7 @@ let to_do_on_select
   | PIP prop ->
     begin
       try
-	let id = Prop_id.to_id prop in
-	let str_id = string_of_int id in
-	let tc_c, l = Register.TestFailures.find str_id in
+	let tc_c, l = Register.TestFailures.find prop in
 	if button_nb = 1 then
 	    begin
 	      main_ui#pretty_information
