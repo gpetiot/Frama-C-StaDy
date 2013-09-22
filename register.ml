@@ -3,23 +3,12 @@ open Cil
 open Cil_types
 open Lexing
 
- 
+
+
+let can_validate_others = ref false
 
 
 
-
-
-
-
-(* messages reçus via socket :
-
-   @FC:TestInput|N|x=V
-   @FC:FinalStatus|OK
-   @FC:NumCases=N
-   @FC:Verdict|assert_violated=id:L
-   @FC:PathPrefix|N|...
-   @FC:NumCase=N
-*)
 
 
 module TestFailures = State_builder.Hashtbl
@@ -34,11 +23,6 @@ module TestFailures = State_builder.Hashtbl
     let size = 64
    end)
   
-module AllPathsOK = State_builder.False_ref
-  (struct
-    let name = "PathCrawler.AllPathsOK"
-    let dependencies = [Ast.self]
-   end)
 
 module NbCases = State_builder.Zero_ref
   (struct
@@ -47,105 +31,59 @@ module NbCases = State_builder.Zero_ref
    end)
   
 
-(* val tested_func: unit -> kernel_function *)
-let tested_func () = (fst (Globals.entry_point ()))
+
+(********************************)
 
 
-let asserts_violated_cpt = ref 0
-let current_assert_line = ref (-1)
-let current_c_testcase = ref ""
-let current_entries = ref []
+(* messages reçus via socket :
+   @FC:TC|N|INfo:Prop_ID|x1=v1|x2=v2 ...
+   @FC:FinalStatus|OK
+   @FC:NbTC|N
+*)
 
 
 (* coupe une chaîne en deux *)
 let cut s n =
-  try
-    (String.sub s 0 n), (String.sub s n ((String.length s)-n))
-  with
-  | _ -> Options.Self.debug ~level:2 "cut \"%s\" %i" s n; assert false
+  try (String.sub s 0 n), (String.sub s n ((String.length s)-n))
+  with _ -> Options.Self.debug ~level:2 "cut \"%s\" %i" s n; assert false
 
+let process_test_case s =
+  let cut_sep sep x =
+    let pos = String.index x sep in
+    let a,_ = cut x pos in
+    let _,b = cut x (pos+1) in
+    a,b
+  in
+  let str_tc, s = cut_sep '|' s in
+  let _msg, s = cut_sep ':' s in
+  let str_prop, s = cut_sep '|' s in
+  let id_prop = int_of_string str_prop in
+  let add_var_val acc str =
+    try let x, y = cut_sep '=' str in (x,y)::acc
+    with _ -> acc
+  in
+  let list_entries =
+    let rec aux acc str =
+      try let x,y = cut_sep '|' str in aux (add_var_val acc x) y
+      with _ -> add_var_val acc str
+    in
+    aux [] s
+  in
+  let prop = Prop_id.to_prop id_prop in
+  let file = Options.Temp_File.get() in
+  let func = Kernel_function.get_name (fst (Globals.entry_point ())) in
+  let f = "testcases_" ^ (Filename.chop_extension file) in
+  let f = Filename.concat f func in
+  let f = Filename.concat f "testdrivers" in
+  let f = Filename.concat f ("TC_" ^ str_tc ^ ".c") in
+  TestFailures.add prop (f, list_entries)
 
-let update_status_last_assert() =
-  if !current_assert_line <> -1 then
-    let line = string_of_int !current_assert_line in
-    let str = line (*^ "#" ^ !current_assert_pred*) in
-    let prop = Prop_id.to_prop (int_of_string str) in
-    TestFailures.add prop (!current_c_testcase, !current_entries);
-    current_assert_line := -1;
-    current_c_testcase := "";
-    current_entries := []
-      
+let process_nb_test_cases s =
+  NbCases.set (int_of_string s)
 
-(* message du type @FC:Verdict|assert_violated=id:L
-   met à KO le statut de la propriété associée à l'assertion ligne L du
-   fichier F
-   le chemin vers le testcase.xml est récupéré : on peut l'ouvrir dans un
-   navigateur via l'interface graphique (clic droit sur une assertion violée) *)
-let process_assert_violated s =
-  let () = update_status_last_assert () in
-  (* il y a ':' dans l'id donc on parse en partant de la fin *)
-  let pos = String.rindex s ':' in
-  let _, line = cut s (pos+1) in
-  let line = int_of_string line in
-  current_assert_line := line;
-  asserts_violated_cpt := !asserts_violated_cpt + 1
-
-
-(* message du type @FC:NumCase=i
-*)
-let process_numcase n =
-  let filename = Options.Temp_File.get() in
-  let tested_func = Kernel_function.get_name (tested_func()) in
-  let testcase_fname = "testcases_" ^ (Filename.chop_extension filename) in
-  let testcase_fname = Filename.concat testcase_fname tested_func in
-  let testcase_fname_c = Filename.concat testcase_fname "testdrivers" in
-  let testcase_fname_c = Filename.concat testcase_fname_c ("TC_" ^ n ^ ".c") in
-  current_c_testcase := testcase_fname_c
-
-
-(* message du type @FC:Verdict|failure=oracle : line L
-   met à KO le statut de la postcondition associée à l'échec de l'oracle
-   ligne L de la fonction sous test
-   le chemin vers le testcase.xml est récupéré : on peut l'ouvrir dans un
-   navigateur via l'interface graphique (clic droit sur une postcondition
-   violée) *)
-let process_oracle s =
-  let () = update_status_last_assert () in
-  current_assert_line := (int_of_string s);
-  asserts_violated_cpt := !asserts_violated_cpt + 1
-    
-
-(* message du type @FC:FinalStatus|OK
-   positionne à OK le statut associé à chacune des assertions que nous avons
-   rajoutées (ACSL assert ==> pc_assert) et qui n'ont pas été violées,
-   uniquement si la génération de tests s'est terminée sans problème avec la
-   stratégie all-paths *)
-let process_asserts() =
-  let () = update_status_last_assert () in
-  AllPathsOK.set true
-    
-
-(* message du type @FC:TestInput|N|x=V
-   récupère la valeur V d'une variable d'entrée x pour le cas de test N
-   violant une assertion *)
-let process_testinput s =
-  let pos = String.index s '|' in
-  let _, s = cut s (pos+1) in
-  let pos = String.index s '=' in
-  let name = String.sub s 0 pos in
-  let _, value = cut s (pos+1) in
-  current_entries := (name, value) :: !current_entries
-
-
-(* message du type @FC:PathPrefix|N|...
-   inutilisé *)
-let process_pathprefix _s = ()
-
-
-(* message du type @FC:NumCases=N *)
-let process_numcases s =
-  NbCases.set (int_of_string s);
-  NbCases.mark_as_computed()
+let process_final_status () =
+  can_validate_others := true
+  
 
 
 (* le mot-clé au début de la chaîne permet de savoir que faire des données
@@ -153,32 +91,19 @@ let process_numcases s =
    correspondante *)
 let process_string s =
   try
-    Options.Self.debug ~level:2 "\"%s\"" s;
-    let s1, s2 = cut s 8 in
-    if s1 = "NumCase=" then process_numcase s2
+    let s1, s2 = cut s 3 in
+    if s1 = "TC|" then
+      process_test_case s2
     else
-      let s1, s2 = cut s 9 in
-      if s1 = "NumCases=" then process_numcases s2
+      let s1, s2 = cut s 5 in
+      if s1 = "NbTC|" then
+	process_nb_test_cases s2
       else
-	let s1, s2 = cut s 10 in
-	if s1 = "TestInput|" then process_testinput s2
+	let s1, _s2 = cut s 14 in
+	if s1 = "FinalStatus|OK" then
+	  process_final_status ()
 	else
-	  let s1, s2 = cut s 11 in
-	  if s1 = "PathPrefix|" then process_pathprefix s2
-	  else
-	    let s1, _ = cut s 14 in
-	    if s1 = "FinalStatus|OK" then process_asserts()
-	    else
-	      let s1, _ = cut s 15 in
-	      if s1 = "Verdict|success" then ()
-	      else
-		let s1, s2 = cut s 24 in
-		if s1 = "Verdict|assert_violated=" then
-		  process_assert_violated s2
-		else
-		  let s1, s2 = cut s 30 in
-		  if s1 = "Verdict|failure=oracle : line " then
-		    process_oracle s2
+	  Options.Self.debug ~level:2 "'%s' not processed" s
   with
   | exc ->
     Options.Self.debug ~level:2 "%s" (Printexc.to_string exc);
@@ -190,25 +115,23 @@ let process_string s =
 let rec process_channel c =
   try
     let str = input_line c in
-    let () =
+    begin
       if str <> "" then
 	let prefix, suffix = cut str 4 in
-	let () = if prefix = "@FC:" then process_string suffix in
-	()
-    in
+	if prefix = "@FC:" then
+	  process_string suffix
+    end;
     process_channel c
   with
-    | End_of_file -> update_status_last_assert()
+    | End_of_file -> ()
 
 
-(* récupère le cannal d'écoute du socket *)
+(* récupère le cannal d'écoute de la socket *)
 let process_socket s =
   let in_chan = Unix.in_channel_of_descr s in
-  let () = process_channel in_chan in
-  let () = close_in in_chan in
-  let () = AllPathsOK.mark_as_computed() in
-  let () = TestFailures.mark_as_computed() in
-  asserts_violated_cpt := 0
+  process_channel in_chan;
+  close_in in_chan;
+  TestFailures.mark_as_computed()
 
 
 
@@ -364,7 +287,11 @@ let run() =
 	  print_exit_code ret
       end;
 
-      Options.Self.feedback "all-paths: %b" (AllPathsOK.get());
+      
+      NbCases.mark_as_computed();
+      TestFailures.mark_as_computed();
+
+      Options.Self.feedback "all-paths: %b" !can_validate_others;
       Options.Self.feedback "%i test cases" (NbCases.get());
 
       let t_l = List.fold_left (fun x y ->
@@ -384,12 +311,13 @@ let run() =
 	Options.Self.feedback
 	  "E-ACSL not found, counter-examples will not be confirmed!";
       
+      let confirm_with_e_acsl = false in
 
       List.iter (fun prop ->
 	try
 	  let c_test_case, entries = TestFailures.find prop in
 	  let status =
-	    if c_test_case <> "" then
+	    if confirm_with_e_acsl then
 	      begin
 	      (* change the include of the C test-case -- UGLY *)
 		let tmp = "__pcva__temp.c" in
@@ -450,11 +378,10 @@ let run() =
 	  Property_status.emit pcva_emitter ~hyps prop ~distinct status
 	with
 	| Not_found ->
-	  (* NK does not agree on this condition *)
-	  (*if (AllPathsOK.get()) then*)
-	    let hyps = [] in
-	    let distinct = true in
-	    let status = Property_status.True in
+	  let hyps = [] in
+	  let distinct = true in
+	  let status = Property_status.True in
+	  if !can_validate_others then
 	    Property_status.emit pcva_emitter ~hyps prop ~distinct status
       ) translated_properties;
 
@@ -467,7 +394,8 @@ let run() =
       Queue.clear Pcva_printer.quantif_pred_queue;
       Pcva_printer.postcond := None;
       Pcva_printer.at_term_cpt := 0;
-      Datatype.String.Hashtbl.clear Pcva_printer.at_term_affect_in_function
+      Datatype.String.Hashtbl.clear Pcva_printer.at_term_affect_in_function;
+      can_validate_others := false
 
     end
 
