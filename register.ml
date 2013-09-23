@@ -13,10 +13,17 @@ let can_validate_others = ref false
 
 module TestFailures = State_builder.Hashtbl
   (Property.Hashtbl)
-  (Datatype.Pair
-     (Datatype.String) (* C testcase filename *)
-     (Datatype.List
-	(Datatype.Pair (Datatype.String) (Datatype.String)))) (* entries *)
+  (Datatype.List
+     (Datatype.Pair
+	(Datatype.String) (* C testcase filename *)
+	(Datatype.List  (* entries *)
+	   (Datatype.Pair
+	      (Datatype.String)
+	      (Datatype.String)
+	   )
+	)
+     )
+  )
   (struct
     let name = "PathCrawler.TestFailures"
     let dependencies = [Ast.self]
@@ -76,7 +83,8 @@ let process_test_case s =
   let f = Filename.concat f func in
   let f = Filename.concat f "testdrivers" in
   let f = Filename.concat f ("TC_" ^ str_tc ^ ".c") in
-  TestFailures.add prop (f, list_entries)
+  let testcases = try TestFailures.find prop with _ -> [] in
+  TestFailures.add prop ((f, list_entries)::testcases)
 
 let process_nb_test_cases s =
   NbCases.set (int_of_string s)
@@ -297,13 +305,7 @@ let run() =
       let t_l = List.fold_left (fun x y ->
 	Printf.sprintf "%s %i" x (Prop_id.to_id y)
       ) "" translated_properties in
-      Options.Self.feedback "translated properties: %s" t_l;
-
-      
-      (* For some reason, the test case entries are duplicated, so we fix it *)
-      TestFailures.iter (fun x (y,entries) ->
-	TestFailures.replace x (y, Pcva_printer.no_repeat entries)
-      );
+      Options.Self.debug ~level:2 "translated properties: %s" t_l;
 
 
       let e_acsl_present = Dynamic.is_plugin_present "E_ACSL" in
@@ -313,66 +315,68 @@ let run() =
       
       let confirm_with_e_acsl = false in
 
+
+      let confirm_testcase (c_test_case, _) =
+	(* change the include of the C test-case -- UGLY *)
+	let tmp = "__pcva__temp.c" in
+	let cmd =
+	  Printf.sprintf "sed -e s/%s/%s/ %s > %s"
+	    (Options.Temp_File.get())
+	    (List.hd(Kernel.Files.get()))
+	    c_test_case
+	    tmp
+	in
+	let _ = Sys.command cmd in
+	let cmd = Printf.sprintf "cp %s %s" tmp c_test_case in
+	let _ = Sys.command cmd in
+	
+	(* confirm the bug by execution using E-ACSL *)
+	if e_acsl_present then
+	  let out = "pcva_exec" in
+	  let cmd =
+	    Printf.sprintf
+	      "frama-c %s -rte -rte-verbose 0 -then -val -value-verbose 0 -then -e-acsl -then-on e-acsl -print -ocode %s.c"
+	      c_test_case
+	      out
+	  in
+	  let _ = Sys.command cmd in
+	  let cmd =
+	    Printf.sprintf
+	      "gcc -w %s.c %s %s %s -o %s.out -lgmp && ./%s.out"
+	      out
+	      "/usr/local/share/frama-c/e-acsl/e_acsl.c"
+	      "/usr/local/share/frama-c/e-acsl/memory_model/e_acsl_mmodel.c"
+	      "/usr/local/share/frama-c/e-acsl/memory_model/e_acsl_bittree.c"
+	      out
+	      out
+	  in
+	  let ret = Sys.command cmd in
+	  Options.Self.debug ~level:2 "%s by E-ACSL"
+	    (if ret = 0 then "NOT confirmed" else "confirmed");
+	  if ret = 0 then
+	    failwith "not confirmed"
+	    (*false (* not confirmed *)*)
+	  else
+	    true (* confirmed *)
+	else (* e-acsl not found *)
+	  false (* not confirmed *)
+      in
+	    
+
+
       List.iter (fun prop ->
 	try
-	  let c_test_case, entries = TestFailures.find prop in
+	  let testcases = TestFailures.find prop in
 	  let status =
 	    if confirm_with_e_acsl then
-	      begin
-	      (* change the include of the C test-case -- UGLY *)
-		let tmp = "__pcva__temp.c" in
-		let cmd =
-		  Printf.sprintf "sed -e s/%s/%s/ %s > %s"
-		    (Options.Temp_File.get())
-		    (List.hd(Kernel.Files.get()))
-		    c_test_case
-		    tmp
-		in
-		let _ = Sys.command cmd in
-		let cmd = Printf.sprintf "cp %s %s" tmp c_test_case in
-		let _ = Sys.command cmd in
-
-		(* confirm the bug by execution using E-ACSL *)
-		if e_acsl_present then
-		  let out = "pcva_exec" in
-		  let cmd =
-		    Printf.sprintf
-		      "frama-c %s -rte -rte-verbose 0 -then -val -value-verbose 0 -then -e-acsl -then-on e-acsl -print -ocode %s.c"
-		      c_test_case
-		      out
-		  in
-		  let _ = Sys.command cmd in
-		  let cmd =
-		    Printf.sprintf
-		      "gcc -w %s.c %s %s %s -o %s.out -lgmp && ./%s.out"
-		      out
-		      "/usr/local/share/frama-c/e-acsl/e_acsl.c"
-		      "/usr/local/share/frama-c/e-acsl/memory_model/e_acsl_mmodel.c"
-		      "/usr/local/share/frama-c/e-acsl/memory_model/e_acsl_bittree.c"
-		      out
-		      out
-		  in
-		  let ret = Sys.command cmd in
-		  Options.Self.feedback "Bug of property %i %s by E-ACSL" 
-		    (Prop_id.to_id prop)
-		    (if ret = 0 then "NOT confirmed" else "confirmed");
-		  if ret = 0 then
-		    Property_status.False_if_reachable
-		  else
-		    Property_status.False_and_reachable
-		else (* e-acsl not found *)
-		  Property_status.False_if_reachable
-	      end
+	      if (List.fold_left (fun x y -> x && (confirm_testcase y))
+		    true testcases) then
+		Property_status.False_and_reachable
+	      else
+		Property_status.False_if_reachable
 	    else (* test case not generated *)
-	      Property_status.False_if_reachable
+	      Property_status.False_and_reachable
 	  in
-
-
-	  List.iter (fun (x,y) ->
-	    Options.Self.debug~level:1 "%s = %s" x y) entries;
-	  Options.Self.debug ~level:1 "------------------";
-	  Options.Self.debug ~level:1 "prop %i in counter-examples table"
-	    (Prop_id.to_id prop);
 	  let hyps = [] in
 	  let distinct = true in
 	  Property_status.emit pcva_emitter ~hyps prop ~distinct status

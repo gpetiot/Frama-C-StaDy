@@ -30,30 +30,33 @@ let to_do_on_select
   | PIP prop ->
     begin
       try
-	let tc_c, l = Register.TestFailures.find prop in
+	let testcases = Register.TestFailures.find prop in
 	if button_nb = 1 then
-	    begin
-	      main_ui#pretty_information
-		"Counter-example (by PathCrawler-VA):@.";
-	      List.iter (fun (s,v) ->
-		main_ui#pretty_information "%s = %s@." s v) l;
-	      if tc_c <> "" then
-		main_ui#pretty_information "@\ntestcase file: %s@." tc_c
-	    end
-	  else if button_nb = 3 then
-	    let open_testcase () =
-	      let prj = Project.create tc_c in
-	      Project.copy ~selection:(State_selection.of_list
-	      [Kernel.PreprocessAnnot.self]) prj;
-	      Project.on prj (fun () ->
-		File.init_from_c_files [File.from_filename tc_c];
-		!Db.RteGen.compute()
-	      ) () in
+	  List.iter (fun (tc_c, l) ->
+	    main_ui#pretty_information
+	      "Counter-example (by PathCrawler-VA):@.";
 	    if tc_c <> "" then
-	      ignore
-		(popup_factory#add_item
-		   "_Open counter-example in new project"
-                   ~callback:open_testcase)
+	      main_ui#pretty_information "%s@.@\n" tc_c;
+	    List.iter (fun (s,v) ->
+	      main_ui#pretty_information "%s = %s@." s v) l;
+	    main_ui#pretty_information "------------------------@."
+	  ) testcases
+	else if button_nb = 3 then
+	  List.iter (fun(tc_c, _) ->
+	    ignore
+	      (popup_factory#add_item
+		 (Printf.sprintf "_Open %s in new project" tc_c)
+                 ~callback:(fun () ->
+		   let prj = Project.create tc_c in
+		   Project.copy ~selection:
+		     (State_selection.of_list[Kernel.PreprocessAnnot.self]) prj;
+		   Project.on prj (fun () ->
+		     File.init_from_c_files [File.from_filename tc_c];
+		     !Db.RteGen.compute()
+		   ) ()
+		 )
+	      )
+	  ) testcases
       with
       | _ -> ()
     end
