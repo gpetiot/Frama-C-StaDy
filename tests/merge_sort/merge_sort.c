@@ -5,6 +5,7 @@ void BottomUpMerge(int* A, int iLeft, int iRight, int iEnd, int* B) {
  
   /* While there are elements in the left or right lists */
   /*@ loop invariant iLeft <= j <= iEnd;
+    @ loop invariant j == i0+i1;
     @ loop assigns j, i0, i1, B[iLeft..iEnd-1];
     @ loop variant iEnd-j;
     @*/
@@ -47,12 +48,16 @@ void BottomUpSort(int n, int* A, int* B) {
  
   /* Make successively longer sorted runs of length 2, 4, 8, 16...
      until whole array is sorted. */
-  /*@ loop variant n-width;
+  /*@ loop invariant 1 <= width <= 2*n - 1;
+    @ loop variant n-width;
     @*/
   for (width = 1; width < n; width = 2 * width) {
     int i;
  
     /* Array A is full of runs of length width. */
+    /*@ loop invariant 0 <= i <= n+2*width-1;
+      @ loop variant n-i;
+      @*/
     for (i = 0; i < n; i = i + 2 * width) {
       /* Merge two runs: A[i:i+width-1] and A[i+width:i+2*width-1] to B[] */
       /* or copy A[i:n-1] to B[] ( if(i+width >= n) ) */

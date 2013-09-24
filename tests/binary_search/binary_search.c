@@ -1,36 +1,30 @@
 
-/*@ requires 0 <= n <= 5;
-  @ requires \valid(A+(0..n-1));
-  @ requires \forall int i; 0 <= i < n-1 ==> A[i] <= A[i+1];
-  @ ensures !(\forall integer i; 0 <= i < n ==> A[i] != elem) ==> \result == 1;
-  @ ensures (\forall integer i; 0 <= i < n ==> A[i] != elem) ==> \result == 0;
-  @*/
-int binary_search( int* A, int n, int elem)
-{ /* error undetected by path testing : low = 1 ; */
-  int low, high, mid, ret ;
-  low = 0 ;
-  high = n-1 ;
-  ret = 0 ;
-  while( ( high > low ) )
-    { mid = (low + high) / 2 ;
-    
-      /* error: should be: if( elem == A[mid] ) */
-      /*if( elem != A[mid] ) */
-      if( elem == A[mid] )
-	ret = 1;
-      if( elem > A[mid] )
-        low = mid + 1 ;
-      else
-        high = mid - 1;
-    }  
-  mid = (low + high) / 2 ;
-  /* error: should be: if( ( ret != 1)  && ( elem == A[mid]) ) */
-  /*if( ( ret != 1)  && ( elem != A[mid]) )*/
-  if( ( ret != 1)  && ( elem == A[mid]) )
-    /* error: should be: ret =  1; */
-    /*ret =  0; */
-      ret = 1;
-  
-  return ret ;
+/* lemma div_by_2_def: \forall integer n; 0 <= n - 2 * (n / 2) <= 1; */
+
+/*@ requires 0 < length <= 5;
+    requires \valid(arr+(0..length-1));
+    requires \forall integer j; 0 <= j < length-1 ==> arr[j] <= arr[j+1];
+    assigns  \nothing;
+    ensures -1 <= \result < length;
+    ensures (\result == -1 ==> \forall integer i; 0 <= i < length ==> arr[i] != query);
+    ensures (\result >= 0 ==> arr[\result] == query) ;
+*/
+int binary_search(int* arr, int length, int query) {
+  int low = 0;
+  int high = length - 1;
+  /*@ loop invariant 0 <= low <= high+1;
+    @ loop invariant low-1 <= high <= length-1;
+    @ loop assigns high, low;
+    @ loop variant high-low;
+    @*/
+  while (low <= high) {
+    int mean = low + (high - low) / 2;
+    //int mean = (high +low) / 2; // Version avec erreur !!!
+    //@ assert low <= mean <= high;
+    if (arr[mean] == query) return mean;
+    if (arr[mean] < query) low = mean + 1;
+    else high = mean - 1;
+  }
+  return -1;
 }
 
