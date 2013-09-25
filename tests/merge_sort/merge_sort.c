@@ -5,7 +5,9 @@ void BottomUpMerge(int* A, int iLeft, int iRight, int iEnd, int* B) {
  
   /* While there are elements in the left or right lists */
   /*@ loop invariant iLeft <= j <= iEnd;
-    @ loop invariant j == i0+i1;
+    @ loop invariant iLeft <= i0 <= iRight;
+    @ loop invariant iRight <= i1 <= iEnd;
+    @ loop invariant i0-iLeft + i1-iRight == j-iLeft;
     @ loop assigns j, i0, i1, B[iLeft..iEnd-1];
     @ loop variant iEnd-j;
     @*/
