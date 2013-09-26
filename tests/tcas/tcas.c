@@ -105,50 +105,66 @@ int alt_sep_test() {
   @ requires 0 <= other_rac <= 2;
   @ requires 0 <= two_of_three_reports_valid <= 1;
   @
+#ifdef P1A
   @ behavior P1a :
   @   assumes up_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes down_separation < Positive_RA_Alt_Thresh[alt_layer_value];
   @   ensures \result != 2;
+#endif
+#ifdef P1B
   @ behavior P1b :
   @   assumes up_separation < Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes down_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
   @   ensures \result != 1;
-  @
+#endif
+#ifdef P2A
   @ behavior P2a :
   @   assumes up_separation < Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes down_separation < Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes up_separation > down_separation;
   @   ensures \result != 2;
+#endif
+#ifdef P2B
   @ behavior P2b :
   @   assumes up_separation < Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes down_separation < Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes up_separation < down_separation;
   @   ensures \result != 1;
-  @
+#endif
+#ifdef P3A
   @ behavior P3a :
   @   assumes up_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes down_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes own_tracked_alt > other_tracked_alt;
   @   ensures \result != 2;
+#endif
+#ifdef P3B
   @ behavior P3b :
   @   assumes up_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes down_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
   @   assumes own_tracked_alt < other_tracked_alt;
   @   ensures \result != 1; 
-  @
+#endif
+#ifdef P4A
   @ behavior P4a :
   @   assumes own_tracked_alt > other_tracked_alt;
   @   ensures \result != 2;
+#endif
+#ifdef P4B
   @ behavior P4b :
   @   assumes own_tracked_alt < other_tracked_alt;
   @   ensures \result != 1;
-  @
+#endif
+#ifdef P5A
   @ behavior P5a :
   @   assumes up_separation > down_separation;
   @   ensures \result != 2;
+#endif
+#ifdef P5B
   @ behavior P5b :
   @   assumes up_separation < down_separation;
   @   ensures \result != 1;
+#endif
   @*/
 int entry_point(int two_of_three_reports_valid,
 		int own_tracked_alt,
