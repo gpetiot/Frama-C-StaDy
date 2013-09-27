@@ -6,8 +6,8 @@
     requires \forall integer j; 0 <= j < length-1 ==> arr[j] <= arr[j+1];
     assigns  \nothing;
     ensures -1 <= \result < length;
-    ensures (\result == -1 ==> \forall integer i; 0 <= i < length ==> arr[i] != query);
-    ensures (\result >= 0 ==> arr[\result] == query) ;
+    ensures \result == -1 ==> \forall integer i; 0 <= i < length ==> arr[i] != query;
+    ensures \result >= 0 ==> arr[\result] == query;
 */
 int binary_search(int* arr, int length, int query) {
   int low = 0;
@@ -19,7 +19,6 @@ int binary_search(int* arr, int length, int query) {
     @*/
   while (low <= high) {
     int mean = low + (high - low) / 2;
-    //int mean = (high +low) / 2; // Version avec erreur !!!
     //@ assert low <= mean <= high;
     if (arr[mean] == query) return mean;
     if (arr[mean] < query) low = mean + 1;
