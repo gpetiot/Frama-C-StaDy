@@ -33,8 +33,7 @@ let to_do_on_select
 	let testcases = Register.TestFailures.find prop in
 	if button_nb = 1 then
 	  List.iter (fun (tc_c, l) ->
-	    main_ui#pretty_information
-	      "Counter-example (by PathCrawler-VA):@.";
+	    main_ui#pretty_information "Counter-example (by PathCrawler-VA):@.";
 	    if tc_c <> "" then
 	      main_ui#pretty_information "%s@.@\n" tc_c;
 	    List.iter (fun (s,v) ->
@@ -43,33 +42,35 @@ let to_do_on_select
 	  ) testcases
 	else if button_nb = 3 then
 	  List.iter (fun(tc_c, _) ->
+	    let callback() =
+	      let prj = Project.create tc_c in
+	      Project.copy ~selection:
+		(State_selection.of_list[Kernel.PreprocessAnnot.self]) prj;
+	      Project.on prj (fun () ->
+		File.init_from_c_files [File.from_filename tc_c];
+		!Db.RteGen.compute()
+	      ) ()
+	    in
 	    ignore
 	      (popup_factory#add_item
-		 (Printf.sprintf "_Open %s in new project" tc_c)
-                 ~callback:(fun () ->
-		   let prj = Project.create tc_c in
-		   Project.copy ~selection:
-		     (State_selection.of_list[Kernel.PreprocessAnnot.self]) prj;
-		   Project.on prj (fun () ->
-		     File.init_from_c_files [File.from_filename tc_c];
-		     !Db.RteGen.compute()
-		   ) ()
-		 )
+		 (Printf.sprintf "_Open %s in new project" tc_c) ~callback
 	      )
 	  ) testcases
       with
       | _ -> ()
-    end
+    end;
+    if button_nb = 3 then
+      let callback() = Register.compute_props [prop]; main_ui#redisplay() in
+      ignore (popup_factory#add_item "Validate property with pcva" ~callback)
   | _ -> ()
 
 
-let pc_selector
-    menu (main_ui:Design.main_window_extension_points) ~button localizable =
-  to_do_on_select menu main_ui button localizable
+let pc_selector menu (main_ui:Design.main_window_extension_points) ~button loc =
+  to_do_on_select menu main_ui button loc
 
 
 let main main_ui =
-  (*Options.Enabled.set true;*)
+  Register.setup_props_bijection();
   main_ui#register_panel pc_panel;
   main_ui#register_source_selector pc_selector
 

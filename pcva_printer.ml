@@ -36,13 +36,13 @@ let no_repeat l =
 
 (*
   first pass:
-     - computes the output for \forall and \exists predicates
-     - stores it somewhere
+  - computes the output for \forall and \exists predicates
+  - stores it somewhere
   second pass:
-     - print the quantif-functions in the beginning of the file
-     - print the function call where the predicate was used
+  - print the quantif-functions in the beginning of the file
+  - print the function call where the predicate was used
 *)
-class pcva_printer ~first_pass () = object (self)
+class pcva_printer props ~first_pass () = object (self)
   inherit Printer.extensible_printer () as super
 
   val mutable current_function = None
@@ -122,8 +122,7 @@ class pcva_printer ~first_pass () = object (self)
     match t with
     | TLval tv
     | TAddrOf tv
-    | TStartOf tv ->
-      self#vars_of_term_lval tv
+    | TStartOf tv -> self#vars_of_term_lval tv
     | TSizeOfE t1
     | TAlignOfE t1
     | TUnOp(_,t1)
@@ -229,7 +228,7 @@ class pcva_printer ~first_pass () = object (self)
 	match t.term_node with
 	| Tat(term,LogicLabel _) -> self#term fmt term
 	| _ -> super#term_node fmt t
-    
+	  
   method exp fmt e =
     match e.enode with
     | UnOp(Neg,{enode=Const(CInt64 (_,_,str))},_) ->
@@ -346,12 +345,12 @@ class pcva_printer ~first_pass () = object (self)
 	      quantif_pred_cpt := !quantif_pred_cpt + 1
 	    end
 
-	  
+	      
 
 	| _ -> failwith "\\forall not of the form \\forall ...; a ==> b;"
       end
     | Pexists(logic_vars,pred) ->
-       begin
+      begin
 	if (List.length logic_vars) > 1 then
 	  failwith "\\exists quantification on many variables unsupported!";
 	match pred.content with
@@ -413,7 +412,7 @@ class pcva_printer ~first_pass () = object (self)
 	      quantif_pred_cpt := !quantif_pred_cpt + 1
 	    end
 
-	  
+	      
 
 	| _ -> failwith "\\exists not of the form \\exists ...; a && b;"
       end
@@ -448,72 +447,40 @@ class pcva_printer ~first_pass () = object (self)
       Format.fprintf fmt "{@[<h 2>@\n";
     Annotations.iter_code_annot (fun _emitter ca ->
       let prop = Property.ip_of_code_annot_single kf stmt ca in
-      let id = Prop_id.to_id prop in
-      let ca = ca.annot_content in
-      let behaviors =
-	match ca with
-	| AAssert (b,_)
-	| AStmtSpec (b,_)
-	| AInvariant (b,_,_) -> b
-	| _ -> []
-      in
-      let behaviors =
-	List.map (fun bname ->
-	  let ret = ref [] in
-	  Annotations.iter_behaviors (fun _emit beh ->
-	    if beh.b_name = bname then
-	      ret := beh.b_assumes
-	  ) kf;
-	  !ret
-	) behaviors
-      in
-      let pc_assert_exception fmt pred msg id =
-	Format.fprintf fmt
-	  "@[<v 2>if(!(%a)) pathcrawler_assert_exception(\"%s\", %i);@]@\n"
-	  self#predicate_named pred msg id;
-	Prop_id.translated_properties := prop :: !Prop_id.translated_properties
-      in
-      match ca with
-      | AAssert (_,pred) ->
-	if behaviors = [] then
-	  pc_assert_exception fmt pred "Assert!" id
-	else
-	  begin
-	    Format.fprintf fmt "@[<v 2>if (";
-	    List.iter (fun assumes ->
-	      Format.fprintf fmt "(";
-	      List.iter (fun a ->
-		Format.fprintf fmt "%a &&" self#predicate a.ip_content
-	      ) assumes;
-	      Format.fprintf fmt " 1 ) || "
-	    ) behaviors;
-	    Format.fprintf fmt " 0 )@]";
-	    pc_assert_exception fmt pred "Assert!" id
-	  end
-      | AInvariant (_,true,pred) ->
-	if behaviors = [] then
-	  begin
-	    pc_assert_exception fmt pred "Loop invariant not established!" id;
-	    end_loop :=
-	      (fun fmt ->
-		pc_assert_exception fmt pred
-		  "Loop invariant not preserved!" id)
-	    :: !end_loop
-	  end
-	else
-	  begin
-	    Format.fprintf fmt "@[<v 2>if (";
-	    List.iter (fun assumes ->
-	      Format.fprintf fmt "(";
-	      List.iter (fun a ->
-		Format.fprintf fmt "%a &&" self#predicate a.ip_content
-	      ) assumes;
-	      Format.fprintf fmt " 1 ) || "
-	    ) behaviors;
-	    Format.fprintf fmt " 0 )@]";
-	    pc_assert_exception fmt pred "Loop invariant not established!" id;
-	    end_loop :=
-	      (fun fmt ->
+      if List.mem prop props then
+	begin
+	  let id = Prop_id.to_id prop in
+	  let ca = ca.annot_content in
+	  let behaviors =
+	    match ca with
+	    | AAssert (b,_)
+	    | AStmtSpec (b,_)
+	    | AInvariant (b,_,_) -> b
+	    | _ -> []
+	  in
+	  let behaviors =
+	    List.map (fun bname ->
+	      let ret = ref [] in
+	      Annotations.iter_behaviors (fun _emit beh ->
+		if beh.b_name = bname then
+		  ret := beh.b_assumes
+	      ) kf;
+	      !ret
+	    ) behaviors
+	  in
+	  let pc_assert_exception fmt pred msg id =
+	    Format.fprintf fmt
+	      "@[<v 2>if(!(%a)) pathcrawler_assert_exception(\"%s\", %i);@]@\n"
+	      self#predicate_named pred msg id;
+	    Prop_id.translated_properties :=
+	      prop :: !Prop_id.translated_properties
+	  in
+	  match ca with
+	  | AAssert (_,pred) ->
+	    if behaviors = [] then
+	      pc_assert_exception fmt pred "Assert!" id
+	    else
+	      begin
 		Format.fprintf fmt "@[<v 2>if (";
 		List.iter (fun assumes ->
 		  Format.fprintf fmt "(";
@@ -523,27 +490,68 @@ class pcva_printer ~first_pass () = object (self)
 		  Format.fprintf fmt " 1 ) || "
 		) behaviors;
 		Format.fprintf fmt " 0 )@]";
-		pc_assert_exception fmt pred "Loop invariant not preserved!" id)
-	    :: !end_loop
-	  end
-      | AVariant (term,_) ->
-	Format.fprintf fmt
-	  "@[<v 2>if((%a)<0) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
-	  self#term term "Variant non positive!" id;
-	Prop_id.translated_properties := prop :: !Prop_id.translated_properties;
-	begin_loop :=
-	  (fun fmt ->
-	    Format.fprintf fmt "int old_variant_%i = %a;\n" id self#term term)
-	:: !begin_loop;
-	end_loop :=
-	  (fun fmt ->
+		pc_assert_exception fmt pred "Assert!" id
+	      end
+	  | AInvariant (_,true,pred) ->
+	    if behaviors = [] then
+	      begin
+		pc_assert_exception
+		  fmt pred "Loop invariant not established!" id;
+		end_loop :=
+		  (fun fmt ->
+		    pc_assert_exception fmt pred
+		      "Loop invariant not preserved!" id)
+		:: !end_loop
+	      end
+	    else
+	      begin
+		Format.fprintf fmt "@[<v 2>if (";
+		List.iter (fun assumes ->
+		  Format.fprintf fmt "(";
+		  List.iter (fun a ->
+		    Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		  ) assumes;
+		  Format.fprintf fmt " 1 ) || "
+		) behaviors;
+		Format.fprintf fmt " 0 )@]";
+		pc_assert_exception
+		  fmt pred "Loop invariant not established!" id;
+		end_loop :=
+		  (fun fmt ->
+		    Format.fprintf fmt "@[<v 2>if (";
+		    List.iter (fun assumes ->
+		      Format.fprintf fmt "(";
+		      List.iter (fun a ->
+			Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		      ) assumes;
+		      Format.fprintf fmt " 1 ) || "
+		    ) behaviors;
+		    Format.fprintf fmt " 0 )@]";
+		    pc_assert_exception
+		      fmt pred "Loop invariant not preserved!" id)
+		:: !end_loop
+	      end
+	  | AVariant (term,_) ->
 	    Format.fprintf fmt
-	      "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
-	      self#term term id "Variant non decreasing!" id;
-	  Prop_id.translated_properties :=
-	    prop :: !Prop_id.translated_properties)
-	:: !end_loop
-      | _ -> ()
+	      "@[<v 2>if((%a)<0) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
+	      self#term term "Variant non positive!" id;
+	    Prop_id.translated_properties :=
+	      prop :: !Prop_id.translated_properties;
+	    begin_loop :=
+	      (fun fmt ->
+		Format.fprintf
+		  fmt "int old_variant_%i = %a;\n" id self#term term)
+	    :: !begin_loop;
+	    end_loop :=
+	      (fun fmt ->
+		Format.fprintf fmt
+		  "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
+		  self#term term id "Variant non decreasing!" id;
+		Prop_id.translated_properties :=
+		  prop :: !Prop_id.translated_properties)
+	    :: !end_loop
+	  | _ -> ()
+	end
     ) stmt;
 
     begin
@@ -653,27 +661,28 @@ class pcva_printer ~first_pass () = object (self)
     if f.svar.vname <> entry_point_name then
       begin
 	List.iter (fun b ->
-	  let assumes = b.b_assumes in
-	  let requires = b.b_requires in
 	  let assumes fmt =
-	    if assumes <> [] then
+	    if b.b_assumes <> [] then
 	      begin
 		Format.fprintf fmt "@[<v 2>if (";
 		List.iter (fun a ->
 		  Format.fprintf fmt "%a &&" self#predicate a.ip_content
-		) assumes;
+		) b.b_assumes;
 		Format.fprintf fmt " 1 )"
 	      end
 	  in
 	  List.iter (fun pred ->
 	    let prop = Property.ip_of_requires kf Kglobal b pred in
-	    let id = Prop_id.to_id prop in
-	    assumes fmt;
-	    pc_assert_exception fmt pred.ip_content "Pre-condition!" id;
-	    Prop_id.translated_properties :=
-	      prop :: !Prop_id.translated_properties;
-	    Format.fprintf fmt "@]"
-	  ) requires
+	    if List.mem prop props then
+	      begin
+		let id = Prop_id.to_id prop in
+		assumes fmt;
+		pc_assert_exception fmt pred.ip_content "Pre-condition!" id;
+		Prop_id.translated_properties :=
+		  prop :: !Prop_id.translated_properties;
+		Format.fprintf fmt "@]"
+	      end
+	  ) b.b_requires
 	) behaviors
       end;
     (* END precond (not entry-point) *)
@@ -682,34 +691,52 @@ class pcva_printer ~first_pass () = object (self)
     (* BEGIN postcond *)
     postcond :=
       if List.length behaviors > 0 then
-	Some (fun fmt ->
-	  Format.fprintf fmt "@[<h 2>{@\n";
-	  List.iter (fun b ->
-	    let assumes = b.b_assumes in
-	    let ensures = b.b_post_cond in
-	    let assumes fmt =
-	      if assumes <> [] then
-		begin
-		  Format.fprintf fmt "@[<v 2>if (@[<hv>";
-		  List.iter (fun a ->
-		    Format.fprintf fmt "@[<hv>%a@] && "
-		      self#predicate a.ip_content
-		  ) assumes;
-		  Format.fprintf fmt " 1@])@\n"
-		end
-	    in
-	    List.iter (fun (tk,pred) ->
-	      let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
-	      let id = Prop_id.to_id prop in
-	      assumes fmt;
-	      pc_assert_exception fmt pred.ip_content "Post-condition!" id;
-	      Prop_id.translated_properties :=
-		prop :: !Prop_id.translated_properties;
-	      Format.fprintf fmt "@]@\n"
-	    ) ensures
-	  ) behaviors;
-	  Format.fprintf fmt "@]@\n}@\n"
-	)
+	let at_least_one_prop =
+	  List.fold_left (fun res b ->
+	    if res then true
+	    else
+	      List.fold_left (
+		fun res (tk,pred) ->
+		  if res then true
+		  else
+		    let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
+		    List.mem prop props
+	      ) false b.b_post_cond
+	  ) false behaviors
+	in
+	if at_least_one_prop then
+	  Some (fun fmt ->
+	    Format.fprintf fmt "@[<h 2>{@\n";
+	    List.iter (fun b ->
+	      let assumes fmt =
+		if b.b_assumes <> [] then
+		  begin
+		    Format.fprintf fmt "@[<v 2>if (@[<hv>";
+		    List.iter (fun a ->
+		      Format.fprintf fmt "@[<hv>%a@] && "
+			self#predicate a.ip_content
+		    ) b.b_assumes;
+		    Format.fprintf fmt " 1@])@\n"
+		  end
+	      in
+	      List.iter (fun (tk,pred) ->
+		let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
+		if List.mem prop props then
+		  begin
+		    let id = Prop_id.to_id prop in
+		    assumes fmt;
+		    pc_assert_exception
+		      fmt pred.ip_content "Post-condition!" id;
+		    Prop_id.translated_properties :=
+		      prop :: !Prop_id.translated_properties;
+		    Format.fprintf fmt "@]@\n"
+		  end
+	    ) b.b_post_cond
+	    ) behaviors;
+	    Format.fprintf fmt "@]@\n}@\n"
+	  )
+	else
+	  None
       else
 	None;
     (* END postcond *)
@@ -746,6 +773,10 @@ class pcva_printer ~first_pass () = object (self)
       (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
 
 
+
+
+
+
   method global fmt (g:global) =
     match g with
     | GFun (fundec, l) ->
@@ -770,13 +801,11 @@ class pcva_printer ~first_pass () = object (self)
 	Format.fprintf fmt "@\n";
 	self#out_current_function
       end
-
     | GType (typ, l) ->
       self#line_directive ~forcefile:true fmt l;
       Format.fprintf fmt "typedef %a;@\n"
 	(self#typ (Some (fun fmt -> Format.fprintf fmt "%s" typ.tname)))
 	typ.ttype
-
     | GEnumTag (enum, l) ->
       self#line_directive fmt l;
       if verbose then 
@@ -792,11 +821,9 @@ class pcva_printer ~first_pass () = object (self)
 	       self#exp item.eival))
 	enum.eitems
 	self#attributes enum.eattr
-
     | GEnumTagDecl (enum, l) -> (* This is a declaration of a tag *)
       self#line_directive fmt l;
       Format.fprintf fmt "enum %a;@\n" self#varname enum.ename
-
     | GCompTag (comp, l) -> (* This is a definition of a tag *)
       let n = comp.cname in
       let su =
@@ -812,11 +839,9 @@ class pcva_printer ~first_pass () = object (self)
 	(Pretty_utils.pp_list ~sep:"@\n" self#fieldinfo)
 	comp.cfields
 	self#attributes rest_attr
-
     | GCompTagDecl (comp, l) -> (* This is a declaration of a tag *)
       self#line_directive fmt l;
       Format.fprintf fmt "%s;@\n" (Cil.compFullName comp)
-
     | GVar (vi, io, l) ->
       if print_var vi then begin
 	self#line_directive ~forcefile:true fmt l;
@@ -851,24 +876,15 @@ class pcva_printer ~first_pass () = object (self)
 	end;
 	if Cil.isFunctionType vi.vtype then self#out_current_function
       end
-
     | GAsm (s, l) ->
       self#line_directive fmt l;
       Format.fprintf fmt "__asm__(\"%s\");@\n" (Escape.escape_string s)
-
     | GPragma (Attr(_an, _args), _l) -> Format.fprintf fmt "@\n"
-
     | GPragma (AttrAnnot _, _) -> Format.fprintf fmt "@\n"
-
     | GAnnot (decl,l) ->
       self#line_directive fmt l;
-      Format.fprintf fmt "/*@@@ %a@ */@\n"
-	self#global_annotation decl
-
-    | GText s  ->
-      if s <> "//" then
-	Format.fprintf fmt "%s@\n" s
-
+      Format.fprintf fmt "/*@@@ %a@ */@\n" self#global_annotation decl
+    | GText s  -> if s <> "//" then Format.fprintf fmt "%s@\n" s
 
   method file fmt f =
     Queue.iter (fun (a,_) ->
@@ -888,14 +904,3 @@ class pcva_printer ~first_pass () = object (self)
       end
     | _ -> super#term_lval fmt t
 end
-
-
-module First_pass =
-  Printer_builder.Make
-    (struct class printer = pcva_printer ~first_pass:true end)
-
-module Second_pass =
-  Printer_builder.Make
-    (struct class printer = pcva_printer ~first_pass:false end)
- 
-
