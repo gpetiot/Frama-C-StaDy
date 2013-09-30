@@ -172,11 +172,96 @@ let compute_props props =
   ) translated_properties;
   Prop_id.translated_properties := [];
   Prop_id.can_validate_others := false
-  
+    
 
 
 
 
+
+let properties_of_behavior name =
+  let props = ref [] in
+  Globals.Functions.iter (fun kf ->
+    Annotations.iter_behaviors (fun _ b ->
+      if b.b_name = name then
+	let new_props = Property.ip_all_of_behavior kf Kglobal b in
+	props := List.rev_append new_props !props
+    ) kf
+  );
+  !props
+
+
+
+let properties_of_function name =
+  let props = ref [] in
+  Globals.Functions.iter (fun kf ->
+    let kf_name = Kernel_function.get_name kf in
+    if kf_name = name then
+      begin
+	Annotations.iter_behaviors (fun _ bhv ->
+	  let new_props = Property.ip_all_of_behavior kf Kglobal bhv in
+	  props := List.rev_append new_props !props
+	) kf;
+	let o = object
+	  inherit Visitor.frama_c_inplace
+	  method vstmt_aux stmt =
+	    let f s =
+	      Annotations.iter_code_annot (fun _ ca ->
+		let p = Property.ip_of_code_annot kf s ca in
+		props := List.rev_append p !props
+	      ) s;
+	      s
+	    in
+	    ChangeDoChildrenPost(stmt, f)
+	end in
+	try
+	  let fundec = Kernel_function.get_definition kf in
+	  ignore (Visitor.visitFramacFunction o fundec)
+	with _ -> ()
+      end
+  );
+  !props
+
+
+
+let properties_of_name name =
+  let props = ref [] in
+  Globals.Functions.iter (fun kf ->
+    Annotations.iter_behaviors (fun _ bhv ->
+      List.iter (fun id_pred ->
+	if List.mem name id_pred.ip_name then
+	  let p = Property.ip_of_requires kf Kglobal bhv id_pred in
+	  props := p :: !props
+      ) bhv.b_requires;
+      List.iter (fun (tk,id_pred) ->
+	if List.mem name id_pred.ip_name then
+	  let p = Property.ip_of_ensures kf Kglobal bhv (tk,id_pred) in
+	  props := p :: !props
+      ) bhv.b_post_cond;
+    ) kf;
+    let o = object
+      inherit Visitor.frama_c_inplace
+      method vstmt_aux stmt =
+	let f s =
+	  Annotations.iter_code_annot (fun _ ca ->
+	    let names = match ca.annot_content with
+	      | AAssert(_,{name=l})
+	      | AInvariant(_,_,{name=l}) -> l
+	      | _ -> []
+	    in
+	    if List.mem name names then
+	      let p = Property.ip_of_code_annot kf s ca in
+	      props := List.rev_append p !props
+	  ) s;
+	  s
+	in
+	ChangeDoChildrenPost(stmt, f)
+    end in
+    try
+      let fundec = Kernel_function.get_definition kf in
+      ignore (Visitor.visitFramacFunction o fundec)
+    with _ -> ()
+  );
+  !props
 
 
 
@@ -185,8 +270,29 @@ let run() =
   if Options.Enabled.get() then
     begin
       setup_props_bijection();
-      let all_props = Property_status.fold (fun p l -> p :: l) []  in
-      compute_props all_props;
+      let properties = Options.Properties.get () in
+      let behaviors = Options.Behaviors.get () in
+      let functions = Options.Functions.get () in
+
+      let props =
+	if behaviors <> [] || functions <> [] || properties <> [] then
+	  begin
+	    let props = ref [] in
+	    let gather p b = List.rev_append (properties_of_behavior b) p in
+	    let new_props = List.fold_left gather [] behaviors in
+	    props := List.rev_append new_props !props;
+	    let gather p f = List.rev_append (properties_of_function f) p in
+	    let new_props = List.fold_left gather [] functions in
+	    props := List.rev_append new_props !props;
+	    let gather p n = List.rev_append (properties_of_name n) p in
+	    let new_props = List.fold_left gather [] properties in
+	    props := List.rev_append new_props !props;
+	    !props
+	  end
+	else
+	  Property_status.fold (fun p l -> p :: l) [] 
+      in
+      compute_props props;
       (* cleaning *)
       Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
       Property.Hashtbl.clear Prop_id.prop_to_id_tbl

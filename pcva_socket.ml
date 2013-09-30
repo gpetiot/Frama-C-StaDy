@@ -89,10 +89,14 @@ let process_socket s =
 
 
 
-let print_exit_code = function
-  | Unix.WEXITED _ -> Options.Self.feedback "PathCrawler OK"
-  | Unix.WSIGNALED _ -> Options.Self.feedback "PathCrawler killed!"
-  | Unix.WSTOPPED _ -> Options.Self.feedback "PathCrawler stopped!"
-
+let print_exit_code code =
+  let str =
+    match code with
+    | Unix.WEXITED _ -> "OK"
+    | Unix.WSIGNALED _ ->  "killed"
+    | Unix.WSTOPPED _ -> "stopped"
+  in
+  Options.Self.feedback "PathCrawler %s!" str
+    
 
 

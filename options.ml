@@ -33,3 +33,21 @@ module Socket_Type = Self.String (struct
 end)
 
 let () = Socket_Type.set_possible_values ["internet"; "unix"; "stdio"]
+
+module Functions = Self.StringList (struct
+  let option_name = "-pcva-fct"
+  let arg_name = "f,..."
+  let help = ""
+end)
+
+module Behaviors = Self.StringList (struct
+  let option_name = "-pcva-bhv"
+  let arg_name = "b,..."
+  let help = ""
+end)
+
+module Properties = Self.StringList (struct
+  let option_name = "-pcva-prop"
+  let arg_name = "p,..."
+  let help = ""
+end)
