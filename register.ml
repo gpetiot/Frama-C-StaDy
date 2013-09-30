@@ -179,15 +179,14 @@ let compute_props props =
 
 
 let properties_of_behavior name =
-  let props = ref [] in
-  Globals.Functions.iter (fun kf ->
-    Annotations.iter_behaviors (fun _ b ->
+  Globals.Functions.fold (fun kf props ->
+    Annotations.fold_behaviors (fun _ b p ->
       if b.b_name = name then
-	let new_props = Property.ip_all_of_behavior kf Kglobal b in
-	props := List.rev_append new_props !props
-    ) kf
-  );
-  !props
+	List.rev_append (Property.ip_all_of_behavior kf Kglobal b) p
+      else
+	p
+    ) kf props
+  ) []
 
 
 
@@ -277,17 +276,13 @@ let run() =
       let props =
 	if behaviors <> [] || functions <> [] || properties <> [] then
 	  begin
-	    let props = ref [] in
 	    let gather p b = List.rev_append (properties_of_behavior b) p in
-	    let new_props = List.fold_left gather [] behaviors in
-	    props := List.rev_append new_props !props;
+	    let bhv_props = List.fold_left gather [] behaviors in
 	    let gather p f = List.rev_append (properties_of_function f) p in
-	    let new_props = List.fold_left gather [] functions in
-	    props := List.rev_append new_props !props;
+	    let fct_props = List.fold_left gather [] functions in
 	    let gather p n = List.rev_append (properties_of_name n) p in
-	    let new_props = List.fold_left gather [] properties in
-	    props := List.rev_append new_props !props;
-	    !props
+	    let nam_props = List.fold_left gather [] properties in
+	    List.rev_append bhv_props (List.rev_append fct_props nam_props)
 	  end
 	else
 	  Property_status.fold (fun p l -> p :: l) [] 
