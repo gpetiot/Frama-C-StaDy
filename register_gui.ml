@@ -30,7 +30,7 @@ let to_do_on_select
   | PIP prop ->
     begin
       try
-	let testcases = Register.TestFailures.find prop in
+	let testcases = States.TestFailures.find prop in
 	if button_nb = 1 then
 	  List.iter (fun (tc_c, l) ->
 	    main_ui#pretty_information "Counter-example (by PathCrawler-VA):@.";
