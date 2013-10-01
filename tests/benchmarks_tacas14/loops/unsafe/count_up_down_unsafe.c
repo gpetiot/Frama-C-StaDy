@@ -1,19 +1,13 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-unsigned int __VERIFIER_nondet_uint();
 
-int main()
+
+void f(unsigned int nondet_uint)
 {
-  unsigned int n = __VERIFIER_nondet_uint();
+  unsigned int n = nondet_uint;
   unsigned int x=n, y=0;
   while(x>0)
   {
     x--;
     y++;
   }
-  __VERIFIER_assert(y!=n);
+  //@ assert y!=n;
 }

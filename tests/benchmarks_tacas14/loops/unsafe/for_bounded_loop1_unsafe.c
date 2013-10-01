@@ -1,26 +1,19 @@
-extern void __VERIFIER_assume(int);
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
 
-int __VERIFIER_nondet_int();
 
-int main() {
+/*@ requires 0 < n < 10;
+  @ requires \valid(non_det_y+(0..n-1));
+  @ requires \forall int i; 0 <= i < n ==> non_det_y[i] != 0;
+  @*/
+void f(int n, int* non_det_y) {
   int i=0, x=0, y=0;
-  int n=__VERIFIER_nondet_int();
-  __VERIFIER_assume(n>0);
   for(i=0; i<n; i++)
   {
     x = x-y;
-    __VERIFIER_assert(x==0);
-    y = __VERIFIER_nondet_int();
-    __VERIFIER_assume(y!=0);
+    //@ assert(x==0);
+    y = non_det_y[i];
     x = x+y;
-    __VERIFIER_assert(x!=0);
+    //@ assert(x!=0);
   }
-  __VERIFIER_assert(x==0);
+  //@ assert(x==0);
 }
 
