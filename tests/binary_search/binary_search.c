@@ -21,7 +21,7 @@ int binary_search(int* arr, int length, int query) {
     int mean = low + (high - low) / 2;
     //@ assert low <= mean <= high;
     //@ assert low < mean ==> \forall int x; 0 <= x < low ==> arr[x] != query;
-    //@ assert mean+1 < high ==> \forall int x; high < x < length ==> arr[x] != query;
+    // assert mean+1 < high ==> \forall int x; high < x < length ==> arr[x] != query;
     if (arr[mean] == query) return mean;
     if (arr[mean] < query) low = mean + 1;
     else high = mean - 1;
