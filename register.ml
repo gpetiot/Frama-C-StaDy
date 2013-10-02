@@ -242,14 +242,27 @@ let properties_of_name name =
       method vstmt_aux stmt =
 	let f s =
 	  Annotations.iter_code_annot (fun _ ca ->
-	    let names = match ca.annot_content with
+	    match ca.annot_content with
 	      | AAssert(_,{name=l})
-	      | AInvariant(_,_,{name=l}) -> l
-	      | _ -> []
-	    in
-	    if List.mem name names then
-	      let p = Property.ip_of_code_annot kf s ca in
-	      props := List.rev_append p !props
+	      | AInvariant(_,_,{name=l}) ->
+		if List.mem name l then
+		  let p = Property.ip_of_code_annot kf s ca in
+		  props := List.rev_append p !props
+	      | AStmtSpec(_,{spec_behavior=bhvs}) ->
+		List.iter (fun b ->
+		  List.iter (fun id_pred ->
+		    if List.mem name id_pred.ip_name then
+		      let p = Property.ip_of_requires kf (Kstmt s) b id_pred in
+		      props := p :: !props
+		  ) b.b_requires;
+		  List.iter (fun (tk,id_pred) ->
+		    if List.mem name id_pred.ip_name then
+		      let p =
+			Property.ip_of_ensures kf (Kstmt s) b (tk,id_pred) in
+		      props := p :: !props
+		  ) b.b_post_cond;
+		) bhvs
+	      | _ -> ()
 	  ) s;
 	  s
 	in
