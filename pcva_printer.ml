@@ -23,6 +23,9 @@ let at_term_cpt = ref 0
 let at_term_affect_in_function :
     ((Format.formatter -> unit) Queue.t) Datatype.String.Hashtbl.t =
   Datatype.String.Hashtbl.create 32
+let at_term_affect_in_stmt :
+    ((Format.formatter -> unit) Queue.t) Cil_datatype.Stmt.Hashtbl.t =
+  Cil_datatype.Stmt.Hashtbl.create 32
 
 let no_repeat l =
   let rec aux acc = function
@@ -193,27 +196,49 @@ class pcva_printer props ~first_pass () = object (self)
 	if stringlabel = "Old" then
 	  if first_pass then
 	    begin
-	      let fct_name = try (Extlib.the current_function).vname
-		with _ ->
-		  failwith
-		    (Pretty_utils.sfprintf
-		       "no current function (term: %a)" Printer.pp_term t)
-	      in
-	      let affects = try
-			      Datatype.String.Hashtbl.find
-				at_term_affect_in_function fct_name
-		with _ -> Queue.create() in
-	      Queue.add (fun fmt ->
-		Format.fprintf fmt "%a = %a;@\n"
-		  (self#typ
-		     (Some (fun fmt -> Format.fprintf fmt "term_at_%i"
-		       !at_term_cpt)))
-		  (to_c_type term.term_type)
-		  self#term
-		  term
-	      ) affects;
-	      Datatype.String.Hashtbl.add
-		at_term_affect_in_function fct_name affects;
+	      match self#current_stmt with
+	      | None ->
+		begin
+		  let fct_name = try (Extlib.the current_function).vname
+		    with _ ->
+		      failwith
+			(Pretty_utils.sfprintf
+			   "no current function (term: %a)" Printer.pp_term t)
+		  in
+		  let affects = try
+				  Datatype.String.Hashtbl.find
+				    at_term_affect_in_function fct_name
+		    with _ -> Queue.create() in
+		  Queue.add (fun fmt ->
+		    Format.fprintf fmt "%a = %a;@\n"
+		      (self#typ
+			 (Some (fun fmt -> Format.fprintf fmt "term_at_%i"
+			   !at_term_cpt)))
+		      (to_c_type term.term_type)
+		      self#term
+		      term
+		  ) affects;
+		  Datatype.String.Hashtbl.add
+		    at_term_affect_in_function fct_name affects
+		end
+	      | Some stmt ->
+		begin
+		  let affects = try
+				  Cil_datatype.Stmt.Hashtbl.find
+				    at_term_affect_in_stmt stmt
+		    with _ -> Queue.create() in
+		  Queue.add (fun fmt ->
+		    Format.fprintf fmt "%a = %a;@\n"
+		      (self#typ
+			 (Some (fun fmt -> Format.fprintf fmt "term_at_%i"
+			   !at_term_cpt)))
+		      (to_c_type term.term_type)
+		      self#term
+		      term
+		  ) affects;
+		  Cil_datatype.Stmt.Hashtbl.add
+		    at_term_affect_in_stmt stmt affects
+		end
 	    end
 	  else
 	    begin
@@ -443,16 +468,17 @@ class pcva_printer props ~first_pass () = object (self)
     let begin_loop = ref [] in
     let end_loop = ref [] in
     let has_code_annots = List.length (Annotations.code_annot stmt) > 0 in
+    let end_contract = ref [] in
     if has_code_annots then
       Format.fprintf fmt "{@[<h 2>@\n";
     Annotations.iter_code_annot (fun _emitter ca ->
-      let prop = Property.ip_of_code_annot_single kf stmt ca in
-      if List.mem prop props then
+      (*let prop = Property.ip_of_code_annot_single kf stmt ca in
+      if List.mem prop props then*)
 	begin
-	  let id = Prop_id.to_id prop in
-	  let ca = ca.annot_content in
+	  (*let id = Prop_id.to_id prop in
+	  let ca = ca.annot_content in*)
 	  let behaviors =
-	    match ca with
+	    match ca.annot_content with
 	    | AAssert (b,_)
 	    | AStmtSpec (b,_)
 	    | AInvariant (b,_,_) -> b
@@ -468,56 +494,190 @@ class pcva_printer props ~first_pass () = object (self)
 	      !ret
 	    ) behaviors
 	  in
-	  let pc_assert_exception fmt pred msg id =
+	  let pc_assert_exception fmt pred msg id prop =
 	    Format.fprintf fmt
 	      "@[<v 2>if(!(%a)) pathcrawler_assert_exception(\"%s\", %i);@]@\n"
 	      self#predicate_named pred msg id;
 	    Prop_id.translated_properties :=
 	      prop :: !Prop_id.translated_properties
 	  in
-	  match ca with
-	  | AAssert (_,pred) ->
-	    if behaviors = [] then
-	      pc_assert_exception fmt pred "Assert!" id
-	    else
+	  (* variables for \at terms *)
+	  begin
+	    if not first_pass then
 	      begin
-		Format.fprintf fmt "@[<v 2>if (";
-		List.iter (fun assumes ->
-		  Format.fprintf fmt "(";
-		  List.iter (fun a ->
-		    Format.fprintf fmt "%a &&" self#predicate a.ip_content
-		  ) assumes;
-		  Format.fprintf fmt " 1 ) || "
-		) behaviors;
-		Format.fprintf fmt " 0 )@]";
-		pc_assert_exception fmt pred "Assert!" id
+		try
+		  let q =
+		    Cil_datatype.Stmt.Hashtbl.find at_term_affect_in_stmt stmt
+		  in
+		  let tmp = !at_term_cpt in
+		  Queue.iter (fun e -> e fmt; at_term_cpt := !at_term_cpt+1) q;
+		  at_term_cpt := tmp
+		with _ -> ()
+	      end
+	  end;
+	  match ca.annot_content with
+	  | AStmtSpec (_,bhvs) ->
+	    let pc_assert_exception fmt pred msg id =
+	      Format.fprintf fmt
+		"@[<v 2>if(!(%a)) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
+		self#predicate pred msg id
+	    in
+	    begin
+	      if behaviors <> [] then
+		begin
+		  Format.fprintf fmt "@[<v 2>if (";
+		  List.iter (fun assumes ->
+		    Format.fprintf fmt "(";
+		    List.iter (fun a ->
+		      Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		    ) assumes;
+		    Format.fprintf fmt " 1 ) || "
+		  ) behaviors;
+		  Format.fprintf fmt " 0 )@]{@[";
+		end;
+	      List.iter (fun b ->
+		let assumes fmt =
+		  if b.b_assumes <> [] then
+		    begin
+		      Format.fprintf fmt "@[<v 2>if (";
+		      List.iter (fun a ->
+			Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		      ) b.b_assumes;
+		      Format.fprintf fmt " 1 )"
+		    end
+		in
+		List.iter (fun pred ->
+		  let prop = Property.ip_of_requires kf (Kstmt stmt) b pred in
+		  if List.mem prop props then
+		    begin
+		      let id = Prop_id.to_id prop in
+		      assumes fmt;
+		      pc_assert_exception
+			fmt pred.ip_content "Stmt Pre-condition!" id;
+		      Prop_id.translated_properties :=
+			prop :: !Prop_id.translated_properties;
+		      Format.fprintf fmt "@]"
+		    end
+		) b.b_requires
+	      ) bhvs.spec_behavior;
+	      if behaviors <> [] then Format.fprintf fmt "@]}";
+	    end;
+	    
+
+	    let contract =
+	      if List.length bhvs.spec_behavior > 0 then
+		let at_least_one_prop =
+		  List.fold_left (fun res b ->
+		    if res then true
+		    else
+		      List.fold_left (
+			fun res (tk,pred) ->
+			  if res then true
+			  else
+			    let prop = Property.ip_of_ensures
+			      kf (Kstmt stmt) b (tk,pred) in
+			    List.mem prop props
+		      ) false b.b_post_cond
+		  ) false bhvs.spec_behavior
+		in
+		if at_least_one_prop then
+		  Some (fun fmt ->
+		    Format.fprintf fmt "@[<h 2>{@\n";
+		    List.iter (fun b ->
+		      let assumes fmt =
+			if b.b_assumes <> [] then
+			  begin
+			    Format.fprintf fmt "@[<v 2>if (@[<hv>";
+			    List.iter (fun a ->
+			      Format.fprintf fmt "@[<hv>%a@] && "
+				self#predicate a.ip_content
+			    ) b.b_assumes;
+			    Format.fprintf fmt " 1@])@\n"
+			  end
+		      in
+		      List.iter (fun (tk,pred) ->
+			let prop = Property.ip_of_ensures
+			  kf (Kstmt stmt) b (tk,pred) in
+			if List.mem prop props then
+			  begin
+			    let id = Prop_id.to_id prop in
+			    assumes fmt;
+			    pc_assert_exception
+			      fmt pred.ip_content "Stmt Post-condition!" id;
+			    Prop_id.translated_properties :=
+			      prop :: !Prop_id.translated_properties;
+			    Format.fprintf fmt "@]@\n"
+			  end
+		      ) b.b_post_cond
+		    ) bhvs.spec_behavior;
+		    Format.fprintf fmt "@]@\n}@\n"
+		  )
+		else
+		  None
+	      else
+		None in
+	    begin
+	      match contract with
+	      | None -> ()
+	      | Some c ->
+		let new_contract fmt =
+		  if behaviors <> [] then
+		    begin
+		      Format.fprintf fmt "@[<v 2>if (";
+		      List.iter (fun assumes ->
+			Format.fprintf fmt "(";
+			List.iter (fun a ->
+			  Format.fprintf fmt "%a &&" self#predicate a.ip_content
+			) assumes;
+			Format.fprintf fmt " 1 ) || "
+		      ) behaviors;
+		      Format.fprintf fmt " 0 )@] {@[";
+		    end;
+		  c fmt;
+		  if behaviors <> [] then
+		    Format.fprintf fmt "@]}"
+		in
+		end_contract := new_contract :: !end_contract
+	    end
+
+	  | AAssert (_,pred) ->
+	    let prop = Property.ip_of_code_annot_single kf stmt ca in
+	    if List.mem prop props then
+	      begin
+		let id = Prop_id.to_id prop in
+		if behaviors = [] then
+		  pc_assert_exception fmt pred "Assert!" id prop
+		else
+		  begin
+		    Format.fprintf fmt "@[<v 2>if (";
+		    List.iter (fun assumes ->
+		      Format.fprintf fmt "(";
+		      List.iter (fun a ->
+			Format.fprintf fmt "%a &&" self#predicate a.ip_content
+		      ) assumes;
+		      Format.fprintf fmt " 1 ) || "
+		    ) behaviors;
+		    Format.fprintf fmt " 0 )@]";
+		    pc_assert_exception fmt pred "Assert!" id prop
+		  end
 	      end
 	  | AInvariant (_,true,pred) ->
-	    if behaviors = [] then
+	    let prop = Property.ip_of_code_annot_single kf stmt ca in
+	    if List.mem prop props then
 	      begin
-		pc_assert_exception
-		  fmt pred "Loop invariant not established!" id;
-		end_loop :=
-		  (fun fmt ->
-		    pc_assert_exception fmt pred
-		      "Loop invariant not preserved!" id)
-		:: !end_loop
-	      end
-	    else
-	      begin
-		Format.fprintf fmt "@[<v 2>if (";
-		List.iter (fun assumes ->
-		  Format.fprintf fmt "(";
-		  List.iter (fun a ->
-		    Format.fprintf fmt "%a &&" self#predicate a.ip_content
-		  ) assumes;
-		  Format.fprintf fmt " 1 ) || "
-		) behaviors;
-		Format.fprintf fmt " 0 )@]";
-		pc_assert_exception
-		  fmt pred "Loop invariant not established!" id;
-		end_loop :=
-		  (fun fmt ->
+		let id = Prop_id.to_id prop in
+		if behaviors = [] then
+		  begin
+		    pc_assert_exception
+		      fmt pred "Loop invariant not established!" id prop;
+		    end_loop :=
+		      (fun fmt ->
+			pc_assert_exception fmt pred
+			  "Loop invariant not preserved!" id prop)
+		    :: !end_loop
+		  end
+		else
+		  begin
 		    Format.fprintf fmt "@[<v 2>if (";
 		    List.iter (fun assumes ->
 		      Format.fprintf fmt "(";
@@ -528,28 +688,48 @@ class pcva_printer props ~first_pass () = object (self)
 		    ) behaviors;
 		    Format.fprintf fmt " 0 )@]";
 		    pc_assert_exception
-		      fmt pred "Loop invariant not preserved!" id)
-		:: !end_loop
+		      fmt pred "Loop invariant not established!" id prop;
+		    end_loop :=
+		      (fun fmt ->
+			Format.fprintf fmt "@[<v 2>if (";
+			List.iter (fun assumes ->
+			  Format.fprintf fmt "(";
+			  List.iter (fun a ->
+			    Format.fprintf
+			      fmt "%a &&" self#predicate a.ip_content
+			  ) assumes;
+			  Format.fprintf fmt " 1 ) || "
+			) behaviors;
+			Format.fprintf fmt " 0 )@]";
+			pc_assert_exception
+			  fmt pred "Loop invariant not preserved!" id prop)
+		    :: !end_loop
+		  end
 	      end
 	  | AVariant (term,_) ->
-	    Format.fprintf fmt
-	      "@[<v 2>if((%a)<0) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
-	      self#term term "Variant non positive!" id;
-	    Prop_id.translated_properties :=
-	      prop :: !Prop_id.translated_properties;
-	    begin_loop :=
-	      (fun fmt ->
-		Format.fprintf
-		  fmt "int old_variant_%i = %a;\n" id self#term term)
-	    :: !begin_loop;
-	    end_loop :=
-	      (fun fmt ->
+	    let prop = Property.ip_of_code_annot_single kf stmt ca in
+	    if List.mem prop props then
+	      begin
+		let id = Prop_id.to_id prop in
 		Format.fprintf fmt
-		  "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
-		  self#term term id "Variant non decreasing!" id;
+		  "@[<v 2>if((%a)<0) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
+		  self#term term "Variant non positive!" id;
 		Prop_id.translated_properties :=
-		  prop :: !Prop_id.translated_properties)
-	    :: !end_loop
+		  prop :: !Prop_id.translated_properties;
+		begin_loop :=
+		  (fun fmt ->
+		    Format.fprintf
+		      fmt "int old_variant_%i = %a;\n" id self#term term)
+		:: !begin_loop;
+		end_loop :=
+		  (fun fmt ->
+		    Format.fprintf fmt
+		      "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
+		      self#term term id "Variant non decreasing!" id;
+		    Prop_id.translated_properties :=
+		      prop :: !Prop_id.translated_properties)
+		:: !end_loop
+	      end
 	  | _ -> ()
 	end
     ) stmt;
@@ -576,6 +756,7 @@ class pcva_printer props ~first_pass () = object (self)
 	end
       | _ -> self#stmtkind next fmt stmt.skind
     end;
+    List.iter (fun contract -> contract fmt) !end_contract;
     if has_code_annots then
       Format.fprintf fmt "@]@\n}"
 

@@ -50,7 +50,8 @@ let print_in_file filename props =
   Queue.clear Pcva_printer.quantif_pred_queue;
   Pcva_printer.postcond := None;
   Pcva_printer.at_term_cpt := 0;
-  Datatype.String.Hashtbl.clear Pcva_printer.at_term_affect_in_function
+  Datatype.String.Hashtbl.clear Pcva_printer.at_term_affect_in_function;
+  Cil_datatype.Stmt.Hashtbl.clear Pcva_printer.at_term_affect_in_stmt
 
 
 
@@ -300,6 +301,14 @@ let run() =
 	else
 	  Property_status.fold (fun p l -> p :: l) [] 
       in
+      Options.Self.feedback "selected properties:";
+      List.iter (fun p ->
+	try
+	  let id = Prop_id.to_id p in
+	  Options.Self.debug ~level:2 "%a (%i) found" Property.pretty p id
+	with _ -> Options.Self.debug ~level:2 "%a not found" Property.pretty p
+      ) props;
+
       compute_props props;
       (* cleaning *)
       Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
