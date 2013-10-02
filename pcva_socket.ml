@@ -2,7 +2,7 @@
 
 
 (* messages reçus via socket :
-   @FC:TC|N|INfo:Prop_ID|x1=v1|x2=v2 ...
+   @FC:TC|N|info:Prop_ID|x1=v1|x2=v2 ...
    @FC:FinalStatus|OK
    @FC:NbTC|N
 *)
@@ -22,7 +22,7 @@ let process_test_case s =
   in
   let str_tc, s = cut_sep '|' s in
   let _msg, s = cut_sep ':' s in
-  let str_prop, s = cut_sep '|' s in
+  let str_prop, s = try cut_sep '|' s with _ -> s, "" in
   let id_prop = int_of_string str_prop in
   let add_var_val acc str =
     try let x, y = cut_sep '=' str in (x,y)::acc
@@ -33,7 +33,7 @@ let process_test_case s =
       try let x,y = cut_sep '|' str in aux (add_var_val acc x) y
       with _ -> add_var_val acc str
     in
-    aux [] s
+    if s = "" then [] else aux [] s
   in
   let prop = Prop_id.to_prop id_prop in
   let file = Options.Temp_File.get() in
