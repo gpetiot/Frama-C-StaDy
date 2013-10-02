@@ -1,22 +1,20 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-unsigned int __VERIFIER_nondet_uint();
-unsigned int  SIZE;
+
+
+/*@ requires 1 <= n <= 7;
+  @ requires \valid(a+(0..n-1));
+  @ ensures (\forall int i; 0 <= i < n ==> a[i] != q) <==> \result == 0;
+  @ ensures (\exists int i; 0 <= i < n && a[i] == q) <==> \result == 1;
+  @*/
 int linear_search(int *a, int n, int q) {
   unsigned int j=0;
+  /*@ loop invariant 0 <= j <= n;
+    @ loop invariant \forall int i; 0 <= i < j ==> a[i] != q;
+    @ loop variant n-j;
+    @*/
   while (j<n && a[j]!=q) {
-  j++;
+    j++;
   }
-  if (j<SIZE) return 1;
+  if (j<n) return 1;
   else return 0;
 }
-int main() { 
-  SIZE=(__VERIFIER_nondet_uint()/8)+1;
-  int a[SIZE];
-  a[SIZE/2]=3;
-  __VERIFIER_assert(linear_search(a,SIZE,3));
-}
+

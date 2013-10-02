@@ -1,13 +1,7 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
 
-extern _Bool __VERIFIER_nondet_bool();
 
-int main(){
+
+int f(){
    int a[5];
    int len=0;
 
@@ -23,9 +17,8 @@ int main(){
 
       len++;
    }
+
    __VERIFIER_assert(len>=0 && len<5);
    return 1;
-
-   
 }
 

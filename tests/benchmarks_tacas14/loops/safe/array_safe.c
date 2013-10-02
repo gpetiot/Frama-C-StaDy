@@ -1,25 +1,22 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-int __VERIFIER_nondet_int();
 
-main()
+/*@ requires \valid(array+(0..SIZE-1));
+  @ requires 0 < SIZE <= 5;
+  @*/
+void f(int nondet_menor, int* array, unsigned int SIZE)
 {
-  unsigned int SIZE=1;
   unsigned int j,k;
-  int array[SIZE], menor;
+  int menor = nondet_menor;
   
-  menor = __VERIFIER_nondet_int();
-
+  /*@ loop invariant 0 <= j <= SIZE;
+    @ loop invariant \forall int i; 0 <= i < j ==> menor <= array[i];
+    @ loop variant SIZE-j;
+    @*/
   for(j=0;j<SIZE;j++) {
-       array[j] = __VERIFIER_nondet_int();
        
        if(array[j]<=menor)
           menor = array[j];                          
     }                       
-    
-    __VERIFIER_assert(array[0]>=menor);    
+  //@ assert \forall int i; 0 <= i < SIZE ==> menor <= array[i];
+
+  //@ assert(array[0]>=menor);    
 }

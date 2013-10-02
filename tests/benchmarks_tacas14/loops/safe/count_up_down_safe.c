@@ -1,20 +1,18 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-unsigned int __VERIFIER_nondet_uint();
 
-int main()
+/*@ requires n < 20; */
+void f(unsigned int n)
 {
-  unsigned int n = __VERIFIER_nondet_uint();
   unsigned int x=n, y=0;
+  /*@ loop invariant 0 <= x <= n;
+    @ loop invariant 0 <= y <= n;
+    @ loop invariant x+y == n;
+    @ loop variant x;
+    @*/
   while(x>0)
   {
     x--;
     y++;
   }
-  __VERIFIER_assert(y==n);
+  //@ assert(y==n);
 }
 

@@ -1,33 +1,34 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-char __VERIFIER_nondet_char();
 
-int main() {
-    unsigned int max = 5;
-    char str1[max], str2[max];
-    int i, j;
+/*@ requires max == 5;
+  @ requires \valid(str1+(0..max-1));
+  @ requires \valid(str2+(0..max-1));
+  @*/
+void f(char* str1, char* str2, int max) {
+  int i = max-1, j;
 
-    for (i=0; i<max; i++) {
-        str1[i]=__VERIFIER_nondet_char();
-    }
+  str1[max-1]= '\0';
 
-    str1[max-1]= '\0';
-
-    j = 0;
+  j = 0;
    
-    for (i = max - 1; i >= 0; i--) {
-        str2[j] = str1[i];
-        j++;
-    }
+  /*@ loop invariant -1 <= i;
+    @ loop invariant i <= max-1;
+    @ loop invariant i+j == max-1;
+    @ loop variant i;
+    @*/
+  for (i = max - 1; i >= 0; i--) {
+    str2[j] = str1[i];
+    j++;
+  }
 
-    j = max-1;
-    for (i=0; i<max; i++) {
-      __VERIFIER_assert(str1[i] == str2[j]);
-      j--;
-    }   
+  j = max-1;
+
+  /*@ loop invariant 0 <= i <= max;
+    @ loop invariant i+j == max-1;
+    @ loop variant max-i;
+    @*/
+  for (i=0; i<max; i++) {
+    //@ assert(str1[i] == str2[j]);
+    j--;
+  }   
 }
 
