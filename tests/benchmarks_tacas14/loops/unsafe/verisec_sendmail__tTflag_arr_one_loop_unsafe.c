@@ -1,13 +1,9 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
 
-int main (void)
+/*@ requires \valid(in+(0..10));
+  @*/
+int f (char in[11])
 {
-  char in[11]; // = "3277192070";
+  //char in[11]; // = "3277192070";
   char *s;
   unsigned char c;
   int i, j;
@@ -25,7 +21,7 @@ int main (void)
     c = in[idx_in];
   }
   /* BAD */
-  __VERIFIER_assert (i >= 0);
+  //@ assert (i >= 0);
   return 0;
 }
 

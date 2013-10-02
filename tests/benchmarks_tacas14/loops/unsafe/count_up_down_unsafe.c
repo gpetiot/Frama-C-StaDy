@@ -1,8 +1,7 @@
 
-
-void f(unsigned int nondet_uint)
+/*@ requires n < 10; */
+void f(unsigned int n)
 {
-  unsigned int n = nondet_uint;
   unsigned int x=n, y=0;
   while(x>0)
   {

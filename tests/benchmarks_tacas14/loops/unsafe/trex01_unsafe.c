@@ -1,23 +1,19 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-_Bool __VERIFIER_nondet_bool();
 
-void f(int d) {
-  int x, y, k, z = 1;
+_Bool T[1000];
+int G = 0;
+
+void f(int d, int x, int y, int k) {
+  int z = 1;
   L1:
   while (z < k) { z = 2 * z; }
-  __VERIFIER_assert(z>=2);
+  //@ assert(z>=2);
   L2:
   while (x > 0 && y > 0) {
-    _Bool c = __VERIFIER_nondet_bool();
+    _Bool c = T[G++];
     if (c) {
       P1:
       x = x - d;
-      y = __VERIFIER_nondet_bool();
+      y = T[G++];
       z = z - 1;
     } else {
       y = y - d;
@@ -25,12 +21,15 @@ void f(int d) {
   }
 }
 
-void main() {
-  _Bool c = __VERIFIER_nondet_bool();
+/*@ requires k < 20;
+  @ requires x < 20;
+  @ requires y < 20;
+  @*/
+void m(_Bool c, int x, int y, int k) {
   if (c) {
-    f(1);
+    f(1, x, y, k);
   } else {
-    f(2);
+    f(2, x, y, k);
   }
 }
 

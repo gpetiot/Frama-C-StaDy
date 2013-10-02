@@ -1,15 +1,7 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-extern int __VERIFIER_nondet_int();
 
-main()
+
+void f(int x, int y)
 {
-  int x=__VERIFIER_nondet_int();
-  int y=__VERIFIER_nondet_int();
 
   if (y>0)
   {
@@ -18,7 +10,7 @@ main()
       x=x+y;
      }
   }                           
-  __VERIFIER_assert(y<=0 || (y<0 && x>=100));     
+  //@ assert(y<=0 || (y<0 && x>=100));     
 }
 
 

@@ -1,4 +1,9 @@
 
+int I;
+int G[100];
+
+int __VERIFIER_nondet_int() { return G[I++]; }
+
 
 void immediate_notify(void) ;
 int max_loop ;

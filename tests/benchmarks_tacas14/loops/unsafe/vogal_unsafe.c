@@ -1,20 +1,11 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-#define MAX 10
 
-extern char __VERIFIER_nondet_char();
-
-main(void)
+/*@ requires \valid(string_entrada+(0..(MAX-1)));
+  @ requires 0 <= MAX <= 3;
+  @*/
+void f(int MAX, char *string_entrada)
 {
-  char string_entrada[MAX], vetor_vogais[]={'a','A','e','E','i','I','o','O','u','U','\0'};; 
+  char vetor_vogais[]={'a','A','e','E','i','I','o','O','u','U','\0'};
   unsigned int  i,j,cont, tam_string, n_caracter;
-
-  for(i=0;i<MAX;i++)
-    string_entrada[i] = __VERIFIER_nondet_char();
 
   string_entrada[MAX-1]='\0';
   
@@ -39,5 +30,5 @@ main(void)
     }       
     i++;       
   }    
-  __VERIFIER_assert(cont_aux==cont);                          
+  //@ assert(cont_aux==cont);                          
 }

@@ -1,8 +1,6 @@
 
 #define a (2)
 
-/*@ requires n < 10;
-  @*/
 void f(unsigned int n) { 
   int i, sn=0;
   for(i=1; i<=n; i++) {
