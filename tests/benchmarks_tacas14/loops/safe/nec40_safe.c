@@ -1,18 +1,14 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-int __VERIFIER_nondet_int();
+
 
   char x[100], y[100];
-  int i,j,k;
 
-void main() {  
-  k = __VERIFIER_nondet_int();
+void f(int k) {
+  int i,j;
   
   i = 0;
+  /*@ loop invariant 0 <= i < 100;
+    @ loop variant 100-i;
+    @*/
   while(x[i] != 0){
     y[i] = x[i];
     i++;
@@ -21,5 +17,6 @@ void main() {
   
   if(k >= 0 && k < i)
     if(y[k] != 0)
-      {__VERIFIER_assert(0);}
+      //@ assert \false;
+      ;
 }

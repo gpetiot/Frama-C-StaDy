@@ -1,11 +1,5 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
+
 typedef int Char;
-#define MAXPATHLEN 1
 
 Char *tmp;
 
@@ -14,18 +8,18 @@ int glob2 (Char *pathbuf, Char *pathlim)
   Char *p;
 
   for (p = pathbuf; p <= pathlim; p++) {
-    /* BAD */
-    __VERIFIER_assert(p<=tmp);
+    //@ assert(p<=tmp);
     *p = 1;
   }
 
   return 0;
 }
 
-int main ()
+/*@ requires MAXPATHLEN == 1;
+  @ requires \valid(pathbuf+(0..MAXPATHLEN));
+  @*/
+int f (unsigned MAXPATHLEN, Char* pathbuf)
 {
-  Char pathbuf[MAXPATHLEN+1];
-
   Char *bound = pathbuf + sizeof(pathbuf)/sizeof(*pathbuf) - 1;
 
   tmp = pathbuf + sizeof(pathbuf)/sizeof(*pathbuf) - 1;

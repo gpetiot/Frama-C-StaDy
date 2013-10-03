@@ -1,12 +1,9 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-int main (void)
+
+/*@ requires \valid(in+(0..10));
+  @*/
+int f (char in[11])
 {
-  char in[11]; // = "3277192070";
+  //char in[11]; // = "3277192070";
   char *s;
   unsigned char c;
   unsigned int i, j;
@@ -16,6 +13,10 @@ int main (void)
   s = in;
   i = 0;
   c = in[idx_in];
+  /*@ loop invariant \forall int x; 0 <= x < idx_in ==> '0' <= in[x] && in[x] <= '9';
+    @ loop invariant 0 <= i;
+    @ loop variant 11-idx_in;
+    @*/
   while (('0' <= c) && (c <= '9'))
   {
     j = c - '0';
@@ -24,7 +25,7 @@ int main (void)
     c = in[idx_in];
   }
   /* OK */
-  __VERIFIER_assert (i >= 0);
+  //@ assert (i >= 0);
   return 0;
 }
 

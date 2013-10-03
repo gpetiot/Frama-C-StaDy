@@ -6,6 +6,9 @@ void f(int k) {
   int i, j;
   i = 0;
 
+  /*@ loop invariant 0 <= i < 100;
+    @ loop variant 100-i;
+    @*/
   while(x[i] != 0){
     y[i] = x[i];
     i++;

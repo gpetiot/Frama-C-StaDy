@@ -1,11 +1,4 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-#define bool int
-extern bool __VERIFIER_nondet_bool();
+
 
 void foo()
 {
@@ -16,11 +9,10 @@ void foo()
   else y+=10;
 }
 
-int main()
+void f(int c1, int c2)
 {
   int d = 1;
   int x;
-  bool c1=__VERIFIER_nondet_bool(), c2=__VERIFIER_nondet_bool();
 
   if (c1) d = d - 1;
   if (c2) foo();
@@ -35,6 +27,6 @@ int main()
     x=x-d;
   }
 
-  __VERIFIER_assert(x<=0);
+  //@ assert(x<=0);
 }
 

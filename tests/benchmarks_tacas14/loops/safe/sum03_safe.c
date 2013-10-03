@@ -1,21 +1,17 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-#define a (2)
-unsigned int __VERIFIER_nondet_uint();
 
-int main() { 
+#define a (2)
+
+void f(unsigned int loop1, unsigned int n1) { 
   int sn=0;
-  unsigned int loop1=__VERIFIER_nondet_uint(), n1=__VERIFIER_nondet_uint();
   unsigned int x=0;
 
+  /*@ loop invariant sn == x*a;
+    @*/
   while(1){
+    if(x == 100) break;
     sn = sn + a;
     x++;
-    __VERIFIER_assert(sn==x*a || sn == 0);
+    //@ assert(sn==x*a || sn == 0);
   }
 }
 

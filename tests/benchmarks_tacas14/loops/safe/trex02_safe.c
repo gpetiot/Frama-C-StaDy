@@ -1,11 +1,4 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-_Bool __VERIFIER_nondet_bool();
-int __VERIFIER_nondet_int();
+
 
 //x is an input variable
 int x;
@@ -14,14 +7,21 @@ void foo() {
   x--;
 }
 
-int main() {
-  x=__VERIFIER_nondet_int();
+
+/*@ requires \valid(nondet_bool+(0..100));
+  @ requires -100 <= nondet_x <= 100;
+  @*/
+void f(int nondet_x, _Bool* nondet_bool) {
+  int i = 0;
+  x = nondet_x;
+  /*@ loop invariant 0 <= i;
+    @*/
   while (x > 0) {
-    _Bool c = __VERIFIER_nondet_bool();
+    _Bool c = nondet_bool[i++];
     if(c) foo();
     else foo();
   }
-  __VERIFIER_assert(x<=0);
+  //@ assert(x<=0);
 }
 
 

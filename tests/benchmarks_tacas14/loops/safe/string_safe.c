@@ -1,39 +1,39 @@
-extern void __VERIFIER_assume(int);
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-#define MAX 5
 
-extern char __VERIFIER_nondet_char();
-
-main()
+/*@ requires MAX == 5;
+  @ requires \valid(string_A+(0..MAX-1));
+  @ requires \valid(string_B+(0..MAX-1));
+  @ requires
+  \forall int x; 0 <= x < MAX ==> (string_B[x] == '\0' ==> string_A[x] == '\0');
+  @*/
+void f(int MAX, char* string_A, char* string_B)
 {
-  char string_A[MAX], string_B[MAX];
   int i, j, nc_A, nc_B, found=0;  
   
-  for(i=0; i<MAX; i++)
-    string_A[i]=__VERIFIER_nondet_char();    
-  __VERIFIER_assume(string_A[MAX-1]=='\0');
-
-  for(i=0; i<MAX; i++)
-    string_B[i]=__VERIFIER_nondet_char();    
-  __VERIFIER_assume(string_B[MAX-1]=='\0');
+  
+  string_A[MAX-1]='\0';
+  string_B[MAX-1]='\0';
 
   nc_A = 0;
+  /*@ loop invariant 0 <= nc_A <= MAX;
+    @ loop variant MAX-nc_A;
+    @*/
   while(string_A[nc_A]!='\0')
     nc_A++;
 
   nc_B = 0;
+  /*@ loop invariant 0 <= nc_B <= MAX;
+    @ loop variant MAX-nc_B;
+    @*/
   while(string_B[nc_B]!='\0')
     nc_B++;
 
-  __VERIFIER_assume(nc_B >= nc_A);
   
   
   i=j=0;
+  /*@ loop invariant 0 <= i <= MAX;
+    @ loop invariant 0 <= j <= MAX;
+    @ loop invariant j <= i;
+    @*/
   while((i<nc_A) && (j<nc_B))
   {
     if(string_A[i] == string_B[j]) 
@@ -50,6 +50,6 @@ main()
 
   found = (j>nc_B-1);
   
-  __VERIFIER_assert(found == 0 || found == 1);
+  //@ assert(found == 0 || found == 1);
 }
 

@@ -1,14 +1,15 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
-extern unsigned int __VERIFIER_nondet_uint();
-int main() { 
-  unsigned int i, n=__VERIFIER_nondet_uint(), sn=0;
+
+/*@ requires n <= 100;
+  @*/
+void f(unsigned int n) { 
+  unsigned int i, sn=0;
+
+  /*@ loop invariant 0 <= i <= n+1;
+    @ loop invariant sn == i*(i-1)/2;
+    @ loop variant n+1-i;
+    @*/
   for(i=0; i<=n; i++) {
     sn = sn + i;
   }
-  __VERIFIER_assert(sn==(n*(n+1))/2 || sn == 0);
+  //@ assert(sn==(n*(n+1))/2 || sn == 0);
 }
