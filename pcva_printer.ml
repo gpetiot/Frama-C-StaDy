@@ -20,6 +20,7 @@ let postcond = ref None
 (* How we handle \at terms (\at predicates are not supported) *)
 let at_term_cpt = ref 0
 
+
 let at_term_affect_in_function :
     ((Format.formatter -> unit) Queue.t) Datatype.String.Hashtbl.t =
   Datatype.String.Hashtbl.create 32
@@ -27,13 +28,37 @@ let at_term_affect_in_stmt :
     ((Format.formatter -> unit) Queue.t) Cil_datatype.Stmt.Hashtbl.t =
   Cil_datatype.Stmt.Hashtbl.create 32
 
-let no_repeat l =
+let no_repeat l : 'a list =
   let rec aux acc = function
     | [] -> acc
     | h :: t when List.mem h acc -> aux acc t
     | h :: t -> aux (h :: acc) t
   in
   aux  [] l
+
+
+
+    
+(* to change a \valid to a pathcrawler_dimension *)
+(* term -> term * term *)
+let rec extract_terms t : term * term =
+  let loc = t.term_loc in
+  match t.term_node with
+  | TLval _ -> t, lzero ~loc ()
+  | TCastE (_,term)
+  | TCoerce (term,_)
+  | TAlignOfE term -> extract_terms term
+  | TBinOp (PlusPI,x,{term_node = Trange(_,Some y)})
+  | TBinOp (IndexPI,x,{term_node = Trange(_,Some y)}) -> x,y
+  | TBinOp ((PlusPI|IndexPI),x,y) -> x,y
+  | TBinOp (MinusPI,x,y) ->
+    x, term_of_exp_info loc (TUnOp(Neg,y)) {exp_type=t.term_type; exp_name=[]}
+  | TStartOf _ -> t, lzero ~loc ()
+  | TAddrOf (TVar _, TIndex _) ->
+    let lv = mkTermMem t TNoOffset in
+    let te = term_of_exp_info loc(TLval lv){exp_type=t.term_type;exp_name=[]} in
+    extract_terms te
+  | _ -> failwith (Pretty_utils.sfprintf"unsupported term: %a"Printer.pp_term t)
 
 
 
@@ -48,12 +73,16 @@ let no_repeat l =
 class pcva_printer props ~first_pass () = object (self)
   inherit Printer.extensible_printer () as super
 
-  val mutable current_function = None
+  
   val mutable result_varinfo = None
+  val mutable current_function = None
+  val mutable last_function = None
+  val mutable ignore_at = false
 
   method private in_current_function vi =
     assert (current_function = None);
-    current_function <- Some vi
+    current_function <- Some vi;
+    last_function <- Some vi
 
   method private out_current_function =
     assert (current_function <> None);
@@ -72,143 +101,110 @@ class pcva_printer props ~first_pass () = object (self)
       (if display_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
 
 
-  (* to change a \valid to a pathcrawler_dimension *)
-  (* term -> term * term *)
-  method private extract_terms t =
-    let loc = t.term_loc in
-    match t.term_node with
-    | TLval _ -> t, lzero ~loc ()
-    | TCastE (_,term)
-    | TCoerce (term,_)
-    | TAlignOfE term -> self#extract_terms term
-    | TBinOp (PlusPI,x,{term_node = Trange(_,Some y)})
-    | TBinOp (IndexPI,x,{term_node = Trange(_,Some y)}) -> x,y
-    | TBinOp (PlusPI,x,y)
-    | TBinOp (IndexPI,x,y) -> x,y
-    | TBinOp (MinusPI,x,y) ->
-      x, term_of_exp_info loc (TUnOp(Neg,y)) {exp_type=t.term_type; exp_name=[]}
-    | TStartOf _ -> t, lzero ~loc ()
-    | TAddrOf (TVar _, TIndex _) ->
-      let tnode = mkTermMem t TNoOffset in
-      let term =
-	term_of_exp_info loc (TLval tnode) {exp_type=t.term_type; exp_name=[]}
-      in
-      self#extract_terms term
-    | _ ->
-      failwith (Pretty_utils.sfprintf "unsupported term: %a" Printer.pp_term t)
 
 
-  method private vars_of_term_lhost h =
+
+  method private tlhost_vars h =
     match h with
     | TVar lv -> (try [Extlib.the lv.lv_origin] with _ -> [])
-    | TResult _ ->
-      begin
-	match result_varinfo with
-	| None -> failwith "vars_of_term_lhost: no result_varinfo"
-	| Some v -> [v]
-      end
-    | TMem t -> self#vars_of_term t
+    | TResult _ when result_varinfo =  None -> failwith "no result_varinfo"
+    | TResult _ -> [ (Extlib.the result_varinfo) ]
+    | TMem t -> self#term_vars t
 
-  method private vars_of_term_offset o =
+  method private toffset_vars o =
     match o with
-    | TNoOffset -> []
-    | TField (_, t) -> self#vars_of_term_offset t
-    | TModel _ -> []
-    | TIndex (i,t) ->
-      List.rev_append (self#vars_of_term i) (self#vars_of_term_offset t)
+    | TField (_, t) -> self#toffset_vars t
+    | TNoOffset | TModel _ -> []
+    | TIndex (i,t) -> List.rev_append (self#term_vars i) (self#toffset_vars t)
 
-  method private vars_of_term_lval t =
+  method private tlval_vars t =
     let h, o = t in
-    List.rev_append (self#vars_of_term_lhost h) (self#vars_of_term_offset o)
+    List.rev_append (self#tlhost_vars h) (self#toffset_vars o)
 
-  method private vars_of_term_node t =
+  method private tnode_vars t =
     match t with
-    | TLval tv
-    | TAddrOf tv
-    | TStartOf tv -> self#vars_of_term_lval tv
-    | TSizeOfE t1
-    | TAlignOfE t1
-    | TUnOp(_,t1)
-    | Tat(t1,_)
-    | Tbase_addr(_,t1)
-    | Toffset(_,t1)
-    | Tblock_length(_,t1)
-    | TLogic_coerce(_,t1)
-    | TCoerce(t1,_)
-    | Trange(None,Some t1)
-    | Trange(Some t1,None)
-    | TCastE(_,t1) -> self#vars_of_term t1
+    | TLval tv | TAddrOf tv | TStartOf tv -> self#tlval_vars tv
+    | TSizeOfE t1 | TAlignOfE t1 | TUnOp(_,t1) | Tat(t1,_) | Tbase_addr(_,t1)
+    | Toffset(_,t1) | Tblock_length(_,t1) | TLogic_coerce(_,t1) | TCoerce(t1,_)
+    | Trange(None,Some t1) | Trange(Some t1,None)
+    | TCastE(_,t1) -> self#term_vars t1
     | Trange (Some t1, Some t2)
-    | TBinOp(_,t1,t2) ->
-      List.rev_append (self#vars_of_term t1) (self#vars_of_term t2)
+    | TBinOp(_,t1,t2) -> List.rev_append (self#term_vars t1) (self#term_vars t2)
     | Tif(t1,t2,t3) ->
-      List.rev_append (self#vars_of_term t1)
-	(List.rev_append (self#vars_of_term t2) (self#vars_of_term t3))
+      List.rev_append (self#term_vars t1)
+	(List.rev_append (self#term_vars t2) (self#term_vars t3))
     | _ -> []
 
-  method private vars_of_term t =
-    self#vars_of_term_node t.term_node
+  method private term_vars t =
+    self#tnode_vars t.term_node
 
-  method private vars_of_predicate p =
+  method private pred_vars p =
     match p with
-    | Prel(_,t1,t2)
-    | Pfresh(_,_,t1,t2) ->
-      List.rev_append (self#vars_of_term t1) (self#vars_of_term t2)
-    | Pvalid_read(_,t1)
-    | Pvalid(_,t1)
-    | Pinitialized(_,t1)
-    | Pallocable(_,t1)
-    | Pfreeable(_,t1) -> self#vars_of_term t1
-    | Pand(p1,p2)
-    | Por(p1,p2)
-    | Pxor(p1,p2)
-    | Pimplies(p1,p2)
-    | Piff(p1,p2)
-    | Pif(_,p1,p2) ->
-      List.rev_append
-	(self#vars_of_predicate_named p1)
-	(self#vars_of_predicate_named p2)
-    | Pnot(p1)
-    | Pforall(_,p1)
-    | Pexists(_,p1) -> self#vars_of_predicate_named p1
+    | Prel(_,t1,t2) | Pfresh(_,_,t1,t2) ->
+      List.rev_append (self#term_vars t1) (self#term_vars t2)
+    | Pvalid_read(_,t1) | Pvalid(_,t1)
+    | Pinitialized(_,t1) | Pallocable(_,t1)
+    | Pfreeable(_,t1) -> self#term_vars t1
+    | Pand(p1,p2) | Por(p1,p2) | Pxor(p1,p2) | Pimplies(p1,p2) | Piff(p1,p2)
+    | Pif(_,p1,p2) -> List.rev_append (self#pnamed_vars p1)(self#pnamed_vars p2)
+    | Pnot(p1) | Pforall(_,p1) | Pexists(_,p1) -> self#pnamed_vars p1
     | _ -> []
 
-  method private vars_of_predicate_named p =
-    self#vars_of_predicate p.content
+  method private pnamed_vars p = self#pred_vars p.content
 
-  method term fmt t =
-    self#term_node fmt t
+
+
+
+
+
+
+
+
+
+
+  method term fmt t = self#term_node fmt t
 
   method term_node fmt t =
     let to_c_type = function
       | Ctype t -> t
       | Linteger -> longType
-      | _ -> assert false in
-    try
-      match t.term_node with
-      | TConst(Integer(i,_)) ->
-	if (Integer.to_string i) = "-2147483648" then
-	  Format.fprintf fmt "(-2147483467-1)"
-	else
-	  super#term_node fmt t
-      | Tat(_, StmtLabel _) -> failwith "\\at on stmt label unsupported!"
-      | Tat(term,LogicLabel(_,stringlabel)) ->
+      | _ -> assert false
+    in
+    match t.term_node with
+    | TConst(Integer(i,_)) ->
+      if (Integer.to_string i) = "-2147483648" then
+	Format.fprintf fmt "(-2147483467-1)"
+      else
+	super#term_node fmt t
+    | Tat(_, StmtLabel _) -> failwith "\\at on stmt label unsupported!"
+    | Tat(term,LogicLabel(_,stringlabel)) ->
+      if ignore_at then
+	self#term fmt term
+      else
+      begin
+	(*try*)
 	if stringlabel = "Old" then
 	  if first_pass then
 	    begin
 	      match self#current_stmt with
 	      | None ->
 		begin
-		  let fct_name = try (Extlib.the current_function).vname
+		  let fct_name = try (Extlib.the last_function).vname
 		    with _ ->
 		      failwith
 			(Pretty_utils.sfprintf
-			   "no current function (term: %a)" Printer.pp_term t)
+			   "no current function (term: %a)"
+			   Printer.pp_term t)
 		  in
+		  Options.Self.debug ~level:2 "fct_name = %s" fct_name;
 		  let affects = try
 				  Datatype.String.Hashtbl.find
 				    at_term_affect_in_function fct_name
-		    with _ -> Queue.create() in
+		    with _ ->
+		      Options.Self.debug ~level:2 "fct %s queue created"
+			fct_name;
+		      Queue.create()
+		  in
 		  Queue.add (fun fmt ->
 		    Format.fprintf fmt "%a = %a;@\n"
 		      (self#typ
@@ -218,6 +214,7 @@ class pcva_printer props ~first_pass () = object (self)
 		      self#term
 		      term
 		  ) affects;
+		  Options.Self.debug ~level:2 "add at fct %s -> ..." fct_name;
 		  Datatype.String.Hashtbl.add
 		    at_term_affect_in_function fct_name affects
 		end
@@ -226,7 +223,10 @@ class pcva_printer props ~first_pass () = object (self)
 		  let affects = try
 				  Cil_datatype.Stmt.Hashtbl.find
 				    at_term_affect_in_stmt stmt
-		    with _ -> Queue.create() in
+		    with _ ->
+		      Options.Self.debug ~level:2 "stmt queue created";
+		      Queue.create()
+		  in
 		  Queue.add (fun fmt ->
 		    Format.fprintf fmt "%a = %a;@\n"
 		      (self#typ
@@ -236,6 +236,7 @@ class pcva_printer props ~first_pass () = object (self)
 		      self#term
 		      term
 		  ) affects;
+		  Options.Self.debug ~level:2 "add at stmt ?? -> ...";
 		  Cil_datatype.Stmt.Hashtbl.add
 		    at_term_affect_in_stmt stmt affects
 		end
@@ -246,14 +247,20 @@ class pcva_printer props ~first_pass () = object (self)
 	      at_term_cpt := !at_term_cpt + 1
 	    end
 	else
-	  failwith (Printf.sprintf "\\at label '%s' unsupported!" stringlabel)
-      | _ -> super#term_node fmt t
-    with
-      _ ->
-	match t.term_node with
-	| Tat(term,LogicLabel _) -> self#term fmt term
-	| _ -> super#term_node fmt t
-	  
+	  failwith (Printf.sprintf "\\at label '%s' unsupported!"
+		      stringlabel)
+      (*with
+	| _ -> self#term fmt term*)
+      end
+    | _ -> super#term_node fmt t
+    
+	 
+
+
+
+
+
+ 
   method exp fmt e =
     match e.enode with
     | UnOp(Neg,{enode=Const(CInt64 (_,_,str))},_) ->
@@ -263,6 +270,9 @@ class pcva_printer props ~first_pass () = object (self)
 	| _ -> super#exp fmt e
       end
     | _ -> super#exp fmt e
+
+
+
 
   method private predicate fmt pred =
     (* generate guards for logic vars, e.g.:
@@ -294,17 +304,14 @@ class pcva_printer props ~first_pass () = object (self)
 	  | _, _ -> assert false
 	in
 	terms t12 t21
-      | Pand(p1, p2) -> 
-	let acc, vars = aux acc vars p1 in
-	aux acc vars p2
+      | Pand(p1, p2) -> let acc, vars = aux acc vars p1 in aux acc vars p2
       | _ -> assert false
     in
     match pred with
     | Ptrue -> Format.fprintf fmt "1"
     | Pfalse -> Format.fprintf fmt "0"
-    | Pvalid(_,term)
-    | Pvalid_read(_,term) ->
-      let x, y = self#extract_terms term in
+    | Pvalid(_,term) | Pvalid_read(_,term) ->
+      let x, y = extract_terms term in
       Format.fprintf fmt "((%a) >= 0 && (pathcrawler_dimension(%a) > (%a)))"
 	self#term y self#term x self#term y
     | Pforall(logic_vars,pred) ->
@@ -321,7 +328,7 @@ class pcva_printer props ~first_pass () = object (self)
 	      failwith "Unguarded variables in \\forall !"
 	    else
 	      let t1,r1,lv,r2,t2 = List.hd guards in
-	      let vars = self#vars_of_predicate_named pred in (* pour l'appel *)
+	      let vars = self#pnamed_vars pred in (* pour l'appel *)
 	      let vars = no_repeat vars in
 	      let logic_var = List.hd logic_vars in
 	      let vars = List.filter
@@ -347,18 +354,18 @@ class pcva_printer props ~first_pass () = object (self)
 	      let typed_args =
 		String.sub typed_args 1 ((String.length typed_args)-1) in
 	      let fct_forall fmt =
+		ignore_at <- true;
 		Format.fprintf fmt
 		  "int forall_%i (%s) {\n  %a %s = %a%s;\n  while(%s %a %a) {\n    if(!(%a))\n      return 0;\n    %s ++;\n  }\n  return 1;\n}\n\n"
 		  !quantif_pred_cpt typed_args (self#typ None)
 		  (to_c_type lv.lv_type) lv.lv_name self#term t1
 		  (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
 		  lv.lv_name self#relation r2 self#term t2
-		  self#predicate_named goal lv.lv_name
+		  self#predicate_named goal lv.lv_name;
+		ignore_at <- false
 	      in
 	      let call_forall fmt =
-		Format.fprintf fmt
-		  "(forall_%i(%s))"
-		  !quantif_pred_cpt args
+		Format.fprintf fmt "(forall_%i(%s))" !quantif_pred_cpt args
 	      in
 	      (* the ref quantif_pred_cpt has to be incremented before each
 		 printing of these functions *)
@@ -388,7 +395,7 @@ class pcva_printer props ~first_pass () = object (self)
 	      failwith "Unguarded variables in \\exists !"
 	    else
 	      let t1,r1,lv,r2,t2 = List.hd guards in
-	      let vars = self#vars_of_predicate_named pred in (* pour l'appel *)
+	      let vars = self#pnamed_vars pred in (* pour l'appel *)
 	      let vars = no_repeat vars in
 	      let logic_var = List.hd logic_vars in
 	      let vars = List.filter
@@ -414,13 +421,15 @@ class pcva_printer props ~first_pass () = object (self)
 	      let typed_args =
 		String.sub typed_args 1 ((String.length typed_args)-1) in
 	      let fct_exists fmt =
+		ignore_at <- true;
 		Format.fprintf fmt
 		  "int exists_%i (%s) {\n  %a %s = %a%s;\n  while(%s %a %a) {\n    if(%a)\n      return 1;\n    %s ++;\n  }\n  return 0;\n}\n\n"
 		  !quantif_pred_cpt typed_args (self#typ None)
 		  (to_c_type lv.lv_type) lv.lv_name self#term t1
 		  (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
 		  lv.lv_name self#relation r2 self#term t2
-		  self#predicate_named goal lv.lv_name
+		  self#predicate_named goal lv.lv_name;
+		ignore_at <- false
 	      in
 	      let call_exists fmt =
 		Format.fprintf fmt
@@ -772,6 +781,7 @@ class pcva_printer props ~first_pass () = object (self)
 
 
   method private fundecl fmt f =
+    Options.Self.debug ~level:2 "IN fundecl";
     (* declaration. *)
     let was_ghost = is_ghost in
     let entry_point_name =
@@ -912,7 +922,7 @@ class pcva_printer props ~first_pass () = object (self)
 		      prop :: !Prop_id.translated_properties;
 		    Format.fprintf fmt "@]@\n"
 		  end
-	    ) b.b_post_cond
+	      ) b.b_post_cond
 	    ) behaviors;
 	    Format.fprintf fmt "@]@\n}@\n"
 	  )
@@ -928,6 +938,7 @@ class pcva_printer props ~first_pass () = object (self)
       if not first_pass then
 	begin
 	  try
+	    Options.Self.debug ~level:2 "find %s" f.svar.vname;
 	    let q =
 	      Datatype.String.Hashtbl.find
 		at_term_affect_in_function f.svar.vname
@@ -935,10 +946,10 @@ class pcva_printer props ~first_pass () = object (self)
 	    let tmp = !at_term_cpt in
 	    Queue.iter (fun e -> e fmt; at_term_cpt := !at_term_cpt + 1) q;
 	    at_term_cpt := tmp
-	  with _ -> ()
+	  with _ -> Options.Self.debug ~level:2 "%s queue not found"
+	    f.svar.vname
 	end
     end;
-    
     self#block ~braces:true fmt f.sbody;
     begin
       match !postcond with
@@ -951,9 +962,8 @@ class pcva_printer props ~first_pass () = object (self)
     
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
-      (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
-
-
+      (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore);
+    Options.Self.debug ~level:2 "OUT fundecl"
 
 
 
@@ -961,27 +971,26 @@ class pcva_printer props ~first_pass () = object (self)
   method global fmt (g:global) =
     match g with
     | GFun (fundec, l) ->
-      if print_var fundec.svar
-      then begin
-	self#in_current_function fundec.svar;
-	(* If the function has attributes then print a prototype because
-	 * GCC cannot accept function attributes in a definition *)
-	let oldattr = fundec.svar.vattr in
-	(* Always pring the file name before function declarations *)
-	(* Prototype first *)
-	if oldattr <> [] then
-	  (self#line_directive fmt l;
-	   Format.fprintf fmt "%a;@\n"
-	     self#vdecl_complete fundec.svar);
-	(* Temporarily remove the function attributes *)
-	fundec.svar.vattr <- [];
-	(* Body now *)
-	self#line_directive ~forcefile:true fmt l;
-	self#fundecl fmt fundec;
-	fundec.svar.vattr <- oldattr;
-	Format.fprintf fmt "@\n";
-	self#out_current_function
-      end
+      if print_var fundec.svar then
+	begin
+	  self#in_current_function fundec.svar;
+	  (* If the function has attributes then print a prototype because
+	   * GCC cannot accept function attributes in a definition *)
+	  let oldattr = fundec.svar.vattr in
+	  (* Always pring the file name before function declarations *)
+	  (* Prototype first *)
+	  if oldattr <> [] then
+	    (self#line_directive fmt l;
+	     Format.fprintf fmt "%a;@\n" self#vdecl_complete fundec.svar);
+	  (* Temporarily remove the function attributes *)
+	  fundec.svar.vattr <- [];
+	  (* Body now *)
+	  self#line_directive ~forcefile:true fmt l;
+	  self#fundecl fmt fundec;
+	  fundec.svar.vattr <- oldattr;
+	  Format.fprintf fmt "@\n";
+	  self#out_current_function
+	end
     | GType (typ, l) ->
       self#line_directive ~forcefile:true fmt l;
       Format.fprintf fmt "typedef %a;@\n"

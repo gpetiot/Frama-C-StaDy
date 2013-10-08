@@ -301,12 +301,12 @@ let run() =
 	else
 	  Property_status.fold (fun p l -> p :: l) [] 
       in
-      Options.Self.feedback "selected properties:";
+      Options.Self.debug ~level:2 "selected properties:";
       List.iter (fun p ->
 	try
 	  let id = Prop_id.to_id p in
 	  Options.Self.debug ~level:2 "%a (%i) found" Property.pretty p id
-	with _ -> Options.Self.debug ~level:2 "%a not found" Property.pretty p
+	with _ -> Options.Self.debug ~level:3 "%a not found" Property.pretty p
       ) props;
 
       compute_props props;
