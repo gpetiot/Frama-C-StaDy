@@ -1,0 +1,49 @@
+[kernel] preprocessing with "gcc -C -E -I.  tests/bubble_sort/bubble_sort.c"
+[ap] non-default behaviors ignored!
+[stady] Prolog precondition successfully generated
+[stady] The result is in file out.pl
+[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main bubble_sort -pc -pc-validate-asserts -pc-test-params out.pl -pc-com internet -pc-no-xml
+[kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:44:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
+stady_temp.c:63:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+[pc] analyzing...
+[pc] Compiling pathcrawler_stady_temp/lanceur_bubble_sort utilities ...
+[pc] Compiling pathcrawler_stady_temp/lanceur_bubble_sort ...
+[pc] generating tests...
+[pc] Starting lanceur_bubble_sort (isc version)
+[pc] Starting lanceur_pathcrawler__bubble_sort_precond (isc version)
+[pc] generation finished
+[stady] PathCrawler OK!
+[stady] all-paths: true
+[stady] 12166 test cases
+[ap] non-default behaviors ignored!
+[report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'bubble_sort'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Post-condition (file tests/bubble_sort/bubble_sort.c, line 9)
+            by pcva.
+[    -    ] Assigns (file tests/bubble_sort/bubble_sort.c, line 8)
+[  Valid  ] Loop variant at loop (file tests/bubble_sort/bubble_sort.c, line 18)
+            by pcva.
+[  Valid  ] Loop variant at loop (file tests/bubble_sort/bubble_sort.c, line 24)
+            by pcva.
+[  Valid  ] Invariant (file tests/bubble_sort/bubble_sort.c, line 14)
+            by pcva.
+[  Valid  ] Invariant (file tests/bubble_sort/bubble_sort.c, line 19)
+            by pcva.
+[  Valid  ] Invariant (file tests/bubble_sort/bubble_sort.c, line 20)
+            by pcva.
+[    -    ] Default behavior
+            tried with Frama-C kernel.
+
+--------------------------------------------------------------------------------
+--- Status Report Summary
+--------------------------------------------------------------------------------
+     6 Completely validated
+     2 To be validated
+     8 Total
+--------------------------------------------------------------------------------

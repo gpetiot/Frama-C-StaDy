@@ -1,0 +1,51 @@
+[kernel] preprocessing with "gcc -C -E -I.  -dD tests/quick_sort/quick_sort.c"
+[ap] non-default behaviors ignored!
+[stady] Prolog precondition successfully generated
+[stady] The result is in file out.pl
+[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main quick_sort -pc -pc-validate-asserts -pc-test-params out.pl -pc-com internet -pc-no-xml
+[kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:18:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
+stady_temp.c:51:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+[pc] analyzing...
+[pc] Compiling pathcrawler_stady_temp/lanceur_quick_sort utilities ...
+[pc] Compiling pathcrawler_stady_temp/lanceur_quick_sort ...
+[pc] generating tests...
+[pc] Starting lanceur_quick_sort (isc version)
+[pc] Starting lanceur_pathcrawler__quick_sort_precond (isc version)
+[pc] generation finished
+[stady] PathCrawler OK!
+[stady] all-paths: true
+[stady] 6060 test cases
+[ap] non-default behaviors ignored!
+[report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'quick_sort'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Post-condition (file tests/quick_sort/quick_sort.c, line 12)
+            by pcva.
+[  Valid  ] Post-condition (file tests/quick_sort/quick_sort.c, line 13)
+            by pcva.
+[  Valid  ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 32)
+            by pcva.
+[  Valid  ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 36)
+            by pcva.
+[  Valid  ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 43)
+            by pcva.
+[  Valid  ] Invariant (file tests/quick_sort/quick_sort.c, line 29)
+            by pcva.
+[  Valid  ] Invariant (file tests/quick_sort/quick_sort.c, line 33)
+            by pcva.
+[  Valid  ] Invariant (file tests/quick_sort/quick_sort.c, line 40)
+            by pcva.
+[  Valid  ] Default behavior
+            by Frama-C kernel.
+
+--------------------------------------------------------------------------------
+--- Status Report Summary
+--------------------------------------------------------------------------------
+     9 Completely validated
+     9 Total
+--------------------------------------------------------------------------------

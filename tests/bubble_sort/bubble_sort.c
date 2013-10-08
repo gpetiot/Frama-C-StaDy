@@ -1,4 +1,8 @@
 
+/* run.config
+OPT: -main bubble_sort -stady -then -report
+*/
+
 /*@ requires 0 < n <= 5;
   @ requires \valid(A+(0..n-1));
   @ assigns A[0..n-1];

@@ -1,4 +1,8 @@
 
+/* run.config
+OPT: -main insertion_sort -stady -then -report
+*/
+
 /*@ requires 1 <= n <= 5;
   @ requires \valid(t+(0..n-1));
   @ assigns t[0..n-1];

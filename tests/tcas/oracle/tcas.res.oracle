@@ -1,0 +1,78 @@
+[kernel] preprocessing with "gcc -C -E -I.  tests/tcas/tcas.c"
+[ap] non-default behaviors ignored!
+[stady] Prolog precondition successfully generated
+[stady] The result is in file out.pl
+[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main entry_point -pc -pc-validate-asserts -pc-test-params out.pl -pc-com internet -pc-no-xml
+[kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:274:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+[pc] analyzing...
+[pc] Compiling pathcrawler_stady_temp/lanceur_entry_point utilities ...
+[pc] Compiling pathcrawler_stady_temp/lanceur_entry_point ...
+[pc] generating tests...
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_pathcrawler__entry_point_precond (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] Starting lanceur_entry_point (isc version)
+[pc] generation finished
+[stady] PathCrawler OK!
+[stady] all-paths: false
+[stady] 1219 test cases
+[ap] non-default behaviors ignored!
+[report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'entry_point'
+--------------------------------------------------------------------------------
+
+[   Bug   ] Post-condition for 'P1a' (file tests/tcas/tcas.c, line 116)
+            by pcva.
+[   Bug   ] Post-condition for 'P2b' (file tests/tcas/tcas.c, line 130)
+            by pcva.
+[   Bug   ] Post-condition for 'P3a' (file tests/tcas/tcas.c, line 135)
+            by pcva.
+[   Bug   ] Post-condition for 'P4b' (file tests/tcas/tcas.c, line 146)
+            by pcva.
+[  Dead   ] Behavior 'P1a'
+            Locally invalid, but unreachable.
+            By Frama-C kernel because:
+             - Post-condition for 'P1a' (file tests/tcas/tcas.c, line 116)
+[  Dead   ] Behavior 'P2b'
+            Locally invalid, but unreachable.
+            By Frama-C kernel because:
+             - Post-condition for 'P2b' (file tests/tcas/tcas.c, line 130)
+[  Dead   ] Behavior 'P3a'
+            Locally invalid, but unreachable.
+            By Frama-C kernel because:
+             - Post-condition for 'P3a' (file tests/tcas/tcas.c, line 135)
+[  Dead   ] Behavior 'P4b'
+            Locally invalid, but unreachable.
+            By Frama-C kernel because:
+             - Post-condition for 'P4b' (file tests/tcas/tcas.c, line 146)
+[  Valid  ] Default behavior
+            by Frama-C kernel.
+
+--------------------------------------------------------------------------------
+--- Status Report Summary
+--------------------------------------------------------------------------------
+     1 Completely validated
+     4 Bugs found
+     4 Dead properties
+     9 Total
+--------------------------------------------------------------------------------

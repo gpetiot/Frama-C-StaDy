@@ -1,0 +1,51 @@
+[kernel] preprocessing with "gcc -C -E -I.  tests/insertion_sort/insertion_sort.c"
+[ap] non-default behaviors ignored!
+[stady] Prolog precondition successfully generated
+[stady] The result is in file out.pl
+[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main insertion_sort -pc -pc-validate-asserts -pc-test-params out.pl -pc-com internet -pc-no-xml
+[kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:66:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
+stady_temp.c:81:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+[pc] analyzing...
+[pc] Compiling pathcrawler_stady_temp/lanceur_insertion_sort utilities ...
+[pc] Compiling pathcrawler_stady_temp/lanceur_insertion_sort ...
+[pc] generating tests...
+[pc] Starting lanceur_insertion_sort (isc version)
+[pc] Starting lanceur_pathcrawler__insertion_sort_precond (isc version)
+[pc] generation finished
+[stady] PathCrawler OK!
+[stady] all-paths: true
+[stady] 5086 test cases
+[ap] non-default behaviors ignored!
+[report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'insertion_sort'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Post-condition (file tests/insertion_sort/insertion_sort.c, line 9)
+            by pcva.
+[    -    ] Assigns (file tests/insertion_sort/insertion_sort.c, line 8)
+[  Valid  ] Loop variant at loop (file tests/insertion_sort/insertion_sort.c, line 20)
+            by pcva.
+[  Valid  ] Loop variant at loop (file tests/insertion_sort/insertion_sort.c, line 30)
+            by pcva.
+[  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 15)
+            by pcva.
+[  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 16)
+            by pcva.
+[  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 25)
+            by pcva.
+[  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 26)
+            by pcva.
+[    -    ] Default behavior
+            tried with Frama-C kernel.
+
+--------------------------------------------------------------------------------
+--- Status Report Summary
+--------------------------------------------------------------------------------
+     7 Completely validated
+     2 To be validated
+     9 Total
+--------------------------------------------------------------------------------

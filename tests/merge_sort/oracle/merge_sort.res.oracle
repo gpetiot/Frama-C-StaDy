@@ -1,0 +1,78 @@
+[kernel] preprocessing with "gcc -C -E -I.  tests/merge_sort/merge_sort.c"
+[ap] non-default behaviors ignored!
+[ap] Predicate ignored: \separated(table, ret)
+[stady] Prolog precondition successfully generated
+[stady] The result is in file out.pl
+[stady] Predicate ignored: \separated(table, ret)
+[stady] Predicate ignored: \separated(table, ret)
+[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main merge_sort -pc -pc-validate-asserts -pc-test-params out.pl -pc-com internet -pc-no-xml
+[kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:23:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+stady_temp.c:147:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
+[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+[pc] analyzing...
+[pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort utilities ...
+[pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort ...
+[pc] generating tests...
+[pc] Starting lanceur_merge_sort (isc version)
+[pc] Starting lanceur_pathcrawler__merge_sort_precond (isc version)
+[pc] generation finished
+[stady] PathCrawler OK!
+[stady] all-paths: true
+[stady] 15200 test cases
+[ap] non-default behaviors ignored!
+[ap] Predicate ignored: \separated(table, ret)
+[report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'BottomUpMerge'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 17)
+            by pcva.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 10)
+            by pcva.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 11)
+            by pcva.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 12)
+            by pcva.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 13)
+            by pcva.
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'CopyArray'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 38)
+            by pcva.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 33)
+            by pcva.
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'BottomUpSort'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 59)
+            by pcva.
+[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 66)
+            by pcva.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 56)
+            by pcva.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 63)
+            by pcva.
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'merge_sort'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Post-condition (file tests/merge_sort/merge_sort.c, line 85)
+            by pcva.
+[  Valid  ] Default behavior
+            by Frama-C kernel.
+
+--------------------------------------------------------------------------------
+--- Status Report Summary
+--------------------------------------------------------------------------------
+    13 Completely validated
+    13 Total
+--------------------------------------------------------------------------------

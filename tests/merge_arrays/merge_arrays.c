@@ -1,4 +1,8 @@
 
+/* run.config
+OPT: -main merge_arrays -stady -then -report
+*/
+
 /*@ requires 0 <= l1 <= 3;
   @ requires 0 <= l2 <= 3;
   @ requires \valid_read(t1+(0..l1-1));

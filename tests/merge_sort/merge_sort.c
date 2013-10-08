@@ -1,4 +1,7 @@
 
+/* run.config
+OPT: -main merge_sort -stady -then -report
+*/
 
 void BottomUpMerge(int* A, int iLeft, int iRight, int iEnd, int* B) {
   int i0 = iLeft, i1 = iRight, j;

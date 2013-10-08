@@ -105,7 +105,7 @@ let compute_props props =
   in
   let cmd =
     Printf.sprintf
-      "frama-c %s -main %s -pc -pc-validate-asserts %s -pc-com %s -pc-no-xml %s"
+      "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -pc -pc-validate-asserts %s -pc-com %s -pc-no-xml %s"
       (Options.Temp_File.get())
       (Kernel_function.get_name (fst(Globals.entry_point())))
       test_params

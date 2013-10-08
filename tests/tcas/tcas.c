@@ -1,4 +1,9 @@
 
+/* run.config
+OPT: -main entry_point -stady -then -report
+*/
+
+
 int Cur_Vertical_Sep = 16684;
 int High_Confidence = 32767;
 int Two_of_Three_Reports_Valid;

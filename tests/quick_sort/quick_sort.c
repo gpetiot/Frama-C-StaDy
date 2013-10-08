@@ -1,4 +1,7 @@
 
+/* run.config
+OPT: -main quick_sort -pp-annot -stady -then -report
+*/
 
 #define MAX_LEVELS 100
 
