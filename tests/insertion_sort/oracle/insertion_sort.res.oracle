@@ -1,4 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/insertion_sort/insertion_sort.c"
+[stady] slicing: none
 [ap] non-default behaviors ignored!
 [stady] Prolog precondition successfully generated
 [stady] The result is in file out.pl
@@ -16,7 +17,6 @@ stady_temp.c:81:[kernel] warning: Calling undeclared function pathcrawler_assert
 [pc] generation finished
 [stady] PathCrawler OK!
 [stady] all-paths: true
-[stady] 5086 test cases
 [ap] non-default behaviors ignored!
 [report] Computing properties status...
 
@@ -25,20 +25,20 @@ stady_temp.c:81:[kernel] warning: Calling undeclared function pathcrawler_assert
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/insertion_sort/insertion_sort.c, line 9)
-            by pcva.
+            by StaDyPlus.
 [    -    ] Assigns (file tests/insertion_sort/insertion_sort.c, line 8)
 [  Valid  ] Loop variant at loop (file tests/insertion_sort/insertion_sort.c, line 20)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Loop variant at loop (file tests/insertion_sort/insertion_sort.c, line 30)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 15)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 16)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 25)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 26)
-            by pcva.
+            by StaDyPlus.
 [    -    ] Default behavior
             tried with Frama-C kernel.
 

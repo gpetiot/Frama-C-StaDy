@@ -1,4 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  -dD tests/quick_sort/quick_sort.c"
+[stady] slicing: none
 [ap] non-default behaviors ignored!
 [stady] Prolog precondition successfully generated
 [stady] The result is in file out.pl
@@ -16,7 +17,6 @@ stady_temp.c:51:[kernel] warning: Calling undeclared function pathcrawler_assert
 [pc] generation finished
 [stady] PathCrawler OK!
 [stady] all-paths: true
-[stady] 6060 test cases
 [ap] non-default behaviors ignored!
 [report] Computing properties status...
 
@@ -25,21 +25,21 @@ stady_temp.c:51:[kernel] warning: Calling undeclared function pathcrawler_assert
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/quick_sort/quick_sort.c, line 12)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Post-condition (file tests/quick_sort/quick_sort.c, line 13)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 32)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 36)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 43)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/quick_sort/quick_sort.c, line 29)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/quick_sort/quick_sort.c, line 33)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/quick_sort/quick_sort.c, line 40)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Default behavior
             by Frama-C kernel.
 

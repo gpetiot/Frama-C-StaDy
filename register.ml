@@ -81,101 +81,145 @@ let setup_props_bijection () =
 
 
 
+module type TestGen =
+sig
+  val init: Property.t list -> unit
+  val run: unit -> unit
+  val translated_properties: unit -> Property.t list
+  val clean: unit -> unit
+end
+
+
+module PathCrawler : TestGen =
+struct
+  let cmd = ref ""
+
+  let init props =
+    (* Translate some parts of the pre-condition in Prolog *)
+    generate_test_parameters();
+    Options.Self.feedback "Prolog precondition successfully generated";
+    let parameters_file = out_file () in
+    Options.Self.feedback "The result is in file %s" parameters_file;
+    print_in_file (Options.Temp_File.get()) props;
+    (*let translated_properties =
+      Pcva_printer.no_repeat !Prop_id.translated_properties in*)
+    let test_params =
+      if Sys.file_exists parameters_file then
+	Printf.sprintf "-pc-test-params %s" parameters_file
+      else
+	""
+    in
+    let tmp =
+      Printf.sprintf
+	"frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -pc -pc-validate-asserts %s -pc-com %s -pc-no-xml %s"
+	(Options.Temp_File.get())
+	(Kernel_function.get_name (fst(Globals.entry_point())))
+	test_params
+	(Options.Socket_Type.get())
+	(Options.PathCrawler_Options.get())
+    in
+    Options.Self.feedback "cmd: %s" tmp;
+    cmd := tmp
+
+  let run () =
+    (* open socket with the generator *)
+    begin
+      match Options.Socket_Type.get() with
+      | s when s = "unix" ->
+	let socket = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
+	let name = "Pc2FcSocket" in
+	begin
+	  try
+	    Unix.bind socket (Unix.ADDR_UNIX name);
+	    Unix.listen socket 1;
+	    let ret = Unix.system !cmd in
+	    let client, _ = Unix.accept socket in
+	    Pcva_socket.process_socket client;
+	    Pcva_socket.print_exit_code ret
+	  with _ ->
+	    Unix.close socket;
+	    Options.Self.feedback "error: unix socket now closed!"
+	end;
+	Unix.close socket;
+	Sys.remove name
+      | s when s = "internet" ->
+	let socket = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
+	begin
+	  try
+	    Unix.bind socket(Unix.ADDR_INET(Unix.inet_addr_loopback,2222));
+	    Unix.listen socket 1;
+	    let ret = Unix.system !cmd in
+	    let client, _ = Unix.accept socket in
+	    Pcva_socket.process_socket client;
+	    Pcva_socket.print_exit_code ret
+	  with _ ->
+	    Unix.close socket;
+	    Options.Self.feedback "error: internet socket now closed!"
+	end;
+	Unix.close socket
+      | _ (* stdio *) ->
+	let chan = Unix.open_process_in !cmd in
+	Pcva_socket.process_channel chan;
+	let ret = Unix.close_process_in chan in
+	Pcva_socket.print_exit_code ret
+    end
+
+
+  let translated_properties() =
+    Pcva_printer.no_repeat !Prop_id.translated_properties
+
+  let clean() =
+    Prop_id.translated_properties := [];
+    Prop_id.can_validate_others := false
+end
 
 
 
 
+module type SlicingType = sig
+  val process : Property.t list -> unit
+  val name : string
+end
 
 
+module None(G:TestGen): SlicingType =
+struct
+  let name = "none"
 
-let compute_props props =
-  (* Translate some parts of the pre-condition in Prolog *)
-  generate_test_parameters();
-  Options.Self.feedback "Prolog precondition successfully generated";
-  let parameters_file = out_file () in
-  Options.Self.feedback "The result is in file %s" parameters_file;
-  print_in_file (Options.Temp_File.get()) props;
-  let translated_properties =
-    Pcva_printer.no_repeat !Prop_id.translated_properties in
-  let test_params =
-    if Sys.file_exists parameters_file then
-      Printf.sprintf "-pc-test-params %s" parameters_file
-    else
-      ""
-  in
-  let cmd =
-    Printf.sprintf
-      "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -pc -pc-validate-asserts %s -pc-com %s -pc-no-xml %s"
-      (Options.Temp_File.get())
-      (Kernel_function.get_name (fst(Globals.entry_point())))
-      test_params
-      (Options.Socket_Type.get())
-      (Options.PathCrawler_Options.get())
-  in
-  Options.Self.feedback "cmd: %s" cmd;
-  (* open socket with the generator *)
-  begin
-    match Options.Socket_Type.get() with
-    | s when s = "unix" ->
-      let socket = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
-      let name = "Pc2FcSocket" in
-      begin
-	try
-	  Unix.bind socket (Unix.ADDR_UNIX name);
-	  Unix.listen socket 1;
-	  let ret = Unix.system cmd in
-	  let client, _ = Unix.accept socket in
-	  Pcva_socket.process_socket client;
-	  Pcva_socket.print_exit_code ret
-	with _ ->
-	  Unix.close socket;
-	  Options.Self.feedback "error: unix socket now closed!"
-      end;
-      Unix.close socket;
-      Sys.remove name
-    | s when s = "internet" ->
-      let socket = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
-      begin
-	try
-	  Unix.bind socket(Unix.ADDR_INET(Unix.inet_addr_loopback,2222));
-	  Unix.listen socket 1;
-	  let ret = Unix.system cmd in
-	  let client, _ = Unix.accept socket in
-	  Pcva_socket.process_socket client;
-	  Pcva_socket.print_exit_code ret
-	with _ ->
-	  Unix.close socket;
-	  Options.Self.feedback "error: internet socket now closed!"
-      end;
-      Unix.close socket
-    | _ (* stdio *) ->
-      let chan = Unix.open_process_in cmd in
-      Pcva_socket.process_channel chan;
-      let ret = Unix.close_process_in chan in
-      Pcva_socket.print_exit_code ret
-  end;
-  States.NbCases.mark_as_computed();
-  States.TestFailures.mark_as_computed();
-  Options.Self.feedback "all-paths: %b" !Prop_id.can_validate_others;
-  Options.Self.feedback "%i test cases" (States.NbCases.get());
-  let hyps = [] in
-  let distinct = true in
-  List.iter (fun prop ->
-    try
-      let _ = States.TestFailures.find prop in
-      let status = Property_status.False_and_reachable in
-      Property_status.emit pcva_emitter ~hyps prop ~distinct status
-    with
-    | Not_found ->
-      let status = Property_status.True in
-      if !Prop_id.can_validate_others then
+  let process props =
+    G.init props;
+    G.run ();
+    States.NbCases.mark_as_computed();
+    States.TestFailures.mark_as_computed();
+    Options.Self.feedback "all-paths: %b" !Prop_id.can_validate_others;
+    Options.Self.debug ~level:3 "%i test cases" (States.NbCases.get());
+    let hyps = [] in
+    let distinct = true in
+    List.iter (fun prop ->
+      try
+	let _ = States.TestFailures.find prop in
+	let status = Property_status.False_and_reachable in
 	Property_status.emit pcva_emitter ~hyps prop ~distinct status
-  ) translated_properties;
-  Prop_id.translated_properties := [];
-  Prop_id.can_validate_others := false
-    
+      with
+      | Not_found ->
+	let status = Property_status.True in
+	if !Prop_id.can_validate_others then
+	  Property_status.emit pcva_emitter ~hyps prop ~distinct status
+    ) (G.translated_properties());
+    G.clean()
+ end
 
+module All = None
+module Each = None
+module Min = None
+module Smart = None
 
+module Make(S:SlicingType) =
+struct
+  let run props =
+    Options.Self.feedback "slicing: %s" S.name;
+    S.process props
+end
 
 
 
@@ -309,7 +353,18 @@ let run() =
 	with _ -> Options.Self.debug ~level:3 "%a not found" Property.pretty p
       ) props;
 
-      compute_props props;
+      begin
+	let module G = PathCrawler in
+	match Options.Slicing.get() with
+	| "all" -> let module M = Make(All(G)) in M.run props
+	| "each" -> let module M = Make(Each(G)) in M.run props
+	| "min" -> let module M = Make(Min(G)) in M.run props
+	| "smart" -> let module M = Make(Smart(G)) in M.run props
+	| _ -> let module M = Make(None(G)) in M.run props
+      end;
+
+      (*compute_props props;*)
+
       (* cleaning *)
       Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
       Property.Hashtbl.clear Prop_id.prop_to_id_tbl

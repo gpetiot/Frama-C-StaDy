@@ -1,4 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/tcas/tcas.c"
+[stady] slicing: none
 [ap] non-default behaviors ignored!
 [stady] Prolog precondition successfully generated
 [stady] The result is in file out.pl
@@ -33,7 +34,6 @@ stady_temp.c:274:[kernel] warning: Calling undeclared function pathcrawler_asser
 [pc] generation finished
 [stady] PathCrawler OK!
 [stady] all-paths: false
-[stady] 1219 test cases
 [ap] non-default behaviors ignored!
 [report] Computing properties status...
 
@@ -42,13 +42,13 @@ stady_temp.c:274:[kernel] warning: Calling undeclared function pathcrawler_asser
 --------------------------------------------------------------------------------
 
 [   Bug   ] Post-condition for 'P1a' (file tests/tcas/tcas.c, line 116)
-            by pcva.
+            by StaDyPlus.
 [   Bug   ] Post-condition for 'P2b' (file tests/tcas/tcas.c, line 130)
-            by pcva.
+            by StaDyPlus.
 [   Bug   ] Post-condition for 'P3a' (file tests/tcas/tcas.c, line 135)
-            by pcva.
+            by StaDyPlus.
 [   Bug   ] Post-condition for 'P4b' (file tests/tcas/tcas.c, line 146)
-            by pcva.
+            by StaDyPlus.
 [  Dead   ] Behavior 'P1a'
             Locally invalid, but unreachable.
             By Frama-C kernel because:

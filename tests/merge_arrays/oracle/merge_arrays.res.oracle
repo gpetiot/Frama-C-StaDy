@@ -1,4 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_arrays/merge_arrays.c"
+[stady] slicing: none
 [ap] non-default behaviors ignored!
 [stady] Prolog precondition successfully generated
 [stady] The result is in file out.pl
@@ -16,7 +17,6 @@ stady_temp.c:65:[kernel] warning: Calling undeclared function pathcrawler_assert
 [pc] generation finished
 [stady] PathCrawler OK!
 [stady] all-paths: true
-[stady] 2046 test cases
 [ap] non-default behaviors ignored!
 [report] Computing properties status...
 
@@ -25,33 +25,33 @@ stady_temp.c:65:[kernel] warning: Calling undeclared function pathcrawler_assert
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/merge_arrays/merge_arrays.c, line 13)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 24)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 40)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 50)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 18)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 19)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 20)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 21)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 35)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 36)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 37)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 45)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 46)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 47)
-            by pcva.
+            by StaDyPlus.
 [  Valid  ] Default behavior
             by Frama-C kernel.
 
