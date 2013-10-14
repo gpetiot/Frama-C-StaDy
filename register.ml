@@ -56,7 +56,7 @@ let print_in_file filename props =
 
 
 let pcva_emitter =
-  Emitter.create "pcva" [Emitter.Property_status; Emitter.Funspec]
+  Emitter.create "StaDyPlus" [Emitter.Property_status; Emitter.Funspec]
     ~correctness:[] ~tuning:[]
 
 

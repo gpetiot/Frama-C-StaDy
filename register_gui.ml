@@ -48,7 +48,7 @@ let to_do_on_select
 		(State_selection.of_list[Kernel.PreprocessAnnot.self]) prj;
 	      Project.on prj (fun () ->
 		File.init_from_c_files [File.from_filename tc_c];
-		!Db.RteGen.compute()
+		(*!Db.RteGen.compute()*)
 	      ) ()
 	    in
 	    ignore

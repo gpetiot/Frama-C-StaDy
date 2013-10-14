@@ -173,7 +173,7 @@ class pcva_printer props ~first_pass () = object (self)
     match t.term_node with
     | TConst(Integer(i,_)) ->
       if (Integer.to_string i) = "-2147483648" then
-	Format.fprintf fmt "(-2147483467-1)"
+	Format.fprintf fmt "(-2147483647-1)"
       else
 	super#term_node fmt t
     | Tat(_, StmtLabel _) -> failwith "\\at on stmt label unsupported!"
