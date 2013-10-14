@@ -1,5 +1,4 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_sort/merge_sort.c"
-[stady] slicing: none
 [ap] non-default behaviors ignored!
 [ap] Predicate ignored: \separated(table, ret)
 [stady] Prolog precondition successfully generated

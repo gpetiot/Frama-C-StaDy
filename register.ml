@@ -157,7 +157,7 @@ let compute_props props =
   States.NbCases.mark_as_computed();
   States.TestFailures.mark_as_computed();
   Options.Self.feedback "all-paths: %b" !Prop_id.can_validate_others;
-  Options.Self.feedback "%i test cases" (States.NbCases.get());
+  Options.Self.debug ~level:3 "%i test cases" (States.NbCases.get());
   let hyps = [] in
   let distinct = true in
   List.iter (fun prop ->

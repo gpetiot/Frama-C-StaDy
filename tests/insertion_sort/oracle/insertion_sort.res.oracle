@@ -1,5 +1,4 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/insertion_sort/insertion_sort.c"
-[stady] slicing: none
 [ap] non-default behaviors ignored!
 [stady] Prolog precondition successfully generated
 [stady] The result is in file out.pl
