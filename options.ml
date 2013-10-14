@@ -51,19 +51,3 @@ module Properties = Self.StringList (struct
   let arg_name = "p,..."
   let help = ""
 end)
-
-module Slicing = Self.String (struct
-  let option_name = "-stady-slice"
-  let arg_name = "criterion"
-  let help = "Slicing of the program depending on a criterion\n\
-	[*] none : no slicing (default)\n\
-	[*] all : slicing on all threats\n\
-	[*] each : slicing on each threat\n\
-	[*] min : slicing based on a minimal induced cover\n\
-	[*] smart : slicing using `min` iteratively"
-  let default = "none"
-end)
-  
-let () =
-  Slicing.set_possible_values ["none"; "all"; "each"; "min"; "smart"]
-    

@@ -60,24 +60,7 @@ let to_do_on_select
       | _ -> ()
     end;
     if button_nb = 3 then
-      (*let callback() = Register.compute_props [prop]; main_ui#redisplay() in*)
-      let callback() =
-	begin
-	  let module G = Register.PathCrawler in
-	  let props = [prop] in
-	  match Options.Slicing.get() with
-	  | "all" -> let module M = Register.Make(Register.All(G)) in
-		     M.run props
-	  | "each" -> let module M = Register.Make(Register.Each(G)) in
-		      M.run props
-	  | "min" -> let module M = Register.Make(Register.Min(G)) in
-		     M.run props
-	  | "smart" -> let module M = Register.Make(Register.Smart(G)) in
-		       M.run props
-	  | _ -> let module M = Register.Make(Register.None(G)) in M.run props
-	end;
-	main_ui#redisplay()
-      in
+      let callback() = Register.compute_props [prop]; main_ui#redisplay() in
       ignore (popup_factory#add_item "Validate property with pcva" ~callback)
   | _ -> ()
 
