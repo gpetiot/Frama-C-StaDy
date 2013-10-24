@@ -301,6 +301,18 @@ let run() =
 	else
 	  Property_status.fold (fun p l -> p :: l) [] 
       in
+
+      let props = List.filter (fun p ->
+	match Property_status.get p with
+	| Property_status.Inconsistent _
+	| Property_status.Best (Property_status.True,_)
+	| Property_status.Best (Property_status.False_if_reachable,_)
+	| Property_status.Best (Property_status.False_and_reachable,_) -> false
+	| Property_status.Never_tried
+	| Property_status.Best (Property_status.Dont_know,_) -> true
+      ) props in
+
+
       Options.Self.debug ~level:2 "selected properties:";
       List.iter (fun p ->
 	try
