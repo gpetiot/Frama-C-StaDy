@@ -88,16 +88,7 @@ int my_valid_interval(char* memory, int* len, void *ptr, unsigned beg,
   /* pas dans la mémoire, pas valide */
   if(ind == -1)
     return 0;
-  for(i = beg; i < end; i++)
-    if(ind+i >= MAX_LEN)
-      return 0;
-    else if(ind+i < 0)
-      return 0;
-    /* un des éléments de l'intervalle n'est pas valide */
-    else if(len[ind+i] <= 0)
-      return 0;
-  /* tous les éléments sont valides */
-  return 1;
+  return len[ind+beg] >= end;
 }
 
 
@@ -129,7 +120,7 @@ int my_offset(char* memory, int* len, void* ptr) {
   int ind = index_from_ptr(memory, len, ptr), beg, start, i;
   if(ind == -1)
     return -1;
-
+  
   beg = ind;
   start = ind;
   for(i = start; i >= 0; i--)
@@ -160,7 +151,7 @@ void debug(char* memory, int* len) {
 int f_precond(char memory[MAX_LEN], int len[MAX_LEN], int n) {
   int i;
   /* memory peut contenir n'importe quoi */
-  /* len doit respetcer un invariant */
+  /* len doit respecter un invariant */
   /*@ loop invariant \forall int k; 0 <= k < i ==> len[k] >= 0;
     @ loop invariant \forall int k; 1 <= k < i ==>
                                   (len[k] == 0 || len[k] == len[k-1]-1);
@@ -178,6 +169,9 @@ int f_precond(char memory[MAX_LEN], int len[MAX_LEN], int n) {
 	      return 0;
   if(!my_valid_interval(memory, len, memory+n, 0, 4))
     return 0;
+
+  //if(my_offset(memory, len, memory+n) != 3)
+  //return 0;
   
   return 1;
 }
