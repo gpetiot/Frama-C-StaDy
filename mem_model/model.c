@@ -42,9 +42,30 @@ void* my_malloc(char* memory, int* len, unsigned n) {
 }
 
 
-
+/*@ requires \valid(memory+(0..(MAX_LEN-1)));
+  @ requires \valid(len+(0..(MAX_LEN-1)));
+  @ ensures -1 <= \result < MAX_LEN;
+  @ assigns \nothing;
+  @ behavior found:
+  @  assumes \exists int k; 0 <= k < MAX_LEN && memory+k-ptr == 0;
+  @  ensures memory+\result-ptr == 0;
+  @  ensures memory+\result == ptr;
+  @ behavior not_found:
+  @  assumes \forall int k; 0 <= k < MAX_LEN ==> memory+k-ptr != 0;
+  @  ensures \result == -1;
+  @*/
 int index_from_ptr(char* memory, int* len, void *ptr) {
   int i, ind = -1;
+  /*@ loop invariant 0 <= i <= MAX_LEN;
+    @ loop invariant -1 <= ind < MAX_LEN;
+    @ loop invariant (\forall int k; 0 <= k < i ==> memory+k-ptr != 0) ==> ind == -1;
+    @ loop invariant \forall int k; 0 <= k < i ==> memory+k-ptr==0 ==> ind == k;
+    @ loop invariant \forall int k; 0 <= k < i ==> memory+k == ptr ==> ind == k;
+    @ loop invariant ind != -1 ==> memory+ind-ptr == 0;
+    @ loop invariant ind != -1 ==> memory+ind == ptr;
+    @ loop assigns i, ind;
+    @ loop variant MAX_LEN-i;
+    @*/
   for(i = 0; i < MAX_LEN && ind == -1; i++)
     /* pas sûr que PathCrawler apprécie cette instruction */
     if(memory+i-(char*)ptr == 0)
