@@ -8,18 +8,21 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-%dom('f', cont('t',_), [], int([-2147483648..2147483647])).
-dom('f',cont('memory',_),[],int([-128..127])).
-dom('f',cont('len',_),[],int([0..64])).
+dom('f',cont('mem',_),[],int([-128..127])).
+dom('f',cont('inc',_),[],int([0..64])).
+dom('f',cont('dec',_),[],int([0..64])).
 dom('pathcrawler__f_precond',A,B,C) :- dom('f',A,B,C).
+
 create_input_vals('f', Ins):-
-  %create_input_val(dim('t'), int([0..4294967295]),Ins),
-	create_input_val('n',int([-2147483648..2147483647]),Ins),
-  create_input_val(dim('memory'), int([64..64]),Ins),
-  create_input_val(dim('len'), int([64..64]),Ins),
+  create_input_val(dim('mem'), int([64..64]),Ins),
+  create_input_val(dim('inc'), int([64..64]),Ins),
+  create_input_val(dim('dec'), int([64..64]),Ins),
+  create_input_val('max_len', int([64..64]), Ins),
   create_input_val('n', int([0..63]), Ins),
+  create_input_val('m', int([0..63]), Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :- create_input_vals('f',Ins).
+
 quantif_preconds('f',[]).
 quantif_preconds('pathcrawler__f_precond',A) :- quantif_preconds('f',A).
 unquantif_preconds('f',[]).

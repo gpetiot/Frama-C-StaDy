@@ -268,22 +268,22 @@ int f_precond(char memory[MAX_LEN], int len[MAX_LEN], int n) {
   for(i = 0; i < MAX_LEN; i++)
     /*if(len[i] < 0)
       return 0;
-      else
+      else*/
       if(len[i] > MAX_LEN-i)
 	return 0;
-	else*/
+	else
 	if(i > 0)
 	  if(len[i-1] > 1)
 	    if(len[i] != len[i-1]-1)
 	      return 0;
 
 
-  if(my_block_length(memory, len, memory+0) != 4)
+  if(my_base_addr(memory, len, memory+3) - (memory+1) != 0)
     return 0;
-  /*
+  
   else if(my_offset(memory, len, memory+n) != 2)
     return 0;
-  */
+  
   return 1;
 }
 
