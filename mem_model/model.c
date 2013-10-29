@@ -105,6 +105,7 @@ void my_free(char* memory, int* len, void *ptr) {
 
 /*@ requires \valid_read(memory+(0..(MAX_LEN-1)));
   @ requires \valid_read(len+(0..(MAX_LEN-1)));
+  @ ensures \result == 1 <==> \valid((char*)ptr);
   @ behavior valid:
   @   assumes \valid((char*)ptr);
   @   ensures \result == 1;
