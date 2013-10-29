@@ -1,8 +1,8 @@
 
 #define MAX_LEN 64
-#define DEBUG
+/*#define DEBUG*/
 
-extern void printf(char*, ...);
+/*extern void printf(char*, ...);*/
 
 /*char memory[MAX_LEN];
 int len[MAX_LEN]; // nb de cases occupées à partir de cette case :
@@ -146,17 +146,39 @@ int my_valid_interval(char* memory, int* len, void *ptr, unsigned beg,
 
 
 char* my_base_addr(char* memory, int* len, void* ptr) {
-  int ind = index_from_ptr(memory, len, ptr), start, i;
-  if(ind == -1)
-    return 0;
-
-  start = ind;
-  for(i = start; i >= 0; i--)
-    /* tant que l'élément à gauche dans len est strictement plus grand,
-       on est dans le même bloc */
-    if(len[i] > len[ind])
+  int i, ind = -1, ind_base_addr = 0;
+  char* ret;
+  /*@ loop invariant 0 <= i <= MAX_LEN;
+    @ loop invariant -1 <= ind < MAX_LEN;
+    @ loop invariant 0 <= ind_base_addr < MAX_LEN;
+    @ loop invariant ind == -1 || 0 <= ind_base_addr <= ind < MAX_LEN;
+    @ loop invariant !in_mem(memory, i, (char*)ptr) ==> ind == -1;
+    @ loop invariant \forall int k;
+                       ind_in_mem(memory, i, (char*)ptr, k) ==> ind == k;
+    @ loop invariant ind != -1 ==> memory+ind-ptr == 0;
+    @ loop assigns i, ind, ind_base_addr;
+    @ loop variant MAX_LEN-i;
+    @*/
+  for(i = 0; i < MAX_LEN && ind == -1; i++) {
+    if(i > 0)
+      if(len[i-1] == 0 || len[i-1] == 1)
+	if(len[i] > 0)
+	  ind_base_addr = i;
+    if(memory+i-(char*)ptr == 0)
       ind = i;
-  return memory+ind;
+  }
+
+  if(ind == -1)
+    ret = 0;
+  else if(len[ind] > 0)
+    ret = memory+ind_base_addr;
+  else
+    ret = 0;
+
+#ifdef DEBUG
+  printf("my_base_addr(%p) = %p\n", ptr, ret);
+#endif
+  return ret;
 }
 
 
@@ -267,7 +289,7 @@ int f_precond(char memory[MAX_LEN], int len[MAX_LEN], int n) {
 
 
 /* fonction sous test */
-int g(char memory[MAX_LEN], int len[MAX_LEN], int* ptr) {
+int g(char memory[MAX_LEN], int len[MAX_LEN], void* ptr) {
   return 0;
 }
 
