@@ -41,14 +41,23 @@ void* my_malloc(char* memory, int* len, unsigned n) {
   return 0;
 }
 
-/*@ predicate in_memory(char* memory, integer i, char* ptr) =
-            \exists int k; 0 <= k < i && memory+k-ptr == 0;
+/*@ predicate in_mem(char* memory, integer i, char* ptr) =
+      \exists int k; 0 <= k < i && memory+k-ptr == 0;
+*/
+
+/*@ predicate ind_in_mem(char* memory, integer i, char* ptr, integer k) =
+      0 <= k < i && memory+k-ptr == 0;
 */
 
 
 /*@ lemma not_valid_not_in_mem:
       \forall char* p, char* mem, integer i;
-        !\valid(p) ==> !in_memory(mem, i, p);
+        !\valid(p) ==> !in_mem(mem, i, p);
+*/
+
+/*@ lemma not_valid_not_ind_in_mem:
+      \forall char* p, char* mem, integer i, k;
+        !\valid(p) ==> !ind_in_mem(mem, i, p, k);
 */
 
 
@@ -57,10 +66,10 @@ void* my_malloc(char* memory, int* len, unsigned n) {
   @ ensures -1 <= \result < MAX_LEN;
   @ assigns \nothing;
   @ behavior found:
-  @  assumes in_memory(memory, MAX_LEN, (char*)ptr);
-  @  ensures memory+\result-ptr == 0;
+  @  assumes in_mem(memory, MAX_LEN, (char*)ptr);
+  @  ensures ind_in_mem(memory, MAX_LEN, (char*)ptr, \result);
   @ behavior not_found:
-  @  assumes !in_memory(memory, MAX_LEN, (char*)ptr);
+  @  assumes !in_mem(memory, MAX_LEN, (char*)ptr);
   @  ensures \result == -1;
   @ behavior invalid:
   @  assumes !\valid((char*)ptr);
@@ -70,8 +79,9 @@ int index_from_ptr(char* memory, int* len, void *ptr) {
   int i, ind = -1;
   /*@ loop invariant 0 <= i <= MAX_LEN;
     @ loop invariant -1 <= ind < MAX_LEN;
-    @ loop invariant !in_memory(memory, i, (char*)ptr) ==> ind == -1;
-    @ loop invariant \forall int k; 0 <= k < i ==> memory+k-ptr==0 ==> ind == k;
+    @ loop invariant !in_mem(memory, i, (char*)ptr) ==> ind == -1;
+    @ loop invariant \forall int k;
+                       ind_in_mem(memory, i, (char*)ptr, k) ==> ind == k;
     @ loop invariant ind != -1 ==> memory+ind-ptr == 0;
     @ loop assigns i, ind;
     @ loop variant MAX_LEN-i;
@@ -105,20 +115,26 @@ void my_free(char* memory, int* len, void *ptr) {
 
 /*@ requires \valid_read(memory+(0..(MAX_LEN-1)));
   @ requires \valid_read(len+(0..(MAX_LEN-1)));
-  @ ensures \result == 1 <==> \valid((char*)ptr);
+  @ ensures \result == 1 ==> \valid((char*)ptr);
+  @ ensures !\valid((char*)ptr) ==> \result == 0;
+  @ behavior invalid:
+  @  assumes !in_mem(memory, MAX_LEN, (char*)ptr);
+  @  ensures \result == 0;
   @ behavior valid:
-  @   assumes \valid((char*)ptr);
-  @   ensures \result == 1;
-  @ behavior not_valid:
-  @   assumes !\valid((char*)ptr);
-  @   ensures \result == 0;
+  @  assumes in_mem(memory, MAX_LEN, (char*)ptr);
+  @  ensures \exists int k; ind_in_mem(memory, MAX_LEN, (char*)ptr, k);
+  @  ensures \exists int k;
+       ind_in_mem(memory, MAX_LEN, (char*)ptr, k) && len[k]>0 ==> \result == 1;
+  @  ensures \exists int k;
+       ind_in_mem(memory, MAX_LEN, (char*)ptr, k) && len[k]==0 ==> \result == 0;
   @*/
 int my_valid(char* memory, int* len, void *ptr) {
-  int ind = index_from_ptr(memory, len, ptr);
+  int ind = index_from_ptr(memory, len, ptr), ret;
   /* pas dans la mémoire, pas valide */
   if(ind == -1)
     return 0;
-  return len[ind] > 0;
+  ret = (len[ind] > 0)? 1: 0;
+  return ret;
 }
 
 
