@@ -1,5 +1,5 @@
 
-#define MAX_LEN 64
+#define MAX_LEN 32
 /*#define DEBUG*/
 
 /*extern void printf(char*, ...);*/
@@ -41,28 +41,38 @@ void* my_malloc(char* memory, int* len, unsigned n) {
   return 0;
 }
 
+/*@ predicate in_memory(char* memory, integer i, char* ptr) =
+            \exists int k; 0 <= k < i && memory+k-ptr == 0;
+*/
 
-/*@ requires \valid(memory+(0..(MAX_LEN-1)));
-  @ requires \valid(len+(0..(MAX_LEN-1)));
+
+/*@ lemma not_valid_not_in_mem:
+      \forall char* p, char* mem, integer i;
+        !\valid(p) ==> !in_memory(mem, i, p);
+*/
+
+
+/*@ requires \valid_read(memory+(0..(MAX_LEN-1)));
+  @ requires \valid_read(len+(0..(MAX_LEN-1)));
   @ ensures -1 <= \result < MAX_LEN;
   @ assigns \nothing;
   @ behavior found:
-  @  assumes \exists int k; 0 <= k < MAX_LEN && memory+k-ptr == 0;
+  @  assumes in_memory(memory, MAX_LEN, (char*)ptr);
   @  ensures memory+\result-ptr == 0;
-  @  ensures memory+\result == ptr;
   @ behavior not_found:
-  @  assumes \forall int k; 0 <= k < MAX_LEN ==> memory+k-ptr != 0;
+  @  assumes !in_memory(memory, MAX_LEN, (char*)ptr);
+  @  ensures \result == -1;
+  @ behavior invalid:
+  @  assumes !\valid((char*)ptr);
   @  ensures \result == -1;
   @*/
 int index_from_ptr(char* memory, int* len, void *ptr) {
   int i, ind = -1;
   /*@ loop invariant 0 <= i <= MAX_LEN;
     @ loop invariant -1 <= ind < MAX_LEN;
-    @ loop invariant (\forall int k; 0 <= k < i ==> memory+k-ptr != 0) ==> ind == -1;
+    @ loop invariant !in_memory(memory, i, (char*)ptr) ==> ind == -1;
     @ loop invariant \forall int k; 0 <= k < i ==> memory+k-ptr==0 ==> ind == k;
-    @ loop invariant \forall int k; 0 <= k < i ==> memory+k == ptr ==> ind == k;
     @ loop invariant ind != -1 ==> memory+ind-ptr == 0;
-    @ loop invariant ind != -1 ==> memory+ind == ptr;
     @ loop assigns i, ind;
     @ loop variant MAX_LEN-i;
     @*/
@@ -93,7 +103,15 @@ void my_free(char* memory, int* len, void *ptr) {
 }
 
 
-
+/*@ requires \valid_read(memory+(0..(MAX_LEN-1)));
+  @ requires \valid_read(len+(0..(MAX_LEN-1)));
+  @ behavior valid:
+  @   assumes \valid((char*)ptr);
+  @   ensures \result == 1;
+  @ behavior not_valid:
+  @   assumes !\valid((char*)ptr);
+  @   ensures \result == 0;
+  @*/
 int my_valid(char* memory, int* len, void *ptr) {
   int ind = index_from_ptr(memory, len, ptr);
   /* pas dans la mémoire, pas valide */
@@ -169,14 +187,20 @@ void debug(char* memory, int* len) {
 
 
 /* pré-condition de notre driver, pas de la fonction sous test */
+/*@ assigns \nothing;
+  @ ensures \forall int k; 0 <= k < MAX_LEN ==> len[k] >= 0;
+  @ ensures \forall int k; 1<=k<MAX_LEN ==> (len[k-1]>1 ==> len[k]==len[k-1]-1);
+  @*/
 int f_precond(char memory[MAX_LEN], int len[MAX_LEN], int n) {
   int i;
   /* memory peut contenir n'importe quoi */
   /* len doit respecter un invariant */
-  /*@ loop invariant \forall int k; 0 <= k < i ==> len[k] >= 0;
-    @ loop invariant \forall int k; 1 <= k < i ==>
-                                  (len[k] == 0 || len[k] == len[k-1]-1);
-  */
+  /*@ loop invariant 0 <= i <= MAX_LEN;
+    @ loop invariant \forall int k; 0 <= k < i ==> len[k] >= 0;
+    @ loop invariant \forall int k; 1<=k<i ==>(len[k-1]>1==>len[k]==len[k-1]-1);
+    @ loop assigns i;
+    @ loop variant MAX_LEN-i;
+    @*/
   for(i = 0; i < MAX_LEN; i++)
     if(len[i] < 0)
       return 0;
@@ -188,11 +212,13 @@ int f_precond(char memory[MAX_LEN], int len[MAX_LEN], int n) {
 	  if(len[i-1] > 1)
 	    if(len[i] != len[i-1]-1)
 	      return 0;
-  if(!my_valid_interval(memory, len, memory+n, 0, 4))
-    return 0;
 
-  //if(my_offset(memory, len, memory+n) != 3)
-  //return 0;
+
+  /*if(!my_valid_interval(memory, len, memory+n, 0, 4))
+    return 0;*/
+
+  if(my_offset(memory, len, memory+n) != 3)
+    return 0;
   
   return 1;
 }
