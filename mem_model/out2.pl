@@ -7,19 +7,24 @@
 :- export strategy/2.
 :- export precondition_of/2.
 
+
+max_len(32).
+
 dom(0,0,0,0).
 dom('f',cont('mem',_),[],int([-128..127])).
-dom('f',cont('inc',_),[],int([0..64])).
-dom('f',cont('dec',_),[],int([0..64])).
+dom('f',cont('inc',_),[],int([0..X])) :- max_len(X).
+dom('f',cont('dec',_),[],int([0..X])) :- max_len(X).
 dom('pathcrawler__f_precond',A,B,C) :- dom('f',A,B,C).
 
 create_input_vals('f', Ins):-
-  create_input_val(dim('mem'), int([64..64]),Ins),
-  create_input_val(dim('inc'), int([64..64]),Ins),
-  create_input_val(dim('dec'), int([64..64]),Ins),
-  create_input_val('max_len', int([64..64]), Ins),
-  create_input_val('n', int([0..63]), Ins),
-  create_input_val('m', int([0..63]), Ins),
+  max_len(X),
+  Y is X-1,
+  create_input_val(dim('mem'), int([X..X]),Ins),
+  create_input_val(dim('inc'), int([X..X]),Ins),
+  create_input_val(dim('dec'), int([X..X]),Ins),
+  create_input_val('max_len', int([X..X]), Ins),
+  create_input_val('n', int([0..Y]), Ins),
+  create_input_val('m', int([0..Y]), Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :- create_input_vals('f',Ins).
 
