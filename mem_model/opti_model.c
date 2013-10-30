@@ -194,7 +194,7 @@ int my_offset(char* mem, int* dec, int* inc, int max_len, void* ptr) {
 
 
 #define PVALID(L,x) (L[x] > 0)
-#define PVALID_INTERVAL(L,x,y) ((L[x] > 0 && L[y] > 0 && L[y] == L[x]+y-x))
+#define PVALID_INTERVAL(L,x,y) ((L[x] > 0 && L[y] > 0 && L[x] == L[y]+y-x))
 #define PBLOCK_LENGTH(D,I,x) ((D[x] == 0)? 0 : (D[x]+I[x]-1))
 #define PBASE_ADDR(L,x) ((L[x]==0) ? -1 : (x-(L[x]-1)))
 #define POFFSET(L,x) (L[x]-1)
@@ -217,13 +217,14 @@ int f_precond(char *mem, int *inc, int *dec, int max_len, int n, int m) {
   printf("----------------------------\n");
 #endif
 
-  if(PBLOCK_LENGTH(dec, inc, n) != 4) return 0;
-  if(POFFSET(inc, m) != 7) return 0;
+  //if(PBLOCK_LENGTH(dec, inc, n) != 4) return 0;
+  if(POFFSET(inc, m) != 3) return 0;
   //if(PBASE_ADDR(inc, m) != n) return 0;
-  
   //if(!PVALID(dec, n)) return 0;
   //if(!PVALID(dec, m)) return 0;
-  //if(!PVALID_INTERVAL(dec, 2, 4)) return 0;
+  //if(!PVALID_INTERVAL(dec, m, m+4)) return 0;
+  //if(!PVALID_INTERVAL(dec, n, n+4)) return 0;
+  //if(n == m) return 0;
   
 
   for(i = 0; i < max_len; i++) {
@@ -298,8 +299,16 @@ int f_precond(char *mem, int *inc, int *dec, int max_len, int n, int m) {
 }
 
 
+/* fonction sous test */
+int g(char* mem, int* dec, int* inc, int max_len, char* n, char* m) {
+  
+}
+
+
+
+
 /* driver perso */
 int f(char *mem, int *inc, int *dec, int max_len, int n, int m) {
-  return 0;
+  return g(mem, inc, dec, max_len, mem+n, mem+m);
 }
 

@@ -28,10 +28,20 @@ create_input_vals('f', Ins):-
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :- create_input_vals('f',Ins).
 
-quantif_preconds('f',[]).
+quantif_preconds('f',
+		 [
+%		  uq_cond([I],
+%			  [],
+%			  infegal,cont('dec',I),-(int(math),'max_len',I)),
+%		  uq_cond([I],
+%			  [cond(egal,cont('dec',I),0,ptr)],
+%			  egal,cont('inc',I),0)
+		 ]).
 quantif_preconds('pathcrawler__f_precond',A) :- quantif_preconds('f',A).
+
 unquantif_preconds('f',[]).
 unquantif_preconds('pathcrawler__f_precond',A) :- unquantif_preconds('f',A).
+
 strategy('f',[]).
 strategy('pathcrawler__f_precond',A) :- strategy('f',A).
 precondition_of('f','pathcrawler__f_precond').
