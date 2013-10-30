@@ -191,13 +191,19 @@ int my_offset(char* mem, int* dec, int* inc, int max_len, void* ptr) {
 
 
 
+/* for pre-condition */
 
-
-#define PVALID(L,x) (L[x] > 0)
-#define PVALID_INTERVAL(L,x,y) ((L[x] > 0 && L[y] > 0 && L[x] == L[y]+y-x))
-#define PBLOCK_LENGTH(D,I,x) ((D[x] == 0)? 0 : (D[x]+I[x]-1))
-#define PBASE_ADDR(L,x) ((L[x]==0) ? -1 : (x-(L[x]-1)))
-#define POFFSET(L,x) (L[x]-1)
+int pvalid(int* dec, int* inc, int x) { return dec[x] > 0; }
+int pvalid_interval(int* dec, int* inc, int x, int y) {
+  return dec[x] > 0 && dec[y] > 0 && dec[x] == dec[y]+y-x;
+}
+int pblock_length(int* dec, int* inc, int x) {
+  if(dec[x] == 0) return 0; else return dec[x]+inc[x]-1;
+} 
+int pbase_addr(int* dec, int* inc, int x) {
+  if(inc[x] == 0) return -1; else return x-inc[x]+1;
+}
+int poffset(int* dec, int* inc, int x) { return inc[x]-1; }
 
 
 
@@ -217,19 +223,17 @@ int f_precond(char *mem, int *inc, int *dec, int max_len, int n, int m) {
   printf("----------------------------\n");
 #endif
 
-  //if(PBLOCK_LENGTH(dec, inc, n) != 4) return 0;
-  if(POFFSET(inc, m) != 3) return 0;
-  //if(PBASE_ADDR(inc, m) != n) return 0;
-  //if(!PVALID(dec, n)) return 0;
-  //if(!PVALID(dec, m)) return 0;
-  //if(!PVALID_INTERVAL(dec, m, m+4)) return 0;
-  //if(!PVALID_INTERVAL(dec, n, n+4)) return 0;
-  //if(n == m) return 0;
   
-
+  if(pbase_addr(dec, inc, m) != m) return 0;
+  if(pbase_addr(dec, inc, n) != n) return 0;
+  //if(!pvalid_interval(dec, inc, m, m+4)) return 0;
+  //if(!pvalid_interval(dec, inc, n, n+4)) return 0;
+  if(n == m) return 0;
+  
+  
   for(i = 0; i < max_len; i++) {
-    if(dec[i] > max_len-i)
-      return 0;
+    /*if(dec[i] > max_len-i)
+      return 0;*/
     if(i == 0) {
       if(dec[0] == 0) {
 	if(inc[0] != 0)
