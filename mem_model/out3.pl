@@ -7,9 +7,7 @@
 :- export strategy/2.
 :- export precondition_of/2.
 
-
-maxlen(8).
-
+maxlen(5).
 
 dom(0,0,0,0).
 dom('f',cont('mem',_),[],int([-128..127])).
@@ -42,7 +40,9 @@ quantif_preconds('pathcrawler__f_precond',A) :- quantif_preconds('f',A).
 unquantif_preconds('f',[
 		       cond(egal,dim('inc'),dim('dec'),pre),
 		       cond(egal,dim('inc'),dim('mem'),pre),
-		       cond(egal,dim('inc'),'max_len',pre)
+		       cond(egal,dim('inc'),'max_len',pre),
+		       cond(egal,cont('dec',0),0,pre),
+		       cond(egal,cont('inc',0),0,pre)
 		   ]).
 unquantif_preconds('pathcrawler__f_precond',A) :- unquantif_preconds('f',A).
 
