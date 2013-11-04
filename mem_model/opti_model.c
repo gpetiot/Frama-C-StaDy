@@ -211,6 +211,9 @@ int poffset(int* dec, int* inc, int x) { return inc[x]-1; }
 int f_precond(char *mem, int *inc, int *dec, int max_len, int n, int m) {
   int i;
 
+  if(pathcrawler_dimension(inc) <= m) return 0;
+  if(pathcrawler_dimension(inc) <= n) return 0;
+
 #ifdef DEBUG
   printf("dec: ");
   for(i = 0; i < max_len; i++)
@@ -231,47 +234,17 @@ int f_precond(char *mem, int *inc, int *dec, int max_len, int n, int m) {
   if(n == m) return 0;
   
   
+  
   for(i = 0; i < max_len; i++) {
     /*if(dec[i] > max_len-i)
       return 0;*/
-    if(i == 0) {
-      if(dec[0] == 0) {
-	if(inc[0] != 0)
-	  return 0;
-      }
-      else
-	if(inc[0] != 1)
-	  return 0;
-    }
-    else {
-      if(dec[i-1] > 1)
-	if(dec[i] != dec[i-1]-1)
-	  return 0;
-      if(dec[i] == dec[i-1]-1) {
-	if(inc[i] != inc[i-1]+1)
-	  return 0;
-      }
-      else
-	if(dec[i] == 0) {
-	  if(inc[i] != 0)
-	    return 0;
-	}
-	else
-	  if(inc[i] != 1)
-	    return 0;
-    }
-  }
-
-  /*
-  for(i = 0; i < max_len; i++) {
-    if(dec[i] > max_len-i)
-      return 0;
     if(i > 0)
       if(dec[i-1] > 1)
 	if(dec[i] != dec[i-1]-1)
 	  return 0;
   }
 
+  
   for(i = 0; i < max_len; i++) {
     if(i == 0) {
       if(dec[0] == 0) {
@@ -297,7 +270,7 @@ int f_precond(char *mem, int *inc, int *dec, int max_len, int n, int m) {
 	    return 0;
     }
   }
-  */
+  
 
   return 1;
 }

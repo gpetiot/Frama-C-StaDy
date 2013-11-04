@@ -8,21 +8,22 @@
 :- export precondition_of/2.
 
 
-max_len(32).
+maxlen(8).
+
 
 dom(0,0,0,0).
 dom('f',cont('mem',_),[],int([-128..127])).
-dom('f',cont('inc',_),[],int([0..X])) :- max_len(X).
-dom('f',cont('dec',_),[],int([0..X])) :- max_len(X).
+dom('f',cont('inc',_),[],int([0..X])) :- maxlen(X).
+dom('f',cont('dec',_),[],int([0..X])) :- maxlen(X).
 dom('pathcrawler__f_precond',A,B,C) :- dom('f',A,B,C).
 
 create_input_vals('f', Ins):-
-  max_len(X),
+  maxlen(X),
   Y is X-1,
-  create_input_val(dim('mem'), int([X..X]),Ins),
-  create_input_val(dim('inc'), int([X..X]),Ins),
-  create_input_val(dim('dec'), int([X..X]),Ins),
-  create_input_val('max_len', int([X..X]), Ins),
+  create_input_val(dim('mem'), int([0..X]),Ins),
+  create_input_val(dim('inc'), int([0..X]),Ins),
+  create_input_val(dim('dec'), int([0..X]),Ins),
+  create_input_val('max_len', int([0..X]), Ins),
   create_input_val('n', int([0..Y]), Ins),
   create_input_val('m', int([0..Y]), Ins),
   true.
@@ -35,19 +36,14 @@ quantif_preconds('f',
 			  infegal,
 			  cont('dec',I),
 			  -(int(math),'max_len',I))
-%		  ,
-%		  uq_cond([I,J],
-%			  [cond(infegal,0,I,pre), cond(inf,I,'max_len',pre),
-%			   cond(egal,-(int(math),cont('dec',I),1),J,pre)
-%			  ],
-%			  egal,
-%			  cont('dec',I),
-%			  cont('inc',J)
-%		  )
 		 ]).
 quantif_preconds('pathcrawler__f_precond',A) :- quantif_preconds('f',A).
 
-unquantif_preconds('f',[]).
+unquantif_preconds('f',[
+		       cond(egal,dim('inc'),dim('dec'),pre),
+		       cond(egal,dim('inc'),dim('mem'),pre),
+		       cond(egal,dim('inc'),'max_len',pre)
+		   ]).
 unquantif_preconds('pathcrawler__f_precond',A) :- unquantif_preconds('f',A).
 
 strategy('f',[]).
