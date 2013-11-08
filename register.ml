@@ -187,7 +187,7 @@ let properties_of_function name =
 	) kf;
 	let o = object
 	  inherit Visitor.frama_c_inplace
-	  method vstmt_aux stmt =
+	  method! vstmt_aux stmt =
 	    let f s =
 	      Annotations.iter_code_annot (fun _ ca ->
 		let p = Property.ip_of_code_annot kf s ca in
@@ -224,7 +224,7 @@ let properties_of_name name =
     ) kf;
     let o = object
       inherit Visitor.frama_c_inplace
-      method vstmt_aux stmt =
+      method! vstmt_aux stmt =
 	let f s =
 	  Annotations.iter_code_annot (fun _ ca ->
 	    match ca.annot_content with

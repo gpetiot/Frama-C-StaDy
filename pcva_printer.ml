@@ -162,9 +162,9 @@ class pcva_printer props ~first_pass () = object (self)
 
 
 
-  method term fmt t = self#term_node fmt t
+  method! term fmt t = self#term_node fmt t
 
-  method term_node fmt t =
+  method! term_node fmt t =
     let to_c_type = function
       | Ctype t -> t
       | Linteger -> longType
@@ -261,7 +261,7 @@ class pcva_printer props ~first_pass () = object (self)
 
 
  
-  method exp fmt e =
+  method! exp fmt e =
     match e.enode with
     | UnOp(Neg,{enode=Const(CInt64 (_,_,str))},_) ->
       begin
@@ -274,7 +274,7 @@ class pcva_printer props ~first_pass () = object (self)
 
 
 
-  method private predicate fmt pred =
+  method! private predicate fmt pred =
     (* generate guards for logic vars, e.g.:
        [0 <= a <= 10; x <= b <= y] *)
     let rec aux acc vars p = 
@@ -468,10 +468,10 @@ class pcva_printer props ~first_pass () = object (self)
       end
     | _ -> super#predicate fmt pred
 
-  method private predicate_named fmt pred_named =
+  method! private predicate_named fmt pred_named =
     self#predicate fmt pred_named.content
 
-  method private annotated_stmt next fmt stmt =
+  method! private annotated_stmt next fmt stmt =
     self#stmt_labels fmt stmt;
     let kf = Kernel_function.find_englobing_kf stmt in
     let begin_loop = ref [] in
@@ -968,7 +968,7 @@ class pcva_printer props ~first_pass () = object (self)
 
 
 
-  method global fmt (g:global) =
+  method! global fmt (g:global) =
     match g with
     | GFun (fundec, l) ->
       if print_var fundec.svar then
@@ -1076,7 +1076,7 @@ class pcva_printer props ~first_pass () = object (self)
       Format.fprintf fmt "/*@@@ %a@ */@\n" self#global_annotation decl
     | GText s  -> if s <> "//" then Format.fprintf fmt "%s@\n" s
 
-  method file fmt f =
+  method! file fmt f =
     Queue.iter (fun (a,_) ->
       a fmt;
       quantif_pred_cpt := !quantif_pred_cpt + 1;
@@ -1084,7 +1084,7 @@ class pcva_printer props ~first_pass () = object (self)
     quantif_pred_cpt := 0;
     super#file fmt f
 
-  method term_lval fmt t =
+  method! term_lval fmt t =
     match t with
     | (TResult _,_) ->
       begin

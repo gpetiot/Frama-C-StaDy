@@ -7,9 +7,7 @@ open Lexing
 let output chan str =
   Options.Self.debug ~level:2 "%s" str;
   output_string chan str
-  
-
-
+    
 
 let typically_typer ~typing_context ~loc bhv ps =
   match ps with
@@ -25,13 +23,6 @@ let typically_typer ~typing_context ~loc bhv ps =
     "expecting a predicate after keyword 'typically'"
 
 let () = Logic_typing.register_behavior_extension "typically" typically_typer
-
-
-
-
-
-
-
 
 
 
@@ -538,17 +529,6 @@ let map_on_quantifs f = List.map f !quantifs
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 let translate() =
   let kf = fst (Globals.entry_point()) in
   let func_name = Kernel_function.get_name kf in
@@ -575,7 +555,7 @@ let translate() =
       let chan = open_out (Options.Precond_File.get()) in
       output chan prolog_header;
       
-	(* DOM *)
+      (* DOM *)
       iter_on_complex_domains (fun x ->
 	output chan (Printf.sprintf "dom('%s', %s).\n" func_name (strcd x))
       );
@@ -583,7 +563,7 @@ let translate() =
       output chan (Printf.sprintf "dom('%s',A,B,C) :- dom('%s',A,B,C).\n"
 		     precond_name func_name);
       
-	(* CREATE_INPUT_VALS *)
+      (* CREATE_INPUT_VALS *)
       output chan
 	(Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
       iter_on_simple_domains (fun s ->
@@ -595,7 +575,7 @@ let translate() =
 	   "create_input_vals('%s',Ins) :- create_input_vals('%s',Ins).\n"
 	   precond_name func_name);
       
-	(* QUANTIF_PRECONDS *)
+      (* QUANTIF_PRECONDS *)
       let qp = map_on_quantifs strqrel in
       let qp = fold_virgule qp in
       output chan
@@ -606,7 +586,7 @@ let translate() =
 	   precond_name func_name);
       
       
-	(* UNQUANTIF_PRECONDS *)
+      (* UNQUANTIF_PRECONDS *)
       let uqp = map_on_unquantifs struqrel in
       let uqp = fold_virgule uqp in
       output chan
