@@ -1,8 +1,8 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/insertion_sort/insertion_sort.c"
-[ap] non-default behaviors ignored!
+[stady] non-default behaviors ignored!
 [stady] Prolog precondition successfully generated
-[stady] The result is in file out.pl
-[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main insertion_sort -pc -pc-validate-asserts -pc-test-params out.pl -pc-com internet -pc-no-xml
+[stady] The result is in file stady_precond.pl
+[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main insertion_sort -pc -pc-validate-asserts -pc-test-params stady_precond.pl -pc-com internet -pc-no-xml
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:66:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
 stady_temp.c:81:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
@@ -16,7 +16,6 @@ stady_temp.c:81:[kernel] warning: Calling undeclared function pathcrawler_assert
 [pc] generation finished
 [stady] PathCrawler OK!
 [stady] all-paths: true
-[ap] non-default behaviors ignored!
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

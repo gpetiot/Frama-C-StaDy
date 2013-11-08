@@ -1,11 +1,11 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_sort/merge_sort.c"
-[ap] non-default behaviors ignored!
-[ap] Predicate ignored: \separated(table, ret)
+[stady] non-default behaviors ignored!
+[stady] Predicate ignored: \separated(table, ret)
 [stady] Prolog precondition successfully generated
-[stady] The result is in file out.pl
+[stady] The result is in file stady_precond.pl
 [stady] Predicate ignored: \separated(table, ret)
 [stady] Predicate ignored: \separated(table, ret)
-[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main merge_sort -pc -pc-validate-asserts -pc-test-params out.pl -pc-com internet -pc-no-xml
+[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main merge_sort -pc -pc-validate-asserts -pc-test-params stady_precond.pl -pc-com internet -pc-no-xml
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:23:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
 stady_temp.c:147:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
@@ -19,8 +19,6 @@ stady_temp.c:147:[kernel] warning: Calling undeclared function pathcrawler_dimen
 [pc] generation finished
 [stady] PathCrawler OK!
 [stady] all-paths: true
-[ap] non-default behaviors ignored!
-[ap] Predicate ignored: \separated(table, ret)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

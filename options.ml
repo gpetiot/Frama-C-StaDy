@@ -18,6 +18,13 @@ module Temp_File = Self.String (struct
   let default = "stady_temp.c"
 end)
 
+module Precond_File = Self.String (struct
+  let option_name = "-stady-precond-file"
+  let help = ""
+  let arg_name = "file_name"
+  let default = "stady_precond.pl"
+end)
+
 module PathCrawler_Options = Self.String (struct
   let option_name = "-stady-pc-options"
   let help = "command line options for PathCrawler"

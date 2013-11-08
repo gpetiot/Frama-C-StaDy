@@ -1,8 +1,8 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/tcas/tcas.c"
-[ap] non-default behaviors ignored!
+[stady] non-default behaviors ignored!
 [stady] Prolog precondition successfully generated
-[stady] The result is in file out.pl
-[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main entry_point -pc -pc-validate-asserts -pc-test-params out.pl -pc-com internet -pc-no-xml
+[stady] The result is in file stady_precond.pl
+[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main entry_point -pc -pc-validate-asserts -pc-test-params stady_precond.pl -pc-com internet -pc-no-xml
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:274:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
@@ -33,7 +33,6 @@ stady_temp.c:274:[kernel] warning: Calling undeclared function pathcrawler_asser
 [pc] generation finished
 [stady] PathCrawler OK!
 [stady] all-paths: false
-[ap] non-default behaviors ignored!
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

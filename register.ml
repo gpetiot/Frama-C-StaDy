@@ -8,22 +8,6 @@ open Lexing
 
 
 
-(* extern functions *)
-
-let generate_test_parameters =
-  Dynamic.get
-    ~plugin:"Annot_Precond"
-    "generate_test_parameters"
-    (Datatype.func Datatype.unit Datatype.unit)
-    
-let out_file =
-  Dynamic.get
-    ~plugin:"Annot_Precond"
-    "out_file"
-    (Datatype.func Datatype.unit Datatype.string)
-    
-
-
 
 (* outputs the AST of a project in a file *)
 let print_in_file filename props =
@@ -90,9 +74,9 @@ let setup_props_bijection () =
 
 let compute_props props =
   (* Translate some parts of the pre-condition in Prolog *)
-  generate_test_parameters();
+  Native_precond.translate();
   Options.Self.feedback "Prolog precondition successfully generated";
-  let parameters_file = out_file () in
+  let parameters_file = Options.Precond_File.get () in
   Options.Self.feedback "The result is in file %s" parameters_file;
   print_in_file (Options.Temp_File.get()) props;
   let translated_properties =
