@@ -46,7 +46,7 @@ let process_test_case s =
   States.TestFailures.add prop ((f, list_entries)::testcases)
 
 let process_nb_test_cases s = States.NbCases.set (int_of_string s)
-let process_final_status () = Prop_id.can_validate_others := true
+let process_final_status () = Prop_id.all_paths := true
     
 
 

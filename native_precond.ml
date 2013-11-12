@@ -546,6 +546,7 @@ let translate() =
       let typically = List.map (fun (_,_,pred) -> pred) typically in
       List.iter (fun l ->
 	let ll = List.map Logic_const.pred_of_id_pred l in
+	Prop_id.typically := true;
 	List.iter requires_to_prolog ll
       ) typically;
       Options.Self.feedback "non-default behaviors ignored!";

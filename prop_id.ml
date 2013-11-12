@@ -18,4 +18,5 @@ let to_prop id = Datatype.Int.Hashtbl.find id_to_prop_tbl id
 let translated_properties = ref ([] : Property.t list)
 
 
-let can_validate_others = ref false
+let all_paths = ref false
+let typically = ref false

@@ -140,7 +140,7 @@ let compute_props props =
   end;
   States.NbCases.mark_as_computed();
   States.TestFailures.mark_as_computed();
-  Options.Self.feedback "all-paths: %b" !Prop_id.can_validate_others;
+  Options.Self.feedback "all-paths: %b" !Prop_id.all_paths;
   Options.Self.debug ~level:3 "%i test cases" (States.NbCases.get());
   let hyps = [] in
   let distinct = true in
@@ -152,11 +152,12 @@ let compute_props props =
     with
     | Not_found ->
       let status = Property_status.True in
-      if !Prop_id.can_validate_others then
+      if !Prop_id.all_paths && (not !Prop_id.typically) then
 	Property_status.emit pcva_emitter ~hyps prop ~distinct status
   ) translated_properties;
   Prop_id.translated_properties := [];
-  Prop_id.can_validate_others := false
+  Prop_id.all_paths := false;
+  Prop_id.typically := false
     
 
 
