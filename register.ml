@@ -12,23 +12,26 @@ open Lexing
 (* outputs the AST of a project in a file *)
 let print_in_file filename props =
   Kernel.Unicode.set false;
+
   (* first pass: prepare the quantifiers predicates, ignore the output *)
   let fmt = Format.make_formatter (fun _ _ _ -> ()) ignore in
   let module First_pass = Printer_builder.Make
 	(struct class printer =
 		  Pcva_printer.pcva_printer props ~first_pass:true end)
   in
-  let module Second_pass = Printer_builder.Make
-	(struct class printer =
-		  Pcva_printer.pcva_printer props ~first_pass:false end)
-  in
   First_pass.pp_file fmt (Ast.get());
+
   (* second pass: print the instrumented quantif, output in a file *)
   let out = open_out filename in
   let fmt = Format.formatter_of_out_channel out in
+    let module Second_pass = Printer_builder.Make
+	(struct class printer =
+		  Pcva_printer.pcva_printer props ~first_pass:false end)
+  in
   Second_pass.pp_file fmt (Ast.get());
   flush out;
   close_out out;
+
   (* cleaning *)
   Pcva_printer.quantif_pred_cpt := 0;
   Queue.clear Pcva_printer.quantif_pred_queue;
