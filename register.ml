@@ -5,8 +5,79 @@ open Lexing
 
 
 
+type at_term =
+| Quantif_term of
+    term (* nombre d'éléments *)
+  * at_term
+| Unquantif_term of term
 
 
+
+let rec print_at_term = function
+  | Unquantif_term t -> Options.Self.feedback "%a" Printer.pp_term t
+  | Quantif_term (t,a) -> Options.Self.feedback "%a ->" Printer.pp_term t;
+    print_at_term a
+
+
+
+let first_pass() =
+  (* pour chaque fonction, les termes dont on veut la valeur en Pre *)
+  let terms_at_Pre : (at_term list) Datatype.String.Hashtbl.t =
+    Datatype.String.Hashtbl.create 32
+  in
+  let terms_at_stmt : (at_term list) Cil_datatype.Stmt.Hashtbl.t =
+    Cil_datatype.Stmt.Hashtbl.create 32
+  in
+  let o = object(self)
+    inherit Visitor.frama_c_inplace
+
+    method! vterm _t =
+      let f x =
+	match x.term_node with
+	| Tat (t, StmtLabel stmt) ->
+	  let terms = Cil_datatype.Stmt.Hashtbl.find terms_at_stmt !stmt in
+	  let terms = (Unquantif_term t) :: terms in
+	  Cil_datatype.Stmt.Hashtbl.add terms_at_stmt !stmt terms;
+	  x
+	| Tat (t, LogicLabel(_,label) ) when label = "Old" || label = "Pre" ->
+	  let func = (Extlib.the self#current_func).svar.vname in
+	  let terms = Datatype.String.Hashtbl.find terms_at_Pre func in
+	  let terms = (Unquantif_term t) :: terms in
+	  Datatype.String.Hashtbl.add terms_at_Pre func terms;
+	  x
+	| _ -> x
+      in
+      DoChildrenPost f
+
+    method! vpredicate _p =
+      let f x =
+	match x with
+	| Papp (li, labels, terms) ->
+	  Options.Self.feedback "application of %s" li.l_var_info.lv_name;
+	  let s = function
+	    | StmtLabel _ -> assert false
+	    | LogicLabel (_, str) -> str
+	  in
+	  List.iter (fun (a,b) -> Options.Self.feedback "(%s ; %s)" (s a) (s b))
+	    labels;
+	  List.iter (fun t -> Options.Self.feedback "%a" Printer.pp_term t)
+	    terms;
+	  let body = li.l_body in
+	  begin
+	    match body with
+	    | LBpred pred ->
+	      let _p = pred.content in
+	      ()
+	    | _ -> ()
+	  end;
+	  x
+	| _ -> x
+      in
+      DoChildrenPost f
+  end
+  in
+  Visitor.visitFramacFile o (Ast.get());
+  terms_at_Pre, terms_at_stmt
 
 
 (* outputs the AST of a project in a file *)
@@ -309,7 +380,20 @@ let run() =
 	with _ -> Options.Self.debug ~level:3 "%a not found" Property.pretty p
       ) props;
 
-      compute_props props;
+      (*compute_props props;*)
+      let terms_at_Pre, terms_at_stmt = first_pass() in
+      Datatype.String.Hashtbl.iter_sorted (fun f terms ->
+	Options.Self.feedback "function %s" f;
+	List.iter print_at_term terms
+      ) terms_at_Pre;
+      Cil_datatype.Stmt.Hashtbl.iter_sorted (fun stmt terms ->
+	Options.Self.feedback "stmt %a" Printer.pp_stmt stmt;
+	List.iter print_at_term terms
+      ) terms_at_stmt;
+      Datatype.String.Hashtbl.clear terms_at_Pre;
+      Cil_datatype.Stmt.Hashtbl.clear terms_at_stmt;
+
+
       (* cleaning *)
       Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
       Property.Hashtbl.clear Prop_id.prop_to_id_tbl
