@@ -7,16 +7,242 @@ open Lexing
 
 type at_term =
 | Quantif_term of
-    term (* nombre d'éléments *)
+    term (* borne min *)
+  * term (* borne max *)
   * at_term
 | Unquantif_term of term
 
 
 
-let rec print_at_term = function
-  | Unquantif_term t -> Options.Self.feedback "%a" Printer.pp_term t
-  | Quantif_term (t,a) -> Options.Self.feedback "%a ->" Printer.pp_term t;
-    print_at_term a
+
+
+let rec str_at_term = function
+  | Unquantif_term t -> Pretty_utils.sfprintf "%a" Printer.pp_term t
+  | Quantif_term(t1,t2,a) ->
+    Pretty_utils.sfprintf "%s[%a,%a]"
+      (str_at_term a) Printer.pp_term t1 Printer.pp_term t2
+
+let rec compareat x y = str_at_term x = str_at_term y
+
+let strlabel = function
+  | Label (str,_,_) -> str
+  | Case _ -> "case"
+  | Default _ -> "default"
+    
+let concat l = List.fold_left (fun x y -> x ^ y) "" l
+let strllabel = function
+  | StmtLabel {contents={labels=ll}} ->
+    concat (List.map strlabel ll)
+  | LogicLabel (_, str) -> str
+
+
+
+(*
+class c = object
+  inherit Visitor.frama_c_inplace
+
+  method! vpredicate _p =
+    match _p with
+    | Papp (li, labels, _) ->
+      begin
+	match li.l_body with
+	| LBpred _pred ->
+	  List.iter
+	    (fun (a,b) ->
+	      Options.Self.feedback "(%s,%s)"
+		(strllabel a) (strllabel b))
+	    labels;
+	  let cc = new c in
+	  let _ = cc#vpredicate _pred.content in
+	  DoChildrenPost (fun x -> x)
+	| _ -> DoChildrenPost (fun x -> x)
+      end
+    | _ -> DoChildrenPost (fun x -> x)
+end
+  *)
+
+
+class subst = object(self)
+
+  method subst_pred
+    pred
+    (labels:(logic_label*logic_label)list)
+    (args:(logic_var*term)list)
+    (quantifs:(logic_var*logic_var)list) =
+    match pred with
+    | Pfalse -> Pfalse
+    | Ptrue -> Ptrue
+    | Papp (li,lassoc,params) ->
+      let new_labels =
+	List.map (fun (x,y) -> x, self#subst_label y labels) lassoc in
+      let new_args = List.map2 (fun x y -> x,y) li.l_profile params in
+      let new_args =
+	List.map (fun (x,y) ->
+	  x, self#subst_term y labels args quantifs) new_args in
+      begin
+	match li.l_body with
+	| LBnone -> failwith "LBnone unsupported"
+	| LBreads _ -> failwith "LBreads unsupported"
+	| LBterm _ -> failwith "LBterm unsupported"
+	| LBpred {content=p} -> self#subst_pred p new_labels new_args quantifs
+	| LBinductive _ -> failwith "LBinductive unsupported"
+      end
+    | Pseparated t -> Pseparated t
+    | Prel (rel,t1,t2) -> Prel (rel,
+				self#subst_term t1 labels args quantifs,
+				self#subst_term t2 labels args quantifs)
+    | Pand (p1, p2) -> Pand (self#subst_pnamed p1 labels args quantifs,
+			     self#subst_pnamed p2 labels args quantifs)
+    | Por (p1, p2) -> Por (self#subst_pnamed p1 labels args quantifs,
+			   self#subst_pnamed p2 labels args quantifs)
+    | Pxor (p1, p2) -> Pxor (self#subst_pnamed p1 labels args quantifs,
+			     self#subst_pnamed p2 labels args quantifs)
+    | Pimplies (p1, p2) -> Pimplies (self#subst_pnamed p1 labels args quantifs,
+				     self#subst_pnamed p2 labels args quantifs)
+    | Piff (p1, p2) -> Piff (self#subst_pnamed p1 labels args quantifs,
+			     self#subst_pnamed p2 labels args quantifs)
+    | Pnot p -> Pnot (self#subst_pnamed p labels args quantifs)
+    | Pif (t,p1,p2) -> Pif (self#subst_term t labels args quantifs,
+			    self#subst_pnamed p1 labels args quantifs,
+			    self#subst_pnamed p2 labels args quantifs)
+    | Plet (v,p) -> Plet (v, self#subst_pnamed p labels args quantifs)
+    | Pforall (q,p) ->
+      let q' =
+	List.map (fun v -> {v with lv_name = "__quantif_" ^ v.lv_name}) q in
+      let q'' = List.combine q q' in
+      Pforall(q',self#subst_pnamed p labels args (List.rev_append q'' quantifs))
+    | Pexists (q,p) ->
+      let q' =
+	List.map (fun v -> {v with lv_name = "__quantif_" ^ v.lv_name}) q in
+      let q'' = List.combine q q' in
+      Pexists (q,self#subst_pnamed p labels args (List.rev_append q'' quantifs))
+    | Pat (p,l) -> Pat (self#subst_pnamed p labels args quantifs,
+			self#subst_label l labels)
+    | Pvalid_read (l,t) -> Pvalid_read (self#subst_label l labels,
+					self#subst_term t labels args quantifs)
+    | Pvalid (l,t) -> Pvalid (self#subst_label l labels,
+			      self#subst_term t labels args quantifs)
+    | Pinitialized (l,t) -> Pinitialized(self#subst_label l labels,
+					 self#subst_term t labels args quantifs)
+    | Pallocable (l,t) -> Pallocable (self#subst_label l labels,
+				      self#subst_term t labels args quantifs)
+    | Pfreeable (l,t) -> Pfreeable (self#subst_label l labels,
+				    self#subst_term t labels args quantifs)
+    | Pfresh (l1,l2,t1,t2) -> Pfresh (self#subst_label l1 labels,
+				      self#subst_label l2 labels,
+				      self#subst_term t1 labels args quantifs,
+				      self#subst_term t2 labels args quantifs)
+    | Psubtype (t1,t2) -> Psubtype (self#subst_term t1 labels args quantifs,
+				    self#subst_term t2 labels args quantifs)
+      
+  method subst_label l labels =
+    if List.mem_assoc l labels then List.assoc l labels else l
+
+  method subst_tnode term labels args quantifs =
+    match term with
+    | TConst c -> TConst c
+    | TLval (TVar v,y) ->
+      let off = self#subst_toffset y labels args quantifs in
+      if List.mem_assoc v args then
+	let t' = List.assoc v args in
+	match t'.term_node with
+	| TLval v' -> TLval (Logic_const.addTermOffsetLval off v')
+	| _ as whatever -> assert (off = TNoOffset); whatever
+      else
+	if List.mem_assoc v quantifs then
+	  TLval (TVar (List.assoc v quantifs), off)
+	else
+	  TLval (TVar v, off)
+    | TLval(TResult t,y) -> TLval(TResult t,
+				  self#subst_toffset y labels args quantifs)
+    | TLval(TMem t,y) -> TLval(TMem (self#subst_term t labels args quantifs),
+			       self#subst_toffset y labels args quantifs)
+    | TSizeOf t -> TSizeOf t
+    | TSizeOfE t -> TSizeOfE (self#subst_term t labels args quantifs)
+    | TSizeOfStr s -> TSizeOfStr s
+    | TAlignOf t -> TAlignOf t
+    | TAlignOfE t -> TAlignOfE (self#subst_term t labels args quantifs)
+    | TUnOp (u,t) -> TUnOp (u, self#subst_term t labels args quantifs)
+    | TBinOp (b,t1,t2) -> TBinOp (b,
+				  self#subst_term t1 labels args quantifs,
+				  self#subst_term t2 labels args quantifs)
+    | TCastE (ty,t) -> TCastE (ty, self#subst_term t labels args quantifs)
+    | TAddrOf _ -> failwith "TAddrOf unsupported"
+    | TStartOf _ -> failwith "TStartOf unsupported"
+    | Tapp (li,lassoc,params) ->
+      let new_labels =
+	List.map (fun (x,y) -> x, self#subst_label y labels) lassoc in
+      let new_args = List.map2 (fun x y -> x,y) li.l_profile params in
+      let new_args =
+	List.map (fun (x,y) ->
+	  x, self#subst_term y labels args quantifs) new_args in
+      begin
+	match li.l_body with
+	| LBnone -> failwith "LBnone unsupported"
+	| LBreads _ -> failwith "LBreads unsupported"
+	| LBterm{term_node=t} -> self#subst_tnode t new_labels new_args quantifs
+	| LBpred _ -> failwith "LBpred unsupported"
+	| LBinductive _ -> failwith "LBinductive unsupported"
+      end
+    | Tlambda (q,t) -> Tlambda (q, self#subst_term t labels args quantifs)
+    | TDataCons _ -> failwith "constructor of logic sum-type unsupported"
+    | Tif (t1,t2,t3) -> Tif (self#subst_term t1 labels args quantifs,
+			     self#subst_term t2 labels args quantifs,
+			     self#subst_term t3 labels args quantifs)
+    | Tat (t,l) -> Tat (self#subst_term t labels args quantifs,
+			self#subst_label l labels)
+    | Tbase_addr (l,t) -> Tbase_addr (self#subst_label l labels,
+				      self#subst_term t labels args quantifs)
+    | Toffset (l,t) -> Toffset (self#subst_label l labels,
+				self#subst_term t labels args quantifs)
+    | Tblock_length(l,t)-> Tblock_length(self#subst_label l labels,
+					 self#subst_term t labels args quantifs)
+    | Tnull -> Tnull
+    | TLogic_coerce(y,t)-> TLogic_coerce(y,
+					 self#subst_term t labels args quantifs)
+    | TCoerce (t, ty) -> TCoerce (self#subst_term t labels args quantifs, ty)
+    | TCoerceE (t1, t2) -> TCoerceE (self#subst_term t1 labels args quantifs,
+				     self#subst_term t2 labels args quantifs)
+    | TUpdate (t1,o,t2) -> TUpdate (self#subst_term t1 labels args quantifs,
+				    self#subst_toffset o labels args quantifs,
+				    self#subst_term t2 labels args quantifs)
+    | Ttypeof t -> Ttypeof (self#subst_term t labels args quantifs)
+    | Ttype t -> Ttype t
+    | Tempty_set -> Tempty_set
+    | Tunion l -> Tunion (List.map
+			    (fun x -> self#subst_term x labels args quantifs) l)
+    | Tinter l -> Tinter (List.map
+			    (fun x -> self#subst_term x labels args quantifs) l)
+    | Tcomprehension (t,q,None) ->
+      Tcomprehension (self#subst_term t labels args quantifs, q, None)
+    | Tcomprehension (t,q,Some p) ->
+      Tcomprehension (self#subst_term t labels args quantifs, q,
+		      Some (self#subst_pnamed p labels args quantifs))
+    | Trange (None, None) -> Trange (None, None)
+    | Trange(None,Some t)-> Trange(None,
+				   Some(self#subst_term t labels args quantifs))
+    | Trange(Some t,None)-> Trange(Some(self#subst_term t labels args quantifs),
+				   None)
+    | Trange (Some t1, Some t2) ->
+      Trange (Some(self#subst_term t1 labels args quantifs),
+	      Some(self#subst_term t2 labels args quantifs))
+    | Tlet (v,t) -> Tlet (v, self#subst_term t labels args quantifs)
+
+  method subst_toffset offset labels args quantifs =
+    match offset with
+    | TNoOffset -> TNoOffset
+    | TField (f,o) -> TField (f, self#subst_toffset o labels args quantifs)
+    | TModel (m,o) -> TModel (m, self#subst_toffset o labels args quantifs)
+    | TIndex (t,o) -> TIndex (self#subst_term t labels args quantifs,
+			      self#subst_toffset o labels args quantifs)
+
+  method subst_term t labels args quantifs =
+    { t with term_node = self#subst_tnode t.term_node labels args quantifs }
+
+  method subst_pnamed p labels args quantifs =
+    { p with content = self#subst_pred p.content labels args quantifs }
+end
+
 
 
 
@@ -28,52 +254,86 @@ let first_pass() =
   let terms_at_stmt : (at_term list) Cil_datatype.Stmt.Hashtbl.t =
     Cil_datatype.Stmt.Hashtbl.create 32
   in
-  let o = object(self)
+  let o = object
     inherit Visitor.frama_c_inplace
 
+    (* builtin functions ignored *)
+    method! vglob_aux g =
+      let f x = x in
+      match g with
+      | GFun(fundec,_) when Cil.is_unused_builtin fundec.svar -> SkipChildren
+      | GVar(vi,_,_) when Cil.is_unused_builtin vi -> SkipChildren
+      | GVarDecl(_,vi,_) when Cil.is_unused_builtin vi -> SkipChildren
+      | _ -> DoChildrenPost f
+
+(*
     method! vterm _t =
       let f x =
 	match x.term_node with
 	| Tat (t, StmtLabel stmt) ->
-	  let terms = Cil_datatype.Stmt.Hashtbl.find terms_at_stmt !stmt in
-	  let terms = (Unquantif_term t) :: terms in
-	  Cil_datatype.Stmt.Hashtbl.add terms_at_stmt !stmt terms;
-	  x
-	| Tat (t, LogicLabel(_,label) ) when label = "Old" || label = "Pre" ->
-	  let func = (Extlib.the self#current_func).svar.vname in
-	  let terms = Datatype.String.Hashtbl.find terms_at_Pre func in
-	  let terms = (Unquantif_term t) :: terms in
-	  Datatype.String.Hashtbl.add terms_at_Pre func terms;
-	  x
-	| _ -> x
-      in
-      DoChildrenPost f
-
-    method! vpredicate _p =
-      let f x =
-	match x with
-	| Papp (li, labels, terms) ->
-	  Options.Self.feedback "application of %s" li.l_var_info.lv_name;
-	  let s = function
-	    | StmtLabel _ -> assert false
-	    | LogicLabel (_, str) -> str
+	  Options.Self.feedback "\\at(%a,...) StmtLabel" Printer.pp_term t; 
+	  let terms =
+	    try Cil_datatype.Stmt.Hashtbl.find terms_at_stmt !stmt
+	    with _ -> []
 	  in
-	  List.iter (fun (a,b) -> Options.Self.feedback "(%s ; %s)" (s a) (s b))
-	    labels;
-	  List.iter (fun t -> Options.Self.feedback "%a" Printer.pp_term t)
-	    terms;
-	  let body = li.l_body in
+	  let terms = (Unquantif_term t) :: terms in
+	  Cil_datatype.Stmt.Hashtbl.replace terms_at_stmt !stmt terms;
+	  x
+	| Tat (t, LogicLabel(stmtopt,label)) ->
+	  Options.Self.feedback "\\at(%a,%s) LogicLabel"
+	    Printer.pp_term t label;
 	  begin
-	    match body with
-	    | LBpred pred ->
-	      let _p = pred.content in
-	      ()
-	    | _ -> ()
+	    try
+	      let func = (Extlib.the self#current_func).svar.vname in
+	      if label = "Pre" || label = "Old" then
+		begin
+		  let terms =
+		    try Datatype.String.Hashtbl.find terms_at_Pre func
+		    with _ -> Options.Self.feedback "not found func %s" func; []
+		  in
+		  if List.exists (compareat (Unquantif_term t)) terms then
+		    ()
+		  else
+		    let terms = (Unquantif_term t) :: terms in
+		    Options.Self.feedback "add for func %s" func;
+		    Datatype.String.Hashtbl.replace terms_at_Pre func terms
+		end
+	      else
+		begin
+		  Options.Self.feedback "other label: %s" label;
+		  try
+		    let assoc = Stack.top labels_assoc in
+		    let rlabel = List.assoc (LogicLabel(stmtopt,label)) assoc in
+		    Options.Self.feedback "%s -> %s"
+		      label (strllabel rlabel);
+		    let _ = self#vterm {_t with term_node = Tat(t,rlabel)} in
+		    ()
+		  with  _ -> ()
+		end
+	    with _ -> ()
 	  end;
 	  x
 	| _ -> x
       in
       DoChildrenPost f
+*)
+
+    method! vpredicate _p =
+      match _p with
+      | Papp (li, _, _) ->
+	let c = new subst in
+	let p' = c#subst_pred _p [] [] [] in
+	Options.Self.feedback "avant: %a" Printer.pp_predicate _p;
+	begin
+	  match li.l_body with
+	  | LBterm t -> Options.Self.feedback "%a" Printer.pp_term t
+	  | LBpred p -> Options.Self.feedback "%a" Printer.pp_predicate_named p
+	  | _ -> assert false
+	end;
+	Options.Self.feedback "après: %a" Printer.pp_predicate p';
+	DoChildrenPost (fun x -> x)
+      | _ -> DoChildrenPost (fun x -> x)
+
   end
   in
   Visitor.visitFramacFile o (Ast.get());
@@ -382,14 +642,20 @@ let run() =
 
       (*compute_props props;*)
       let terms_at_Pre, terms_at_stmt = first_pass() in
+
+      Options.Self.feedback "terms_at_Pre:";
       Datatype.String.Hashtbl.iter_sorted (fun f terms ->
-	Options.Self.feedback "function %s" f;
-	List.iter print_at_term terms
+	Options.Self.feedback "function '%s'" f;
+	List.iter (fun x -> Options.Self.feedback "%s" (str_at_term x)) terms;
+	Options.Self.feedback "----------------"
       ) terms_at_Pre;
+
+      Options.Self.feedback "terms_at_stmt:";
       Cil_datatype.Stmt.Hashtbl.iter_sorted (fun stmt terms ->
 	Options.Self.feedback "stmt %a" Printer.pp_stmt stmt;
-	List.iter print_at_term terms
+	List.iter (fun x -> Options.Self.feedback "%s" (str_at_term x)) terms
       ) terms_at_stmt;
+
       Datatype.String.Hashtbl.clear terms_at_Pre;
       Cil_datatype.Stmt.Hashtbl.clear terms_at_stmt;
 
