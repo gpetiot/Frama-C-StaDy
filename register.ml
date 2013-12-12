@@ -254,7 +254,8 @@ let first_pass() =
   let terms_at_stmt : (at_term list) Cil_datatype.Stmt.Hashtbl.t =
     Cil_datatype.Stmt.Hashtbl.create 32
   in
-  let o = object
+  let quantif_bounds : (term * term) Stack.t = Stack.create() in
+  let o = object(self)
     inherit Visitor.frama_c_inplace
 
     (* builtin functions ignored *)
@@ -266,7 +267,6 @@ let first_pass() =
       | GVarDecl(_,vi,_) when Cil.is_unused_builtin vi -> SkipChildren
       | _ -> DoChildrenPost f
 
-(*
     method! vterm _t =
       let f x =
 	match x.term_node with
@@ -277,9 +277,11 @@ let first_pass() =
 	    with _ -> []
 	  in
 	  let terms = (Unquantif_term t) :: terms in
+	  Options.Self.feedback "add %a for stmt %a"
+	    Printer.pp_term t Printer.pp_stmt !stmt;
 	  Cil_datatype.Stmt.Hashtbl.replace terms_at_stmt !stmt terms;
 	  x
-	| Tat (t, LogicLabel(stmtopt,label)) ->
+	| Tat (t, LogicLabel(_stmtopt,label)) ->
 	  Options.Self.feedback "\\at(%a,%s) LogicLabel"
 	    Printer.pp_term t label;
 	  begin
@@ -289,7 +291,7 @@ let first_pass() =
 		begin
 		  let terms =
 		    try Datatype.String.Hashtbl.find terms_at_Pre func
-		    with _ -> Options.Self.feedback "not found func %s" func; []
+		    with _ -> Options.Self.debug "not found func %s" func; []
 		  in
 		  if List.exists (compareat (Unquantif_term t)) terms then
 		    ()
@@ -299,31 +301,23 @@ let first_pass() =
 		    Datatype.String.Hashtbl.replace terms_at_Pre func terms
 		end
 	      else
-		begin
-		  Options.Self.feedback "other label: %s" label;
-		  try
-		    let assoc = Stack.top labels_assoc in
-		    let rlabel = List.assoc (LogicLabel(stmtopt,label)) assoc in
-		    Options.Self.feedback "%s -> %s"
-		      label (strllabel rlabel);
-		    let _ = self#vterm {_t with term_node = Tat(t,rlabel)} in
-		    ()
-		  with  _ -> ()
-		end
+		failwith "other label unsupported"
 	    with _ -> ()
 	  end;
 	  x
 	| _ -> x
       in
       DoChildrenPost f
-*)
 
-    method! vpredicate _p =
-      match _p with
-      | Papp (li, _, _) ->
+    method! vpredicate pred =
+      match pred with
+      | Pforall (q,p) -> ignore (p, q); DoChildrenPost (fun x -> x)
+      | Pexists (q,p) -> ignore (p, q); DoChildrenPost (fun x -> x)
+      | Papp (_li, _, _) ->
 	let c = new subst in
-	let p' = c#subst_pred _p [] [] [] in
-	Options.Self.feedback "avant: %a" Printer.pp_predicate _p;
+	let p' = c#subst_pred pred [] [] [] in
+(*
+	Options.Self.feedback "avant: %a" Printer.pp_predicate pred;
 	begin
 	  match li.l_body with
 	  | LBterm t -> Options.Self.feedback "%a" Printer.pp_term t
@@ -331,6 +325,9 @@ let first_pass() =
 	  | _ -> assert false
 	end;
 	Options.Self.feedback "après: %a" Printer.pp_predicate p';
+*)
+	Options.Self.feedback "===============================";
+	ignore (self#vpredicate p');
 	DoChildrenPost (fun x -> x)
       | _ -> DoChildrenPost (fun x -> x)
 
