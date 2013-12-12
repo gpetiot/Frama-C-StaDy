@@ -5,7 +5,7 @@ open Lexing
 
 
 let output chan str =
-  Options.Self.debug ~level:2 "%s" str;
+  Options.Self.debug ~dkey:Options.dkey_native_precond "%s" str;
   output_string chan str
     
 
@@ -368,7 +368,8 @@ let rec tlval_to_prolog tlval =
 	  | (Var(Simple s), Int i) -> Complex(CVVCont(s,I i))
 	  | (Var(Complex c), Int i) -> Complex(CVCCont(c,I i))
 	  | _ ->
-	    Options.Self.feedback "%s+%s" (strcvar x) (strcvar y);
+	    Options.Self.debug ~dkey:Options.dkey_native_precond
+	      "%s+%s unsupported" (strcvar x) (strcvar y);
 	    assert false
 	end
       | Minus _ | Mult _ | Div _ -> assert false
@@ -434,10 +435,10 @@ let rec requires_to_prolog pred =
   | Pand (p1, p2) -> requires_to_prolog p1; requires_to_prolog p2
   | Ptrue -> ()
   | Pvalid (_, term) | Pvalid_read (_, term) -> valid_to_prolog term
-  | Pforall (_quantif, _pn) -> (*forall_to_prolog quantif pn*) ()
+  | Pforall (_quantif, _pn) -> ()
   | Prel (rel, pn1, pn2) -> rel_to_prolog rel pn1 pn2
   | _ ->
-    Options.Self.feedback
+    Options.Self.feedback ~dkey:Options.dkey_native_precond
       "Predicate ignored: %a" Printer.pp_predicate_named pred
 
 (* typ -> var -> unit *)
@@ -549,7 +550,8 @@ let translate() =
 	Prop_id.typically := true;
 	List.iter requires_to_prolog ll
       ) typically;
-      Options.Self.feedback "non-default behaviors ignored!";
+      Options.Self.feedback ~dkey:Options.dkey_native_precond
+	"non-default behaviors ignored!";
       let formals = Kernel_function.get_formals kf in
       List.iter create_input_val formals;
       List.iter requires_to_prolog requires;

@@ -47,11 +47,6 @@ class c = object
       begin
 	match li.l_body with
 	| LBpred _pred ->
-	  List.iter
-	    (fun (a,b) ->
-	      Options.Self.feedback "(%s,%s)"
-		(strllabel a) (strllabel b))
-	    labels;
 	  let cc = new c in
 	  let _ = cc#vpredicate _pred.content in
 	  DoChildrenPost (fun x -> x)
@@ -247,6 +242,7 @@ end
 
 
 let first_pass() =
+  let dkey = Options.dkey_first_pass in
   (* pour chaque fonction, les termes dont on veut la valeur en Pre *)
   let terms_at_Pre : (at_term list) Datatype.String.Hashtbl.t =
     Datatype.String.Hashtbl.create 32
@@ -271,18 +267,18 @@ let first_pass() =
       let f x =
 	match x.term_node with
 	| Tat (t, StmtLabel stmt) ->
-	  Options.Self.feedback "\\at(%a,...) StmtLabel" Printer.pp_term t; 
+	  Options.Self.debug ~dkey "\\at(%a,?) StmtLabel" Printer.pp_term t; 
 	  let terms =
 	    try Cil_datatype.Stmt.Hashtbl.find terms_at_stmt !stmt
 	    with _ -> []
 	  in
 	  let terms = (Unquantif_term t) :: terms in
-	  Options.Self.feedback "add %a for stmt %a"
+	  Options.Self.debug ~dkey "add %a for stmt %a"
 	    Printer.pp_term t Printer.pp_stmt !stmt;
 	  Cil_datatype.Stmt.Hashtbl.replace terms_at_stmt !stmt terms;
 	  x
 	| Tat (t, LogicLabel(_stmtopt,label)) ->
-	  Options.Self.feedback "\\at(%a,%s) LogicLabel"
+	  Options.Self.debug ~dkey "\\at(%a,%s) LogicLabel"
 	    Printer.pp_term t label;
 	  begin
 	    try
@@ -291,13 +287,14 @@ let first_pass() =
 		begin
 		  let terms =
 		    try Datatype.String.Hashtbl.find terms_at_Pre func
-		    with _ -> Options.Self.debug "not found func %s" func; []
+		    with _ ->
+		      Options.Self.debug ~dkey "not found func %s" func; []
 		  in
 		  if List.exists (compareat (Unquantif_term t)) terms then
 		    ()
 		  else
 		    let terms = (Unquantif_term t) :: terms in
-		    Options.Self.feedback "add for func %s" func;
+		    Options.Self.debug ~dkey "add for func %s" func;
 		    Datatype.String.Hashtbl.replace terms_at_Pre func terms
 		end
 	      else
@@ -317,16 +314,17 @@ let first_pass() =
 	let c = new subst in
 	let p' = c#subst_pred pred [] [] [] in
 (*
-	Options.Self.feedback "avant: %a" Printer.pp_predicate pred;
+	Options.Self.debug ~dkey "avant: %a" Printer.pp_predicate pred;
 	begin
 	  match li.l_body with
-	  | LBterm t -> Options.Self.feedback "%a" Printer.pp_term t
-	  | LBpred p -> Options.Self.feedback "%a" Printer.pp_predicate_named p
+	  | LBterm t -> Options.Self.debug ~dkey "%a" Printer.pp_term t
+	  | LBpred p -> Options.Self.debug ~dkey "%a"
+                          Printer.pp_predicate_named p
 	  | _ -> assert false
 	end;
-	Options.Self.feedback "après: %a" Printer.pp_predicate p';
+	Options.Self.debug ~dkey "après: %a" Printer.pp_predicate p';
 *)
-	Options.Self.feedback "===============================";
+	Options.Self.debug ~dkey "===============================";
 	ignore (self#vpredicate p');
 	DoChildrenPost (fun x -> x)
       | _ -> DoChildrenPost (fun x -> x)
@@ -406,9 +404,11 @@ let setup_props_bijection () =
 let compute_props props =
   (* Translate some parts of the pre-condition in Prolog *)
   Native_precond.translate();
-  Options.Self.feedback "Prolog precondition successfully generated";
+  Options.Self.feedback ~dkey:Options.dkey_native_precond
+    "Prolog precondition successfully generated";
   let parameters_file = Options.Precond_File.get () in
-  Options.Self.feedback "The result is in file %s" parameters_file;
+  Options.Self.feedback ~dkey:Options.dkey_native_precond
+    "The result is in file %s" parameters_file;
   print_in_file (Options.Temp_File.get()) props;
   let translated_properties =
     Pcva_printer.no_repeat !Prop_id.translated_properties in
@@ -427,7 +427,7 @@ let compute_props props =
       (Options.Socket_Type.get())
       (Options.PathCrawler_Options.get())
   in
-  Options.Self.feedback "cmd: %s" cmd;
+  Options.Self.debug ~dkey:Options.dkey_socket "cmd: %s" cmd;
   (* open socket with the generator *)
   begin
     match Options.Socket_Type.get() with
@@ -444,7 +444,8 @@ let compute_props props =
 	  Pcva_socket.print_exit_code ret
 	with _ ->
 	  Unix.close socket;
-	  Options.Self.feedback "error: unix socket now closed!"
+	  Options.Self.feedback ~dkey:Options.dkey_socket
+	    "error: unix socket now closed!"
       end;
       Unix.close socket;
       Sys.remove name
@@ -460,7 +461,8 @@ let compute_props props =
 	  Pcva_socket.print_exit_code ret
 	with _ ->
 	  Unix.close socket;
-	  Options.Self.feedback "error: internet socket now closed!"
+	  Options.Self.feedback ~dkey:Options.dkey_socket
+	    "error: internet socket now closed!"
       end;
       Unix.close socket
     | _ (* stdio *) ->
@@ -472,7 +474,7 @@ let compute_props props =
   States.NbCases.mark_as_computed();
   States.TestFailures.mark_as_computed();
   Options.Self.feedback "all-paths: %b" !Prop_id.all_paths;
-  Options.Self.debug ~level:3 "%i test cases" (States.NbCases.get());
+  Options.Self.feedback "%i test cases" (States.NbCases.get());
   let hyps = [] in
   let distinct = true in
   List.iter (fun prop ->
@@ -629,28 +631,33 @@ let run() =
       ) props in
 
 
-      Options.Self.debug ~level:2 "selected properties:";
+      Options.Self.debug ~dkey:Options.dkey_properties "selected properties:";
       List.iter (fun p ->
 	try
 	  let id = Prop_id.to_id p in
-	  Options.Self.debug ~level:2 "%a (%i) found" Property.pretty p id
-	with _ -> Options.Self.debug ~level:3 "%a not found" Property.pretty p
+	  Options.Self.debug ~dkey:Options.dkey_properties
+	    "%a (%i) found" Property.pretty p id
+	with _ -> Options.Self.debug ~dkey:Options.dkey_properties
+	  "%a not found" Property.pretty p
       ) props;
 
       (*compute_props props;*)
       let terms_at_Pre, terms_at_stmt = first_pass() in
 
-      Options.Self.feedback "terms_at_Pre:";
+      Options.Self.debug ~dkey:Options.dkey_first_pass "terms_at_Pre:";
       Datatype.String.Hashtbl.iter_sorted (fun f terms ->
-	Options.Self.feedback "function '%s'" f;
-	List.iter (fun x -> Options.Self.feedback "%s" (str_at_term x)) terms;
-	Options.Self.feedback "----------------"
+	Options.Self.debug ~dkey:Options.dkey_first_pass "function '%s'" f;
+	List.iter (fun x -> Options.Self.debug ~dkey:Options.dkey_first_pass
+	  "%s" (str_at_term x)) terms;
+	Options.Self.debug ~dkey:Options.dkey_first_pass "----------------"
       ) terms_at_Pre;
 
-      Options.Self.feedback "terms_at_stmt:";
+      Options.Self.debug ~dkey:Options.dkey_first_pass "terms_at_stmt:";
       Cil_datatype.Stmt.Hashtbl.iter_sorted (fun stmt terms ->
-	Options.Self.feedback "stmt %a" Printer.pp_stmt stmt;
-	List.iter (fun x -> Options.Self.feedback "%s" (str_at_term x)) terms
+	Options.Self.debug ~dkey:Options.dkey_first_pass
+	  "stmt %a" Printer.pp_stmt stmt;
+	List.iter (fun x -> Options.Self.debug ~dkey:Options.dkey_first_pass
+	  "%s" (str_at_term x)) terms
       ) terms_at_stmt;
 
       Datatype.String.Hashtbl.clear terms_at_Pre;

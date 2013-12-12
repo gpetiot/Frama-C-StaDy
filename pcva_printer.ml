@@ -196,13 +196,14 @@ class pcva_printer props ~first_pass () = object (self)
 			   "no current function (term: %a)"
 			   Printer.pp_term t)
 		  in
-		  Options.Self.debug ~level:2 "fct_name = %s" fct_name;
+		  Options.Self.debug ~dkey:Options.dkey_old_printer
+		    "fct_name = %s" fct_name;
 		  let affects = try
 				  Datatype.String.Hashtbl.find
 				    at_term_affect_in_function fct_name
 		    with _ ->
-		      Options.Self.debug ~level:2 "fct %s queue created"
-			fct_name;
+		      Options.Self.debug ~dkey:Options.dkey_old_printer
+			"fct %s queue created" fct_name;
 		      Queue.create()
 		  in
 		  Queue.add (fun fmt ->
@@ -214,7 +215,8 @@ class pcva_printer props ~first_pass () = object (self)
 		      self#term
 		      term
 		  ) affects;
-		  Options.Self.debug ~level:2 "add at fct %s -> ..." fct_name;
+		  Options.Self.debug ~dkey:Options.dkey_old_printer
+		    "add at fct %s -> ..." fct_name;
 		  Datatype.String.Hashtbl.add
 		    at_term_affect_in_function fct_name affects
 		end
@@ -224,7 +226,8 @@ class pcva_printer props ~first_pass () = object (self)
 				  Cil_datatype.Stmt.Hashtbl.find
 				    at_term_affect_in_stmt stmt
 		    with _ ->
-		      Options.Self.debug ~level:2 "stmt queue created";
+		      Options.Self.debug ~dkey:Options.dkey_old_printer
+			"stmt queue created";
 		      Queue.create()
 		  in
 		  Queue.add (fun fmt ->
@@ -236,7 +239,8 @@ class pcva_printer props ~first_pass () = object (self)
 		      self#term
 		      term
 		  ) affects;
-		  Options.Self.debug ~level:2 "add at stmt ?? -> ...";
+		  Options.Self.debug ~dkey:Options.dkey_old_printer
+		    "add at stmt ?? -> ...";
 		  Cil_datatype.Stmt.Hashtbl.add
 		    at_term_affect_in_stmt stmt affects
 		end
@@ -463,7 +467,8 @@ class pcva_printer props ~first_pass () = object (self)
     | Pat _ -> failwith "\\at on predicates unsupported!"
     | Pseparated _ ->
       begin
-	Options.Self.feedback "Predicate ignored: %a" Printer.pp_predicate pred;
+	Options.Self.feedback ~dkey:Options.dkey_old_printer
+	  "Predicate ignored: %a" Printer.pp_predicate pred;
 	Format.fprintf fmt "1"
       end
     | _ -> super#predicate fmt pred
@@ -781,7 +786,7 @@ class pcva_printer props ~first_pass () = object (self)
 
 
   method private fundecl fmt f =
-    Options.Self.debug ~level:2 "IN fundecl";
+    Options.Self.debug ~dkey:Options.dkey_old_printer "IN fundecl";
     (* declaration. *)
     let was_ghost = is_ghost in
     let entry_point_name =
@@ -938,7 +943,8 @@ class pcva_printer props ~first_pass () = object (self)
       if not first_pass then
 	begin
 	  try
-	    Options.Self.debug ~level:2 "find %s" f.svar.vname;
+	    Options.Self.debug ~dkey:Options.dkey_old_printer
+	      "find %s" f.svar.vname;
 	    let q =
 	      Datatype.String.Hashtbl.find
 		at_term_affect_in_function f.svar.vname
@@ -946,8 +952,8 @@ class pcva_printer props ~first_pass () = object (self)
 	    let tmp = !at_term_cpt in
 	    Queue.iter (fun e -> e fmt; at_term_cpt := !at_term_cpt + 1) q;
 	    at_term_cpt := tmp
-	  with _ -> Options.Self.debug ~level:2 "%s queue not found"
-	    f.svar.vname
+	  with _ -> Options.Self.debug ~dkey:Options.dkey_old_printer
+	    "%s queue not found" f.svar.vname
 	end
     end;
     self#block ~braces:true fmt f.sbody;
@@ -963,7 +969,7 @@ class pcva_printer props ~first_pass () = object (self)
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
       (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore);
-    Options.Self.debug ~level:2 "OUT fundecl"
+    Options.Self.debug ~dkey:Options.dkey_old_printer "OUT fundecl"
 
 
 
