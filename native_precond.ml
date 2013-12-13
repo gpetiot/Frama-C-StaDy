@@ -367,11 +367,11 @@ let rec tlval_to_prolog tlval =
 	  | (Var(Complex c), Var(Logic l)) -> Complex(CVCCont(c,L l))
 	  | (Var(Simple s), Int i) -> Complex(CVVCont(s,I i))
 	  | (Var(Complex c), Int i) -> Complex(CVCCont(c,I i))
-	  | _ -> Options.Self.abort "%s+%s unsupported" (strcvar x) (strcvar y)
+	  | _ -> Options.Self.not_yet_implemented "%s+%s" (strcvar x)(strcvar y)
 	end
       | Minus _ | Mult _ | Div _ -> assert false
     end
-  | _ -> Options.Self.abort "term_lval: %a" Printer.pp_term_lval tlval
+  | _ -> Options.Self.not_yet_implemented "tlval: %a" Printer.pp_term_lval tlval
 
 
 (* term -> compo_var *)
@@ -390,7 +390,7 @@ and term_to_compo_var term =
     begin
       match (term_to_compo_var term) with
       | Int i -> Int (Integer.neg i)
-      | _ -> failwith "term_to_compo_var: TUnOp"
+      | _ -> Options.Self.not_yet_implemented "term_to_compo_var: TUnOp"
     end
   | Tat(t,LogicLabel(_,label)) when label = "Old" -> term_to_compo_var t
   | _ -> error_term term
@@ -422,9 +422,7 @@ let rec requires_to_prolog pred =
   | Pvalid (_, term) | Pvalid_read (_, term) -> valid_to_prolog term
   | Pforall (_quantif, _pn) -> ()
   | Prel (rel, pn1, pn2) -> rel_to_prolog rel pn1 pn2
-  | _ ->
-    Options.Self.feedback ~dkey:Options.dkey_native_precond
-      "Predicate ignored: %a" Printer.pp_predicate_named pred
+  | _ -> Options.Self.not_yet_implemented "%a" Printer.pp_predicate_named pred
 
 (* typ -> var -> unit *)
 let rec create_input_from_type ty v =

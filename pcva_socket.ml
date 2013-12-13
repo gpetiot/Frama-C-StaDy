@@ -11,8 +11,7 @@
 (* coupe une chaîne en deux *)
 let cut s n =
   try (String.sub s 0 n), (String.sub s n ((String.length s)-n))
-  with _ -> Options.Self.debug ~dkey:Options.dkey_socket "cut \"%s\" %i" s n;
-    assert false
+  with _ -> Options.Self.abort "socket:cut \"%s\" %i" s n
 
 let process_test_case s =
   let cut_sep sep x =
