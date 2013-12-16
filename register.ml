@@ -249,54 +249,38 @@ class find_bounds = object(self)
     Cil_datatype.Logic_var.Hashtbl.create 32
     
   method! vpredicate pred =
+    let add_if_result_not_involved hashtbl v t =
+	if(result_involved t) then
+	  Options.Self.debug ~dkey:Options.dkey_first_pass
+	    "\\result involved in %a, not added as bound of \\at-term"
+	    Printer.pp_term t
+	else
+	  Cil_datatype.Logic_var.Hashtbl.add hashtbl v t
+    in
     match pred with
     | Papp _ -> failwith "no application after substitution"
     | Pat _ -> Options.Self.not_yet_implemented "Pat"
     | Prel (Rle,{term_node=TLval(TVar v,TNoOffset)},t)
     | Prel (Rge,t,{term_node=TLval(TVar v,TNoOffset)}) when in_quantif ->
-      if (result_involved t) then
-	Options.Self.debug ~dkey:Options.dkey_first_pass
-	  "\\result involved in %a, not added as upper bound of \\at-term"
-	  Printer.pp_term t
-      else
-	Cil_datatype.Logic_var.Hashtbl.add upper_bounds v t;
+      add_if_result_not_involved upper_bounds v t;
       DoChildrenPost (fun x -> x)
     | Prel (Rge,{term_node=TLval(TVar v,TNoOffset)},t)
     | Prel (Rle,t,{term_node=TLval(TVar v,TNoOffset)}) when in_quantif ->
-      if (result_involved t) then
-	Options.Self.debug ~dkey:Options.dkey_first_pass
-	  "\\result involved in %a, not added as lower bound of \\at-term"
-	  Printer.pp_term t
-      else
-	Cil_datatype.Logic_var.Hashtbl.add lower_bounds v t;
+      add_if_result_not_involved lower_bounds v t;
       DoChildrenPost (fun x -> x)
     | Prel (Rlt,{term_node=TLval(TVar v,TNoOffset)},t)
     | Prel (Rgt,t,{term_node=TLval(TVar v,TNoOffset)}) when in_quantif ->
-      if (result_involved t) then
-	Options.Self.debug ~dkey:Options.dkey_first_pass
-	  "\\result involved in %a, not added as upper bound of \\at-term"
-	  Printer.pp_term t
-      else
-	begin
-	  let exp_info = Cil.exp_info_of_term t in
-	  let tnode = TBinOp (MinusA, t, Cil.lone()) in
-	  let t' = Cil.term_of_exp_info t.term_loc tnode exp_info in
-	  Cil_datatype.Logic_var.Hashtbl.add upper_bounds v t'
-	end;
+      let exp_info = Cil.exp_info_of_term t in
+      let tnode = TBinOp (MinusA, t, Cil.lone()) in
+      let t' = Cil.term_of_exp_info t.term_loc tnode exp_info in
+      add_if_result_not_involved upper_bounds v t';
       DoChildrenPost (fun x -> x)
     | Prel (Rgt,{term_node=TLval(TVar v,TNoOffset)},t)
     | Prel (Rlt,t,{term_node=TLval(TVar v,TNoOffset)}) when in_quantif ->
-      if (result_involved t) then
-	Options.Self.debug ~dkey:Options.dkey_first_pass
-	  "\\result involved in %a, not added as lower bound of \\at-term"
-	  Printer.pp_term t
-      else
-	begin
-	  let exp_info = Cil.exp_info_of_term t in
-	  let tnode = TBinOp (PlusA, t, Cil.lone()) in
-	  let t' = Cil.term_of_exp_info t.term_loc tnode exp_info in
-	  Cil_datatype.Logic_var.Hashtbl.add lower_bounds v t'
-	end;
+      let exp_info = Cil.exp_info_of_term t in
+      let tnode = TBinOp (PlusA, t, Cil.lone()) in
+      let t' = Cil.term_of_exp_info t.term_loc tnode exp_info in
+      add_if_result_not_involved lower_bounds v t';
       DoChildrenPost (fun x -> x)
     | Pforall (_,{content=Pimplies _})
     | Pexists (_,{content=Pand _}) ->
