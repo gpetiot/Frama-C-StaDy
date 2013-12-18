@@ -251,15 +251,15 @@ class find_bounds = object(self)
     Datatype.String.Hashtbl.create 32
   val terms_at_stmt : (at_term list) Cil_datatype.Stmt.Hashtbl.t =
     Cil_datatype.Stmt.Hashtbl.create 32
-    
+      
   method! vpredicate pred =
     let add_if_result_not_involved hashtbl v t =
-	if(result_involved t) then
-	  Options.Self.debug ~dkey:Options.dkey_first_pass
-	    "\\result involved in %a, not added as bound of \\at-term"
-	    Printer.pp_term t
-	else
-	  Cil_datatype.Logic_var.Hashtbl.add hashtbl v t
+      if(result_involved t) then
+	Options.Self.debug ~dkey:Options.dkey_first_pass
+	  "\\result involved in %a, not added as bound of \\at-term"
+	  Printer.pp_term t
+      else
+	Cil_datatype.Logic_var.Hashtbl.add hashtbl v t
     in
     match pred with
     | Papp _ -> failwith "no application after substitution"
@@ -481,7 +481,7 @@ let print_in_file filename props =
   (* second pass: print the instrumented quantif, output in a file *)
   let out = open_out filename in
   let fmt = Format.formatter_of_out_channel out in
-    let module Second_pass = Printer_builder.Make
+  let module Second_pass = Printer_builder.Make
 	(struct class printer =
 		  Pcva_printer.pcva_printer props ~first_pass:false end)
   in
@@ -693,26 +693,26 @@ let properties_of_name name =
 	let f s =
 	  Annotations.iter_code_annot (fun _ ca ->
 	    match ca.annot_content with
-	      | AAssert(_,{name=l})
-	      | AInvariant(_,_,{name=l}) ->
-		if List.mem name l then
-		  let p = Property.ip_of_code_annot kf s ca in
-		  props := List.rev_append p !props
-	      | AStmtSpec(_,{spec_behavior=bhvs}) ->
-		List.iter (fun b ->
-		  List.iter (fun id_pred ->
-		    if List.mem name id_pred.ip_name then
-		      let p = Property.ip_of_requires kf (Kstmt s) b id_pred in
-		      props := p :: !props
-		  ) b.b_requires;
-		  List.iter (fun (tk,id_pred) ->
-		    if List.mem name id_pred.ip_name then
-		      let p =
-			Property.ip_of_ensures kf (Kstmt s) b (tk,id_pred) in
-		      props := p :: !props
-		  ) b.b_post_cond;
-		) bhvs
-	      | _ -> ()
+	    | AAssert(_,{name=l})
+	    | AInvariant(_,_,{name=l}) ->
+	      if List.mem name l then
+		let p = Property.ip_of_code_annot kf s ca in
+		props := List.rev_append p !props
+	    | AStmtSpec(_,{spec_behavior=bhvs}) ->
+	      List.iter (fun b ->
+		List.iter (fun id_pred ->
+		  if List.mem name id_pred.ip_name then
+		    let p = Property.ip_of_requires kf (Kstmt s) b id_pred in
+		    props := p :: !props
+		) b.b_requires;
+		List.iter (fun (tk,id_pred) ->
+		  if List.mem name id_pred.ip_name then
+		    let p =
+		      Property.ip_of_ensures kf (Kstmt s) b (tk,id_pred) in
+		    props := p :: !props
+		) b.b_post_cond;
+	      ) bhvs
+	    | _ -> ()
 	  ) s;
 	  s
 	in
