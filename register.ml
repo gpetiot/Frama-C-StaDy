@@ -306,7 +306,7 @@ class find_bounds = object(self)
       with _ ->
 	Options.Self.abort "logic var %a unbounded" Printer.pp_logic_var v
     in
-    let construct lv att =
+    let construct_or_abort lv att =
       let lower = find_or_abort lower_bounds lv in
       let upper = find_or_abort upper_bounds lv in
       let lower = Visitor.visitFramacTerm (new rm_at) lower in
@@ -317,7 +317,7 @@ class find_bounds = object(self)
       match x.term_node with
       | Tat (t, StmtLabel stmt) ->
 	Options.Self.debug ~dkey:Options.dkey_first_pass
-	  "AT: \\at(%a,?) StmtLabel" Printer.pp_term t; 
+	  "AT: \\at(%a,?) StmtLabel" Printer.pp_term t;
 	let terms =
 	  try Cil_datatype.Stmt.Hashtbl.find terms_at_stmt !stmt
 	  with _ -> []
@@ -329,7 +329,8 @@ class find_bounds = object(self)
 	  try
 	    let at_term =
 	      let t = Visitor.visitFramacTerm (new rm_at) t in
-	      Cil_datatype.Logic_var.Set.fold construct lvars (Unquantif_term t)
+	      Cil_datatype.Logic_var.Set.fold
+		construct_or_abort lvars (Unquantif_term t)
 	    in
 	    let terms = at_term :: terms in
 	    Cil_datatype.Stmt.Hashtbl.replace terms_at_stmt !stmt terms
@@ -359,7 +360,7 @@ class find_bounds = object(self)
 		    let at_term =
 		      let t' = Visitor.visitFramacTerm (new rm_at) t in
 		      Cil_datatype.Logic_var.Set.fold
-			construct lvars (Unquantif_term t')
+			construct_or_abort lvars (Unquantif_term t')
 		    in
 		    let terms = at_term :: terms in
 		    Datatype.String.Hashtbl.replace terms_at_Pre func terms
