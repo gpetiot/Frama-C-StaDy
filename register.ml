@@ -247,6 +247,10 @@ class find_bounds = object(self)
     Cil_datatype.Logic_var.Hashtbl.create 32
   val lower_bounds : term Cil_datatype.Logic_var.Hashtbl.t =
     Cil_datatype.Logic_var.Hashtbl.create 32
+  val terms_at_Pre : (at_term list) Datatype.String.Hashtbl.t =
+    Datatype.String.Hashtbl.create 32
+  val terms_at_stmt : (at_term list) Cil_datatype.Stmt.Hashtbl.t =
+    Cil_datatype.Stmt.Hashtbl.create 32
     
   method! vpredicate pred =
     let add_if_result_not_involved hashtbl v t =
@@ -291,11 +295,6 @@ class find_bounds = object(self)
     | Pexists _ -> Options.Self.not_yet_implemented
       "unsupported: try \\exists ... && ... instead"
     | _ -> DoChildrenPost (fun x -> x)
-
-  val terms_at_Pre : (at_term list) Datatype.String.Hashtbl.t =
-    Datatype.String.Hashtbl.create 32
-  val terms_at_stmt : (at_term list) Cil_datatype.Stmt.Hashtbl.t =
-    Cil_datatype.Stmt.Hashtbl.create 32
 
   method get_terms_at_Pre = terms_at_Pre
   method get_terms_at_stmt = terms_at_stmt
