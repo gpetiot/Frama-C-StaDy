@@ -462,6 +462,27 @@ let first_pass() =
 
 
 
+class second_pass_printer props terms_at_Pre terms_at_stmt () = object(self)
+  inherit Printer.extensible_printer () as super
+end
+
+
+
+let second_pass filename props terms_at_Pre terms_at_stmt =
+  ignore props;
+  Kernel.Unicode.set false;
+  let out = open_out filename in
+  let fmt = Format.formatter_of_out_channel out in
+  let module P =
+	Printer_builder.Make
+	  (struct class printer =
+		    second_pass_printer props terms_at_Pre terms_at_stmt end) in
+  P.pp_file fmt (Ast.get());
+  flush out;
+  close_out out
+
+
+
 
 
 
@@ -790,6 +811,8 @@ let run() =
 	List.iter (fun x -> Options.Self.debug ~dkey:Options.dkey_first_pass
 	  "R: %s" (str_at_term x)) terms
       ) terms_at_stmt;
+
+      second_pass (Options.Temp_File.get()) props terms_at_Pre terms_at_stmt;
 
       Datatype.String.Hashtbl.clear terms_at_Pre;
       Cil_datatype.Stmt.Hashtbl.clear terms_at_stmt;
