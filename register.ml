@@ -28,6 +28,10 @@ let rec str_at_term = function
 
 let rec compareat x y = str_at_term x = str_at_term y
 
+let rec base_of_at = function
+  | Unquantif_term t -> t
+  | Quantif_term (_,_,_,t) -> base_of_at t
+
 
 
 
@@ -256,22 +260,45 @@ class find_bounds = object(self)
     let add_if_result_not_involved hashtbl v t =
       if(result_involved t) then
 	Options.Self.debug ~dkey:Options.dkey_first_pass
-	  "\\result involved in %a, not added as bound of \\at-term"
+	  "\\result involved in %a, not added as bound of %a"
 	  Printer.pp_term t
+	  Printer.pp_logic_var v
       else
-	Cil_datatype.Logic_var.Hashtbl.add hashtbl v t
+	(Options.Self.debug ~dkey:Options.dkey_first_pass
+	  "%a added as bound of %a"
+	  Printer.pp_term t
+	  Printer.pp_logic_var v;
+	 Cil_datatype.Logic_var.Hashtbl.add hashtbl v t)
     in
     match pred with
     | Papp _ -> failwith "no application after substitution"
     | Pat _ -> Options.Self.not_yet_implemented "Pat"
+    | Prel (Rle,{term_node=
+	TLogic_coerce(_,{term_node=TLval(TVar v,TNoOffset)})
+		},t)
+    | Prel (Rge,t,{term_node=
+	TLogic_coerce(_,{term_node=TLval(TVar v,TNoOffset)})
+		  })
     | Prel (Rle,{term_node=TLval(TVar v,TNoOffset)},t)
     | Prel (Rge,t,{term_node=TLval(TVar v,TNoOffset)}) when in_quantif ->
       add_if_result_not_involved upper_bounds v t;
       DoChildrenPost (fun x -> x)
+    | Prel (Rge,{term_node=
+	TLogic_coerce(_,{term_node=TLval(TVar v,TNoOffset)})
+		},t)
+    | Prel (Rle,t,{term_node=
+	TLogic_coerce(_,{term_node=TLval(TVar v,TNoOffset)})
+		  })
     | Prel (Rge,{term_node=TLval(TVar v,TNoOffset)},t)
     | Prel (Rle,t,{term_node=TLval(TVar v,TNoOffset)}) when in_quantif ->
       add_if_result_not_involved lower_bounds v t;
       DoChildrenPost (fun x -> x)
+    | Prel (Rlt,{term_node=
+	TLogic_coerce(_,{term_node=TLval(TVar v,TNoOffset)})
+		},t)
+    | Prel (Rgt,t,{term_node=
+	TLogic_coerce(_,{term_node=TLval(TVar v,TNoOffset)})
+		  })
     | Prel (Rlt,{term_node=TLval(TVar v,TNoOffset)},t)
     | Prel (Rgt,t,{term_node=TLval(TVar v,TNoOffset)}) when in_quantif ->
       let exp_info = Cil.exp_info_of_term t in
@@ -279,6 +306,12 @@ class find_bounds = object(self)
       let t' = Cil.term_of_exp_info t.term_loc tnode exp_info in
       add_if_result_not_involved upper_bounds v t';
       DoChildrenPost (fun x -> x)
+    | Prel (Rgt,{term_node=
+	TLogic_coerce(_,{term_node=TLval(TVar v,TNoOffset)})
+		},t)
+    | Prel (Rlt,t,{term_node=
+	TLogic_coerce(_,{term_node=TLval(TVar v,TNoOffset)})
+		  })
     | Prel (Rgt,{term_node=TLval(TVar v,TNoOffset)},t)
     | Prel (Rlt,t,{term_node=TLval(TVar v,TNoOffset)}) when in_quantif ->
       let exp_info = Cil.exp_info_of_term t in
@@ -314,6 +347,9 @@ class find_bounds = object(self)
     in
     let f x =
       match x.term_node with
+      | Tbase_addr (StmtLabel stmt, t)
+      | Toffset (StmtLabel stmt, t)
+      | Tblock_length (StmtLabel stmt, t)
       | Tat (t, StmtLabel stmt) ->
 	Options.Self.debug ~dkey:Options.dkey_first_pass
 	  "AT: \\at(%a,?) StmtLabel" Printer.pp_term t;
@@ -339,6 +375,9 @@ class find_bounds = object(self)
 	    Printer.pp_term t
 	end;
 	x
+      | Tbase_addr (LogicLabel(_stmtopt,label), t)
+      | Toffset (LogicLabel(_stmtopt,label), t)
+      | Tblock_length (LogicLabel(_stmtopt,label), t)
       | Tat (t, LogicLabel(_stmtopt,label)) ->
 	Options.Self.debug ~dkey:Options.dkey_first_pass
 	  "AT: \\at(%a,%s) LogicLabel" Printer.pp_term t label;
@@ -461,9 +500,148 @@ let first_pass() =
 
 
 
+let debug_builtins = Kernel.register_category "printer:builtins"
+let print_var v =
+  not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
+let no_repeat l : 'a list =
+  let rec aux acc = function
+    | [] -> acc
+    | h :: t when List.mem h acc -> aux acc t
+    | h :: t -> aux (h :: acc) t
+  in
+  aux  [] l
+(* to change a \valid to a pathcrawler_dimension *)
+(* term -> term * term *)
+let rec extract_terms t : term * term =
+  let loc = t.term_loc in
+  match t.term_node with
+  | TLval _ -> t, lzero ~loc ()
+  | TCastE (_,term)
+  | TCoerce (term,_)
+  | TAlignOfE term -> extract_terms term
+  | TBinOp (PlusPI,x,{term_node = Trange(_,Some y)})
+  | TBinOp (IndexPI,x,{term_node = Trange(_,Some y)}) -> x,y
+  | TBinOp ((PlusPI|IndexPI),x,y) -> x,y
+  | TBinOp (MinusPI,x,y) ->
+    x, term_of_exp_info loc (TUnOp(Neg,y)) {exp_type=t.term_type; exp_name=[]}
+  | TStartOf _ -> t, lzero ~loc ()
+  | TAddrOf (TVar _, TIndex _) ->
+    let lv = mkTermMem t TNoOffset in
+    let te = term_of_exp_info loc(TLval lv){exp_type=t.term_type;exp_name=[]} in
+    extract_terms te
+  | _ -> Options.Self.not_yet_implemented "term: %a" Printer.pp_term t
+
+
+
+
+
 
 class second_pass_printer props terms_at_Pre terms_at_stmt () = object(self)
   inherit Printer.extensible_printer () as super
+
+  val mutable pred_cpt = 0
+  val pred_assoc : int Cil_datatype.Identified_predicate.Hashtbl.t =
+    Cil_datatype.Identified_predicate.Hashtbl.create 32
+  val mutable postcond = None
+  val mutable result_varinfo = None
+  val mutable current_function = None
+    
+  method private in_current_function vi =
+    assert (current_function = None);
+    current_function <- Some vi
+
+  method private out_current_function =
+    assert (current_function <> None);
+    current_function <- None
+
+(*
+  method! term_node fmt t =
+    let ctyp = function | Ctype t->t | Linteger->longType | _ -> assert false in
+    match t.term_node with
+    | TConst(Integer(i,_)) ->
+      if (Integer.to_string i) = "-2147483648" then
+	Format.fprintf fmt "(-2147483647-1)"
+      else
+	super#term_node fmt t
+    | Tat(_, StmtLabel _) -> failwith "\\at on stmt label unsupported!"
+    | Tat(term,LogicLabel(_,stringlabel)) ->
+      if ignore_at then
+	self#term fmt term
+      else
+      begin
+	if stringlabel = "Old" then
+	  if first_pass then
+	    begin
+	      match self#current_stmt with
+	      | None ->
+		begin
+		  let fct_name = try (Extlib.the last_function).vname
+		    with _ ->
+		      failwith
+			(Pretty_utils.sfprintf
+			   "no current function (term: %a)"
+			   Printer.pp_term t)
+		  in
+		  Options.Self.debug ~dkey:Options.dkey_old_printer
+		    "fct_name = %s" fct_name;
+		  let affects = try
+				  Datatype.String.Hashtbl.find
+				    at_term_affect_in_function fct_name
+		    with _ ->
+		      Options.Self.debug ~dkey:Options.dkey_old_printer
+			"fct %s queue created" fct_name;
+		      Queue.create()
+		  in
+		  Queue.add (fun fmt ->
+		    Format.fprintf fmt "%a = %a;@\n"
+		      (self#typ
+			 (Some (fun fmt -> Format.fprintf fmt "term_at_%i"
+			   !at_term_cpt)))
+		      (ctyp term.term_type)
+		      self#term
+		      term
+		  ) affects;
+		  Options.Self.debug ~dkey:Options.dkey_old_printer
+		    "add at fct %s -> ..." fct_name;
+		  Datatype.String.Hashtbl.add
+		    at_term_affect_in_function fct_name affects
+		end
+	      | Some stmt ->
+		begin
+		  let affects = try
+				  Cil_datatype.Stmt.Hashtbl.find
+				    at_term_affect_in_stmt stmt
+		    with _ ->
+		      Options.Self.debug ~dkey:Options.dkey_old_printer
+			"stmt queue created";
+		      Queue.create()
+		  in
+		  Queue.add (fun fmt ->
+		    Format.fprintf fmt "%a = %a;@\n"
+		      (self#typ
+			 (Some (fun fmt -> Format.fprintf fmt "term_at_%i"
+			   !at_term_cpt)))
+		      (ctyp term.term_type)
+		      self#term
+		      term
+		  ) affects;
+		  Options.Self.debug ~dkey:Options.dkey_old_printer
+		    "add at stmt ?? -> ...";
+		  Cil_datatype.Stmt.Hashtbl.add
+		    at_term_affect_in_stmt stmt affects
+		end
+	    end
+	  else
+	    begin
+	      Format.fprintf fmt "term_at_%i" !at_term_cpt;
+	      at_term_cpt := !at_term_cpt + 1
+	    end
+	else
+	  failwith (Printf.sprintf "\\at label '%s' unsupported!"
+		      stringlabel)
+      end
+    | _ -> super#term_node fmt t
+*)
 end
 
 
@@ -481,42 +659,6 @@ let second_pass filename props terms_at_Pre terms_at_stmt =
   flush out;
   close_out out
 
-
-
-
-
-
-
-(* outputs the AST of a project in a file *)
-let print_in_file filename props =
-  Kernel.Unicode.set false;
-
-  (* first pass: prepare the quantifiers predicates, ignore the output *)
-  let fmt = Format.make_formatter (fun _ _ _ -> ()) ignore in
-  let module First_pass = Printer_builder.Make
-	(struct class printer =
-		  Pcva_printer.pcva_printer props ~first_pass:true end)
-  in
-  First_pass.pp_file fmt (Ast.get());
-
-  (* second pass: print the instrumented quantif, output in a file *)
-  let out = open_out filename in
-  let fmt = Format.formatter_of_out_channel out in
-  let module Second_pass = Printer_builder.Make
-	(struct class printer =
-		  Pcva_printer.pcva_printer props ~first_pass:false end)
-  in
-  Second_pass.pp_file fmt (Ast.get());
-  flush out;
-  close_out out;
-
-  (* cleaning *)
-  Pcva_printer.quantif_pred_cpt := 0;
-  Queue.clear Pcva_printer.quantif_pred_queue;
-  Pcva_printer.postcond := None;
-  Pcva_printer.at_term_cpt := 0;
-  Datatype.String.Hashtbl.clear Pcva_printer.at_term_affect_in_function;
-  Cil_datatype.Stmt.Hashtbl.clear Pcva_printer.at_term_affect_in_stmt
 
 
 
@@ -554,6 +696,8 @@ let setup_props_bijection () =
 
 
 let compute_props props =
+  ()
+(*
   (* Translate some parts of the pre-condition in Prolog *)
   Native_precond.translate();
   Options.Self.feedback ~dkey:Options.dkey_native_precond
@@ -643,7 +787,7 @@ let compute_props props =
   Prop_id.translated_properties := [];
   Prop_id.all_paths := false;
   Prop_id.typically := false
-    
+*)   
 
 
 
