@@ -336,7 +336,9 @@ class find_bounds = object(self)
     let find_or_abort hashtbl v =
       try Cil_datatype.Logic_var.Hashtbl.find hashtbl v
       with _ ->
-	Options.Self.abort "logic var %a unbounded" Printer.pp_logic_var v
+	Options.Self.debug ~dkey:Options.dkey_first_pass
+	  "logic var %a unbounded" Printer.pp_logic_var v;
+	assert false
     in
     let construct_or_abort lv att =
       let lower = find_or_abort lower_bounds lv in
