@@ -5,26 +5,39 @@ open Lexing
 
 
 
+type min_bound = term list
+type max_bound = term list
+
+
+
 type at_term =
 | Quantif_term of
     logic_var
-  * term (* borne min *)
-  * term (* borne max *)
+  * min_bound (* borne min *)
+  * max_bound (* borne max *)
   * at_term
 | Unquantif_term of term
 
 
 
+let rec str_min_bound = function
+  | [] -> ""
+  | h::t -> Pretty_utils.sfprintf "min(%a,%s)" Printer.pp_term h
+    (str_min_bound t)
 
+let rec str_max_bound = function
+| [] -> ""
+  | h::t -> Pretty_utils.sfprintf "max(%a,%s)" Printer.pp_term h
+    (str_max_bound t)
 
 let rec str_at_term = function
   | Unquantif_term t -> Pretty_utils.sfprintf "%a" Printer.pp_term t
   | Quantif_term(v,t1,t2,a) ->
-    Pretty_utils.sfprintf "%s[%a,%a,%a]"
+    Pretty_utils.sfprintf "%s[%a,%s,%s]"
       (str_at_term a)
       Printer.pp_logic_var v
-      Printer.pp_term t1
-      Printer.pp_term t2
+      (str_min_bound t1)
+      (str_max_bound t2)
 
 let rec compareat x y = str_at_term x = str_at_term y
 
@@ -345,7 +358,7 @@ class find_bounds = object(self)
       let upper = find_or_abort upper_bounds lv in
       let lower = Visitor.visitFramacTerm (new rm_at) lower in
       let upper = Visitor.visitFramacTerm (new rm_at) upper in
-      (Quantif_term (lv, lower, upper, att))
+      (Quantif_term (lv, [lower], [upper], att))
     in
     let f x =
       match x.term_node with
