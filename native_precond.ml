@@ -453,9 +453,11 @@ let rec create_input_from_type ty v =
     | _ -> Integer.zero, maxuint
   in
   match (unrollType ty,v) with
+  | TEnum ({ekind=ik},_), Simple s
   | TInt (ik,_), Simple s ->
     let b_min, b_max = bounds ik in
     add_simple_domain (SDVarInt(s,b_min,b_max))
+  | TEnum ({ekind=ik},_), Complex s
   | TInt (ik,_), Complex s ->
     let b_min, b_max = bounds ik in
     add_complex_domain (CDVarInt(s,b_min,b_max))
@@ -496,7 +498,10 @@ let rec create_input_from_type ty v =
     else
       (add_complex_domain (CDDimInt (s, Integer.zero, maxuint));
        create_input_from_type t (Complex (CVCCont (s,All))))
-  | _ -> assert false
+  | _ ->
+    Options.Self.feedback "error with var:(%a, %s)"
+      Printer.pp_typ ty (strvar v);
+    assert false
 
 (* varinfo -> unit *)
 let create_input_val var = create_input_from_type var.vtype (Simple var)
