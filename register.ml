@@ -5,81 +5,163 @@ open Lexing
 
 
 
+let print_strtbl_vartbl_terms hashtbl dkey =
+  Options.Self.debug ~dkey "========================";
+  Datatype.String.Hashtbl.iter_sorted (fun f tbl ->
+    Options.Self.debug ~dkey "function '%s'" f;
+    Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v ts ->
+      Options.Self.debug ~dkey "var '%s'" v.vname;
+      List.iter (fun t -> Options.Self.debug ~dkey "%a " Printer.pp_term t) ts
+    ) tbl;
+    Options.Self.debug ~dkey "----------------"
+  ) hashtbl;
+  Options.Self.debug ~dkey "========================"
 
 
-let first_pass() =
-  let dkey = Options.dkey_first_pass in
-  (*let terms_at_Pre : (at_term list) Datatype.String.Hashtbl.t =
-    Datatype.String.Hashtbl.create 32 in*)
-  (*let terms_at_stmt : (at_term list) Cil_datatype.Stmt.Hashtbl.t =
-    Cil_datatype.Stmt.Hashtbl.create 32 in*)
-  let lengths :
-      ((term list) Cil_datatype.Varinfo.Hashtbl.t) list
-      Datatype.String.Hashtbl.t =
-    Datatype.String.Hashtbl.create 32
-  in
-  let terms_at_Pre :
-      ((term list) Cil_datatype.Varinfo.Hashtbl.t) list
-      Datatype.String.Hashtbl.t =
-    Datatype.String.Hashtbl.create 32
-  in
-  
-  let o = object(self)
-    inherit Visitor.frama_c_inplace
 
-    (* builtin functions ignored *)
-    method! vglob_aux g =
-      let f x = x in
-      match g with
-      | GFun(fundec,_) when Cil.is_unused_builtin fundec.svar -> SkipChildren
-      | GVar(vi,_,_) when Cil.is_unused_builtin vi -> SkipChildren
-      | GVarDecl(_,vi,_) when Cil.is_unused_builtin vi -> SkipChildren
-      | GAnnot _ -> SkipChildren
-      | _ -> DoChildrenPost f
 
-    method! vpredicate_named pred =
-      let c = new Sd_subst.subst in
-      let p' = c#subst_pred pred.content [] [] [] in
-      Options.Self.debug ~dkey "avant: %a" Printer.pp_predicate pred.content;
-      Options.Self.debug ~dkey "après: %a" Printer.pp_predicate p';
-      Options.Self.debug ~dkey "===============================";
-      let fb = new find_bounds in
-      if self#current_func = None then
-	fb#reset_current_func()
-      else
-	fb#set_current_func  (Extlib.the self#current_func);
-      ignore (Visitor.visitFramacPredicate (fb :> Visitor.frama_c_inplace) p');
-      Datatype.String.Hashtbl.iter (fun k v ->
-	let t = try Datatype.String.Hashtbl.find terms_at_Pre k with _ -> [] in
-	let v' =
-	  let rec aux ret = function
-	    | [] -> ret
-	    | x::s-> aux(if List.exists(compareat x) ret then ret else x::ret) s
-	  in
-	  aux [] v
-	in
-	let v' = List.filter (fun x -> not (List.exists (compareat x) t)) v' in
-	let new_terms = List.rev_append t v' in
-	Datatype.String.Hashtbl.replace terms_at_Pre k new_terms
-      ) fb#get_terms_at_Pre;
-      Cil_datatype.Stmt.Hashtbl.iter (fun k v ->
-	let t = try Cil_datatype.Stmt.Hashtbl.find terms_at_stmt k with _->[] in
-	let v' =
-	  let rec aux ret = function
-	    | [] -> ret
-	    | x::s-> aux(if List.exists(compareat x) ret then ret else x::ret) s
-	  in
-	  aux [] v
-	in
-	let v' = List.filter (fun x -> not (List.exists (compareat x) t)) v' in
-	let new_terms = List.rev_append t v' in
-	Cil_datatype.Stmt.Hashtbl.replace terms_at_stmt k new_terms
-      ) fb#get_terms_at_stmt;
-      SkipChildren
-  end
-  in
-  Visitor.visitFramacFile o (Ast.get());
-  terms_at_Pre, terms_at_stmt
+(* Appends an element to the end of a list. *)
+let append_end : 'a list -> 'a -> 'a list =
+  fun l elt -> List.rev_append (List.rev l) [elt]
+
+
+
+
+
+(* Extracts the varinfo of the variable and its inferred size as a term
+   from a term t as \valid(t). *)
+let extract_from_valid : term -> varinfo * term =
+  fun t -> match t with
+  | {term_node=TBinOp((PlusPI|IndexPI),
+		      ({term_node=TLval(TVar v, _)} as _t1),
+		      ({term_node=Trange(_,Some bound)} as _t2))} ->
+    let varinfo = Extlib.the v.lv_origin in
+    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
+    let einfo = {exp_type=bound.term_type; exp_name=[]} in
+    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
+    varinfo, term
+
+  | {term_node=TBinOp((PlusPI|IndexPI),
+		      ({term_node=TLval(TVar v, _)} as _t1),
+		      (t2 (* anything but a Trange *)))} ->
+    let varinfo = Extlib.the v.lv_origin in
+    let tnode = TBinOp (PlusA, t2, Cil.lone ~loc:t.term_loc()) in
+    let einfo = {exp_type=t2.term_type; exp_name=[]} in
+    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
+    varinfo, term
+
+  | {term_node=TLval(TVar v, _)} ->
+    let varinfo = Extlib.the v.lv_origin in
+    let term = Cil.lone ~loc:t.term_loc () in
+    varinfo, term
+
+  | _ ->
+    Options.Self.debug ~dkey:Options.dkey_lengths
+      "\\valid(%a) ignored" Printer.pp_term t;
+    assert false
+
+
+
+(* Computes and returns a hashtable such that :
+   function_name1 =>
+      var1 => inferred size for var1
+      var2 => inferred size for var2
+   function_name2 =>
+       ...
+*)
+let lengths_from_requires :
+    unit
+    -> term list Cil_datatype.Varinfo.Hashtbl.t Datatype.String.Hashtbl.t =
+  fun () ->
+    let lengths = Datatype.String.Hashtbl.create 32 in
+    Globals.Functions.iter (fun kf ->
+      let vi = Kernel_function.get_vi kf in
+      if not (Cil.is_unused_builtin vi) then
+	begin
+	  let kf_name = Kernel_function.get_name kf in
+	  let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
+
+	  Annotations.iter_behaviors (fun _ bhv ->
+	    List.iter (fun id_pred ->
+	      let pred = id_pred.ip_content in
+	      let c = new Sd_subst.subst in
+	      let pred = c#subst_pred pred [] [] [] in
+
+	      let o = object
+		inherit Visitor.frama_c_inplace
+
+		method! vpredicate p =
+		  match p with
+		  | Pvalid(_, t) | Pvalid_read(_, t) ->
+		    begin
+		      try
+			let varinfo, term = extract_from_valid t in
+			let terms =
+			  try Cil_datatype.Varinfo.Hashtbl.find kf_tbl varinfo
+			  with Not_found -> []
+			in
+			let terms = append_end terms term in
+			Cil_datatype.Varinfo.Hashtbl.replace
+			  kf_tbl varinfo terms;
+			DoChildren
+		      with
+		      | _ -> DoChildren
+		    end
+		  | _ -> DoChildren
+	      end
+	      in
+	      
+	      ignore (Visitor.visitFramacPredicate o pred)
+	    ) bhv.b_requires
+	  ) kf;
+	  Datatype.String.Hashtbl.add lengths kf_name kf_tbl
+	end
+    );
+    Options.Self.debug ~dkey:Options.dkey_lengths "LENGTHS:";
+    print_strtbl_vartbl_terms lengths Options.dkey_lengths;
+    lengths
+
+
+
+
+
+(* Computes and returns a hashtable such that :
+   function_name1 =>
+      formal var1 => size of var1 saved
+      formal var2 => size of var2 saved
+   function_name2 =>
+       ...
+*)
+let at_from_formals :
+    term list Cil_datatype.Varinfo.Hashtbl.t Datatype.String.Hashtbl.t
+    -> term list Cil_datatype.Varinfo.Hashtbl.t Datatype.String.Hashtbl.t =
+  fun lengths ->
+    let terms_at_Pre = Datatype.String.Hashtbl.create 32 in
+    Globals.Functions.iter (fun kf ->
+      let vi = Kernel_function.get_vi kf in
+      if not (Cil.is_unused_builtin vi) then
+	begin
+	  let kf_name = Kernel_function.get_name kf in
+	  let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
+	  let lengths_tbl = Datatype.String.Hashtbl.find lengths kf_name in
+	  let formals = Kernel_function.get_formals kf in
+	  List.iter (fun vi ->
+	    let terms =
+	      try Cil_datatype.Varinfo.Hashtbl.find lengths_tbl vi
+	      with Not_found -> []
+	    in
+	    Cil_datatype.Varinfo.Hashtbl.add kf_tbl vi terms
+	  ) formals;
+	  Datatype.String.Hashtbl.add terms_at_Pre kf_name kf_tbl
+	end
+    );
+    Options.Self.debug ~dkey:Options.dkey_at "AT:";
+    print_strtbl_vartbl_terms terms_at_Pre Options.dkey_at;
+    terms_at_Pre
+
+
+
+
 
 
 
@@ -119,7 +201,7 @@ let rec extract_terms t : term * term =
 
 
 
-class second_pass_printer props terms_at_Pre terms_at_stmt () = object(self)
+class second_pass_printer props terms_at_Pre () = object(self)
   inherit Printer.extensible_printer () as super
 
   val mutable pred_cpt = 0
@@ -229,7 +311,7 @@ end
 
 
 
-let second_pass filename props terms_at_Pre terms_at_stmt =
+let second_pass filename props terms_at_Pre =
   ignore props;
   Kernel.Unicode.set false;
   let out = open_out filename in
@@ -237,7 +319,7 @@ let second_pass filename props terms_at_Pre terms_at_stmt =
   let module P =
 	Printer_builder.Make
 	  (struct class printer =
-		    second_pass_printer props terms_at_Pre terms_at_stmt end) in
+		    second_pass_printer props terms_at_Pre end) in
   P.pp_file fmt (Ast.get());
   flush out;
   close_out out
@@ -521,31 +603,19 @@ let run() =
       ) props;
 
       (*compute_props props;*)
-      let terms_at_Pre, terms_at_stmt = first_pass() in
+      let lengths = lengths_from_requires() in
+      let terms_at_Pre = at_from_formals lengths in
 
-      Options.Self.debug ~dkey:Options.dkey_first_pass "R: terms_at_Pre:";
-      Datatype.String.Hashtbl.iter_sorted (fun f terms ->
-	Options.Self.debug ~dkey:Options.dkey_first_pass "R: function '%s'" f;
-	List.iter (fun x -> Options.Self.debug ~dkey:Options.dkey_first_pass
-	  "R: %s" (str_at_term x)) terms;
-	Options.Self.debug ~dkey:Options.dkey_first_pass "R: ----------------"
-      ) terms_at_Pre;
-
-      Options.Self.debug ~dkey:Options.dkey_first_pass "R: terms_at_stmt:";
-      Cil_datatype.Stmt.Hashtbl.iter_sorted (fun stmt terms ->
-	Options.Self.debug ~dkey:Options.dkey_first_pass
-	  "R: stmt %a" Printer.pp_stmt stmt;
-	List.iter (fun x -> Options.Self.debug ~dkey:Options.dkey_first_pass
-	  "R: %s" (str_at_term x)) terms
-      ) terms_at_stmt;
-
-      second_pass (Options.Temp_File.get()) props terms_at_Pre terms_at_stmt;
-
-      Datatype.String.Hashtbl.clear terms_at_Pre;
-      Cil_datatype.Stmt.Hashtbl.clear terms_at_stmt;
+      
+      second_pass (Options.Temp_File.get()) props terms_at_Pre;    
 
 
       (* cleaning *)
+      let clear_in = Cil_datatype.Varinfo.Hashtbl.clear in
+      Datatype.String.Hashtbl.iter (fun _ tbl -> clear_in tbl) terms_at_Pre;
+      Datatype.String.Hashtbl.clear terms_at_Pre;
+      Datatype.String.Hashtbl.iter (fun _ tbl -> clear_in tbl) lengths;
+      Datatype.String.Hashtbl.clear lengths;
       Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
       Property.Hashtbl.clear Prop_id.prop_to_id_tbl
     end
