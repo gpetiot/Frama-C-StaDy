@@ -1,5 +1,4 @@
 
-open Cil
 open Cil_types
 open Lexing
 
@@ -124,14 +123,14 @@ let rec same_compo_var v w =
 
 (* complex_var -> bool *)
 let rec cvar_is_float = function
-  | CVVCont (v,_) -> isFloatingType v.vtype
+  | CVVCont (v,_) -> Cil.isFloatingType v.vtype
   | CVCCont (v,_) -> cvar_is_float v
 
 (* var -> bool *)
 let var_is_float = function
-  | Simple v -> isFloatingType v.vtype
+  | Simple v -> Cil.isFloatingType v.vtype
   | Complex v -> cvar_is_float v
-  | Logic l -> isLogicFloatType l.lv_type
+  | Logic l -> Cil.isLogicFloatType l.lv_type
 
 (* compo_var -> bool *)
 let rec is_float = function
@@ -401,7 +400,7 @@ let valid_to_prolog term =
   | Tempty_set -> ()
   | TLval x -> add_unquantif (Req, (Dim (tlval_to_prolog x)), (Int Integer.one))
   | TBinOp (PlusPI, {term_node=TLval tlval},
-	    {term_node=(Trange (Some z, Some x))}) when isLogicZero z ->
+	    {term_node=(Trange (Some z, Some x))}) when Cil.isLogicZero z ->
     let var = tlval_to_prolog tlval in
     let b = term_to_compo_var x in
     add_unquantif (Req, (Dim var), (Plus (b, Int Integer.one)))
@@ -426,17 +425,17 @@ let rec requires_to_prolog pred =
 
 (* typ -> var -> unit *)
 let rec create_input_from_type ty v =
-  let maxuint = max_unsigned_number (machdep()) in
-  let maxint = max_signed_number (machdep()) in
-  let minint = min_signed_number (machdep()) in
+  let maxuint = Cil.max_unsigned_number (machdep()) in
+  let maxint = Cil.max_signed_number (machdep()) in
+  let minint = Cil.min_signed_number (machdep()) in
   let bounds = function
     | IBool -> Integer.zero, Integer.one
     | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
     | IUChar -> Integer.zero, Integer.of_int 255
-    | ik when isSigned ik -> minint, maxint
+    | ik when Cil.isSigned ik -> minint, maxint
     | _ -> Integer.zero, maxuint
   in
-  match (unrollType ty,v) with
+  match (Cil.unrollType ty,v) with
   | TInt (ik,_), Simple s ->
     let b_min, b_max = bounds ik in
     add_simple_domain (SDVarInt(s,b_min,b_max))
@@ -457,7 +456,7 @@ let rec create_input_from_type ty v =
     ) ci.cfields
   (* fixed-length arrays *)
   | TPtr (t,attr), Simple s->
-    let a = findAttribute "arraylen" attr in
+    let a = Cil.findAttribute "arraylen" attr in
     if a <> [] then
       List.iter (function
       | AInt ii -> add_simple_domain (SDDimInt (s,ii,ii));
@@ -469,7 +468,7 @@ let rec create_input_from_type ty v =
 	create_input_from_type t (Complex (CVVCont (s,All)))
       end
   | TPtr (t,attr), Complex s ->
-    let a = findAttribute "arraylen" attr in
+    let a = Cil.findAttribute "arraylen" attr in
     if a <> [] then
       List.iter (function
       | AInt ii ->
@@ -519,7 +518,7 @@ let translate() =
   let func_name = Kernel_function.get_name kf in
   let bhv = ref None in
   Annotations.iter_behaviors
-    (fun _ b -> if is_default_behavior b then bhv := Some b) kf;
+    (fun _ b -> if Cil.is_default_behavior b then bhv := Some b) kf;
   let bhv = !bhv in
   match bhv with
   | None -> ()

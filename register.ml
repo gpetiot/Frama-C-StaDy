@@ -1,5 +1,4 @@
 
-open Cil
 open Cil_types
 open Lexing
 
@@ -103,11 +102,11 @@ let lengths_from_requires :
 			let terms = append_end terms term in
 			Cil_datatype.Varinfo.Hashtbl.replace
 			  kf_tbl varinfo terms;
-			DoChildren
+			Cil.DoChildren
 		      with
-		      | _ -> DoChildren
+		      | _ -> Cil.DoChildren
 		    end
-		  | _ -> DoChildren
+		  | _ -> Cil.DoChildren
 	      end
 	      in
 	      
@@ -166,8 +165,10 @@ let at_from_formals :
 
 
 let debug_builtins = Kernel.register_category "printer:builtins"
+
 let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
+
 let no_repeat l : 'a list =
   let rec aux acc = function
     | [] -> acc
@@ -175,12 +176,13 @@ let no_repeat l : 'a list =
     | h :: t -> aux (h :: acc) t
   in
   aux  [] l
+
 (* to change a \valid to a pathcrawler_dimension *)
 (* term -> term * term *)
 let rec extract_terms t : term * term =
   let loc = t.term_loc in
   match t.term_node with
-  | TLval _ -> t, lzero ~loc ()
+  | TLval _ -> t, Cil.lzero ~loc ()
   | TCastE (_,term)
   | TCoerce (term,_)
   | TAlignOfE term -> extract_terms term
@@ -188,11 +190,13 @@ let rec extract_terms t : term * term =
   | TBinOp (IndexPI,x,{term_node = Trange(_,Some y)}) -> x,y
   | TBinOp ((PlusPI|IndexPI),x,y) -> x,y
   | TBinOp (MinusPI,x,y) ->
-    x, term_of_exp_info loc (TUnOp(Neg,y)) {exp_type=t.term_type; exp_name=[]}
-  | TStartOf _ -> t, lzero ~loc ()
+    let einfo = {exp_type=t.term_type; exp_name=[]} in
+    x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
+  | TStartOf _ -> t, Cil.lzero ~loc ()
   | TAddrOf (TVar _, TIndex _) ->
-    let lv = mkTermMem t TNoOffset in
-    let te = term_of_exp_info loc(TLval lv){exp_type=t.term_type;exp_name=[]} in
+    let lv = Cil.mkTermMem t TNoOffset in
+    let einfo = {exp_type=t.term_type;exp_name=[]} in
+    let te = Cil.term_of_exp_info loc(TLval lv) einfo in
     extract_terms te
   | _ -> Options.Self.not_yet_implemented "term: %a" Printer.pp_term t
 
@@ -201,7 +205,7 @@ let rec extract_terms t : term * term =
 
 
 
-class second_pass_printer props terms_at_Pre () = object(self)
+class sd_printer props terms_at_Pre () = object(self)
   inherit Printer.extensible_printer () as super
 
   val mutable pred_cpt = 0
@@ -318,8 +322,7 @@ let second_pass filename props terms_at_Pre =
   let fmt = Format.formatter_of_out_channel out in
   let module P =
 	Printer_builder.Make
-	  (struct class printer =
-		    second_pass_printer props terms_at_Pre end) in
+	  (struct class printer = sd_printer props terms_at_Pre end) in
   P.pp_file fmt (Ast.get());
   flush out;
   close_out out
@@ -458,6 +461,13 @@ let compute_props props =
 
 
 
+
+
+
+
+
+
+
 let properties_of_behavior name =
   Globals.Functions.fold (fun kf props ->
     Annotations.fold_behaviors (fun _ b p ->
@@ -490,7 +500,7 @@ let properties_of_function name =
 	      ) s;
 	      s
 	    in
-	    ChangeDoChildrenPost(stmt, f)
+	    Cil.ChangeDoChildrenPost(stmt, f)
 	end in
 	try
 	  let fundec = Kernel_function.get_definition kf in
@@ -546,7 +556,7 @@ let properties_of_name name =
 	  ) s;
 	  s
 	in
-	ChangeDoChildrenPost(stmt, f)
+	Cil.ChangeDoChildrenPost(stmt, f)
     end in
     try
       let fundec = Kernel_function.get_definition kf in
