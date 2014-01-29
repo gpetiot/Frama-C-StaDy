@@ -169,36 +169,37 @@ let debug_builtins = Kernel.register_category "printer:builtins"
 let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
 
-let no_repeat l : 'a list =
-  let rec aux acc = function
-    | [] -> acc
-    | h :: t when List.mem h acc -> aux acc t
-    | h :: t -> aux (h :: acc) t
-  in
-  aux  [] l
+let no_repeat : 'a list -> 'a list =
+  fun l ->
+    let rec aux acc = function
+      | [] -> acc
+      | h :: t when List.mem h acc -> aux acc t
+      | h :: t -> aux (h :: acc) t
+    in
+    aux  [] l
 
 (* to change a \valid to a pathcrawler_dimension *)
 (* term -> term * term *)
-let rec extract_terms t : term * term =
-  let loc = t.term_loc in
-  match t.term_node with
-  | TLval _ -> t, Cil.lzero ~loc ()
-  | TCastE (_,term)
-  | TCoerce (term,_)
-  | TAlignOfE term -> extract_terms term
-  | TBinOp (PlusPI,x,{term_node = Trange(_,Some y)})
-  | TBinOp (IndexPI,x,{term_node = Trange(_,Some y)}) -> x,y
-  | TBinOp ((PlusPI|IndexPI),x,y) -> x,y
-  | TBinOp (MinusPI,x,y) ->
-    let einfo = {exp_type=t.term_type; exp_name=[]} in
-    x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
-  | TStartOf _ -> t, Cil.lzero ~loc ()
-  | TAddrOf (TVar _, TIndex _) ->
-    let lv = Cil.mkTermMem t TNoOffset in
-    let einfo = {exp_type=t.term_type;exp_name=[]} in
-    let te = Cil.term_of_exp_info loc(TLval lv) einfo in
-    extract_terms te
-  | _ -> Options.Self.not_yet_implemented "term: %a" Printer.pp_term t
+let rec extract_terms : term -> term * term =
+  fun t ->
+    let loc = t.term_loc in
+    match t.term_node with
+    | TLval _ -> t, Cil.lzero ~loc ()
+    | TCastE (_,term)
+    | TCoerce (term,_)
+    | TAlignOfE term -> extract_terms term
+    | TBinOp ((PlusPI|IndexPI),x,{term_node = Trange(_,Some y)}) -> x,y
+    | TBinOp ((PlusPI|IndexPI),x,y) -> x,y
+    | TBinOp (MinusPI,x,y) ->
+      let einfo = {exp_type=t.term_type; exp_name=[]} in
+      x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
+    | TStartOf _ -> t, Cil.lzero ~loc ()
+    | TAddrOf (TVar _, TIndex _) ->
+      let lv = Cil.mkTermMem t TNoOffset in
+      let einfo = {exp_type=t.term_type;exp_name=[]} in
+      let te = Cil.term_of_exp_info loc(TLval lv) einfo in
+      extract_terms te
+    | _ -> Options.Self.not_yet_implemented "term: %a" Printer.pp_term t
 
 
 
