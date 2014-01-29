@@ -485,30 +485,6 @@ let rec create_input_from_type ty v =
 (* varinfo -> unit *)
 let create_input_val var = create_input_from_type var.vtype (Simple var)
 
-(* (simple_domain -> unit) -> unit *)
-let iter_on_simple_domains f = List.iter f !simple_domains
-
-(* (complex_domain -> unit) -> unit *)
-let iter_on_complex_domains f = List.iter f !complex_domains
-
-(* (compo_rel -> unit) -> unit *)
-let iter_on_unquantifs f = List.iter f !unquantifs
-
-(* (quantif_compo_rel -> unit) -> unit *)
-let iter_on_quantifs f = List.iter f !quantifs
-
-(* (simple_domain -> 'a) -> 'a list *)
-let map_on_simple_domains f = List.map f !simple_domains
-
-(* (complex_domain -> 'a) -> 'a list *)
-let map_on_complex_domains f = List.map f !complex_domains
-
-(* (compo_rel -> 'a) -> 'a list *)
-let map_on_unquantifs f = List.map f !unquantifs
-
-(* (quantif_compo_rel -> 'a) -> 'a list *)
-let map_on_quantifs f = List.map f !quantifs
-
 
 
 
@@ -542,9 +518,9 @@ let translate() =
       output chan prolog_header;
       
       (* DOM *)
-      iter_on_complex_domains (fun x ->
+      List.iter (fun x ->
 	output chan (Printf.sprintf "dom('%s', %s).\n" func_name (strcd x))
-      );
+      ) !complex_domains;
       let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
       output chan (Printf.sprintf "dom('%s',A,B,C) :- dom('%s',A,B,C).\n"
 		     precond_name func_name);
@@ -552,9 +528,9 @@ let translate() =
       (* CREATE_INPUT_VALS *)
       output chan
 	(Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
-      iter_on_simple_domains (fun s ->
+      List.iter (fun s ->
 	output chan (Printf.sprintf "  create_input_val(%s,Ins),\n" (strsd s))
-      );
+      ) !simple_domains;
       output chan "  true.\n";
       output chan
 	(Printf.sprintf
@@ -562,7 +538,7 @@ let translate() =
 	   precond_name func_name);
       
       (* QUANTIF_PRECONDS *)
-      let qp = map_on_quantifs strqrel in
+      let qp = List.map strqrel !quantifs in
       let qp = fold_virgule qp in
       output chan
 	(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
@@ -573,7 +549,7 @@ let translate() =
       
       
       (* UNQUANTIF_PRECONDS *)
-      let uqp = map_on_unquantifs struqrel in
+      let uqp = List.map struqrel !unquantifs in
       let uqp = fold_virgule uqp in
       output chan
 	(Printf.sprintf"unquantif_preconds('%s',[%s]).\n"func_name uqp);
