@@ -179,7 +179,6 @@ let no_repeat : 'a list -> 'a list =
     aux  [] l
 
 (* to change a \valid to a pathcrawler_dimension *)
-(* term -> term * term *)
 let rec extract_terms : term -> term * term =
   fun t ->
     let loc = t.term_loc in
@@ -379,12 +378,14 @@ class sd_printer props terms_at_Pre () = object(self)
       Kernel_function.get_name (fst(Globals.entry_point())) in
     let kf = Globals.Functions.find_by_name f.svar.vname in
     let behaviors = Annotations.behaviors kf in
-    let pc_assert_exception fmt pred msg id =
+    let pc_assert_exception fmt pred loc msg id =
       let p = (new Sd_subst.subst)#subst_pred pred [][][] in
       let var = self#predicate_and_var fmt p in
-      Format.fprintf fmt
-	"@[<v 2>if(!%s)@\npathcrawler_assert_exception(\"%s\", %i);@]@\n"
-	var msg id
+      Format.fprintf fmt "@[<hv>%a@[<v 2>if(!%s)"
+	(fun fmt -> self#line_directive ~forcefile:false fmt) loc
+	var;
+      Format.fprintf fmt "pathcrawler_assert_exception(\"%s\", %i);" msg id;
+      Format.fprintf fmt "@]@]"
     in
     let entering_ghost = f.svar.vghost && not was_ghost in
     self#compute_result_varinfo f;
@@ -394,35 +395,34 @@ class sd_printer props terms_at_Pre () = object(self)
 	let x,y,z =
 	  match f.svar.vtype with TFun(_,x,y,z) -> x,y,z | _ -> assert false
 	in
-	Format.fprintf fmt "%a@\n{@[<v 2>@\n"
+	Format.fprintf fmt "%a@ {@\n@[<v 2>@["
 	  (self#typ
 	     (Some (fun fmt ->
 	       Format.fprintf fmt "%s_precond" entry_point_name)))
 	  (TFun(Cil.intType,x,y,z));
 	List.iter (fun b ->
-	  let assumes = b.b_assumes in
-	  let requires = b.b_requires in
-	  let assu fmt =
-	    if assumes <> [] then
+	  List.iter (fun pred ->
+	    if b.b_assumes <> [] then
 	      begin
 		let vars = List.map (fun a ->
 		  let p = (new Sd_subst.subst)#subst_pred a.ip_content [][][] in
 		  self#predicate_and_var fmt p
-		) assumes in
-		Format.fprintf fmt "@[<v 2>if (";
+		) b.b_assumes in
+		Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
+		  (fun fmt -> self#line_directive ~forcefile:false fmt)
+		  pred.ip_loc;
 		List.iter (fun v -> Format.fprintf fmt "%s &&" v) vars;
 		Format.fprintf fmt " 1 )"
-	      end
-	  in
-	  List.iter (fun pred ->
-	    assu fmt;
+	      end;
 	    let p = (new Sd_subst.subst)#subst_pred pred.ip_content [][][] in
 	    let var = self#predicate_and_var fmt p in
-	    Format.fprintf fmt "@[<v 2>if(!%s)@\nreturn 0;@]@\n" var
-	  ) requires;
-	  if assumes <> [] then Format.fprintf fmt "@]"
+	    Format.fprintf fmt "@[<hv>%a@[<v 2>if (!%s) return 0;@]@]"
+	      (fun fmt -> self#line_directive ~forcefile:false fmt) pred.ip_loc
+	      var;
+	    if b.b_assumes <> [] then Format.fprintf fmt "@]@]"
+	  ) b.b_requires;
 	) behaviors;
-	Format.fprintf fmt "return 1;@]@\n}@\n@\n"
+	Format.fprintf fmt "return 1;@]@]@\n}@\n@\n"
       end;
     (* END precond (entry-point) *)
     Format.fprintf fmt "@[%t%a@\n@[<v 2>"
@@ -436,29 +436,28 @@ class sd_printer props terms_at_Pre () = object(self)
     if f.svar.vname <> entry_point_name then
       begin
 	List.iter (fun b ->
-	  let assumes fmt =
-	    if b.b_assumes <> [] then
-	      begin
-		let vars = List.map (fun a ->
-		  let p = (new Sd_subst.subst)#subst_pred a.ip_content [][][] in
-		  self#predicate_and_var fmt p
-		) b.b_assumes in
-		Format.fprintf fmt "@[<v 2>if (";
-		List.iter (fun v -> Format.fprintf fmt "%s &&" v) vars;
-		Format.fprintf fmt " 1 )"
-	      end
-	  in
 	  List.iter (fun pred ->
 	    let prop = Property.ip_of_requires kf Kglobal b pred in
 	    if List.mem prop props then
-	      begin
-		let id = Prop_id.to_id prop in
-		assumes fmt;
-		pc_assert_exception fmt pred.ip_content "Pre-condition!" id;
-		Prop_id.translated_properties :=
-		  prop :: !Prop_id.translated_properties;
-		Format.fprintf fmt "@]"
-	      end
+	      let id = Prop_id.to_id prop in
+	      if b.b_assumes <> [] then
+		begin
+		  let vars = List.map (fun a ->
+		    let p =
+		      (new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+		    self#predicate_and_var fmt p
+		  ) b.b_assumes in
+		  Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
+		    (fun fmt -> self#line_directive ~forcefile:false fmt)
+		    pred.ip_loc;
+		  List.iter (fun v -> Format.fprintf fmt "%s &&" v) vars;
+		  Format.fprintf fmt " 1 )"
+		end;
+	      pc_assert_exception
+		fmt pred.ip_content pred.ip_loc "Pre-condition!" id;
+	      Prop_id.translated_properties :=
+		prop :: !Prop_id.translated_properties;
+	      if b.b_assumes <> [] then Format.fprintf fmt "@]@]"
 	  ) b.b_requires
 	) behaviors
       end;
@@ -468,48 +467,44 @@ class sd_printer props terms_at_Pre () = object(self)
       if List.length behaviors > 0 then
 	let at_least_one_prop =
 	  List.fold_left (fun res b ->
-	    if res then true
-	    else
-	      List.fold_left (
-		fun res (tk,pred) ->
-		  if res then true
-		  else
-		    let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
-		    List.mem prop props
-	      ) false b.b_post_cond
+	    res ||
+	      let at_least_one res (tk,pred) =
+		res ||
+		  let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
+		  List.mem prop props
+	      in
+	      List.fold_left at_least_one false b.b_post_cond
 	  ) false behaviors
 	in
 	if at_least_one_prop then
 	  Some (fun fmt ->
 	    Format.fprintf fmt "@[<h 2>{@\n";
 	    List.iter (fun b ->
-	      let assumes fmt =
-		if b.b_assumes <> [] then
-		  begin
-		    let vars = List.map (fun a ->
-		      let p =
-			(new Sd_subst.subst)#subst_pred a.ip_content [][][] in
-		      self#predicate_and_var fmt p
-		    ) b.b_assumes in
-		    Format.fprintf fmt "@[<v 2>if (@[<hv>";
-		    List.iter (fun v -> Format.fprintf fmt "%s && " v) vars;
-		    Format.fprintf fmt " 1@])@\n"
-		  end
-	      in
 	      List.iter (fun (tk,pred) ->
 		let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
 		if List.mem prop props then
-		  begin
-		    let id = Prop_id.to_id prop in
-		    assumes fmt;
-		    pc_assert_exception fmt pred.ip_content "Post-condition!"id;
-		    Prop_id.translated_properties :=
-		      prop :: !Prop_id.translated_properties;
-		    Format.fprintf fmt "@]@\n"
-		  end
+		  let id = Prop_id.to_id prop in
+		  if b.b_assumes <> [] then
+		    begin
+		      let vars = List.map (fun a ->
+			let p =
+			  (new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+			self#predicate_and_var fmt p
+		      ) b.b_assumes in
+		      Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
+			(fun fmt -> self#line_directive ~forcefile:false fmt)
+			pred.ip_loc;
+		      List.iter (fun v -> Format.fprintf fmt "%s && " v) vars;
+		      Format.fprintf fmt " 1)@\n"
+		    end;
+		  pc_assert_exception
+		    fmt pred.ip_content pred.ip_loc "Post-condition!" id;
+		  Prop_id.translated_properties :=
+		    prop :: !Prop_id.translated_properties;
+		  if b.b_assumes <> [] then Format.fprintf fmt "@]@]@\n"
 	      ) b.b_post_cond
 	    ) behaviors;
-	    Format.fprintf fmt "@]@\n}@\n"
+	    Format.fprintf fmt "@\n}@]@\n"
 	  )
 	else
 	  None
@@ -517,39 +512,35 @@ class sd_printer props terms_at_Pre () = object(self)
 	None;
     (* END postcond *)
     (* alloc variables for \at terms *)
+    let concat_indice str ind = str ^ "[" ^ ind ^ "]" in
     begin
       try
 	let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
 	let iter_counter = ref 0 in
 	Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v terms ->
 	  Format.fprintf fmt "%a"
-	    (self#typ (Some (fun fmt -> Format.fprintf fmt "old_%s;" v.vname)))
+	    (self#typ(Some(fun fmt -> Format.fprintf fmt "old_%s;@\n" v.vname)))
 	    v.vtype;
 	  let rec alloc_aux indices = function
 	    | h :: t ->
-	      let rec extract_typ : typ -> typ =
-		function TPtr(ty,_) -> extract_typ ty | x -> x in
-	      let rec stars : string -> int -> string  =
-		fun ret -> function 0 -> ret | n -> stars (ret^"*") (n-1) in
-	      let all_indices = List.fold_left (fun (str:string) (ind:string) ->
-		str ^ "[" ^ ind ^ "]"
-	      ) "" indices in
+	      let rec extract_typ =function TPtr(ty,_)->extract_typ ty | x->x in
+	      let rec stars ret =function 0->ret | n -> stars (ret^"*") (n-1) in
+	      let all_indices = List.fold_left concat_indice "" indices in
 	      let stars = stars "" ((List.length indices)+1) in
 	      let ty = extract_typ v.vtype in
-	      Format.fprintf fmt "old_%s%s = malloc(%a * sizeof(%a%s));"
+	      Format.fprintf fmt "old_%s%s = malloc(%a * sizeof(%a%s));@\n"
 		v.vname all_indices self#term h (self#typ None)	ty stars;
 	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
-	      Format.fprintf fmt "int %s; for (%s = 0; %s < %a; %s++) {"
-		iterator iterator iterator self#term h iterator;
+	      Format.fprintf fmt "int %s;@\n" iterator;
+	      Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
+		iterator iterator self#term h iterator;
 	      iter_counter := !iter_counter + 1;
 	      alloc_aux (append_end indices iterator) t;
-	      Format.fprintf fmt "}"
+	      Format.fprintf fmt "}@\n"
 	    | [] ->
-	      let all_indices = List.fold_left (fun str ind ->
-		str ^ "[" ^ ind ^ "]"
-	      ) "" indices in
-	      Format.fprintf fmt "old_%s%s = %s%s;" v.vname all_indices v.vname
-		all_indices
+	      let all_indices = List.fold_left concat_indice "" indices in
+	      Format.fprintf fmt "old_%s%s = %s%s;@\n"
+		v.vname all_indices v.vname all_indices
 	  in
 	  alloc_aux [] terms
 	) tbl
@@ -570,29 +561,25 @@ class sd_printer props terms_at_Pre () = object(self)
 	  let rec dealloc_aux indices = function
 	    | [] -> ()
 	    | _ :: [] ->
-	      let all_indices = List.fold_left (fun str ind ->
-		str ^ "[" ^ ind ^ "]"
-	      ) "" indices in
-	      Format.fprintf fmt "free(old_%s%s);" v.vname all_indices
+	      let all_indices = List.fold_left concat_indice "" indices in
+	      Format.fprintf fmt "free(old_%s%s);@\n" v.vname all_indices
 	    | h :: t ->
 	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
-	      Format.fprintf fmt "int %s; for (%s = 0; %s < %a; %s++) {"
-		iterator iterator iterator self#term h iterator;
+	      Format.fprintf fmt "int %s;@\n" iterator;
+	      Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
+		iterator iterator self#term h iterator;
 	      iter_counter := !iter_counter + 1;
 	      let indices = append_end indices iterator in
-	      let all_indices = List.fold_left (fun (str:string) (ind:string) ->
-		str ^ "[" ^ ind ^ "]"
-	      ) "" indices in
+	      let all_indices = List.fold_left concat_indice "" indices in
 	      dealloc_aux indices t;
-	      Format.fprintf fmt "}";
-	      Format.fprintf fmt "free(old_%s%s);" v.vname all_indices
+	      Format.fprintf fmt "}@\n";
+	      Format.fprintf fmt "free(old_%s%s);@\n" v.vname all_indices
 	  in
 	  dealloc_aux [] terms
 	) tbl
       with Not_found -> ()
     end;
-    if List.length behaviors > 0 then
-      Format.fprintf fmt "@.}";
+    if List.length behaviors > 0 then Format.fprintf fmt "@.}";
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
       (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore);
@@ -1049,11 +1036,46 @@ class sd_printer props terms_at_Pre () = object(self)
 
 
 
+  (* factorization of predicate_and_var for \exists dnad \forall  *)
+  method private quantif_predicate_and_var ~forall fmt logic_vars hyps goal =
+    if (List.length logic_vars) > 1 then
+      failwith "quantification on many variables unsupported!";
+    let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+    let guards, vars = compute_guards [] logic_vars hyps in
+    if vars <> [] then
+      failwith "Unguarded variables in quantification!";
+    let t1,r1,lv,r2,t2 = List.hd guards in
+    let iter = lv.lv_name in
+    pred_cpt <- pred_cpt + 1;
+    Format.fprintf fmt "int %s = %i;@\n" var (if forall then 1 else 0);
+    Format.fprintf fmt "{@\n";
+    Format.fprintf fmt "int %s;@\n" iter;
+    Format.fprintf fmt "for (%s = %a%s; %s %a %a && %s %s; %s++) {@\n"
+      iter
+      self#term t1
+      (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
+      iter
+      self#relation r2
+      self#term t2
+      (if forall then "" else "!")
+      var
+      iter;
+    let goal_var = self#predicate_named_and_var fmt goal in 
+    Format.fprintf fmt "if(%s(%s)) %s = %i;@\n"
+      (if forall then "!" else "")
+      goal_var
+      var
+      (if forall then 0 else 1);
+    Format.fprintf fmt "}@\n";
+    Format.fprintf fmt "}@\n";
+    var
+  (* end of quantif_predicate_and_var *)
+
+
 
   (* prints a predicate and returns the name of the variable containing the
      return value *)
   method private predicate_and_var fmt pred =
-    let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
     match pred with
     | Ptrue -> "1"
     | Pfalse -> "0"
@@ -1063,74 +1085,12 @@ class sd_printer props terms_at_Pre () = object(self)
 	"((%a) >= 0 && (pathcrawler_dimension(%a) > (%a)))"
 	self#term y self#term x self#term y;
       Format.flush_str_formatter()
-    | Pforall(logic_vars,pred) ->
-      begin
-	if (List.length logic_vars) > 1 then
-	  failwith "\\forall quantification on many variables unsupported!";
-	match pred.content with
-	| Pimplies(hyps,goal) ->
-	  let guards, vars = compute_guards [] logic_vars hyps in
-	  if vars <> [] then
-	    failwith "Unguarded variables in \\forall !"
-	  else
-	    let t1,r1,lv,r2,t2 = List.hd guards in
-	    let iter = lv.lv_name in
-	    pred_cpt <- pred_cpt + 1;
-	    Format.fprintf fmt "int %s = 1;" var;
-	    Format.fprintf fmt "{";
-	    Format.fprintf fmt "int %s;" iter;
-	    Format.fprintf fmt "for (%s = %a%s; %s %a %a && %s; %s++) {"
-	      iter
-	      self#term t1
-	      (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
-	      iter
-	      self#relation r2
-	      self#term t2
-	      var
-	      iter;
-	    let goal_var = self#predicate_named_and_var fmt goal in 
-	    Format.fprintf fmt "if(!(%s)) %s = 0;"
-	      goal_var
-	      var;
-	    Format.fprintf fmt "}";
-	    Format.fprintf fmt "}";
-	    var
-	| _ -> failwith "\\forall not of the form \\forall ...; a ==> b;"
-      end
-    | Pexists(logic_vars,pred) ->
-      begin
-	if (List.length logic_vars) > 1 then
-	  failwith "\\exists quantification on many variables unsupported!";
-	match pred.content with
-	| Pand(hyps,goal) ->
-	  let guards, vars = compute_guards [] logic_vars hyps in
-	  if vars <> [] then
-	    failwith "Unguarded variables in \\exists !"
-	  else
-	    let t1,r1,lv,r2,t2 = List.hd guards in
-	    let iter = lv.lv_name in
-	    pred_cpt <- pred_cpt + 1;
-	    Format.fprintf fmt "int %s = 0;" var;
-	    Format.fprintf fmt "{";
-	    Format.fprintf fmt "int %s;" iter;
-	    Format.fprintf fmt "for (%s = %a%s; %s %a %a && !%s; %s++) {"
-	      iter
-	      self#term t1
-	      (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
-	      iter
-	      self#relation r2
-	      self#term t2
-	      var
-	      iter;
-	    let goal_var = self#predicate_named_and_var fmt goal in 
-	    Format.fprintf fmt "if(%s) %s = 1;"
-	      goal_var
-	      var;
-	    Format.fprintf fmt "}";
-	    Format.fprintf fmt "}";
-	    var
-	| _ -> failwith "\\exists not of the form \\exists ...; a && b;"
-      end
+    | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
+      self#quantif_predicate_and_var ~forall:true fmt logic_vars hyps goal
+    | Pexists(logic_vars,{content=Pand(hyps,goal)}) ->
+      self#quantif_predicate_and_var ~forall:false fmt logic_vars hyps goal
+    | Pforall _ -> failwith "\\forall not of the form \\forall ...; a ==> b;"
+    | Pexists _ -> failwith "\\exists not of the form \\exists ...; a && b;"
     | Pnot(pred1) ->
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       Format.fprintf Format.str_formatter "(! %s)" pred1_var;
@@ -1166,17 +1126,8 @@ class sd_printer props terms_at_Pre () = object(self)
     | _ ->
       Options.Self.warning "%a unsupported" Printer.pp_predicate pred;
       "1"
-  (* end of pred_and_var *)
-
-
-
+(* end of pred_and_var *)
 	
-
-  (*method! private predicate fmt pred =
-    match pred with
-    | _ -> super#predicate fmt pred*)
-(* end of predicate *)
-      
 
 
 
