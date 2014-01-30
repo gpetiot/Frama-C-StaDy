@@ -500,12 +500,15 @@ let translate() =
   | None -> ()
   | Some bhv ->
     begin
+      let subst pred  = (new Sd_subst.subst)#subst_pnamed pred [] [] [] in
       let requires = List.map Logic_const.pred_of_id_pred bhv.b_requires in
+      let requires = List.map subst requires in
       let typically = List.filter (fun (s,_,_) -> s = "typically")
 	bhv.b_extended in
       let typically = List.map (fun (_,_,pred) -> pred) typically in
       List.iter (fun l ->
 	let ll = List.map Logic_const.pred_of_id_pred l in
+	let ll = List.map subst ll in
 	Prop_id.typically := true;
 	List.iter requires_to_prolog ll
       ) typically;
@@ -526,8 +529,7 @@ let translate() =
 		     precond_name func_name);
       
       (* CREATE_INPUT_VALS *)
-      output chan
-	(Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
+      output chan (Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
       List.iter (fun s ->
 	output chan (Printf.sprintf "  create_input_val(%s,Ins),\n" (strsd s))
       ) !simple_domains;
@@ -540,8 +542,7 @@ let translate() =
       (* QUANTIF_PRECONDS *)
       let qp = List.map strqrel !quantifs in
       let qp = fold_virgule qp in
-      output chan
-	(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
+      output chan(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
       output chan
 	(Printf.sprintf
 	   "quantif_preconds('%s',A) :- quantif_preconds('%s',A).\n"
@@ -562,8 +563,8 @@ let translate() =
       output chan (Printf.sprintf "strategy('%s',[]).\n" func_name);
       output chan (Printf.sprintf "strategy('%s',A) :- strategy('%s',A).\n"
 		     precond_name func_name);
-      output chan (Printf.sprintf "precondition_of('%s','%s').\n"
-		     func_name precond_name);
+      output chan
+	(Printf.sprintf "precondition_of('%s','%s').\n" func_name precond_name);
       flush chan;
       close_out chan;
       simple_domains := [];
