@@ -11,7 +11,7 @@
 (* coupe une chaîne en deux *)
 let cut s n =
   try (String.sub s 0 n), (String.sub s n ((String.length s)-n))
-  with _ -> Options.Self.debug ~level:2 "cut \"%s\" %i" s n; assert false
+  with _ -> Options.Self.abort "socket:cut \"%s\" %i" s n
 
 let process_test_case s =
   let cut_sep sep x =
@@ -63,8 +63,8 @@ let process_string s =
       else
 	let s1, _s2 = cut s 14 in
 	if s1 = "FinalStatus|OK" then process_final_status ()
-	else Options.Self.debug ~level:2 "'%s' not processed" s
-  with _ -> Options.Self.debug ~level:2 "'%s' not processed" s
+	else Options.Self.debug ~dkey:Options.dkey_socket "'%s' not processed" s
+  with _ -> Options.Self.debug ~dkey:Options.dkey_socket "'%s' not processed" s
 
 
 (* filtre les chaînes de caractères reçues, on ne traite que celles qui
@@ -96,7 +96,5 @@ let print_exit_code code =
     | Unix.WSIGNALED _ ->  "killed"
     | Unix.WSTOPPED _ -> "stopped"
   in
-  Options.Self.feedback "PathCrawler %s!" str
+  Options.Self.feedback ~dkey:Options.dkey_socket "PathCrawler %s!" str
     
-
-

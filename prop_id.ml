@@ -1,6 +1,4 @@
 
-open Cil
-
 
 let id_to_prop_tbl : Property.t Datatype.Int.Hashtbl.t =
   Datatype.Int.Hashtbl.create 32

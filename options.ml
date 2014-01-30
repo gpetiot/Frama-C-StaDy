@@ -58,3 +58,14 @@ module Properties = Self.StringList (struct
   let arg_name = "p,..."
   let help = ""
 end)
+
+
+(* Debug Keys *)
+
+let dkey_native_precond = Self.register_category "native-precond"
+let dkey_socket = Self.register_category "socket"
+let dkey_old_printer = Self.register_category "old-printer"
+let dkey_lengths = Self.register_category "lengths"
+let dkey_at = Self.register_category "at"
+let dkey_second_pass = Self.register_category "second-pass"
+let dkey_properties = Self.register_category "properties"

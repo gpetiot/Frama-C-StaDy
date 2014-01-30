@@ -1,11 +1,7 @@
 [kernel] preprocessing with "gcc -C -E -I.  -dD tests/quick_sort/quick_sort.c"
-[stady] non-default behaviors ignored!
-[stady] Prolog precondition successfully generated
-[stady] The result is in file stady_precond.pl
-[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main quick_sort -pc -pc-validate-asserts -pc-test-params stady_precond.pl -pc-com internet -pc-no-xml
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:18:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
-stady_temp.c:51:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+stady_temp.c:6:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
+stady_temp.c:56:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_quick_sort utilities ...
@@ -14,8 +10,8 @@ stady_temp.c:51:[kernel] warning: Calling undeclared function pathcrawler_assert
 [pc] Starting lanceur_quick_sort (isc version)
 [pc] Starting lanceur_pathcrawler__quick_sort_precond (isc version)
 [pc] generation finished
-[stady] PathCrawler OK!
 [stady] all-paths: true
+[stady] 7752 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
