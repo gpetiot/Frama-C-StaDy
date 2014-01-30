@@ -1,7 +1,7 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_arrays/merge_arrays.c"
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:7:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
-stady_temp.c:58:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+stady_temp.c:59:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_arrays utilities ...

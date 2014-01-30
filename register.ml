@@ -260,6 +260,7 @@ class sd_printer props terms_at_Pre () = object(self)
   val mutable result_varinfo = None
   val mutable current_function = None
   val mutable in_old_term = false
+  val mutable in_old_ptr = false
   val mutable first_global = true
     
   (* unmodified *)  
@@ -289,19 +290,50 @@ class sd_printer props terms_at_Pre () = object(self)
   (* replace a varinfo by old_varinfo, according to the terms_at_Pre hashtbl *)
   method! varinfo fmt v =
     if in_old_term then
-      match self#current_function with
+      match current_function with
       | Some f ->
 	begin
+	  let prefix =
+	    if Cil.isPointerType v.vtype && in_old_ptr then "old_ptr" else "old"
+	  in
 	  try
 	    let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.vname in
 	    ignore (Cil_datatype.Varinfo.Hashtbl.find tbl v);
-	    super#varinfo fmt {v with vname="old_"^v.vname}
+	    super#varinfo fmt {v with vname=prefix^"_"^v.vname}
 	  with
-	  | Not_found -> super#varinfo fmt v
+	  | Not_found ->
+	    Options.Self.warning "%s_%s not found in terms_at_Pre"
+	      prefix v.vname;
+	    super#varinfo fmt v
 	end
       | None -> super#varinfo fmt v
     else
       super#varinfo fmt v
+
+  method! logic_var fmt v =
+    if in_old_term then
+      match current_function with
+      | Some f ->
+	begin
+	  let prefix =
+	    match v.lv_type with Ctype ty ->
+	      if Cil.isPointerType ty && in_old_ptr then "old_ptr" else "old"
+	    | _ -> "old"
+	  in
+	  try
+	    let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.vname in
+	    let vi = Extlib.the v.lv_origin in
+	    ignore (Cil_datatype.Varinfo.Hashtbl.find tbl vi);
+	    super#logic_var fmt {v with lv_name=prefix^"_"^v.lv_name}
+	  with
+	  | _ ->
+	    Options.Self.warning "%s_%s not found in terms_at_Pre"
+	      prefix v.lv_name;
+	    super#logic_var fmt v
+	end
+      | None -> super#logic_var fmt v
+    else
+      super#logic_var fmt v
 
   (* support of the litteral value of INT_MIN *)
   method! exp fmt e =
@@ -332,8 +364,12 @@ class sd_printer props terms_at_Pre () = object(self)
     | Tat(term,LogicLabel(_,stringlabel)) ->
       if stringlabel = "Old" || stringlabel = "Pre" then
 	begin
+	  let is_ptr =
+	    match term.term_node with TLval(TMem _,_) -> true | _ -> false in
+	  if is_ptr then in_old_ptr <- true;
 	  in_old_term <- true;
 	  self#term fmt term;
+	  if is_ptr then in_old_ptr <- false;
 	  in_old_term <- false
 	end
       else
@@ -521,8 +557,10 @@ class sd_printer props terms_at_Pre () = object(self)
 	let iter_counter = ref 0 in
 	Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v terms ->
 	  Format.fprintf fmt "%a"
-	    (self#typ(Some(fun fmt -> Format.fprintf fmt "old_%s;@\n" v.vname)))
+	    (self#typ(Some(fun fmt -> Format.fprintf fmt "old_%s = %s;@\n"
+	      v.vname v.vname)))
 	    v.vtype;
+	  
 	  let rec alloc_aux indices = function
 	    | h :: t ->
 	      let rec extract_typ =function TPtr(ty,_)->extract_typ ty | x->x in
@@ -530,7 +568,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	      let all_indices = List.fold_left concat_indice "" indices in
 	      let stars = stars "" (List.length indices) in
 	      let ty = extract_typ v.vtype in
-	      Format.fprintf fmt "old_%s%s = malloc((%a) * sizeof(%a%s));@\n"
+	      Format.fprintf fmt "old_ptr_%s%s = malloc((%a)*sizeof(%a%s));@\n"
 		v.vname all_indices self#term h (self#typ None)	ty stars;
 	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
 	      Format.fprintf fmt "int %s;@\n" iterator;
@@ -541,10 +579,16 @@ class sd_printer props terms_at_Pre () = object(self)
 	      Format.fprintf fmt "}@\n"
 	    | [] ->
 	      let all_indices = List.fold_left concat_indice "" indices in
-	      Format.fprintf fmt "old_%s%s = %s%s;@\n"
+	      Format.fprintf fmt "old_ptr_%s%s = %s%s;@\n"
 		v.vname all_indices v.vname all_indices
 	  in
-	  alloc_aux [] terms
+	  if Cil.isPointerType v.vtype then
+	    begin
+	      Format.fprintf fmt "%a"
+		(self#typ(Some(fun fmt -> Format.fprintf fmt "old_ptr_%s;@\n"
+		  v.vname))) v.vtype;
+		alloc_aux [] terms
+	      end
 	) tbl
       with Not_found -> ()
     end;
@@ -558,7 +602,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	      | [] -> ()
 	      | _ :: [] ->
 		let all_indices = List.fold_left concat_indice "" indices in
-		Format.fprintf fmt "free(old_%s%s);@\n" v.vname all_indices
+		Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
 	      | h :: t ->
 		let iterator = "__stady_iter_" ^(string_of_int !iter_counter) in
 		Format.fprintf fmt "int %s;@\n" iterator;
@@ -569,7 +613,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		let all_indices = List.fold_left concat_indice "" indices in
 		dealloc_aux indices t;
 		Format.fprintf fmt "}@\n";
-		Format.fprintf fmt "free(old_%s%s);@\n" v.vname all_indices
+		Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
 	    in
 	    dealloc_aux [] terms
 	  ) tbl
