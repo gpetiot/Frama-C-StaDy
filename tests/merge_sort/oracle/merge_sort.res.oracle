@@ -1,14 +1,9 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_sort/merge_sort.c"
-[stady] non-default behaviors ignored!
-[stady] Predicate ignored: \separated(table, ret)
-[stady] Prolog precondition successfully generated
-[stady] The result is in file stady_precond.pl
-[stady] Predicate ignored: \separated(table, ret)
-[stady] Predicate ignored: \separated(table, ret)
-[stady] cmd: frama-c -add-path /usr/local/lib/frama-c/plugins stady_temp.c -main merge_sort -pc -pc-validate-asserts -pc-test-params stady_precond.pl -pc-com internet -pc-no-xml
+[stady] warning: \separated(table, ret) unsupported
+[stady] warning: \separated(table, ret) unsupported
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:23:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
-stady_temp.c:147:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
+stady_temp.c:6:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+stady_temp.c:6:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort utilities ...
@@ -17,52 +12,70 @@ stady_temp.c:147:[kernel] warning: Calling undeclared function pathcrawler_dimen
 [pc] Starting lanceur_merge_sort (isc version)
 [pc] Starting lanceur_pathcrawler__merge_sort_precond (isc version)
 [pc] generation finished
-[stady] PathCrawler OK!
 [stady] all-paths: true
+[stady] 20101 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'BottomUpMerge'
 --------------------------------------------------------------------------------
 
-[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 17)
+[  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 6)
             by StaDyPlus.
-[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 10)
+[  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 7)
             by StaDyPlus.
-[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 11)
-            by StaDyPlus.
-[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 12)
+[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 20)
             by StaDyPlus.
 [  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 13)
             by StaDyPlus.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 14)
+            by StaDyPlus.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 15)
+            by StaDyPlus.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 16)
+            by StaDyPlus.
+[  Valid  ] Default behavior
+            by Frama-C kernel.
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'CopyArray'
 --------------------------------------------------------------------------------
 
-[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 38)
+[  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 34)
             by StaDyPlus.
-[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 33)
+[  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 35)
             by StaDyPlus.
+[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 44)
+            by StaDyPlus.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 39)
+            by StaDyPlus.
+[  Valid  ] Default behavior
+            by Frama-C kernel.
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'BottomUpSort'
 --------------------------------------------------------------------------------
 
-[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 59)
+[  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 55)
             by StaDyPlus.
-[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 66)
+[  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 56)
             by StaDyPlus.
-[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 56)
+[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 68)
             by StaDyPlus.
-[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 63)
+[  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 75)
             by StaDyPlus.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 65)
+            by StaDyPlus.
+[  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 72)
+            by StaDyPlus.
+[  Valid  ] Default behavior
+            by Frama-C kernel.
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'merge_sort'
 --------------------------------------------------------------------------------
 
-[  Valid  ] Post-condition (file tests/merge_sort/merge_sort.c, line 85)
+[  Valid  ] Post-condition (file tests/merge_sort/merge_sort.c, line 94)
             by StaDyPlus.
 [  Valid  ] Default behavior
             by Frama-C kernel.
@@ -70,6 +83,6 @@ stady_temp.c:147:[kernel] warning: Calling undeclared function pathcrawler_dimen
 --------------------------------------------------------------------------------
 --- Status Report Summary
 --------------------------------------------------------------------------------
-    13 Completely validated
-    13 Total
+    22 Completely validated
+    22 Total
 --------------------------------------------------------------------------------

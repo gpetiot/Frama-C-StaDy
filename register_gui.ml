@@ -60,7 +60,7 @@ let to_do_on_select
       | _ -> ()
     end;
     if button_nb = 3 then
-      let callback() = Register.compute_props [prop]; main_ui#redisplay() in
+      let callback() = (*Register.compute_props [prop];*) main_ui#redisplay() in
       ignore (popup_factory#add_item "Validate property with pcva" ~callback)
   | _ -> ()
 

@@ -63,10 +63,10 @@ let extract_from_valid : term -> varinfo * term =
 
 (* Computes and returns a hashtable such that :
    function_name1 =>
-      var1 => inferred size for var1
-      var2 => inferred size for var2
+   -  var1 => inferred size for var1
+   -  var2 => inferred size for var2
    function_name2 =>
-       ...
+   -  ...
 *)
 let lengths_from_requires :
     unit
@@ -126,10 +126,10 @@ let lengths_from_requires :
 
 (* Computes and returns a hashtable such that :
    function_name1 =>
-      formal var1 => size of var1 saved
-      formal var2 => size of var2 saved
+   -  formal var1 => size of var1 saved
+   -  formal var2 => size of var2 saved
    function_name2 =>
-       ...
+   -  ...
 *)
 let at_from_formals :
     term list Cil_datatype.Varinfo.Hashtbl.t Datatype.String.Hashtbl.t
@@ -256,9 +256,11 @@ class sd_printer props terms_at_Pre () = object(self)
 
   val mutable pred_cpt = 0
   val mutable postcond = None
+  val mutable dealloc = None
   val mutable result_varinfo = None
   val mutable current_function = None
   val mutable in_old_term = false
+  val mutable first_global = true
     
   (* unmodified *)  
   method private in_current_function vi =
@@ -343,7 +345,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	  begin
 	    if current_function <> None then
 	      Options.Self.warning "%a unsupported" Printer.pp_term t;
-	    self#term fmt term
+	    super#term_node fmt t
 	  end
     | _ -> super#term_node fmt t	 
       
@@ -431,7 +433,7 @@ class sd_printer props terms_at_Pre () = object(self)
       self#vdecl f.svar;
     (* body. *)
     if entering_ghost then is_ghost <- true;
-    if List.length behaviors > 0 then Format.fprintf fmt "@[<h 2>{@\n";
+    (*if List.length behaviors > 0 then*) Format.fprintf fmt "@[<h 2>{@\n";
     (* BEGIN precond (not entry-point) *)
     if f.svar.vname <> entry_point_name then
       begin
@@ -526,9 +528,9 @@ class sd_printer props terms_at_Pre () = object(self)
 	      let rec extract_typ =function TPtr(ty,_)->extract_typ ty | x->x in
 	      let rec stars ret =function 0->ret | n -> stars (ret^"*") (n-1) in
 	      let all_indices = List.fold_left concat_indice "" indices in
-	      let stars = stars "" ((List.length indices)+1) in
+	      let stars = stars "" (List.length indices) in
 	      let ty = extract_typ v.vtype in
-	      Format.fprintf fmt "old_%s%s = malloc(%a * sizeof(%a%s));@\n"
+	      Format.fprintf fmt "old_%s%s = malloc((%a) * sizeof(%a%s));@\n"
 		v.vname all_indices self#term h (self#typ None)	ty stars;
 	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
 	      Format.fprintf fmt "int %s;@\n" iterator;
@@ -546,40 +548,46 @@ class sd_printer props terms_at_Pre () = object(self)
 	) tbl
       with Not_found -> ()
     end;
+    dealloc <- (* dealloc variables for \at terms *)
+      Some begin fun fmt ->
+	try
+	  let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
+	  let iter_counter = ref 0 in
+	  Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v terms ->
+	    let rec dealloc_aux indices = function
+	      | [] -> ()
+	      | _ :: [] ->
+		let all_indices = List.fold_left concat_indice "" indices in
+		Format.fprintf fmt "free(old_%s%s);@\n" v.vname all_indices
+	      | h :: t ->
+		let iterator = "__stady_iter_" ^(string_of_int !iter_counter) in
+		Format.fprintf fmt "int %s;@\n" iterator;
+		Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
+		  iterator iterator self#term h iterator;
+		iter_counter := !iter_counter + 1;
+		let indices = append_end indices iterator in
+		let all_indices = List.fold_left concat_indice "" indices in
+		dealloc_aux indices t;
+		Format.fprintf fmt "}@\n";
+		Format.fprintf fmt "free(old_%s%s);@\n" v.vname all_indices
+	    in
+	    dealloc_aux [] terms
+	  ) tbl
+	with Not_found -> ()
+      end;
+
     self#block ~braces:true fmt f.sbody;
     begin
       match postcond with
       | Some post_cond -> post_cond fmt; postcond <- None
       | None -> ()
     end;
-    (* dealloc variables for \at terms *)
     begin
-      try
-	let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
-	let iter_counter = ref 0 in
-	Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v terms ->
-	  let rec dealloc_aux indices = function
-	    | [] -> ()
-	    | _ :: [] ->
-	      let all_indices = List.fold_left concat_indice "" indices in
-	      Format.fprintf fmt "free(old_%s%s);@\n" v.vname all_indices
-	    | h :: t ->
-	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
-	      Format.fprintf fmt "int %s;@\n" iterator;
-	      Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
-		iterator iterator self#term h iterator;
-	      iter_counter := !iter_counter + 1;
-	      let indices = append_end indices iterator in
-	      let all_indices = List.fold_left concat_indice "" indices in
-	      dealloc_aux indices t;
-	      Format.fprintf fmt "}@\n";
-	      Format.fprintf fmt "free(old_%s%s);@\n" v.vname all_indices
-	  in
-	  dealloc_aux [] terms
-	) tbl
-      with Not_found -> ()
+      match dealloc with
+      | Some de_alloc -> de_alloc fmt; dealloc <- None
+      | None -> ()
     end;
-    if List.length behaviors > 0 then Format.fprintf fmt "@.}";
+    (*if List.length behaviors > 0 then*) Format.fprintf fmt "@.}";
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
       (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore);
@@ -892,12 +900,15 @@ class sd_printer props terms_at_Pre () = object(self)
       | Return _ ->
 	begin
 	  match postcond with
-	  | Some post_cond ->
-	    post_cond fmt;
-	    postcond <- None;
-	    self#stmtkind next fmt stmt.skind
-	  | None -> self#stmtkind next fmt stmt.skind
-	end
+	  | Some post_cond -> post_cond fmt; postcond <- None
+	  | None -> ()
+	end;
+	begin
+	  match dealloc with
+	  | Some de_alloc -> de_alloc fmt; dealloc <- None
+	  | None -> ()
+	end;
+	self#stmtkind next fmt stmt.skind
       | _ -> self#stmtkind next fmt stmt.skind
     end;
     List.iter (fun contract -> contract fmt) !end_contract;
@@ -914,8 +925,13 @@ class sd_printer props terms_at_Pre () = object(self)
 
 
 
-  (* really needed ? *)
-  method! global fmt (g:global) =
+  method! global fmt g =
+    if first_global then
+      begin
+	Format.fprintf fmt "extern void* malloc(unsigned);@\n";
+	Format.fprintf fmt "extern void free(void*);@\n";
+	first_global <- false
+      end;
     match g with
     | GFun (fundec, l) ->
       if print_var fundec.svar then
@@ -1036,7 +1052,7 @@ class sd_printer props terms_at_Pre () = object(self)
 
 
 
-  (* factorization of predicate_and_var for \exists dnad \forall  *)
+  (* factorization of predicate_and_var for \exists and \forall  *)
   method private quantif_predicate_and_var ~forall fmt logic_vars hyps goal =
     if (List.length logic_vars) > 1 then
       failwith "quantification on many variables unsupported!";
@@ -1093,7 +1109,7 @@ class sd_printer props terms_at_Pre () = object(self)
     | Pexists _ -> failwith "\\exists not of the form \\exists ...; a && b;"
     | Pnot(pred1) ->
       let pred1_var = self#predicate_named_and_var fmt pred1 in
-      Format.fprintf Format.str_formatter "(! %s)" pred1_var;
+      Format.fprintf Format.str_formatter "!(%s)" pred1_var;
       Format.flush_str_formatter()
     | Pand(pred1,pred2) ->
       let pred1_var = self#predicate_named_and_var fmt pred1 in
@@ -1113,11 +1129,12 @@ class sd_printer props terms_at_Pre () = object(self)
     | Piff(pred1,pred2) ->
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       let pred2_var = self#predicate_named_and_var fmt pred2 in
-      Format.fprintf Format.str_formatter "( ( !%s || %s ) && ( !%s || %s ) )"
+      Format.fprintf Format.str_formatter
+	"( ( !(%s) || %s ) && ( !(%s) || %s ) )"
 	pred1_var pred2_var pred2_var pred1_var;
       Format.flush_str_formatter()
     | Prel(rel,t1,t2) ->
-      Format.fprintf Format.str_formatter "%a %a %a"
+      Format.fprintf Format.str_formatter "(%a %a %a)"
 	self#term t1 self#relation rel self#term t2;
       Format.flush_str_formatter()
     | Pat (p,_) ->
@@ -1146,13 +1163,11 @@ end (* end of printer class *)
 
 
 let second_pass filename props terms_at_Pre =
-  ignore props;
   Kernel.Unicode.set false;
   let out = open_out filename in
   let fmt = Format.formatter_of_out_channel out in
-  let module P =
-	Printer_builder.Make
-	  (struct class printer = sd_printer props terms_at_Pre end) in
+  let module P = Printer_builder.Make
+	(struct class printer = sd_printer props terms_at_Pre end) in
   P.pp_file fmt (Ast.get());
   flush out;
   close_out out
@@ -1165,22 +1180,6 @@ let pcva_emitter =
     ~correctness:[] ~tuning:[]
 
 
-let setup_props_bijection () =
-  Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
-  Property.Hashtbl.clear Prop_id.prop_to_id_tbl;
-  (* Bijection: unique_identifier <--> property *)
-  let property_id = ref 0 in
-  Property_status.iter (fun property ->
-    let pos1,_ = Property.location property in
-    let fc_builtin = "__fc_builtin_for_normalization.i" in
-    if (Filename.basename pos1.pos_fname) <> fc_builtin then
-      begin
-	Datatype.Int.Hashtbl.add
-	  Prop_id.id_to_prop_tbl !property_id property;
-	Property.Hashtbl.add Prop_id.prop_to_id_tbl property !property_id;
-	property_id := !property_id + 1
-      end
-  )
 
 
 
@@ -1192,10 +1191,7 @@ let setup_props_bijection () =
 
 
 
-
-let compute_props props =
-  ()
-(*
+let compute_props props terms_at_Pre =
   (* Translate some parts of the pre-condition in Prolog *)
   Native_precond.translate();
   Options.Self.feedback ~dkey:Options.dkey_native_precond
@@ -1203,9 +1199,12 @@ let compute_props props =
   let parameters_file = Options.Precond_File.get () in
   Options.Self.feedback ~dkey:Options.dkey_native_precond
     "The result is in file %s" parameters_file;
-  print_in_file (Options.Temp_File.get()) props;
-  let translated_properties =
-    Pcva_printer.no_repeat !Prop_id.translated_properties in
+
+
+  second_pass (Options.Temp_File.get()) props terms_at_Pre;
+
+
+  let translated_properties = no_repeat !Prop_id.translated_properties in
   let test_params =
     if Sys.file_exists parameters_file then
       Printf.sprintf "-pc-test-params %s" parameters_file
@@ -1284,12 +1283,32 @@ let compute_props props =
   ) translated_properties;
   Prop_id.translated_properties := [];
   Prop_id.all_paths := false;
-  Prop_id.typically := false
-*)   
+  Prop_id.typically := false  
 
 
 
 
+
+
+
+
+
+let setup_props_bijection () =
+  Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
+  Property.Hashtbl.clear Prop_id.prop_to_id_tbl;
+  (* Bijection: unique_identifier <--> property *)
+  let property_id = ref 0 in
+  Property_status.iter (fun property ->
+    let pos1,_ = Property.location property in
+    let fc_builtin = "__fc_builtin_for_normalization.i" in
+    if (Filename.basename pos1.pos_fname) <> fc_builtin then
+      begin
+	Datatype.Int.Hashtbl.add
+	  Prop_id.id_to_prop_tbl !property_id property;
+	Property.Hashtbl.add Prop_id.prop_to_id_tbl property !property_id;
+	property_id := !property_id + 1
+      end
+  )
 
 
 
@@ -1442,12 +1461,13 @@ let run() =
 	  "%a not found" Property.pretty p
       ) props;
 
-      (*compute_props props;*)
+      
       let lengths = lengths_from_requires() in
       let terms_at_Pre = at_from_formals lengths in
-
+      compute_props props terms_at_Pre;
       
-      second_pass (Options.Temp_File.get()) props terms_at_Pre;    
+      (*compute_props props;*)
+      (*second_pass (Options.Temp_File.get()) props terms_at_Pre;    *)
 
 
       (* cleaning *)

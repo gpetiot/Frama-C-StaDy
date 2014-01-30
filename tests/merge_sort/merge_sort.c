@@ -3,6 +3,9 @@
 OPT: -main merge_sort -stady -then -report
 */
 
+/*@ requires \valid(A+(iLeft..iRight-1));
+  @ requires \valid(B+(iLeft..iEnd-1));
+  @*/
 void BottomUpMerge(int* A, int iLeft, int iRight, int iEnd, int* B) {
   int i0 = iLeft, i1 = iRight, j;
  
@@ -28,6 +31,9 @@ void BottomUpMerge(int* A, int iLeft, int iRight, int iEnd, int* B) {
 }
 
 
+/*@ requires \valid(A+(0..n-1));
+  @ requires \valid(B+(0..n-1));
+  @*/
 void CopyArray(int* A, int* B, int n) {
   int i;
   /*@ loop invariant 0 <= i <= n;
@@ -46,6 +52,9 @@ int min(int x, int y) {
 }
 
 /* array A[] has the items to sort; array B[] is a work array */
+/*@ requires \valid(A+(0..n-1));
+  @ requires \valid(B+(0..n-1));
+  @*/
 void BottomUpSort(int n, int* A, int* B) {
   int width;
  

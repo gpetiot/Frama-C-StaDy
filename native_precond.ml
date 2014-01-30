@@ -421,7 +421,7 @@ let rec requires_to_prolog pred =
   | Pvalid (_, term) | Pvalid_read (_, term) -> valid_to_prolog term
   | Pforall (_quantif, _pn) -> ()
   | Prel (rel, pn1, pn2) -> rel_to_prolog rel pn1 pn2
-  | _ -> Options.Self.not_yet_implemented "%a" Printer.pp_predicate_named pred
+  | _ -> Options.Self.warning "%a unsupported" Printer.pp_predicate_named pred
 
 (* typ -> var -> unit *)
 let rec create_input_from_type ty v =
