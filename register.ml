@@ -29,34 +29,75 @@ let append_end : 'a list -> 'a -> 'a list =
 
 (* Extracts the varinfo of the variable and its inferred size as a term
    from a term t as \valid(t). *)
-let extract_from_valid : term -> varinfo * term =
-  fun t -> match t with
-  | {term_node=TBinOp((PlusPI|IndexPI),
-		      ({term_node=TLval(TVar v, _)} as _t1),
-		      ({term_node=Trange(_,Some bound)} as _t2))} ->
+let rec extract_from_valid : term -> varinfo * term =
+  fun t -> match t.term_node with
+  | TBinOp((PlusPI|IndexPI),
+	   ({term_node=TLval(TVar v, _)} as _t1),
+	   ({term_node=Trange(_,Some bound)} as _t2)) ->
     let varinfo = Extlib.the v.lv_origin in
     let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
     let einfo = {exp_type=bound.term_type; exp_name=[]} in
     let term = Cil.term_of_exp_info t.term_loc tnode einfo in
     varinfo, term
 
-  | {term_node=TBinOp((PlusPI|IndexPI),
-		      ({term_node=TLval(TVar v, _)} as _t1),
-		      (t2 (* anything but a Trange *)))} ->
+  | TBinOp((PlusPI|IndexPI),
+	   ({term_node=TLval(TVar v, _)} as _t1),
+	   (t2 (* anything but a Trange *))) ->
     let varinfo = Extlib.the v.lv_origin in
     let tnode = TBinOp (PlusA, t2, Cil.lone ~loc:t.term_loc()) in
     let einfo = {exp_type=t2.term_type; exp_name=[]} in
     let term = Cil.term_of_exp_info t.term_loc tnode einfo in
     varinfo, term
 
-  | {term_node=TLval(TVar v, _)} ->
+  | TBinOp((PlusPI|IndexPI),
+	   ({term_node=TLval tlval}),
+	   ({term_node=Trange(_,Some bound)})) ->
+    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
+    let einfo = {exp_type=bound.term_type; exp_name=[]} in
+    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
+    let varinfo, _ = extract_from_valid {t with term_node=TLval tlval} in
+    varinfo, term
+    
+    
+
+  | TLval (TVar v, TNoOffset) ->
     let varinfo = Extlib.the v.lv_origin in
     let term = Cil.lone ~loc:t.term_loc () in
     varinfo, term
+  | TLval (TVar _, TField _) -> assert false
+  | TLval (TVar _, TModel _) -> assert false
+  | TLval (TVar _, TIndex _) -> assert false
+  
 
-  | _ ->
-    Options.Self.debug ~dkey:Options.dkey_lengths
-      "\\valid(%a) ignored" Printer.pp_term t;
+  | TLval (TMem m, TNoOffset) ->
+    let varinfo, _ = extract_from_valid m in
+    let term = Cil.lone ~loc:t.term_loc () in
+    varinfo, term
+  | TLval (TMem _, TField _) -> assert false
+  | TLval (TMem _, TModel _) -> assert false
+  | TLval (TMem _, TIndex _) -> assert false
+
+
+  | TStartOf _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+    "TStartOf \\valid(%a) ignored" Printer.pp_term t;
+    assert false
+  | TAddrOf _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+    "TAddrOf \\valid(%a) ignored" Printer.pp_term t;
+    assert false
+  | TCoerce _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+    "TCoerce \\valid(%a) ignored" Printer.pp_term t;
+    assert false
+  | TCoerceE _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+    "TCoerceE \\valid(%a) ignored" Printer.pp_term t;
+    assert false
+  | TLogic_coerce _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+    "TLogic_coerce \\valid(%a) ignored" Printer.pp_term t;
+    assert false
+  | TBinOp _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+    "TBinOp \\valid(%a) ignored" Printer.pp_term t;
+    assert false
+  | _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+    "\\valid(%a) ignored" Printer.pp_term t;
     assert false
 
 
@@ -93,7 +134,7 @@ let lengths_from_requires :
 		  match p with
 		  | Pvalid(_, t) | Pvalid_read(_, t) ->
 		    begin
-		      try
+		      (*try*)
 			let varinfo, term = extract_from_valid t in
 			let terms =
 			  try Cil_datatype.Varinfo.Hashtbl.find kf_tbl varinfo
@@ -103,8 +144,8 @@ let lengths_from_requires :
 			Cil_datatype.Varinfo.Hashtbl.replace
 			  kf_tbl varinfo terms;
 			Cil.DoChildren
-		      with
-		      | _ -> Cil.DoChildren
+		      (*with
+		      | _ -> Cil.DoChildren*)
 		    end
 		  | _ -> Cil.DoChildren
 	      end
@@ -241,7 +282,9 @@ let rec compute_guards
     | Pand(p1, p2) ->
       let acc, vars = compute_guards acc vars p1 in
       compute_guards acc vars p2
-    | _ -> assert false
+    | _ ->
+      Options.Self.feedback "compute_guards of %a" Printer.pp_predicate_named p;
+      assert false
 
 
 
@@ -566,7 +609,8 @@ class sd_printer props terms_at_Pre () = object(self)
 	      let rec extract_typ =function TPtr(ty,_)->extract_typ ty | x->x in
 	      let rec stars ret =function 0->ret | n -> stars (ret^"*") (n-1) in
 	      let all_indices = List.fold_left concat_indice "" indices in
-	      let stars = stars "" (List.length indices) in
+	      let stars =
+		stars "" ((List.length terms)-(List.length indices)-1) in
 	      let ty = extract_typ v.vtype in
 	      Format.fprintf fmt "old_ptr_%s%s = malloc((%a)*sizeof(%a%s));@\n"
 		v.vname all_indices self#term h (self#typ None)	ty stars;
@@ -608,9 +652,9 @@ class sd_printer props terms_at_Pre () = object(self)
 		Format.fprintf fmt "int %s;@\n" iterator;
 		Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
 		  iterator iterator self#term h iterator;
+		let all_indices = List.fold_left concat_indice "" indices in
 		iter_counter := !iter_counter + 1;
 		let indices = append_end indices iterator in
-		let all_indices = List.fold_left concat_indice "" indices in
 		dealloc_aux indices t;
 		Format.fprintf fmt "}@\n";
 		Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
