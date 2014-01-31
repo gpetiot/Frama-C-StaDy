@@ -10,7 +10,9 @@ PLUGIN_TESTS_DIRS := \
 	merge_arrays \
 	merge_sort \
 	quick_sort \
-	tcas
+	tcas \
+	first_subset \
+	next_subset \
 PLUGIN_PTESTS_OPTS := -j 1
 
 PLUGIN_CMO	= \

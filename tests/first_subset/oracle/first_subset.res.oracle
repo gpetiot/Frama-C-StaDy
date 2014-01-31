@@ -1,0 +1,39 @@
+[kernel] preprocessing with "gcc -C -E -I.  tests/first_subset/first_subset.c"
+[kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:6:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
+stady_temp.c:23:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+[pc] analyzing...
+[pc] Compiling pathcrawler_stady_temp/lanceur_firstSubset utilities ...
+[pc] Compiling pathcrawler_stady_temp/lanceur_firstSubset ...
+[pc] generating tests...
+[pc] Starting lanceur_firstSubset (isc version)
+[pc] Starting lanceur_pathcrawler__firstSubset_precond (isc version)
+[pc] generation finished
+[stady] all-paths: true
+[stady] 1247 test cases
+[report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'firstSubset'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Post-condition (file tests/first_subset/first_subset.c, line 11)
+            by StaDyPlus.
+[    -    ] Assigns (file tests/first_subset/first_subset.c, line 10)
+[  Valid  ] Loop variant at loop (file tests/first_subset/first_subset.c, line 18)
+            by StaDyPlus.
+[  Valid  ] Invariant (file tests/first_subset/first_subset.c, line 14)
+            by StaDyPlus.
+[  Valid  ] Invariant (file tests/first_subset/first_subset.c, line 15)
+            by StaDyPlus.
+[    -    ] Default behavior
+            tried with Frama-C kernel.
+
+--------------------------------------------------------------------------------
+--- Status Report Summary
+--------------------------------------------------------------------------------
+     4 Completely validated
+     2 To be validated
+     6 Total
+--------------------------------------------------------------------------------

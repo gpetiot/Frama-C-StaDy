@@ -1,0 +1,51 @@
+[kernel] preprocessing with "gcc -C -E -I.  tests/next_subset/next_subset.c"
+[kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:24:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
+stady_temp.c:43:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
+[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+[pc] analyzing...
+[pc] Compiling pathcrawler_stady_temp/lanceur_nextSubset utilities ...
+[pc] Compiling pathcrawler_stady_temp/lanceur_nextSubset ...
+[pc] generating tests...
+[pc] Starting lanceur_nextSubset (isc version)
+[pc] Starting lanceur_pathcrawler__nextSubset_precond (isc version)
+[pc] generation finished
+[stady] all-paths: true
+[stady] 4341 test cases
+[report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'nextSubset'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 15)
+            by StaDyPlus.
+[  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 16)
+            by StaDyPlus.
+[  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 17)
+            by StaDyPlus.
+[  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 18)
+            by StaDyPlus.
+[  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 19)
+            by StaDyPlus.
+[    -    ] Assigns (file tests/next_subset/next_subset.c, line 14)
+[  Valid  ] Loop variant at loop (file tests/next_subset/next_subset.c, line 26)
+            by StaDyPlus.
+[  Valid  ] Loop variant at loop (file tests/next_subset/next_subset.c, line 33)
+            by StaDyPlus.
+[  Valid  ] Invariant (file tests/next_subset/next_subset.c, line 23)
+            by StaDyPlus.
+[  Valid  ] Invariant (file tests/next_subset/next_subset.c, line 29)
+            by StaDyPlus.
+[  Valid  ] Invariant (file tests/next_subset/next_subset.c, line 30)
+            by StaDyPlus.
+[    -    ] Default behavior
+            tried with Frama-C kernel.
+
+--------------------------------------------------------------------------------
+--- Status Report Summary
+--------------------------------------------------------------------------------
+    10 Completely validated
+     2 To be validated
+    12 Total
+--------------------------------------------------------------------------------
