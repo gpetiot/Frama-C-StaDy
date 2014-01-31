@@ -302,8 +302,8 @@ class sd_printer props terms_at_Pre () = object(self)
 	    super#varinfo fmt {v with vname=prefix^"_"^v.vname}
 	  with
 	  | Not_found ->
-	    Options.Self.warning "%s_%s not found in terms_at_Pre"
-	      prefix v.vname;
+	    Options.Self.feedback ~dkey:Options.dkey_at
+	      "%s_%s not found in terms_at_Pre" prefix v.vname;
 	    super#varinfo fmt v
 	end
       | None -> super#varinfo fmt v
@@ -327,8 +327,8 @@ class sd_printer props terms_at_Pre () = object(self)
 	    super#logic_var fmt {v with lv_name=prefix^"_"^v.lv_name}
 	  with
 	  | _ ->
-	    Options.Self.warning "%s_%s not found in terms_at_Pre"
-	      prefix v.lv_name;
+	    Options.Self.feedback ~dkey:Options.dkey_at
+	      "%s_%s not found in terms_at_Pre" prefix v.lv_name;
 	    super#logic_var fmt v
 	end
       | None -> super#logic_var fmt v
@@ -450,14 +450,14 @@ class sd_printer props terms_at_Pre () = object(self)
 		  (fun fmt -> self#line_directive ~forcefile:false fmt)
 		  pred.ip_loc;
 		List.iter (fun v -> Format.fprintf fmt "%s &&" v) vars;
-		Format.fprintf fmt " 1 )"
+		Format.fprintf fmt " 1 ) {@\n"
 	      end;
 	    let p = (new Sd_subst.subst)#subst_pred pred.ip_content [][][] in
 	    let var = self#predicate_and_var fmt p in
 	    Format.fprintf fmt "@[<hv>%a@[<v 2>if (!%s) return 0;@]@]"
 	      (fun fmt -> self#line_directive ~forcefile:false fmt) pred.ip_loc
 	      var;
-	    if b.b_assumes <> [] then Format.fprintf fmt "@]@]"
+	    if b.b_assumes <> [] then Format.fprintf fmt "}@\n@]@]"
 	  ) b.b_requires;
 	) behaviors;
 	Format.fprintf fmt "return 1;@]@]@\n}@\n@\n"
@@ -489,13 +489,13 @@ class sd_printer props terms_at_Pre () = object(self)
 		    (fun fmt -> self#line_directive ~forcefile:false fmt)
 		    pred.ip_loc;
 		  List.iter (fun v -> Format.fprintf fmt "%s &&" v) vars;
-		  Format.fprintf fmt " 1 )"
+		  Format.fprintf fmt " 1 ) {@\n"
 		end;
 	      pc_assert_exception
 		fmt pred.ip_content pred.ip_loc "Pre-condition!" id;
 	      Prop_id.translated_properties :=
 		prop :: !Prop_id.translated_properties;
-	      if b.b_assumes <> [] then Format.fprintf fmt "@]@]"
+	      if b.b_assumes <> [] then Format.fprintf fmt "}@\n@]@]"
 	  ) b.b_requires
 	) behaviors
       end;
@@ -533,13 +533,13 @@ class sd_printer props terms_at_Pre () = object(self)
 			(fun fmt -> self#line_directive ~forcefile:false fmt)
 			pred.ip_loc;
 		      List.iter (fun v -> Format.fprintf fmt "%s && " v) vars;
-		      Format.fprintf fmt " 1)@\n"
+		      Format.fprintf fmt " 1) {@\n"
 		    end;
 		  pc_assert_exception
 		    fmt pred.ip_content pred.ip_loc "Post-condition!" id;
 		  Prop_id.translated_properties :=
 		    prop :: !Prop_id.translated_properties;
-		  if b.b_assumes <> [] then Format.fprintf fmt "@]@]@\n"
+		  if b.b_assumes <> [] then Format.fprintf fmt "}@\n@]@]@\n"
 	      ) b.b_post_cond
 	    ) behaviors;
 	    Format.fprintf fmt "@\n}@]@\n"
