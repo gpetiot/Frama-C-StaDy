@@ -12,7 +12,7 @@ PLUGIN_TESTS_DIRS := \
 	quick_sort \
 	tcas \
 	first_subset \
-	next_subset \
+	next_subset
 PLUGIN_PTESTS_OPTS := -j 1
 
 PLUGIN_CMO	= \
