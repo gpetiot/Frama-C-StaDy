@@ -3,6 +3,8 @@ open Cil_types
 open Pretty_source 
 
 
+let compute_props : (Property.t list -> unit) ref = ref (fun _ -> ())
+
 
 let pc_panel (main_ui:Design.main_window_extension_points) =
   let vbox = GPack.vbox () in
@@ -60,7 +62,7 @@ let to_do_on_select
       | _ -> ()
     end;
     if button_nb = 3 then
-      let callback() = (*Register.compute_props [prop];*) main_ui#redisplay() in
+      let callback() = !compute_props [prop]; main_ui#redisplay() in
       ignore (popup_factory#add_item "Validate property with pcva" ~callback)
   | _ -> ()
 
@@ -71,6 +73,9 @@ let pc_selector menu (main_ui:Design.main_window_extension_points) ~button loc =
 
 let main main_ui =
   Register.setup_props_bijection();
+  let lengths = Register.lengths_from_requires() in
+  let terms_at_Pre = Register.at_from_formals lengths in
+  compute_props := (fun props -> Register.compute_props props terms_at_Pre); 
   main_ui#register_panel pc_panel;
   main_ui#register_source_selector pc_selector
 
