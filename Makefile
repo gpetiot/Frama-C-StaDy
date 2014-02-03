@@ -5,6 +5,7 @@ PLUGIN_NAME	= PCVA
 
 PLUGIN_TESTS_DIRS := \
 	behaviors \
+	quantified \
 	binary_search \
 	bubble_sort \
 	insertion_sort \
