@@ -23,6 +23,7 @@ PLUGIN_CMO	= \
 	sd_subst \
 	pcva_socket \
 	native_precond \
+	sd_printer \
 	register
 PLUGIN_GUI_CMO 	= register_gui 
 include $(FRAMAC_SHARE)/Makefile.dynamic
