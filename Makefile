@@ -4,6 +4,7 @@ FRAMAC_LIBDIR	:=$(shell frama-c.byte -print-libpath)
 PLUGIN_NAME	= PCVA
 
 PLUGIN_TESTS_DIRS := \
+	behaviors \
 	binary_search \
 	bubble_sort \
 	insertion_sort \
