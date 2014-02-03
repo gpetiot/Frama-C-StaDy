@@ -19,9 +19,6 @@ let print_strtbl_vartbl_terms hashtbl dkey =
 
 
 
-(* Appends an element to the end of a list. *)
-let append_end : 'a list -> 'a -> 'a list =
-  fun l elt -> List.rev_append (List.rev l) [elt]
 
 
 
@@ -140,7 +137,7 @@ let lengths_from_requires :
 			  try Cil_datatype.Varinfo.Hashtbl.find kf_tbl varinfo
 			  with Not_found -> []
 			in
-			let terms = append_end terms term in
+			let terms = Utils.append_end terms term in
 			Cil_datatype.Varinfo.Hashtbl.replace
 			  kf_tbl varinfo terms;
 			Cil.DoChildren
@@ -209,15 +206,6 @@ let debug_builtins = Kernel.register_category "printer:builtins"
 
 let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
-
-let no_repeat : 'a list -> 'a list =
-  fun l ->
-    let rec aux acc = function
-      | [] -> acc
-      | h :: t when List.mem h acc -> aux acc t
-      | h :: t -> aux (h :: acc) t
-    in
-    aux  [] l
 
 (* to change a \valid to a pathcrawler_dimension *)
 let rec extract_terms : term -> term * term =
@@ -619,7 +607,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	      Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
 		iterator iterator self#term h iterator;
 	      iter_counter := !iter_counter + 1;
-	      alloc_aux (append_end indices iterator) t;
+	      alloc_aux (Utils.append_end indices iterator) t;
 	      Format.fprintf fmt "}@\n"
 	    | [] ->
 	      let all_indices = List.fold_left concat_indice "" indices in
@@ -654,7 +642,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		  iterator iterator self#term h iterator;
 		let all_indices = List.fold_left concat_indice "" indices in
 		iter_counter := !iter_counter + 1;
-		let indices = append_end indices iterator in
+		let indices = Utils.append_end indices iterator in
 		dealloc_aux indices t;
 		Format.fprintf fmt "}@\n";
 		Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
@@ -1300,7 +1288,7 @@ let compute_props props terms_at_Pre =
   second_pass (Options.Temp_File.get()) props terms_at_Pre;
 
 
-  let translated_properties = no_repeat !Prop_id.translated_properties in
+  let translated_properties = Utils.no_repeat !Prop_id.translated_properties in
   let test_params =
     if Sys.file_exists parameters_file then
       Printf.sprintf "-pc-test-params %s" parameters_file

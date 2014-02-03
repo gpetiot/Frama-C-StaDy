@@ -17,6 +17,7 @@ PLUGIN_PTESTS_OPTS := -j 1
 
 PLUGIN_CMO	= \
 	options \
+	utils \
 	prop_id \
 	states \
 	sd_subst \
