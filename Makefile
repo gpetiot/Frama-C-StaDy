@@ -18,7 +18,6 @@ PLUGIN_PTESTS_OPTS := -j 1
 PLUGIN_CMO	= \
 	options \
 	prop_id \
-	pcva_printer \
 	states \
 	sd_subst \
 	pcva_socket \
