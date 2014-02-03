@@ -1,6 +1,5 @@
 
 open Cil_types
-open Lexing
 
 
 let output chan str =

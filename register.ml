@@ -1,6 +1,5 @@
 
 open Cil_types
-open Lexing
 
 
 
@@ -347,7 +346,7 @@ let setup_props_bijection () =
   Property_status.iter (fun property ->
     let pos1,_ = Property.location property in
     let fc_builtin = "__fc_builtin_for_normalization.i" in
-    if (Filename.basename pos1.pos_fname) <> fc_builtin then
+    if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
       begin
 	Datatype.Int.Hashtbl.add
 	  Prop_id.id_to_prop_tbl !property_id property;

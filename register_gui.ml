@@ -1,7 +1,4 @@
 
-open Cil_types
-open Pretty_source 
-
 
 let compute_props : (Property.t list -> unit) ref = ref (fun _ -> ())
 
@@ -29,7 +26,7 @@ let to_do_on_select
     (popup_factory:GMenu.menu GMenu.factory)
     (main_ui:Design.main_window_extension_points) button_nb selected =
   match selected with
-  | PIP prop ->
+  | Pretty_source.PIP prop ->
     begin
       try
 	let testcases = States.TestFailures.find prop in
