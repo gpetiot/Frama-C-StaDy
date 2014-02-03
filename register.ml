@@ -1258,7 +1258,15 @@ let second_pass filename props terms_at_Pre =
 	(struct class printer = sd_printer props terms_at_Pre end) in
   P.pp_file fmt (Ast.get());
   flush out;
-  close_out out
+  close_out out;
+  let buf = Buffer.create 512 in
+  let fmt = Format.formatter_of_buffer buf in
+  P.pp_file fmt (Ast.get());
+  let dkey = Options.dkey_generated_c in
+  Format.pp_print_flush fmt();
+  Options.Self.debug ~dkey "%s" (Buffer.contents buf);
+  Buffer.clear buf
+
 
 
 

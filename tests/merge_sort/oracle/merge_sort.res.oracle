@@ -1,6 +1,7 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_sort/merge_sort.c"
 [stady] warning: \separated(table, ret) unsupported
 [stady] warning: \separated(table, ret) unsupported
+[stady] warning: \separated(table, ret) unsupported
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:6:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
 stady_temp.c:6:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
