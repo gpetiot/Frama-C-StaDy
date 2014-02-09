@@ -488,7 +488,7 @@ let rec create_input_from_type ty v =
 let create_input_val var = create_input_from_type var.vtype (Simple var)
 
 
-
+let generated = ref false
 
 
 let translate() =
@@ -574,6 +574,7 @@ let translate() =
       simple_domains := [];
       complex_domains := [];
       unquantifs := [];
-      quantifs := []
+      quantifs := [];
+      generated := true
     end
 
