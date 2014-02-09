@@ -150,6 +150,8 @@ let lengths_from_requires :
 	      ignore (Visitor.visitFramacPredicate o pred)
 	    ) bhv.b_requires
 	  ) kf;
+	  (* TODO: handle arrays with constant size *)
+	  (*Globals.Vars.iter (fun vi _ -> () );*)
 	  Datatype.String.Hashtbl.add lengths kf_name kf_tbl
 	end
     );
@@ -188,6 +190,13 @@ let at_from_formals :
 	    in
 	    Cil_datatype.Varinfo.Hashtbl.add kf_tbl vi terms
 	  ) formals;
+	  Globals.Vars.iter (fun vi _ ->
+	    let terms =
+	      try Cil_datatype.Varinfo.Hashtbl.find lengths_tbl vi
+	      with Not_found -> []
+	    in
+	    Cil_datatype.Varinfo.Hashtbl.add kf_tbl vi terms
+	  );
 	  Datatype.String.Hashtbl.add terms_at_Pre kf_name kf_tbl
 	end
     );

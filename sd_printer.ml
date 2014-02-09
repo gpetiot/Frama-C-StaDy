@@ -125,7 +125,8 @@ class sd_printer props terms_at_Pre () = object(self)
       | Some f ->
 	begin
 	  let prefix =
-	    if Cil.isPointerType v.vtype && in_old_ptr then "old_ptr" else "old"
+	    if (Cil.isPointerType v.vtype || Cil.isArrayType v.vtype)
+	      && in_old_ptr then "old_ptr" else "old"
 	  in
 	  try
 	    let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.vname in
@@ -148,7 +149,8 @@ class sd_printer props terms_at_Pre () = object(self)
 	begin
 	  let prefix =
 	    match v.lv_type with Ctype ty ->
-	      if Cil.isPointerType ty && in_old_ptr then "old_ptr" else "old"
+	      if (Cil.isPointerType ty || Cil.isArrayType ty)
+		&& in_old_ptr then "old_ptr" else "old"
 	    | _ -> "old"
 	  in
 	  try
@@ -383,23 +385,30 @@ class sd_printer props terms_at_Pre () = object(self)
     (* alloc variables for \at terms *)
     let concat_indice str ind = str ^ "[" ^ ind ^ "]" in
     begin
+      let rec extract_ptr_typ = function
+	| TPtr(ty,_)
+	| TArray(ty,_,_,_) -> extract_ptr_typ ty
+	| x -> x
+      in
+      let rec array_to_ptr = function
+	| TArray(ty,_,_,attributes) -> TPtr(array_to_ptr ty, attributes)
+	| x -> x
+      in
       try
 	let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
 	let iter_counter = ref 0 in
 	Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v terms ->
-	  Format.fprintf fmt "%a"
-	    (self#typ(Some(fun fmt -> Format.fprintf fmt "old_%s = %s;@\n"
-	      v.vname v.vname)))
-	    v.vtype;
-	  
+	  Format.fprintf fmt "%a = %s;@\n"
+	    (self#typ(Some(fun fmt -> Format.fprintf fmt "old_%s" v.vname)))
+	    (array_to_ptr v.vtype)
+	    v.vname;
 	  let rec alloc_aux indices = function
 	    | h :: t ->
-	      let rec extract_typ =function TPtr(ty,_)->extract_typ ty | x->x in
 	      let rec stars ret =function 0->ret | n -> stars (ret^"*") (n-1) in
 	      let all_indices = List.fold_left concat_indice "" indices in
 	      let stars =
 		stars "" ((List.length terms)-(List.length indices)-1) in
-	      let ty = extract_typ v.vtype in
+	      let ty = extract_ptr_typ v.vtype in
 	      Format.fprintf fmt "old_ptr_%s%s = malloc((%a)*sizeof(%a%s));@\n"
 		v.vname all_indices self#term h (self#typ None)	ty stars;
 	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
@@ -414,13 +423,14 @@ class sd_printer props terms_at_Pre () = object(self)
 	      Format.fprintf fmt "old_ptr_%s%s = %s%s;@\n"
 		v.vname all_indices v.vname all_indices
 	  in
-	  if Cil.isPointerType v.vtype then
+	  if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
 	    begin
-	      Format.fprintf fmt "%a"
-		(self#typ(Some(fun fmt -> Format.fprintf fmt "old_ptr_%s;@\n"
-		  v.vname))) v.vtype;
-		alloc_aux [] terms
-	      end
+	      Format.fprintf fmt "%a;@\n"
+		(self#typ(Some(fun fmt -> Format.fprintf fmt "old_ptr_%s"
+		  v.vname)))
+		(array_to_ptr v.vtype);
+	      alloc_aux [] terms
+	    end
 	) tbl
       with Not_found -> ()
     end;
