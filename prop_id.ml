@@ -17,4 +17,4 @@ let translated_properties = ref ([] : Property.t list)
 
 
 let all_paths = ref false
-let typically = ref false
+let typically = ref ([] : Property.identified_property list)

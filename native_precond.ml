@@ -511,7 +511,9 @@ let translate() =
       List.iter (fun l ->
 	let ll = List.map Logic_const.pred_of_id_pred l in
 	let ll = List.map subst ll in
-	Prop_id.typically := true;
+	let new_props = List.map (Property.ip_of_requires kf Kglobal bhv) l in
+	List.iter Property_status.register new_props;
+	Prop_id.typically := List.rev_append new_props !Prop_id.typically;
 	List.iter requires_to_prolog ll
       ) typically;
       Options.Self.feedback ~dkey:Options.dkey_native_precond
