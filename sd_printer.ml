@@ -816,6 +816,9 @@ class sd_printer props terms_at_Pre () = object(self)
       begin
 	Format.fprintf fmt "extern void* malloc(unsigned);@\n";
 	Format.fprintf fmt "extern void free(void*);@\n";
+	Format.fprintf fmt
+	  "extern int pathcrawler_assert_exception(char*,int);@\n";
+	Format.fprintf fmt "extern int pathcrawler_dimension(void*);@\n";
 	first_global <- false
       end;
     match g with

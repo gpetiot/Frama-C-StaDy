@@ -1,6 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/tcas/tcas.c"
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:408:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_entry_point utilities ...

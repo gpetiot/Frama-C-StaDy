@@ -3,8 +3,6 @@
 [stady] warning: \separated(table, ret) unsupported
 [stady] warning: \separated(table, ret) unsupported
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:6:[kernel] warning: Calling undeclared function pathcrawler_assert_exception. Old style K&R code?
-stady_temp.c:6:[kernel] warning: Calling undeclared function pathcrawler_dimension. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort utilities ...
