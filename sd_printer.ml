@@ -1011,10 +1011,16 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.fprintf Format.str_formatter "(%s || %s)" pred1_var pred2_var;
       Format.flush_str_formatter()
     | Pimplies(pred1,pred2) ->
+      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+      pred_cpt <- pred_cpt + 1;
+      Format.fprintf fmt "int %s = 1;@\n" var;
       let pred1_var = self#predicate_named_and_var fmt pred1 in
+      Format.fprintf fmt "if (%s) {@\n" pred1_var;
       let pred2_var = self#predicate_named_and_var fmt pred2 in
-      Format.fprintf Format.str_formatter "(!(%s) || %s)" pred1_var pred2_var;
-      Format.flush_str_formatter()
+      Format.fprintf fmt "%s = %s;@\n" var pred2_var;
+      Format.fprintf fmt "}@\n";
+      var
+    (* TODO: not safe enough *)
     | Piff(pred1,pred2) ->
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       let pred2_var = self#predicate_named_and_var fmt pred2 in
