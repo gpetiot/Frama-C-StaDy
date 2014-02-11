@@ -13,7 +13,7 @@ stady_temp.c:88:[kernel] warning: Calling undeclared function free. Old style K&
 [pc] Starting lanceur_pathcrawler__bubble_sort_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 14796 test cases
+[stady] 484 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

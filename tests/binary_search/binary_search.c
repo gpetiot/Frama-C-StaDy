@@ -5,7 +5,7 @@ OPT: -main binary_search -stady -then -report
 
 /* lemma div_by_2_def: \forall integer n; 0 <= n - 2 * (n / 2) <= 1; */
 
-/*@ requires 0 < length <= 5;
+/*@ requires 0 < length <= 3;
     requires \valid(arr+(0..length-1));
     requires \forall integer j; 0 <= j < length-1 ==> arr[j] <= arr[j+1];
     assigns  \nothing;

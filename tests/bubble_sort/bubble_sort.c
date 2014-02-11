@@ -3,7 +3,7 @@
 OPT: -main bubble_sort -stady -then -report
 */
 
-/*@ requires 0 < n <= 5;
+/*@ requires 0 < n <= 3;
   @ requires \valid(A+(0..n-1));
   @ assigns A[0..n-1];
   @ ensures \forall integer i; 0 <= i < n-1 ==> A[i] <= A[i+1];

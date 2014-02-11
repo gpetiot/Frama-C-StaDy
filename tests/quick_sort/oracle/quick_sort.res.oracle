@@ -13,7 +13,7 @@ stady_temp.c:144:[kernel] warning: Calling undeclared function free. Old style K
 [pc] Starting lanceur_pathcrawler__quick_sort_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 7752 test cases
+[stady] 878 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

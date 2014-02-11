@@ -87,7 +87,7 @@ void BottomUpSort(int n, int* A, int* B) {
 }
 
 
-/*@ requires 1 <= l <= 5;
+/*@ requires 1 <= l <= 3;
   @ requires \separated(table,ret);
   @ requires \valid(table+(0..l-1));
   @ requires \valid(ret+(0..l-1));

@@ -3,9 +3,9 @@
 OPT: -main quick_sort -pp-annot -stady -then -report
 */
 
-#define MAX_LEVELS 100
+#define MAX_LEVELS 50
 
-/*@ requires 0 <= elements <= 5;
+/*@ requires 0 <= elements <= 3;
   @ requires \valid(arr+(0..elements-1));
   @ requires \valid(beg+(0..99));
   @ requires \valid(end+(0..99));
