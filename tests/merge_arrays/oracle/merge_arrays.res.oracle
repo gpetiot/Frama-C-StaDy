@@ -1,6 +1,10 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_arrays/merge_arrays.c"
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:30:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:136:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+stady_temp.c:30:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:136:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_arrays utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_arrays ...

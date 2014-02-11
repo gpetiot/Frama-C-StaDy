@@ -814,7 +814,6 @@ class sd_printer props terms_at_Pre () = object(self)
   method! global fmt g =
     if first_global then
       begin
-	Format.fprintf fmt "#include<stdlib.h>@\n";
 	Format.fprintf fmt
 	  "extern int pathcrawler_assert_exception(char*,int);@\n";
 	Format.fprintf fmt "extern int pathcrawler_dimension(void*);@\n";
