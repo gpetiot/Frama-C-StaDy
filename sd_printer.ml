@@ -964,11 +964,7 @@ class sd_printer props terms_at_Pre () = object(self)
       var
       iter;
     let goal_var = self#predicate_named_and_var fmt goal in 
-    Format.fprintf fmt "if(%s(%s)) %s = %i;@\n"
-      (if forall then "!" else "")
-      goal_var
-      var
-      (if forall then 0 else 1);
+    Format.fprintf fmt "%s = %s;@\n" var goal_var;
     Format.fprintf fmt "}@\n";
     Format.fprintf fmt "}@\n";
     var

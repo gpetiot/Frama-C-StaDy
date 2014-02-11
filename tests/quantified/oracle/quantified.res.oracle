@@ -6,7 +6,7 @@
                     {
                     int __q_i;
                     for (__q_i = 0; __q_i < n &&  __stady_pred_5; __q_i++) {
-                    if(!(((n-1) >= 0 && (pathcrawler_dimension(*(t+__q_i)) > (n-1))))) __stady_pred_5 = 0;
+                    __stady_pred_5 = ((n-1) >= 0 && (pathcrawler_dimension(*(t+__q_i)) > (n-1)));
                     }
                     }
                     if (!__stady_pred_5) return 0;int __stady_pred_6 = 1;
@@ -25,13 +25,13 @@
                     if ((__q_k != __q_j)) {
                     __stady_pred_9 = (*(*(t+__q_i)+__q_k) == 0);
                     }
-                    if(!(__stady_pred_9)) __stady_pred_8 = 0;
+                    __stady_pred_8 = __stady_pred_9;
                     }
                     }
-                    if((((*(*(t+__q_i)+__q_j) == 1) && __stady_pred_8))) __stady_pred_7 = 1;
+                    __stady_pred_7 = ((*(*(t+__q_i)+__q_j) == 1) && __stady_pred_8);
                     }
                     }
-                    if(!(__stady_pred_7)) __stady_pred_6 = 0;
+                    __stady_pred_6 = __stady_pred_7;
                     }
                     }
                     if (!__stady_pred_6) return 0;return 1;
