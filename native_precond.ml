@@ -365,11 +365,17 @@ let rec tlval_to_prolog tlval =
 	  | (Var(Complex c), Var(Logic l)) -> Complex(CVCCont(c,L l))
 	  | (Var(Simple s), Int i) -> Complex(CVVCont(s,I i))
 	  | (Var(Complex c), Int i) -> Complex(CVCCont(c,I i))
-	  | _ -> Options.Self.not_yet_implemented "%s+%s" (strcvar x)(strcvar y)
+	  | _ ->
+	    Options.Self.debug ~dkey:Options.dkey_native_precond "%s+%s"
+	      (strcvar x)(strcvar y);
+	    assert false
 	end
       | Minus _ | Mult _ | Div _ -> assert false
     end
-  | _ -> Options.Self.not_yet_implemented "tlval: %a" Printer.pp_term_lval tlval
+  | _ ->
+    Options.Self.debug ~dkey:Options.dkey_native_precond "tlval: %a"
+      Printer.pp_term_lval tlval;
+    assert false
 
 
 (* term -> compo_var *)
@@ -388,7 +394,10 @@ and term_to_compo_var term =
     begin
       match (term_to_compo_var term) with
       | Int i -> Int (Integer.neg i)
-      | _ -> Options.Self.not_yet_implemented "term_to_compo_var: TUnOp"
+      | _ ->
+	Options.Self.debug ~dkey:Options.dkey_native_precond
+	  "term_to_compo_var: TUnOp";
+	assert false
     end
   | Tat(t,LogicLabel(_,label)) when label = "Old" -> term_to_compo_var t
   | _ -> error_term term
@@ -398,7 +407,7 @@ let valid_to_prolog term =
   match term.term_node with
   | Tempty_set -> ()
   | TLval x -> add_unquantif (Req, (Dim (tlval_to_prolog x)), (Int Integer.one))
-  | TBinOp (PlusPI, {term_node=TLval tlval},
+  | TBinOp ((PlusPI|IndexPI), {term_node=TLval tlval},
 	    {term_node=(Trange (Some z, Some x))}) when Cil.isLogicZero z ->
     let var = tlval_to_prolog tlval in
     let b = term_to_compo_var x in
@@ -414,12 +423,15 @@ let rel_to_prolog rel term1 term2 =
     
 (* predicate named -> unit *)
 let rec requires_to_prolog pred =
-  match pred.content with
-  | Pand (p1, p2) -> requires_to_prolog p1; requires_to_prolog p2
-  | Ptrue -> ()
-  | Pvalid (_, term) | Pvalid_read (_, term) -> valid_to_prolog term
-  | Pforall (_quantif, _pn) -> ()
-  | Prel (rel, pn1, pn2) -> rel_to_prolog rel pn1 pn2
+  try
+    match pred.content with
+    | Pand (p1, p2) -> requires_to_prolog p1; requires_to_prolog p2
+    | Ptrue -> ()
+    | Pvalid (_, term) | Pvalid_read (_, term) -> valid_to_prolog term
+    | Pforall (_quantif, _pn) -> ()
+    | Prel (rel, pn1, pn2) -> rel_to_prolog rel pn1 pn2
+    | _ -> assert false
+  with
   | _ -> Options.Self.warning "%a unsupported" Printer.pp_predicate_named pred
 
 (* typ -> var -> unit *)

@@ -1,6 +1,10 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/next_subset/next_subset.c"
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:31:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:130:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+stady_temp.c:31:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:130:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_nextSubset utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_nextSubset ...
@@ -9,7 +13,7 @@
 [pc] Starting lanceur_pathcrawler__nextSubset_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 4341 test cases
+[stady] 600 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

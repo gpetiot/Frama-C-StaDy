@@ -814,8 +814,6 @@ class sd_printer props terms_at_Pre () = object(self)
   method! global fmt g =
     if first_global then
       begin
-	Format.fprintf fmt "extern void* malloc(unsigned);@\n";
-	Format.fprintf fmt "extern void free(void*);@\n";
 	Format.fprintf fmt
 	  "extern int pathcrawler_assert_exception(char*,int);@\n";
 	Format.fprintf fmt "extern int pathcrawler_dimension(void*);@\n";
@@ -966,11 +964,7 @@ class sd_printer props terms_at_Pre () = object(self)
       var
       iter;
     let goal_var = self#predicate_named_and_var fmt goal in 
-    Format.fprintf fmt "if(%s(%s)) %s = %i;@\n"
-      (if forall then "!" else "")
-      goal_var
-      var
-      (if forall then 0 else 1);
+    Format.fprintf fmt "%s = %s;@\n" var goal_var;
     Format.fprintf fmt "}@\n";
     Format.fprintf fmt "}@\n";
     var
@@ -1011,10 +1005,16 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.fprintf Format.str_formatter "(%s || %s)" pred1_var pred2_var;
       Format.flush_str_formatter()
     | Pimplies(pred1,pred2) ->
+      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+      pred_cpt <- pred_cpt + 1;
+      Format.fprintf fmt "int %s = 1;@\n" var;
       let pred1_var = self#predicate_named_and_var fmt pred1 in
+      Format.fprintf fmt "if (%s) {@\n" pred1_var;
       let pred2_var = self#predicate_named_and_var fmt pred2 in
-      Format.fprintf Format.str_formatter "(!(%s) || %s)" pred1_var pred2_var;
-      Format.flush_str_formatter()
+      Format.fprintf fmt "%s = %s;@\n" var pred2_var;
+      Format.fprintf fmt "}@\n";
+      var
+    (* TODO: not safe enough *)
     | Piff(pred1,pred2) ->
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       let pred2_var = self#predicate_named_and_var fmt pred2 in

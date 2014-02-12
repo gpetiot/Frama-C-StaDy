@@ -6,7 +6,7 @@ OPT: -main firstSubset -stady -then -report
 /* @ predicate is_dset{L}(int *a, integer n) =
       \forall integer i; 0 <= i < n ==> (a[i] == 0 || a[i] == 1); */
 
-/*@ requires n >= 0 && n <= 10 && \valid(s+(0..n-1));
+/*@ requires n >= 0 && n <= 3 && \valid(s+(0..n-1));
   @ assigns s[0..n-1];
   @ ensures \forall integer i; 0 <= i < n ==> (s[i] == 0 || s[i] == 1); */
 void firstSubset(int s[], int n) {

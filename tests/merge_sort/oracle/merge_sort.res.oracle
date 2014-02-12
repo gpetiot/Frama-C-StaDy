@@ -3,7 +3,11 @@
 [stady] warning: \separated(table, ret) unsupported
 [stady] warning: \separated(table, ret) unsupported
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
+stady_temp.c:8:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:64:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+stady_temp.c:8:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:64:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort ...
@@ -12,7 +16,7 @@
 [pc] Starting lanceur_pathcrawler__merge_sort_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 20101 test cases
+[stady] 894 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

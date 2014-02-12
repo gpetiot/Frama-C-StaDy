@@ -10,7 +10,7 @@ OPT: -main nextSubset -stady -then -report
   @ predicate lt{L1,L2}(int* a, integer i) =
   @ \at(a[i],L1) < \at(a[i],L2); */
 
-/*@ requires n >= 0 && n <= 5 && \valid(s+(0..n-1)) && is_dset(s,n);
+/*@ requires n >= 0 && n <= 3 && \valid(s+(0..n-1)) && is_dset(s,n);
   @ assigns s[0..n-1];
   @ ensures is_dset(s,n);
   @ ensures -1 <= \result < n;
