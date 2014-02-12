@@ -1,10 +1,10 @@
 [kernel] preprocessing with "gcc -C -E -I.  -dD tests/quick_sort/quick_sort.c"
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:144:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:147:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:144:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:147:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_quick_sort utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_quick_sort ...
@@ -13,7 +13,7 @@ stady_temp.c:144:[kernel] warning: Calling undeclared function free. Old style K
 [pc] Starting lanceur_pathcrawler__quick_sort_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 878 test cases
+[stady] 894 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

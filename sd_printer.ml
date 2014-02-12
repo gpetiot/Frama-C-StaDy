@@ -753,8 +753,8 @@ class sd_printer props terms_at_Pre () = object(self)
 	    begin
 	      let id = Prop_id.to_id prop in
 	      Format.fprintf fmt
-		"@[<v 2>if((%a)<0)pathcrawler_assert_exception(\"%s\",%i);@]@\n"
-		self#term term "Variant non positive!" id;
+		"@[<v 2>if((%a)<0)pathcrawler_assert_exception(\"Variant non positive\",%i);@]@\n"
+		self#term term id;
 	      Prop_id.translated_properties :=
 		prop :: !Prop_id.translated_properties;
 	      begin_loop :=
@@ -765,8 +765,11 @@ class sd_printer props terms_at_Pre () = object(self)
 	      end_loop :=
 		(fun fmt ->
 		  Format.fprintf fmt
-		    "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
-		    self#term term id "Variant non decreasing!" id;
+		    "@[<v 2>if((old_variant_%i)<0)pathcrawler_assert_exception(\"Variant non positive\",%i);@]@\n"
+		    id id;
+		  Format.fprintf fmt
+		    "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"Variant non decreasing\",%i);@]@\n"
+		    self#term term id id;
 		  Prop_id.translated_properties :=
 		    prop :: !Prop_id.translated_properties)
 	      :: !end_loop

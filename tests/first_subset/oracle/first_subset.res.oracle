@@ -1,10 +1,10 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/first_subset/first_subset.c"
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:13:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:63:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:13:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:63:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_firstSubset utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_firstSubset ...
@@ -13,7 +13,7 @@ stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&
 [pc] Starting lanceur_pathcrawler__firstSubset_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 113 test cases
+[stady] 119 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
