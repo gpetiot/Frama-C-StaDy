@@ -30,6 +30,8 @@ let to_do_on_select
       try
 	let testcases = List.rev (States.TestFailures.find prop) in
 	if button_nb = 1 then
+	  let nb = List.length testcases in
+	  if nb > 0 then main_ui#pretty_information "%i counter-examples@." nb;
 	  List.iter (fun (tc_c, l) ->
 	    main_ui#pretty_information "Counter-example (by PathCrawler-VA):@.";
 	    if tc_c <> "" then main_ui#pretty_information "%s@.@\n" tc_c;
