@@ -105,7 +105,7 @@ class sd_printer props terms_at_Pre () = object(self)
     current_function <- None
 
   (* unmodified *)
-  method private opt_funspec fmt funspec =
+  method! private opt_funspec fmt funspec =
     if logic_printer_enabled && not (Cil.is_empty_funspec funspec) then
       Format.fprintf fmt "@[<hv 1>/*@@ %a@ */@]@\n" self#funspec funspec
 
