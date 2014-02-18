@@ -1,7 +1,7 @@
 
 FRAMAC_SHARE	:=$(shell frama-c.byte -print-path)
 FRAMAC_LIBDIR	:=$(shell frama-c.byte -print-libpath)
-PLUGIN_NAME	= PCVA
+PLUGIN_NAME	:= PCVA
 
 PLUGIN_TESTS_DIRS := \
 	behaviors \
@@ -17,7 +17,7 @@ PLUGIN_TESTS_DIRS := \
 	next_subset
 PLUGIN_PTESTS_OPTS := -j 1
 
-PLUGIN_CMO	= \
+PLUGIN_CMO	:= \
 	options \
 	utils \
 	prop_id \
@@ -27,6 +27,6 @@ PLUGIN_CMO	= \
 	native_precond \
 	sd_printer \
 	register
-PLUGIN_GUI_CMO 	= register_gui 
+PLUGIN_GUI_CMO 	:= register_gui 
 include $(FRAMAC_SHARE)/Makefile.dynamic
 
