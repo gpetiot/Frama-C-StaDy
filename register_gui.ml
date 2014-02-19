@@ -28,18 +28,26 @@ let to_do_on_select
   | Pretty_source.PIP prop ->
     begin
       try
-	let testcases = List.rev (States.TestFailures.find prop) in
+	let tbl = States.TestFailures.find prop in
 	if button_nb = 1 then
-	  let nb = List.length testcases in
+	  let nb = States.TestFailures.length() in
 	  if nb > 0 then main_ui#pretty_information "%i counter-examples@." nb;
-	  List.iter (fun (tc_c, l) ->
+	  Datatype.String.Hashtbl.iter_sorted (fun tc (input,conc,symb) ->
 	    main_ui#pretty_information "Counter-example (by PathCrawler-VA):@.";
-	    if tc_c <> "" then main_ui#pretty_information "%s@.@\n" tc_c;
-	    List.iter(fun(s,v) -> main_ui#pretty_information "%s = %s@." s v) l;
+	    if tc <> "" then main_ui#pretty_information "%s@.@\n" tc;
+	    let pretty (s, v) = main_ui #pretty_information "%s = %s@." s v in
+	    main_ui#pretty_information "input:@.";
+	    List.iter pretty input;
+	    main_ui#pretty_information "------------------------@.";
+	    main_ui#pretty_information "concrete output:@.";
+	    List.iter pretty conc;
+	    main_ui#pretty_information "------------------------@.";
+	    main_ui#pretty_information "symbolic output:@.";
+	    List.iter pretty symb;
 	    main_ui#pretty_information "------------------------@."
-	  ) testcases
+	  ) tbl
 	else if button_nb = 3 then
-	  List.iter (fun(tc_c, _) ->
+	  Datatype.String.Hashtbl.iter_sorted (fun tc_c _ ->
 	    let callback() =
 	      let prj = Project.create tc_c in
 	      let sel = State_selection.of_list[Kernel.PreprocessAnnot.self] in
@@ -48,7 +56,7 @@ let to_do_on_select
 	    in
 	    let item_str = Printf.sprintf "_Open %s in new project" tc_c in
 	    ignore (popup_factory#add_item item_str ~callback)
-	  ) testcases
+	  ) tbl
       with
       | _ -> ()
     end;

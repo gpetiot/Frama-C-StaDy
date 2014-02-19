@@ -24,6 +24,11 @@ let process_test_case s =
   let _msg, s = cut_sep ':' s in
   let str_prop, s = try cut_sep '|' s with _ -> s, "" in
   let id_prop = int_of_string str_prop in
+  let kind, s = try cut_sep '|' s with _ -> s, "" in
+  if kind <> "IN" && kind <> "OUTCONC" && kind <> "OUTSYMB" then
+    (Options.Self.debug ~dkey:Options.dkey_socket "wrong value for kind: %s"
+       kind;
+     assert false);
   let add_var_val acc str =
     try let x, y = cut_sep '=' str in (x,y)::acc
     with _ -> acc
@@ -42,8 +47,37 @@ let process_test_case s =
   let f = Filename.concat f func in
   let f = Filename.concat f "testdrivers" in
   let f = Filename.concat f ("TC_" ^ str_tc ^ ".c") in
-  let testcases = try States.TestFailures.find prop with _ -> [] in
-  States.TestFailures.add prop ((f, list_entries)::testcases)
+  try
+      let tbl = States.TestFailures.find prop in
+      try
+	let input,conc,symb = Datatype.String.Hashtbl.find tbl f in
+	let input, conc, symb =
+	  if kind = "IN" then list_entries, conc, symb
+	  else if kind = "OUTCONC" then input, list_entries, symb
+	  else input, conc, list_entries
+	in
+	Datatype.String.Hashtbl.replace tbl f (input,conc,symb);
+	States.TestFailures.replace prop tbl
+      with
+      | _ ->
+	let input, conc, symb =
+	  if kind = "IN" then list_entries, [], []
+	  else if kind = "OUTCONC" then [], list_entries, []
+	  else [], [], list_entries
+	in
+	Datatype.String.Hashtbl.add tbl f (input,conc,symb);
+	States.TestFailures.replace prop tbl
+  with
+  | _ ->
+    (* no counter-example for considered property *)
+    let new_tbl = Datatype.String.Hashtbl.create 32 in
+    let input, conc, symb =
+      if kind = "IN" then list_entries, [], []
+      else if kind = "OUTCONC" then [], list_entries, []
+      else [], [], list_entries
+    in
+    Datatype.String.Hashtbl.add new_tbl f (input,conc,symb);
+    States.TestFailures.add prop new_tbl
 
 let process_nb_test_cases s = States.NbCases.set (int_of_string s)
 let process_final_status () = Prop_id.all_paths := true
