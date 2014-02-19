@@ -54,6 +54,7 @@ let process_final_status () = Prop_id.all_paths := true
    en fin de chaîne, on se redirige vers la fonction de traitement
    correspondante *)
 let process_string s =
+  Options.Self.debug ~dkey:Options.dkey_socket "'%s' received" s;
   try
     let s1, s2 = cut s 3 in
     if s1 = "TC|" then process_test_case s2
