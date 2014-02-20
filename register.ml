@@ -514,9 +514,6 @@ let run() =
       let lengths = lengths_from_requires() in
       let terms_at_Pre = at_from_formals lengths in
       compute_props props terms_at_Pre;
-      
-      (*compute_props props;*)
-      (*second_pass (Options.Temp_File.get()) props terms_at_Pre;    *)
 
 
       (* cleaning *)
