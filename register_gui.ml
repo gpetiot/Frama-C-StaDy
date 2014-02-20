@@ -30,7 +30,7 @@ let to_do_on_select
       try
 	let tbl = States.TestFailures.find prop in
 	if button_nb = 1 then
-	  let nb = States.TestFailures.length() in
+	  let nb = Datatype.String.Hashtbl.length tbl in
 	  if nb > 0 then main_ui#pretty_information "%i counter-examples@." nb;
 	  Datatype.String.Hashtbl.iter_sorted (fun tc (input,conc,symb) ->
 	    main_ui#pretty_information "Counter-example (by PathCrawler-VA):@.";
