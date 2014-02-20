@@ -45,7 +45,18 @@ class subst = object(self)
     | Pif (t,p1,p2) -> Pif (self#subst_term t labels args quantifs,
 			    self#subst_pnamed p1 labels args quantifs,
 			    self#subst_pnamed p2 labels args quantifs)
-    | Plet (v,p) -> Plet (v, self#subst_pnamed p labels args quantifs)
+    | Plet (li,{content=p}) ->
+      let lv = li.l_var_info in
+      begin
+	match li.l_body with
+	| LBnone -> Options.Self.not_yet_implemented "LBnone"
+	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
+	| LBterm t' ->
+	  let t'' = self#subst_term t' labels args quantifs in
+	  self#subst_pred p labels ((lv,t'')::args) quantifs
+	| LBpred _ -> Options.Self.not_yet_implemented "LBpred"
+	| LBinductive _ -> Options.Self.not_yet_implemented "LBinductive"
+      end
     | Pforall (q,p) ->
       let q' = List.map (fun v -> {v with lv_name = "__q_" ^ v.lv_name}) q in
       let q'' = List.combine q q' in
@@ -162,7 +173,18 @@ class subst = object(self)
     | Trange (Some t1, Some t2) ->
       Trange (Some(self#subst_term t1 labels args quantifs),
 	      Some(self#subst_term t2 labels args quantifs))
-    | Tlet (v,t) -> Tlet (v, self#subst_term t labels args quantifs)
+    | Tlet (li,{term_node=t}) ->
+      let lv = li.l_var_info in
+      begin
+	match li.l_body with
+	| LBnone -> Options.Self.not_yet_implemented "LBnone"
+	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
+	| LBterm t' ->
+	  let t'' = self#subst_term t' labels args quantifs in
+	  self#subst_tnode t labels ((lv,t'')::args) quantifs
+	| LBpred _ -> Options.Self.not_yet_implemented "LBpred"
+	| LBinductive _ -> Options.Self.not_yet_implemented "LBinductive"
+      end
 
   method subst_toffset offset labels args quantifs =
     match offset with
