@@ -121,7 +121,7 @@ let lengths_from_requires :
 	    List.iter (fun id_pred ->
 	      let pred = id_pred.ip_content in
 	      let c = new Sd_subst.subst in
-	      let pred = c#subst_pred pred [] [] [] in
+	      let pred = c#subst_pred pred [] [] [] [] in
 
 	      let o = object
 		inherit Visitor.frama_c_inplace

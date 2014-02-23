@@ -514,7 +514,7 @@ let translate() =
   | None -> ()
   | Some bhv ->
     begin
-      let subst pred  = (new Sd_subst.subst)#subst_pnamed pred [] [] [] in
+      let subst pred  = (new Sd_subst.subst)#subst_pnamed pred [] [] [] [] in
       let requires = List.map Logic_const.pred_of_id_pred bhv.b_requires in
       let requires = List.map subst requires in
       let typically = List.filter (fun (s,_,_) -> s = "typically")

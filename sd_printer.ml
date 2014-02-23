@@ -250,7 +250,7 @@ class sd_printer props terms_at_Pre () = object(self)
     let kf = Globals.Functions.find_by_name f.svar.vname in
     let behaviors = Annotations.behaviors kf in
     let pc_assert_exception fmt pred loc msg id =
-      let p = (new Sd_subst.subst)#subst_pred pred [][][] in
+      let p = (new Sd_subst.subst)#subst_pred pred [][][][] in
       let var = self#predicate_and_var fmt p in
       Format.fprintf fmt "@[<hv>%a@[<v 2>if(!%s)"
 	(fun fmt -> self#line_directive ~forcefile:false fmt) loc
@@ -276,7 +276,8 @@ class sd_printer props terms_at_Pre () = object(self)
 	    if b.b_assumes <> [] then
 	      begin
 		let vars = List.map (fun a ->
-		  let p = (new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+		  let p =
+		    (new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
 		  self#predicate_and_var fmt p
 		) b.b_assumes in
 		Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
@@ -285,7 +286,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		List.iter (fun v -> Format.fprintf fmt "%s &&" v) vars;
 		Format.fprintf fmt " 1 ) {@\n"
 	      end;
-	    let p = (new Sd_subst.subst)#subst_pred pred.ip_content [][][] in
+	    let p = (new Sd_subst.subst)#subst_pred pred.ip_content [][][][] in
 	    let var = self#predicate_and_var fmt p in
 	    Format.fprintf fmt "@[<hv>%a@[<v 2>if (!%s) return 0;@]@]"
 	      (fun fmt -> self#line_directive ~forcefile:false fmt) pred.ip_loc
@@ -315,7 +316,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		begin
 		  let vars = List.map (fun a ->
 		    let p =
-		      (new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+		      (new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
 		    self#predicate_and_var fmt p
 		  ) b.b_assumes in
 		  Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
@@ -359,7 +360,8 @@ class sd_printer props terms_at_Pre () = object(self)
 		    begin
 		      let vars = List.map (fun a ->
 			let p =
-			  (new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+			  (new Sd_subst.subst)#subst_pred a.ip_content [][][][]
+			in
 			self#predicate_and_var fmt p
 		      ) b.b_assumes in
 		      Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
@@ -516,7 +518,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	  ) behaviors
 	in
 	let pc_assert_exception fmt pred msg id prop =
-	  let p = (new Sd_subst.subst)#subst_pnamed pred [][][] in
+	  let p = (new Sd_subst.subst)#subst_pnamed pred [][][][] in
 	  let var = self#predicate_named_and_var fmt p in
 	  Format.fprintf fmt
 	    "@[<v 2>if(!%s) pathcrawler_assert_exception(\"%s\", %i);@]@\n"
@@ -527,7 +529,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	match ca.annot_content with
 	| AStmtSpec (_,bhvs) ->
 	  let pc_assert_exception fmt pred msg id =
-	    let p = (new Sd_subst.subst)#subst_pred pred [][][] in
+	    let p = (new Sd_subst.subst)#subst_pred pred [][][][] in
 	    let var = self#predicate_and_var fmt p in
 	    Format.fprintf fmt
 	      "@[<v 2>if(!%s) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
@@ -539,7 +541,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		let vars = List.map (fun assumes ->
 		  List.map (fun a ->
 		    let p =
-		      (new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+		      (new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
 		    self#predicate_and_var fmt p
 		  ) assumes
 		) behaviors in
@@ -557,7 +559,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		  begin
 		    let vars = List.map (fun a ->
 		      let p =
-			(new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+			(new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
 		      self#predicate_and_var fmt p
 		    ) b.b_assumes in
 		    Format.fprintf fmt "@[<v 2>if (";
@@ -606,7 +608,8 @@ class sd_printer props terms_at_Pre () = object(self)
 			begin
 			  let vars = List.map (fun a ->
 			    let p =
-			      (new Sd_subst.subst)#subst_pred a.ip_content[][][]
+			      (new Sd_subst.subst)#subst_pred a.ip_content
+				[][][][]
 			    in
 			    self#predicate_and_var fmt p
 			  ) b.b_assumes in
@@ -646,7 +649,8 @@ class sd_printer props terms_at_Pre () = object(self)
 		    let vars = List.map (fun assumes ->
 		      List.map (fun a ->
 			let p =
-			  (new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+			  (new Sd_subst.subst)#subst_pred a.ip_content [][][][]
+			in
 			self#predicate_and_var fmt p
 		      ) assumes
 		    ) behaviors in
@@ -676,7 +680,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		  let vars = List.map (fun assumes ->
 		    List.map (fun a ->
 		      let p =
-			(new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+			(new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
 		      self#predicate_and_var fmt p
 		    ) assumes
 		  ) behaviors in
@@ -710,7 +714,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		  let vars = List.map (fun assumes ->
 		    List.map (fun a ->
 		      let p =
-			(new Sd_subst.subst)#subst_pred a.ip_content [][][] in
+			(new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
 		      self#predicate_and_var fmt p
 		    ) assumes
 		  ) behaviors in
@@ -728,7 +732,8 @@ class sd_printer props terms_at_Pre () = object(self)
 		      let vars = List.map (fun assumes ->
 			List.map (fun a ->
 			  let p =
-			    (new Sd_subst.subst)#subst_pred a.ip_content [][][]
+			    (new Sd_subst.subst)#subst_pred a.ip_content
+			      [][][][]
 			  in
 			  self#predicate_and_var fmt p
 			) assumes

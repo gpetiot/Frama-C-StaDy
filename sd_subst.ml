@@ -8,43 +8,49 @@ class subst = object(self)
     pred
     (labels:(logic_label*logic_label)list)
     (args:(logic_var*term)list)
+    (preds:(logic_var*predicate)list)
     (quantifs:(logic_var*logic_var)list) =
     match pred with
     | Pfalse -> Pfalse
     | Ptrue -> Ptrue
     | Papp (li,lassoc,params) ->
-      let new_labels =
-	List.map (fun (x,y) -> x, self#subst_label y labels) lassoc in
-      let new_args = List.map2 (fun x y -> x,y) li.l_profile params in
-      let new_args =
-	List.map (fun (x,y) ->
-	  x, self#subst_term y labels args quantifs) new_args in
-      begin
-	match li.l_body with
-	| LBnone -> Options.Self.not_yet_implemented "LBnone"
-	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
-	| LBterm _ -> Options.Self.not_yet_implemented "LBterm"
-	| LBpred {content=p} -> self#subst_pred p new_labels new_args quantifs
-	| LBinductive _ -> Options.Self.not_yet_implemented "LBinductive"
-      end
+      if List.mem_assoc li.l_var_info preds then
+	List.assoc li.l_var_info preds
+      else
+	let new_labels =
+	  List.map (fun (x,y) -> x, self#subst_label y labels) lassoc in
+	let new_args = List.map2 (fun x y -> x,y) li.l_profile params in
+	let new_args =
+	  List.map (fun (x,y) ->
+	    x, self#subst_term y labels args quantifs) new_args in
+	begin
+	  match li.l_body with
+	  | LBnone -> Options.Self.not_yet_implemented "LBnone"
+	  | LBreads _ -> Options.Self.not_yet_implemented "LBreads"
+	  | LBterm _ -> Options.Self.not_yet_implemented "LBterm"
+	  | LBpred {content=p} ->
+	    self#subst_pred p new_labels new_args preds quantifs
+	  | LBinductive _ -> Options.Self.not_yet_implemented "LBinductive"
+	end
     | Pseparated t -> Pseparated t
     | Prel (rel,t1,t2) -> Prel (rel,
 				self#subst_term t1 labels args quantifs,
 				self#subst_term t2 labels args quantifs)
-    | Pand (p1, p2) -> Pand (self#subst_pnamed p1 labels args quantifs,
-			     self#subst_pnamed p2 labels args quantifs)
-    | Por (p1, p2) -> Por (self#subst_pnamed p1 labels args quantifs,
-			   self#subst_pnamed p2 labels args quantifs)
-    | Pxor (p1, p2) -> Pxor (self#subst_pnamed p1 labels args quantifs,
-			     self#subst_pnamed p2 labels args quantifs)
-    | Pimplies (p1, p2) -> Pimplies (self#subst_pnamed p1 labels args quantifs,
-				     self#subst_pnamed p2 labels args quantifs)
-    | Piff (p1, p2) -> Piff (self#subst_pnamed p1 labels args quantifs,
-			     self#subst_pnamed p2 labels args quantifs)
-    | Pnot p -> Pnot (self#subst_pnamed p labels args quantifs)
+    | Pand (p1, p2) -> Pand (self#subst_pnamed p1 labels args preds quantifs,
+			     self#subst_pnamed p2 labels args preds quantifs)
+    | Por (p1, p2) -> Por (self#subst_pnamed p1 labels args preds quantifs,
+			   self#subst_pnamed p2 labels args preds quantifs)
+    | Pxor (p1, p2) -> Pxor (self#subst_pnamed p1 labels args preds quantifs,
+			     self#subst_pnamed p2 labels args preds quantifs)
+    | Pimplies (p1, p2) ->
+      Pimplies (self#subst_pnamed p1 labels args preds quantifs,
+		self#subst_pnamed p2 labels args preds quantifs)
+    | Piff (p1, p2) -> Piff (self#subst_pnamed p1 labels args preds quantifs,
+			     self#subst_pnamed p2 labels args preds quantifs)
+    | Pnot p -> Pnot (self#subst_pnamed p labels args preds quantifs)
     | Pif (t,p1,p2) -> Pif (self#subst_term t labels args quantifs,
-			    self#subst_pnamed p1 labels args quantifs,
-			    self#subst_pnamed p2 labels args quantifs)
+			    self#subst_pnamed p1 labels args preds quantifs,
+			    self#subst_pnamed p2 labels args preds quantifs)
     | Plet (li,{content=p}) ->
       let lv = li.l_var_info in
       begin
@@ -53,19 +59,23 @@ class subst = object(self)
 	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
 	| LBterm t' ->
 	  let t'' = self#subst_term t' labels args quantifs in
-	  self#subst_pred p labels ((lv,t'')::args) quantifs
-	| LBpred _ -> Options.Self.not_yet_implemented "LBpred"
+	  self#subst_pred p labels ((lv,t'')::args) preds quantifs
+	| LBpred {content=p'} ->
+	  let p'' = self#subst_pred p' labels args preds quantifs in
+	  self#subst_pred p labels args ((lv,p'')::preds) quantifs
 	| LBinductive _ -> Options.Self.not_yet_implemented "LBinductive"
       end
     | Pforall (q,p) ->
       let q' = List.map (fun v -> {v with lv_name = "__q_" ^ v.lv_name}) q in
       let q'' = List.combine q q' in
-      Pforall(q',self#subst_pnamed p labels args (List.rev_append q'' quantifs))
+      let new_quantifs = List.rev_append q'' quantifs in
+      Pforall(q',self#subst_pnamed p labels args preds new_quantifs)
     | Pexists (q,p) ->
       let q' = List.map (fun v -> {v with lv_name = "__q_" ^ v.lv_name}) q in
       let q'' = List.combine q q' in
-      Pexists (q,self#subst_pnamed p labels args (List.rev_append q'' quantifs))
-    | Pat (p,l) -> Pat (self#subst_pnamed p labels args quantifs,
+      let new_quantifs = List.rev_append q'' quantifs in
+      Pexists (q,self#subst_pnamed p labels args preds new_quantifs)
+    | Pat (p,l) -> Pat (self#subst_pnamed p labels args preds quantifs,
 			self#subst_label l labels)
     | Pvalid_read (l,t) -> Pvalid_read (self#subst_label l labels,
 					self#subst_term t labels args quantifs)
@@ -163,8 +173,10 @@ class subst = object(self)
     | Tcomprehension (t,q,None) ->
       Tcomprehension (self#subst_term t labels args quantifs, q, None)
     | Tcomprehension (t,q,Some p) ->
+      Options.Self.warning
+	"Tcomprehension with predicate: \\let bindings ignored";
       Tcomprehension (self#subst_term t labels args quantifs, q,
-		      Some (self#subst_pnamed p labels args quantifs))
+		      Some (self#subst_pnamed p labels args [] quantifs))
     | Trange (None, None) -> Trange (None, None)
     | Trange(None,Some t)-> Trange(None,
 				   Some(self#subst_term t labels args quantifs))
@@ -197,6 +209,6 @@ class subst = object(self)
   method subst_term t labels args quantifs =
     { t with term_node = self#subst_tnode t.term_node labels args quantifs }
 
-  method subst_pnamed p labels args quantifs =
-    { p with content = self#subst_pred p.content labels args quantifs }
+  method subst_pnamed p labels args preds quantifs =
+    { p with content = self#subst_pred p.content labels args preds quantifs }
 end
