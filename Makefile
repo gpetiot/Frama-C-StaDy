@@ -24,7 +24,8 @@ PLUGIN_TESTS_DIRS := \
 	deleteSubstr2b \
 	deleteSubstr2c \
 	deleteSubstr3 \
-	deleteSubstr4
+	deleteSubstr4 \
+	sum_array
 PLUGIN_PTESTS_OPTS := -j 1
 
 PLUGIN_CMO	:= \
