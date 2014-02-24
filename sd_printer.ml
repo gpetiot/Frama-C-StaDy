@@ -308,7 +308,7 @@ class sd_printer props terms_at_Pre () = object(self)
     | _ ->
       let lhost = self#term_lhost_and_var fmt tlhost in
       let offset = self#term_offset_and_var fmt toffset in
-      lhost ^ offset
+      "(" ^ lhost ^ ")" ^ offset
 
   method private term_lhost_and_var fmt lhost =
     match lhost with
