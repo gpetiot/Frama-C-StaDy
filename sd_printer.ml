@@ -277,7 +277,7 @@ class sd_printer props terms_at_Pre () = object(self)
     | TResult _ -> assert false
     | TMem t ->
       let v = self#term_and_var fmt t in
-      "*" ^ v
+      "*(" ^ v ^ ")"
 
   method private term_offset_and_var fmt toffset =
     match toffset with
