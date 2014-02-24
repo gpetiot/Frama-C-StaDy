@@ -182,14 +182,8 @@ class sd_printer props terms_at_Pre () = object(self)
   (* unmodified *)
   method! term fmt t = self#term_node fmt t
 
-  (* special treatment for \old terms *)
   method! term_node fmt t =
     match t.term_node with
-    | TConst(Integer(i,_)) ->
-      if (Integer.to_string i) = "-2147483648" then
-	Format.fprintf fmt "(-2147483647-1)"
-      else
-	super#term_node fmt t
     | Tat(_, StmtLabel _) ->
       if current_function <> None then
 	Options.Self.warning "%a unsupported" Printer.pp_term t;
@@ -216,8 +210,89 @@ class sd_printer props terms_at_Pre () = object(self)
 	      Options.Self.warning "%a unsupported" Printer.pp_term t;
 	    super#term_node fmt t
 	  end
-    | _ -> super#term_node fmt t	 
+    | _ -> super#term_node fmt t
+
+  method private term_and_var fmt t = self#term_node_and_var fmt t
+
+  (* special treatment for \old terms *)
+  method private term_node_and_var fmt t =
+    match t.term_node with
+    | TConst(Integer(i,_)) ->
+      if (Integer.to_string i) = "-2147483648" then
+	"(-2147483647-1)"
+      else
+	(Format.fprintf Format.str_formatter "%a" super#term_node t;
+	 Format.flush_str_formatter())
+    | Tat(_, StmtLabel _) ->
+      if current_function <> None then
+	Options.Self.warning "%a unsupported" Printer.pp_term t;
+      Format.fprintf Format.str_formatter "%a" super#term_node t;
+      Format.flush_str_formatter()
+    | Tat(term,LogicLabel(_,stringlabel)) ->
+      if stringlabel = "Old" || stringlabel = "Pre" then
+	begin
+	  let is_ptr =
+	    match term.term_node with TLval(TMem _,_) -> true | _ -> false in
+	  if is_ptr then in_old_ptr <- true;
+	  in_old_term <- true;
+	  let v = self#term_and_var fmt term in
+	  if is_ptr then in_old_ptr <- false;
+	  in_old_term <- false;
+	  v
+	end
+      else
+	(* label Post is only encoutered in post-conditions, and \at(t,Post)
+	   in a post-condition is t *)
+	if stringlabel = "Post" then
+	  self#term_and_var fmt term
+	else
+	  begin
+	    if current_function <> None then
+	      Options.Self.warning "%a unsupported" Printer.pp_term t;
+	    Format.fprintf Format.str_formatter "%a" super#term_node t;
+	    Format.flush_str_formatter()
+	  end
+    | TLogic_coerce (_, t) -> self#term_and_var fmt t
+    | TCoerce (t, _) -> self#term_and_var fmt t
+    | TLval tlval -> self#tlval_and_var fmt tlval
+    | _ ->
+      Format.fprintf Format.str_formatter "%a" super#term_node t;
+      Format.flush_str_formatter()
       
+  method private tlval_and_var fmt (tlhost, toffset) =
+    match tlhost with
+    | TResult _ ->
+      Format.fprintf Format.str_formatter "%a" self#term_lval (tlhost,toffset);
+      Format.flush_str_formatter()
+    | _ ->
+      let lhost = self#term_lhost_and_var fmt tlhost in
+      let offset = self#term_offset_and_var fmt toffset in
+      lhost ^ offset
+
+  method private term_lhost_and_var fmt lhost =
+    match lhost with
+    | TVar lv ->
+      Format.fprintf Format.str_formatter "%a" self#logic_var lv;
+      Format.flush_str_formatter()
+    | TResult _ -> assert false
+    | TMem t ->
+      let v = self#term_and_var fmt t in
+      "*" ^ v
+
+  method private term_offset_and_var fmt toffset =
+    match toffset with
+    | TNoOffset -> ""
+    | TField (fi, tof) ->
+      let v = self#term_offset_and_var fmt tof in
+      "." ^ fi.fname ^ v
+    | TModel (mi, tof) ->
+      let v = self#term_offset_and_var fmt tof in
+      "." ^ mi.mi_name ^ v
+    | TIndex (t, tof) ->
+      let t = self#term_and_var fmt t in
+      let v = self#term_offset_and_var fmt tof in
+      "[" ^ t ^ "]" ^ v
+
   (* modify result_varinfo when the function returns something *)
   method private compute_result_varinfo f =
     List.iter (fun stmt ->
@@ -411,12 +486,14 @@ class sd_printer props terms_at_Pre () = object(self)
 	      let stars =
 		stars "" ((List.length terms)-(List.length indices)-1) in
 	      let ty = extract_ptr_typ v.vtype in
-	      Format.fprintf fmt "old_ptr_%s%s = malloc((%a)*sizeof(%a%s));@\n"
-		v.vname all_indices self#term h (self#typ None)	ty stars;
+	      let h' = self#term_and_var fmt h in
+	      Format.fprintf fmt "old_ptr_%s%s = malloc((%s)*sizeof(%a%s));@\n"
+		v.vname all_indices h' (self#typ None) ty stars;
 	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
 	      Format.fprintf fmt "int %s;@\n" iterator;
-	      Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
-		iterator iterator self#term h iterator;
+	      let h' = self#term_and_var fmt h in
+	      Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
+		iterator iterator h' iterator;
 	      iter_counter := !iter_counter + 1;
 	      alloc_aux (Utils.append_end indices iterator) t;
 	      Format.fprintf fmt "}@\n"
@@ -450,8 +527,9 @@ class sd_printer props terms_at_Pre () = object(self)
 	      | h :: t ->
 		let iterator = "__stady_iter_" ^(string_of_int !iter_counter) in
 		Format.fprintf fmt "int %s;@\n" iterator;
-		Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
-		  iterator iterator self#term h iterator;
+		let h' = self#term_and_var fmt h in
+		Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
+		  iterator iterator h' iterator;
 		let all_indices = List.fold_left concat_indice "" indices in
 		iter_counter := !iter_counter + 1;
 		let indices = Utils.append_end indices iterator in
@@ -757,24 +835,27 @@ class sd_printer props terms_at_Pre () = object(self)
 	  if List.mem prop props then
 	    begin
 	      let id = Prop_id.to_id prop in
+	      let term' = self#term_and_var fmt term in
 	      Format.fprintf fmt
-		"@[<v 2>if((%a)<0)pathcrawler_assert_exception(\"Variant non positive\",%i);@]@\n"
-		self#term term id;
+		"@[<v 2>if((%s)<0)pathcrawler_assert_exception(\"Variant non positive\",%i);@]@\n"
+		term' id;
 	      Prop_id.translated_properties :=
 		prop :: !Prop_id.translated_properties;
 	      begin_loop :=
 		(fun fmt ->
+		  let term' = self#term_and_var fmt term in
 		  Format.fprintf
-		    fmt "int old_variant_%i = %a;\n" id self#term term)
+		    fmt "int old_variant_%i = %s;\n" id term')
 	      :: !begin_loop;
 	      end_loop :=
 		(fun fmt ->
 		  Format.fprintf fmt
 		    "@[<v 2>if((old_variant_%i)<0)pathcrawler_assert_exception(\"Variant non positive\",%i);@]@\n"
 		    id id;
+		  let term' = self#term_and_var fmt term in
 		  Format.fprintf fmt
-		    "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"Variant non decreasing\",%i);@]@\n"
-		    self#term term id id;
+		    "@[<v 2>if((%s) >= old_variant_%i) pathcrawler_assert_exception(\"Variant non decreasing\",%i);@]@\n"
+		    term' id id;
 		  Prop_id.translated_properties :=
 		    prop :: !Prop_id.translated_properties)
 	      :: !end_loop
@@ -961,13 +1042,15 @@ class sd_printer props terms_at_Pre () = object(self)
     Format.fprintf fmt "int %s = %i;@\n" var (if forall then 1 else 0);
     Format.fprintf fmt "{@\n";
     Format.fprintf fmt "int %s;@\n" iter;
-    Format.fprintf fmt "for (%s = %a%s; %s %a %a && %s %s; %s++) {@\n"
+    let t1' = self#term_and_var fmt t1 in
+    let t2' = self#term_and_var fmt t2 in
+    Format.fprintf fmt "for (%s = %s%s; %s %a %s && %s %s; %s++) {@\n"
       iter
-      self#term t1
+      t1'
       (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
       iter
       self#relation r2
-      self#term t2
+      t2'
       (if forall then "" else "!")
       var
       iter;
@@ -988,9 +1071,10 @@ class sd_printer props terms_at_Pre () = object(self)
     | Pfalse -> "0"
     | Pvalid(_,term) | Pvalid_read(_,term) ->
       let x, y = extract_terms term in
+      let x',y' = self#term_and_var fmt x, self#term_and_var fmt y in
       Format.fprintf Format.str_formatter
-	"((%a) >= 0 && (pathcrawler_dimension(%a) > (%a)))"
-	self#term y self#term x self#term y;
+	"((%s) >= 0 && (pathcrawler_dimension(%s) > (%s)))"
+	y' x' y';
       Format.flush_str_formatter()
     | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
       self#quantif_predicate_and_var ~forall:true fmt logic_vars hyps goal
@@ -1031,8 +1115,9 @@ class sd_printer props terms_at_Pre () = object(self)
 	pred1_var pred2_var pred2_var pred1_var;
       Format.flush_str_formatter()
     | Prel(rel,t1,t2) ->
-      Format.fprintf Format.str_formatter "(%a %a %a)"
-	self#term t1 self#relation rel self#term t2;
+      let t1', t2' = self#term_and_var fmt t1, self#term_and_var fmt t2 in
+      Format.fprintf Format.str_formatter "(%s %a %s)"
+	t1' self#relation rel t2';
       Format.flush_str_formatter()
     | Pat (p,_) ->
       Options.Self.warning "%a unsupported!" Printer.pp_predicate pred;
