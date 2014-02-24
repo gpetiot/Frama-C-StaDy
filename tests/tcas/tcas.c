@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main entry_point -stady -then -report
+OPT: -main entry_point -stady -stady-msg-key generated-c -then -report
 */
 
 

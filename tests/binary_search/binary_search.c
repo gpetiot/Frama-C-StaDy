@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main binary_search -stady -then -report
+OPT: -main binary_search -stady -stady-msg-key generated-c -then -report
 */
 
 /* lemma div_by_2_def: \forall integer n; 0 <= n - 2 * (n / 2) <= 1; */

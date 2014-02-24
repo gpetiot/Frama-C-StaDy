@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main merge_sort -stady -then -report
+OPT: -main merge_sort -stady -stady-msg-key generated-c -then -report
 */
 
 /*@ requires \valid(A+(iLeft..iRight-1));

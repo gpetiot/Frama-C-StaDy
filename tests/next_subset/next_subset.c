@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main nextSubset -stady -then -report
+OPT: -main nextSubset -stady -stady-msg-key generated-c -then -report
 */
 
 /*@ predicate is_dset{L}(int *a, integer n) =
