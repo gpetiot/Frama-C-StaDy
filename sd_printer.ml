@@ -77,7 +77,7 @@ let rec compute_guards
 
 
 
-
+type ext_quantifier = Max | Min | Sum | Product | NumOf
 
 
 
@@ -214,6 +214,45 @@ class sd_printer props terms_at_Pre () = object(self)
 
   method private term_and_var fmt t = self#term_node_and_var fmt t
 
+  (* \min, \max, \sum, \product and \numof *)
+  method private lambda_and_var fmt li lower upper q t =
+    let builtin_name = li.l_var_info.lv_name in
+    let var = "__stady_term_" ^ (string_of_int pred_cpt) in
+    let iter = q.lv_name in
+    let kind = if builtin_name = "\\min" then Min
+      else if builtin_name = "\\max" then Max
+      else if builtin_name = "\\sum" then Sum
+      else if builtin_name = "\\product" then Product
+      else if builtin_name = "\\numof" then NumOf
+      else assert false
+    in
+    pred_cpt <- pred_cpt + 1;
+    Format.fprintf fmt "int %s = %s;@\n"
+      var
+      (match kind with
+      | Sum | NumOf -> "0"
+      | Product -> "1"
+      | Min | Max -> "-1" (* undefined here *) );
+    Format.fprintf fmt "{@\n";
+    Format.fprintf fmt "int %s;@\n" iter;
+    let low = self#term_and_var fmt lower in
+    let up = self#term_and_var fmt upper in
+    Format.fprintf fmt "for(%s=%s; %s <= %s; %s++) {@\n" iter low iter up iter;
+    let lambda_term = self#term_and_var fmt t in
+    begin
+      match kind with
+      | Sum -> Format.fprintf fmt "%s += %s;@\n" var lambda_term;
+      | NumOf -> Format.fprintf fmt "if(%s) { %s ++; }@\n" lambda_term var;
+      | Product -> Format.fprintf fmt "%s *= %s;@\n" var lambda_term;
+      | Min -> Format.fprintf fmt "if(%s < %s) { %s = %s; }@\n"
+	lambda_term var var lambda_term;
+      | Max -> Format.fprintf fmt "if(%s > %s) { %s = %s; }@\n"
+	lambda_term var var lambda_term;
+    end;
+    Format.fprintf fmt "}@\n";
+    Format.fprintf fmt "}@\n";
+    var
+
   (* special treatment for \old terms *)
   method private term_node_and_var fmt t =
     match t.term_node with
@@ -223,6 +262,8 @@ class sd_printer props terms_at_Pre () = object(self)
       else
 	(Format.fprintf Format.str_formatter "%a" super#term_node t;
 	 Format.flush_str_formatter())
+    | Tapp (li,[],[lower;upper;{term_node=Tlambda([q],t)}]) ->
+      self#lambda_and_var fmt li lower upper q t
     | Tat(_, StmtLabel _) ->
       if current_function <> None then
 	Options.Self.warning "%a unsupported" Printer.pp_term t;
