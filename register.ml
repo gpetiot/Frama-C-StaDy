@@ -130,7 +130,7 @@ let lengths_from_requires :
 		  match p with
 		  | Pvalid(_, t) | Pvalid_read(_, t) ->
 		    begin
-		      (*try*)
+		      try
 			let varinfo, term = extract_from_valid t in
 			let terms =
 			  try Cil_datatype.Varinfo.Hashtbl.find kf_tbl varinfo
@@ -140,8 +140,8 @@ let lengths_from_requires :
 			Cil_datatype.Varinfo.Hashtbl.replace
 			  kf_tbl varinfo terms;
 			Cil.DoChildren
-		      (*with
-		      | _ -> Cil.DoChildren*)
+		      with
+		      | _ -> Cil.DoChildren
 		    end
 		  | _ -> Cil.DoChildren
 	      end
