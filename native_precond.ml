@@ -159,40 +159,6 @@ let pp_pl_rel = (new pl_printer)#pl_rel
 let pp_pl_quantif = (new pl_printer)#pl_quantif
 
 
-(*
-type index =
-| I of Integer.t
-| All
-| L of logic_var
-type simple_var = varinfo
-type complex_var =
-| CVVCont of varinfo * index
-| CVCCont of complex_var * index
-type var =
-| Simple of simple_var
-| Complex of complex_var
-| Logic of logic_var
-type compo_var =
-| Dim of var
-| Var of var
-| Int of Integer.t
-| Float of float
-| Plus of compo_var * compo_var
-| Minus of compo_var * compo_var
-| Mult of compo_var * compo_var
-| Div of compo_var * compo_var
-type simple_domain =
-| SDVarInt of simple_var * Integer.t * Integer.t
-| SDVarFloat of simple_var * float * float
-| SDDimInt of simple_var * Integer.t * Integer.t
-type complex_domain =
-| CDVarInt of complex_var * Integer.t * Integer.t
-| CDVarFloat of complex_var * float * float
-| CDDimInt of complex_var * Integer.t * Integer.t
-type compo_rel = relation * compo_var * compo_var
-type quantif_compo_rel = logic_var list * compo_rel list * compo_rel
-*)
-
 
 
 let prolog_header : string =
@@ -261,16 +227,6 @@ let fieldinfo_to_int : fieldinfo -> Integer.t =
     in
     aux 0 fi.fcomp.cfields
 
-
-(*
-(* term_lval -> var *)
-let rec tlval_to_prolog tlval =
-  match tlval with
- 
-  
-  
-  
-*)
 
 
 
