@@ -3,7 +3,7 @@ open Cil_types
 
 
 let output chan str =
-  Options.Self.debug ~dkey:Options.dkey_native_precond "%s" str;
+  Options.Self.debug ~dkey:Options.dkey_generated_pl "%s" str;
   output_string chan str
     
 

@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main bubble_sort -stady -stady-msg-key generated-c -then -report
+OPT: -main bubble_sort -stady -stady-msg-key generated-c,generated-pl -then -report
 */
 
 /*@ requires 0 < n <= 3;

@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main f -stady -stady-msg-key generated-c -then -report
+OPT: -main f -stady -stady-msg-key generated-c,generated-pl -then -report
 */
 
 /*@ behavior X:

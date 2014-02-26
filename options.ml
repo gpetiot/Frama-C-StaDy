@@ -63,6 +63,7 @@ end)
 (* Debug Keys *)
 
 let dkey_native_precond = Self.register_category "native-precond"
+let dkey_generated_pl = Self.register_category "generated-pl"
 let dkey_socket = Self.register_category "socket"
 let dkey_lengths = Self.register_category "lengths"
 let dkey_at = Self.register_category "at"
