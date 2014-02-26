@@ -25,12 +25,146 @@ let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
 
+
+
+type pl_constant =
+| PLInt of Integer.t
+| PLFloat of float
+
+type pl_term =
+| PLBinOp of pl_term * binop * pl_term
+| PLConst of pl_constant
+| PLDim of pl_term
+| PLContAll of pl_term
+| PLCont of pl_term * pl_term
+| PLLVar of logic_var
+| PLCVar of varinfo
+
+type pl_domain =
+| PLIntDom of pl_term * Integer.t * Integer.t
+| PLFloatDom of pl_term * float * float
+
+type pl_rel = pl_term * relation * pl_term
+
+type pl_quantif = logic_var list * pl_rel list * pl_rel
+
+
+
+
+
+let domains = ref ([] : pl_domain list)
+let unquantifs = ref ([] : pl_rel list)
+let quantifs = ref ([] : pl_quantif list)
+
+
+let rec is_complex_term : pl_term -> bool =
+  function
+  | PLBinOp (t1,_,t2) -> is_complex_term t1 || is_complex_term t2
+  | PLDim t -> is_complex_term t
+  | PLContAll _ | PLCont _ -> true
+  | PLConst _ | PLLVar _ | PLCVar _ -> false
+
+let is_complex_domain : pl_domain -> bool =
+  function PLIntDom (t,_,_)| PLFloatDom (t,_,_) -> is_complex_term t
+
+
+let virgule : string -> string -> string =
+  fun x y -> if x = "" then y else (x ^ ", " ^ y)
+
+let fold_virgule : string list -> string =
+  fun l -> List.fold_left virgule "" l
+
+
+
+
+class pl_printer = object(self)
+  method pl_constant : pl_constant -> string =
+    function
+    | PLInt i -> Integer.to_string i
+    | PLFloat f -> string_of_float f
+      
+  method is_float : pl_term -> bool =
+    function
+    | PLConst (PLInt _) | PLDim _ -> false
+    | PLConst (PLFloat _) -> true
+    | PLContAll t' | PLBinOp (t',_,_) | PLCont (t',_) -> self#is_float t'
+    | PLLVar lv -> Cil.isLogicFloatType lv.lv_type
+    | PLCVar v -> Cil.isFloatingType v.vtype
+
+  method binop : binop -> string =
+    function
+    | PlusA | PlusPI | IndexPI -> "+"
+    | MinusA -> "-"
+    | Mult -> "*"
+    | Div -> "/"
+    | _ -> assert false
+
+  method pl_term : pl_term -> string =
+    function
+    | PLBinOp (t1, b, t2) ->
+      Printf.sprintf "%s(%s(math), %s, %s)"
+	(self#binop b)
+	(if self#is_float t1 then "real" else "int")
+	(self#pl_term t1)
+	(self#pl_term t2)
+    | PLConst c -> self#pl_constant c
+    | PLDim t' -> Printf.sprintf "dim(%s)" (self#pl_term t')
+    | PLContAll t' -> Printf.sprintf "cont(%s,_)" (self#pl_term t')
+    | PLCont (t1, t2) ->
+      Printf.sprintf "cont(%s,%s)" (self#pl_term t1) (self#pl_term t2)
+    | PLLVar lv -> String.uppercase lv.lv_name
+    | PLCVar v -> Printf.sprintf "'%s'" v.vname
+
+  method pl_domain : bool -> pl_domain -> string =
+    fun complex ->
+      function
+      | PLIntDom (t',a,b) -> Printf.sprintf "%s, %sint([%s..%s])"
+	(self#pl_term t')
+	(if complex then "[], " else "")
+	(Integer.to_string a)
+	(Integer.to_string b)
+      | PLFloatDom (t',a,b) -> Printf.sprintf "%s, %sfloat([(%f)..(%f)])"
+	(self#pl_term t') (if complex then "[], " else "") a b
+
+  method relation : relation -> string =
+    function
+    | Rlt -> "inf"
+    | Rgt -> "sup"
+    | Rle -> "infegal"
+    | Rge -> "supegal"
+    | Req -> "egal"
+    | Rneq -> "diff"
+
+  method pl_rel : pl_rel -> string =
+    fun (t1,r,t2) ->
+      Printf.sprintf "cond(%s,%s,%s,pre)"
+	(self#relation r)
+	(self#pl_term t1)
+	(self#pl_term t2)
+
+  method pl_quantif : pl_quantif -> string =
+    fun (lvars, compo_rels, (t1,r,t2)) ->
+      Printf.sprintf "uq_cond([%s],[%s],%s,%s,%s)"
+	(fold_virgule (List.map (fun z -> String.uppercase z.lv_name) lvars))
+	(fold_virgule (List.map self#pl_rel compo_rels))
+	(self#relation r)
+	(self#pl_term t1)
+	(self#pl_term t2)
+end
+
+
+let pp_pl_term = (new pl_printer)#pl_term
+let pp_pl_domain = (new pl_printer)#pl_domain
+let pp_pl_rel = (new pl_printer)#pl_rel
+let pp_pl_quantif = (new pl_printer)#pl_quantif
+
+
+(*
 type index =
 | I of Integer.t
 | All
 | L of logic_var
-type simple_var =
-  varinfo
+type simple_var = varinfo
 type complex_var =
 | CVVCont of varinfo * index
 | CVCCont of complex_var * index
@@ -55,176 +189,13 @@ type complex_domain =
 | CDVarInt of complex_var * Integer.t * Integer.t
 | CDVarFloat of complex_var * float * float
 | CDDimInt of complex_var * Integer.t * Integer.t
-type compo_rel =
-  relation * compo_var * compo_var
-type quantif_compo_rel =
-  logic_var list * compo_rel list * compo_rel
-    
+type compo_rel = relation * compo_var * compo_var
+type quantif_compo_rel = logic_var list * compo_rel list * compo_rel
+*)
 
 
 
-let simple_domains = ref ([] : simple_domain list)
-let complex_domains = ref ([] : complex_domain list)
-let unquantifs = ref ([]: compo_rel list)
-let quantifs = ref ([] : quantif_compo_rel list)
-
-
-(* simple_domain -> unit *)
-let add_simple_domain x = simple_domains := x :: !simple_domains
-
-(* complex_domain -> unit *)
-let add_complex_domain x = complex_domains := x :: !complex_domains
-
-(* compo_rel -> unit *)
-let add_unquantif x = unquantifs := x :: !unquantifs
-
-(* quantif_compo_rel -> unit *)
-let add_quantif x = quantifs := x :: !quantifs
-
-(* index -> index -> bool *)
-let same_index i j =
-  match (i,j) with
-  | I v, I w -> v = w
-  | All, All -> true
-  | _ -> false
-
-(* simple_var -> simple_var -> bool *)
-let same_simple_var v w = v.vname = w.vname
-
-(* complex_var -> complex_var -> bool *)
-let rec same_complex_var v w =
-  match (v,w) with
-  | CVVCont (v,i), CVVCont (w,j) -> v.vname = w.vname && same_index i j
-  | CVCCont (v,i), CVCCont (w,j) -> same_complex_var v w && same_index i j
-  | _ -> false
-
-(* logic_var -> logic_var -> bool *)
-let same_logic_var v w = v.lv_name = w.lv_name
-
-(* var -> var -> bool *)
-let same_var v w =
-  match (v,w) with
-  | Simple v, Simple w -> same_simple_var v w
-  | Complex v, Complex w -> same_complex_var v w
-  | Logic v, Logic w -> same_logic_var v w
-  | _ -> false
-
-(* compo_var -> compo_var -> bool *)
-let rec same_compo_var v w =
-  match (v,w) with
-  | Var v, Var w -> same_var v w
-  | Int i, Int j -> i = j
-  | Float i, Float j -> i = j
-  | Plus (v,w), Plus(a,b) -> (same_compo_var v a && same_compo_var w b)
-    || (same_compo_var v w && same_compo_var w a)
-  | Minus (v,w), Minus(a,b) -> same_compo_var v a && same_compo_var w b
-  | _ -> false
-
-(* complex_var -> bool *)
-let rec cvar_is_float = function
-  | CVVCont (v,_) -> Cil.isFloatingType v.vtype
-  | CVCCont (v,_) -> cvar_is_float v
-
-(* var -> bool *)
-let var_is_float = function
-  | Simple v -> Cil.isFloatingType v.vtype
-  | Complex v -> cvar_is_float v
-  | Logic l -> Cil.isLogicFloatType l.lv_type
-
-(* compo_var -> bool *)
-let rec is_float = function
-  | Var v -> var_is_float v
-  | Dim v -> var_is_float v
-  | Int _ -> false
-  | Float _ -> true
-  | Plus (v,w) | Minus (v,w) -> (is_float v) || (is_float w)
-  | Mult (v,_) | Div (v,_) -> is_float v
-
-(* logic_var -> string *)
-let logic_var_to_string lv = String.uppercase lv.lv_name
-
-(* index -> string *)
-let index_to_string = function
-  | I i -> Integer.to_string i
-  | All -> "_"
-  | L lv -> logic_var_to_string lv
-
-(* simple_var -> string *)
-let simple_var_to_string v = Printf.sprintf "'%s'" v.vname
-
-(* complex_var -> string *)
-let rec complex_var_to_string = function
-  | CVVCont (vi, i) ->
-    Printf.sprintf "cont(%s,%s)" (simple_var_to_string vi) (index_to_string i)
-  | CVCCont (cv, i) ->
-    Printf.sprintf "cont(%s,%s)" (complex_var_to_string cv) (index_to_string i)
-
-(* compo_var -> string *)
-let strop v = if is_float v then "real(math)" else "int(math)"
-
-(* var -> string *)
-let strvar = function
-  | Simple vi -> simple_var_to_string vi
-  | Complex cv -> complex_var_to_string cv
-  | Logic lv -> logic_var_to_string lv
-
-(* compo_var -> string *)
-let rec strcvar k = match k with
-  | Var v -> strvar v
-  | Dim v -> Printf.sprintf "dim(%s)" (strvar v)
-  | Int i -> Integer.to_string i
-  | Float f -> string_of_float f
-  | Plus (v,w) ->  Printf.sprintf "+(%s, %s, %s)"(strop v)(strcvar v)(strcvar w)
-  | Minus (v,w) -> Printf.sprintf "-(%s, %s, %s)"(strop v)(strcvar v)(strcvar w)
-  | Mult (v,w) ->  Printf.sprintf "*(%s, %s, %s)"(strop v)(strcvar v)(strcvar w)
-  | Div (v,w) ->   Printf.sprintf "/(%s, %s, %s)"(strop v)(strcvar v)(strcvar w)
-
-(* simple_domain -> string *)
-let strsd = function
-  | SDVarInt (v,i,j) -> Printf.sprintf "%s, int([%s..%s])"
-    (simple_var_to_string v) (Integer.to_string i) (Integer.to_string j)
-  | SDVarFloat (v,i,j) -> Printf.sprintf "%s, float([(%f)..(%f)])"
-    (simple_var_to_string v) i j
-  | SDDimInt (v,i,j) -> Printf.sprintf "dim(%s), int([%s..%s])"
-    (simple_var_to_string v) (Integer.to_string i) (Integer.to_string j)
-
-(* complex_domain -> string *)
-let strcd = function
-  | CDVarInt (v,i,j) -> Printf.sprintf "%s, [], int([%s..%s])"
-    (strvar (Complex v)) (Integer.to_string i) (Integer.to_string j)
-  | CDVarFloat (v,i,j) -> Printf.sprintf "%s, [], float([(%f)..(%f)])"
-    (strvar (Complex v)) i j
-  | CDDimInt (v,i,j) -> Printf.sprintf "dim(%s), [], int([%s..%s])"
-    (strvar (Complex v)) (Integer.to_string i) (Integer.to_string j)
-
-(* relation -> string *)
-let strrel = function
-  | Rlt -> "inf"
-  | Rgt -> "sup"
-  | Rle -> "infegal"
-  | Rge -> "supegal"
-  | Req -> "egal"
-  | Rneq -> "diff"
-
-(* string -> string -> string *)
-let virgule x y = if x = "" then y else (x ^ ", " ^ y)
-
-(* string list -> string *)
-let fold_virgule l = List.fold_left virgule "" l
-
-(* compo_rel -> string *)
-let struqrel (rel,x,y) =
-  Printf.sprintf "cond(%s,%s,%s,pre)" (strrel rel) (strcvar x) (strcvar y)
-
-(* quantif_compo_rel -> string *)
-let strqrel (lvars, compo_rels, (rel,x,y)) =
-  Printf.sprintf "uq_cond([%s],[%s],%s,%s,%s)"
-    (fold_virgule (List.map (fun z -> String.uppercase z.lv_name) lvars))
-    (fold_virgule (List.map struqrel compo_rels))
-    (strrel rel) (strcvar x) (strcvar y)
-
-(* string *)
-let prolog_header =
+let prolog_header : string =
   ":- module(test_parameters).\n"
   ^ ":- import create_input_val/3 from substitution.\n"
   ^ ":- export dom/4.\n"
@@ -235,269 +206,277 @@ let prolog_header =
   ^ ":- export precondition_of/2.\n\n"
   ^ "dom(0,0,0,0).\n"
 
-(* unit -> int *)
-let machdep() =
+let machdep : unit -> int = fun () ->
   match Kernel.Machdep.get() with
   | "x86_64" -> 64
   | "x86_32" | "ppc_32" -> 32
   | "x86_16" -> 16
   | _ -> 32
 
-(* predicate named -> unit -> string *)
-let pred_to_string x () =
-  Pretty_utils.sfprintf "%a" Printer.pp_predicate_named x
-
 (* term -> 'a *)
 (* used for debugging *)
-let error_term term =
-  match term.term_node with
-  | TLogic_coerce _ -> failwith "TLogic_coerce"
-  | TBinOp _ -> failwith "TBinOp"
-  | Trange _ -> failwith "Rrange"
-  | TConst _ -> failwith "TConst"
-  | TLval _ -> failwith "TLval"
-  | TSizeOf _ -> failwith "TSizeOf"
-  | TSizeOfE _ -> failwith "TSizeOfE"
-  | TSizeOfStr _ -> failwith "TSizeOfStr"
-  | TAlignOf _ -> failwith "TAlignOf"
-  | TAlignOfE _ -> failwith "TAlignOfE"
-  | TUnOp _ -> failwith "TUnOp"
-  | TCastE _ -> failwith "TCastE"
-  | TAddrOf _ -> failwith "TAddrOf"
-  | TStartOf _ -> failwith "TStartOf"
-  | Tapp _ -> failwith "Tapp"
-  | Tlambda _ -> failwith "Tlambda"
-  | TDataCons _ -> failwith "TDataCons"
-  | Tif _ -> failwith "Tif"
-  | Tat (_,LogicLabel(_,str)) -> Options.Self.abort "Tat(_,%s)" str
-  | Tbase_addr _ -> failwith "Tbase_addr"
-  | Toffset _ -> failwith "Toffset"
-  | Tblock_length _ -> failwith "Tblock_length"
-  | TCoerce _ -> failwith "TCoerce"
-  | TCoerceE _ -> failwith "TCoerceE"
-  | TUpdate _ -> failwith "TUpdate"
-  | Ttypeof _ -> failwith "Ttypeof"
-  | Ttype _ -> failwith "Ttype"
-  | Tempty_set -> failwith "Tempty_set"
-  | Tunion _ -> failwith "Tunion"
-  | Tinter _ -> failwith "Tinter"
-  | Tcomprehension _ -> failwith "Tcomprehension"
-  | Tlet _ -> failwith "Tlet"
-  | _ -> Options.Self.abort "term: %a" Printer.pp_term term
+let error_term : term -> 'a =
+  fun term ->
+    match term.term_node with
+    | TLogic_coerce _ -> failwith "TLogic_coerce"
+    | TBinOp _ -> failwith "TBinOp"
+    | Trange _ -> failwith "Rrange"
+    | TConst _ -> failwith "TConst"
+    | TLval _ -> failwith "TLval"
+    | TSizeOf _ -> failwith "TSizeOf"
+    | TSizeOfE _ -> failwith "TSizeOfE"
+    | TSizeOfStr _ -> failwith "TSizeOfStr"
+    | TAlignOf _ -> failwith "TAlignOf"
+    | TAlignOfE _ -> failwith "TAlignOfE"
+    | TUnOp _ -> failwith "TUnOp"
+    | TCastE _ -> failwith "TCastE"
+    | TAddrOf _ -> failwith "TAddrOf"
+    | TStartOf _ -> failwith "TStartOf"
+    | Tapp _ -> failwith "Tapp"
+    | Tlambda _ -> failwith "Tlambda"
+    | TDataCons _ -> failwith "TDataCons"
+    | Tif _ -> failwith "Tif"
+    | Tat (_,LogicLabel(_,str)) -> Options.Self.abort "Tat(_,%s)" str
+    | Tbase_addr _ -> failwith "Tbase_addr"
+    | Toffset _ -> failwith "Toffset"
+    | Tblock_length _ -> failwith "Tblock_length"
+    | TCoerce _ -> failwith "TCoerce"
+    | TCoerceE _ -> failwith "TCoerceE"
+    | TUpdate _ -> failwith "TUpdate"
+    | Ttypeof _ -> failwith "Ttypeof"
+    | Ttype _ -> failwith "Ttype"
+    | Tempty_set -> failwith "Tempty_set"
+    | Tunion _ -> failwith "Tunion"
+    | Tinter _ -> failwith "Tinter"
+    | Tcomprehension _ -> failwith "Tcomprehension"
+    | Tlet _ -> failwith "Tlet"
+    | _ -> Options.Self.abort "term: %a" Printer.pp_term term
 
-(* fieldinfo -> Integer.t *)
-let fieldinfo_to_int fi =
-  let rec aux cpt = function
-    | {forig_name=s}::_ when s = fi.forig_name -> Integer.of_int cpt
-    | _::t -> aux (cpt+1) t
-    | _ -> assert false
-  in aux 0 fi.fcomp.cfields
-
-
-
-(* logic_type -> bool *)
-let is_integer = function Linteger | Ctype (TInt _) -> true | _ -> false
-
-(* logic_type -> bool *)
-let is_float = function Lreal | Ctype (TFloat _) -> true | _ -> false
+let fieldinfo_to_int : fieldinfo -> Integer.t =
+  fun fi ->
+    let rec aux cpt = function
+      | {forig_name=s}::_ when s = fi.forig_name -> Integer.of_int cpt
+      | _::t -> aux (cpt+1) t
+      | _ -> assert false
+    in
+    aux 0 fi.fcomp.cfields
 
 
+(*
 (* term_lval -> var *)
 let rec tlval_to_prolog tlval =
   match tlval with
-  | TVar lv, _ when lv.lv_origin = None -> Logic lv
-  | TVar lv, TNoOffset -> Simple (Extlib.the lv.lv_origin)
-  | TVar lv, TField (fi, tof) ->
-    let i = fieldinfo_to_int fi in
-    let rec aux cv = function
-      | TNoOffset -> cv
-      | TField (f, toff) -> aux (CVCCont(cv, I (fieldinfo_to_int f))) toff
-      | TIndex({term_node=TConst(Integer(ii,_))},o) -> aux(CVCCont(cv,I ii)) o
-      | _ -> assert false
-    in Complex (aux (CVVCont((Extlib.the lv.lv_origin), I i)) tof)
-  | TVar lv, TIndex ({term_node=TConst (Integer (k, _))}, tof) ->
-    let rec aux cv = function
-      | TNoOffset -> cv
-      | TField (f, toff) -> aux (CVCCont(cv, I (fieldinfo_to_int f))) toff
-      | TIndex ({term_node=TConst(Integer(ii,_))},o) -> aux(CVCCont(cv,I ii)) o
-      | _ -> assert false
-    in Complex (aux (CVVCont((Extlib.the lv.lv_origin), I k)) tof)
-  | TMem {term_node=TLval tl}, TNoOffset -> tlval_to_prolog tl
-  | TMem {term_node=TLval tl}, TField (fi, tof) ->
-    let var = tlval_to_prolog tl in
-    let i = fieldinfo_to_int fi in
-    let rec aux cv = function
-      | TNoOffset -> cv
-      | TField (f, toff) -> aux (CVCCont(cv, I (fieldinfo_to_int f))) toff
-      | TIndex ({term_node=TConst(Integer(ii,_))},o) -> aux(CVCCont(cv,I ii)) o
-      | _ -> assert false
-    in
-    begin
-      match var with
-      | Simple s -> Complex (aux (CVVCont(s, I i)) tof)
-      | Complex c -> Complex (aux (CVCCont(c, I i)) tof)
-      | Logic _ -> assert false
-    end
-  | TMem {term_node=TLval tl}, TIndex ({term_node=TConst(Integer(k,_))},tof) ->
-    let var = tlval_to_prolog tl in
-    let rec aux cv = function
-      | TNoOffset -> cv
-      | TField (f, toff) -> aux (CVCCont(cv, I (fieldinfo_to_int f))) toff
-      | TIndex ({term_node=TConst(Integer(ii,_))},o) -> aux(CVCCont(cv,I ii)) o
-      | _ -> assert false
-    in
-    begin
-      match var with
-      | Simple s -> Complex (aux (CVVCont(s, I k)) tof)
-      | Complex c -> Complex (aux (CVCCont(c, I k)) tof)
-      | Logic _ -> assert false
-    end
-  | TMem term, TNoOffset ->
-    begin
-      match term_to_compo_var term with
-      | Var v | Dim v -> v
-      | Int _ -> assert false
-      | Float _ -> assert false
-      | Plus (x,y) -> 
+ 
+  
+  
+  
+*)
+
+
+
+class to_pl = object(self)
+  method logic_var : logic_var -> pl_term =
+    fun lv ->
+      match lv.lv_origin with
+      | None -> PLLVar lv
+      | Some v -> PLCVar v
+
+  method term_lval : term_lval -> pl_term =
+    fun ((tlhost, toffset) as tlval) ->
+      let zero = PLConst (PLInt Integer.zero) in
+      match (tlhost, toffset) with
+      | TResult _, _
+      | TVar _, TModel _
+      | TMem _, TModel _ ->
+	Options.Self.debug ~dkey:Options.dkey_native_precond "tlval: %a"
+	  Printer.pp_term_lval tlval;
+	assert false
+
+      | TVar v, TNoOffset -> self#logic_var v
+
+      | TVar _, TField (fi, tof) ->
+	let i = PLConst (PLInt (fieldinfo_to_int fi)) in
 	begin
-	  match (x,y) with 
-	  | (Var(Simple s), Var(Logic l)) -> Complex(CVVCont(s,L l))
-	  | (Var(Complex c), Var(Logic l)) -> Complex(CVCCont(c,L l))
-	  | (Var(Simple s), Int i) -> Complex(CVVCont(s,I i))
-	  | (Var(Complex c), Int i) -> Complex(CVCCont(c,I i))
+	  match self#term_lval (tlhost, tof) with
+	  | PLCont (tlhost', tof') -> PLCont (PLCont (tlhost', i), tof')
+	  | x -> PLCont (x, i)
+	end
+
+      | TVar _, TIndex (t, tof) ->
+	let i = self#term t in
+	begin
+	  match self#term_lval (tlhost, tof) with
+	  | PLCont (tlhost', tof') -> PLCont (PLCont (tlhost', i), tof')
+	  | x -> PLCont (x, i)
+	end
+
+      | TMem m, TNoOffset ->
+	let m' = self#term m in
+	PLCont (m', zero)
+
+      | TMem _, TField (fi, tof) ->
+	let i = PLConst (PLInt (fieldinfo_to_int fi)) in
+	begin
+	  match self#term_lval (tlhost, tof) with
+	  | PLCont (x, y) -> PLCont (PLCont (PLCont (x, i), y), zero)
+	  | x -> PLCont (PLCont (x, i), zero)
+	end
+      
+      | TMem _, TIndex (t, tof) ->
+	let i = self#term t in
+	begin
+	  match self#term_lval (tlhost, tof) with
+	  | PLCont (x, y) -> PLCont (PLCont (PLCont (x, i), y), zero)
+	  | x -> PLCont (PLCont (x, i), zero)
+	end
+
+  method term : term -> pl_term =
+    fun t ->
+      match t.term_node with
+      | TLogic_coerce (_, t') -> self#term t'
+      | TConst (Integer (ii, _)) -> PLConst (PLInt ii)
+      | TConst (LReal {r_nearest=f}) -> PLConst (PLFloat f)
+      | TLval tl -> self#term_lval tl
+      | TBinOp(op,x,y)-> PLBinOp (self#term x, op, self#term y)
+      | TUnOp (Neg, term) ->
+	begin
+	  match (self#term term) with
+	  | PLConst (PLInt i) -> PLConst (PLInt (Integer.neg i))
 	  | _ ->
-	    Options.Self.debug ~dkey:Options.dkey_native_precond "%s+%s"
-	      (strcvar x)(strcvar y);
+	    Options.Self.debug ~dkey:Options.dkey_native_precond
+	      "term_to_compo_var: TUnOp";
 	    assert false
 	end
-      | Minus _ | Mult _ | Div _ -> assert false
-    end
-  | _ ->
-    Options.Self.debug ~dkey:Options.dkey_native_precond "tlval: %a"
-      Printer.pp_term_lval tlval;
-    assert false
+      | Tat(t',LogicLabel(_,label)) when label = "Old" -> self#term t'
+      | _ -> error_term t
+end
 
 
-(* term -> compo_var *)
-and term_to_compo_var term =
-  match term.term_node with
-  | TLogic_coerce (_,t) -> term_to_compo_var t
-  | TConst (Integer (ii, _)) -> Int ii
-  | TConst (LReal {r_nearest=f}) -> Float f
-  | TLval tl -> Var (tlval_to_prolog tl)
-  | TBinOp((PlusA|PlusPI|IndexPI),x,y)->
-    Plus(term_to_compo_var x,term_to_compo_var y)
-  | TBinOp((MinusA|MinusPI),x,y)->Minus(term_to_compo_var x,term_to_compo_var y)
-  | TBinOp (Cil_types.Mult,x,y) -> Mult(term_to_compo_var x,term_to_compo_var y)
-  | TBinOp (Cil_types.Div,x,y) -> Div(term_to_compo_var x, term_to_compo_var y)
-  | TUnOp (Neg, term) ->
-    begin
-      match (term_to_compo_var term) with
-      | Int i -> Int (Integer.neg i)
-      | _ ->
-	Options.Self.debug ~dkey:Options.dkey_native_precond
-	  "term_to_compo_var: TUnOp";
-	assert false
-    end
-  | Tat(t,LogicLabel(_,label)) when label = "Old" -> term_to_compo_var t
-  | _ -> error_term term
-
-(* term -> unit *)
-let valid_to_prolog term =
-  match term.term_node with
-  | Tempty_set -> ()
-  | TLval x -> add_unquantif (Req, (Dim (tlval_to_prolog x)), (Int Integer.one))
-  | TBinOp ((PlusPI|IndexPI), {term_node=TLval tlval},
-	    {term_node=(Trange (Some z, Some x))}) when Cil.isLogicZero z ->
-    let var = tlval_to_prolog tlval in
-    let b = term_to_compo_var x in
-    add_unquantif (Req, (Dim var), (Plus (b, Int Integer.one)))
-  | _ -> error_term term
 
 
-(* relation -> term -> term -> unit *)
-let rel_to_prolog rel term1 term2 =
-  let var1 = term_to_compo_var term1 in
-  let var2 = term_to_compo_var term2 in
-  add_unquantif (rel, var1, var2)
+
+
+
+
+
+
+
+let term_to_pl : term -> pl_term = fun t -> (new to_pl)#term t
+
+
+
+let rec create_input_from_type : typ -> pl_term -> unit =
+  fun ty t ->
+    let maxuint = Cil.max_unsigned_number (machdep()) in
+    let maxint = Cil.max_signed_number (machdep()) in
+    let minint = Cil.min_signed_number (machdep()) in
+    let bounds = function
+      | IBool -> Integer.zero, Integer.one
+      | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
+      | IUChar -> Integer.zero, Integer.of_int 255
+      | ik when Cil.isSigned ik -> minint, maxint
+      | _ -> Integer.zero, maxuint
+    in
+    match (Cil.unrollType ty) with
+    | TEnum ({ekind=ik},_)
+    | TInt (ik,_) ->
+      let b_min, b_max = bounds ik in
+      let d = PLIntDom (t, b_min, b_max) in
+      domains := d :: !domains
+
+    | TComp (ci,_,_) ->
+      let i = ref Integer.zero in
+      List.iter (fun field ->
+	create_input_from_type field.ftype (PLCont (t, PLConst (PLInt !i)));
+	i := Integer.succ !i
+      ) ci.cfields
+
+    | TPtr (ty',attr) ->
+      let a = Cil.findAttribute "arraylen" attr in
+      if a <> [] then
+	List.iter (function
+	| AInt ii ->
+	  let d = PLIntDom (PLDim t, ii, ii) in
+	  domains := d :: !domains;
+	  create_input_from_type ty' (PLContAll t)
+	| _ -> ()) a
+      else
+	begin
+	  let d = PLIntDom (PLDim t, Integer.zero, maxuint) in
+	  domains := d :: !domains;
+	  create_input_from_type ty' (PLContAll t)
+	end
     
-(* predicate named -> unit *)
-let rec requires_to_prolog pred =
-  try
-    match pred.content with
-    | Pand (p1, p2) -> requires_to_prolog p1; requires_to_prolog p2
-    | Ptrue -> ()
-    | Pvalid (_, term) | Pvalid_read (_, term) -> valid_to_prolog term
-    | Pforall (_quantif, _pn) -> ()
-    | Prel (rel, pn1, pn2) -> rel_to_prolog rel pn1 pn2
-    | _ -> assert false
-  with
-  | _ -> Options.Self.warning "%a unsupported" Printer.pp_predicate_named pred
+    | _ ->
+      Options.Self.feedback "create_input_from_type (%a) (%s)"
+	Printer.pp_typ ty (pp_pl_term t);
+      assert false
 
-(* typ -> var -> unit *)
-let rec create_input_from_type ty v =
-  let maxuint = Cil.max_unsigned_number (machdep()) in
-  let maxint = Cil.max_signed_number (machdep()) in
-  let minint = Cil.min_signed_number (machdep()) in
-  let bounds = function
-    | IBool -> Integer.zero, Integer.one
-    | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
-    | IUChar -> Integer.zero, Integer.of_int 255
-    | ik when Cil.isSigned ik -> minint, maxint
-    | _ -> Integer.zero, maxuint
-  in
-  match (Cil.unrollType ty,v) with
-  | TEnum ({ekind=ik},_), Simple s
-  | TInt (ik,_), Simple s ->
-    let b_min, b_max = bounds ik in
-    add_simple_domain (SDVarInt(s,b_min,b_max))
-  | TEnum ({ekind=ik},_), Complex s
-  | TInt (ik,_), Complex s ->
-    let b_min, b_max = bounds ik in
-    add_complex_domain (CDVarInt(s,b_min,b_max))
-  | TComp (ci,_,_), Simple s ->
-    let i = ref Integer.zero in
-    List.iter (fun field ->
-      create_input_from_type field.ftype (Complex (CVVCont (s, I !i)));
-      i := Integer.succ !i
-    ) ci.cfields
-  | TComp (ci,_,_), Complex s ->
-    let i = ref Integer.zero in
-    List.iter (fun field ->
-      create_input_from_type field.ftype (Complex (CVCCont (s,I !i)));
-      i := Integer.succ !i
-    ) ci.cfields
-  (* fixed-length arrays *)
-  | TPtr (t,attr), Simple s->
-    let a = Cil.findAttribute "arraylen" attr in
-    if a <> [] then
-      List.iter (function
-      | AInt ii -> add_simple_domain (SDDimInt (s,ii,ii));
-	create_input_from_type t (Complex (CVVCont (s,All)))
-      | _ -> ()) a
-    else
-      begin
-	add_simple_domain (SDDimInt (s, Integer.zero, maxuint));
-	create_input_from_type t (Complex (CVVCont (s,All)))
-      end
-  | TPtr (t,attr), Complex s ->
-    let a = Cil.findAttribute "arraylen" attr in
-    if a <> [] then
-      List.iter (function
-      | AInt ii ->
-	add_complex_domain (CDDimInt (s,ii,ii));
-	create_input_from_type t (Complex (CVCCont (s,All)))
-      | _ -> ()) a
-    else
-      (add_complex_domain (CDDimInt (s, Integer.zero, maxuint));
-       create_input_from_type t (Complex (CVCCont (s,All))))
-  | _ ->
-    Options.Self.feedback "error with var:(%a, %s)"
-      Printer.pp_typ ty (strvar v);
-    assert false
 
-(* varinfo -> unit *)
-let create_input_val var = create_input_from_type var.vtype (Simple var)
+
+
+
+let create_input_val : varinfo -> unit =
+  fun v ->
+    create_input_from_type v.vtype (PLCVar v)
+
+
+
+let valid_to_prolog : term -> unit =
+  fun term ->
+    match term.term_node with
+    | Tempty_set -> ()
+    | TLval _ ->
+      let t = term_to_pl term in
+      let uq = (PLDim t, Req, PLConst (PLInt Integer.one)) in
+      unquantifs := uq :: !unquantifs
+
+    | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
+      let t' = term_to_pl t in
+      let x' = term_to_pl x in
+      let one = PLConst (PLInt(Integer.one)) in
+      let uq = (PLDim t', Req, PLBinOp (x', PlusA, one)) in
+      unquantifs := uq :: !unquantifs
+
+    | _ -> error_term term
+
+
+
+let rel_to_prolog : relation -> term -> term -> unit =
+  fun rel term1 term2 ->
+    let var1 = term_to_pl term1 in
+    let var2 = term_to_pl term2 in
+    let uq = (var1, rel, var2) in
+    unquantifs := uq :: !unquantifs
+    
+
+
+
+
+
+
+let rec requires_to_prolog : predicate named -> unit =
+  fun pred ->
+    try
+      match pred.content with
+      | Pand (p1, p2) -> requires_to_prolog p1; requires_to_prolog p2
+      | Ptrue -> ()
+      | Pvalid (_, term) | Pvalid_read (_, term) -> valid_to_prolog term
+      | Pforall (_quantif, _pn) -> ()
+      | Prel (rel, pn1, pn2) -> rel_to_prolog rel pn1 pn2
+      | _ -> assert false
+    with
+    | _ -> Options.Self.warning "%a unsupported" Printer.pp_predicate_named pred
+
+
+
+
+
+
+
+
+
+
 
 
 let generated = ref false
@@ -535,20 +514,30 @@ let translate() =
       List.iter requires_to_prolog requires;
       let chan = open_out (Options.Precond_File.get()) in
       output chan prolog_header;
+
+      let complex_d, simple_d = List.partition is_complex_domain !domains in
       
       (* DOM *)
       List.iter (fun x ->
-	output chan (Printf.sprintf "dom('%s', %s).\n" func_name (strcd x))
-      ) !complex_domains;
+	output chan (Printf.sprintf "dom('%s', %s).\n"
+		       func_name
+		       (pp_pl_domain true x)
+	)
+      ) complex_d;
+
       let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
       output chan (Printf.sprintf "dom('%s',A,B,C) :- dom('%s',A,B,C).\n"
 		     precond_name func_name);
       
       (* CREATE_INPUT_VALS *)
       output chan (Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
+
       List.iter (fun s ->
-	output chan (Printf.sprintf "  create_input_val(%s,Ins),\n" (strsd s))
-      ) !simple_domains;
+	output chan (Printf.sprintf "  create_input_val(%s,Ins),\n"
+		       (pp_pl_domain false s)
+	)
+      ) simple_d;
+
       output chan "  true.\n";
       output chan
 	(Printf.sprintf
@@ -556,7 +545,7 @@ let translate() =
 	   precond_name func_name);
       
       (* QUANTIF_PRECONDS *)
-      let qp = List.map strqrel !quantifs in
+      let qp = List.map pp_pl_quantif !quantifs in
       let qp = fold_virgule qp in
       output chan(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
       output chan
@@ -566,10 +555,10 @@ let translate() =
       
       
       (* UNQUANTIF_PRECONDS *)
-      let uqp = List.map struqrel !unquantifs in
+      let uqp = List.map pp_pl_rel !unquantifs in
       let uqp = fold_virgule uqp in
       output chan
-	(Printf.sprintf"unquantif_preconds('%s',[%s]).\n"func_name uqp);
+	(Printf.sprintf"unquantif_preconds('%s',[%s]).\n" func_name uqp);
       output chan
 	(Printf.sprintf
 	   "unquantif_preconds('%s',A) :- unquantif_preconds('%s',A).\n"
@@ -583,8 +572,7 @@ let translate() =
 	(Printf.sprintf "precondition_of('%s','%s').\n" func_name precond_name);
       flush chan;
       close_out chan;
-      simple_domains := [];
-      complex_domains := [];
+      domains := [];
       unquantifs := [];
       quantifs := [];
       generated := true
