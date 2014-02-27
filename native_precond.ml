@@ -68,11 +68,7 @@ let is_complex_domain : pl_domain -> bool =
   function PLIntDom (t,_,_)| PLFloatDom (t,_,_) -> is_complex_term t
 
 
-let virgule : string -> string -> string =
-  fun x y -> if x = "" then y else (x ^ ", " ^ y)
 
-let fold_virgule : string list -> string =
-  fun l -> List.fold_left virgule "" l
 
 
 
@@ -145,8 +141,8 @@ class pl_printer = object(self)
   method pl_quantif : pl_quantif -> string =
     fun (lvars, compo_rels, (t1,r,t2)) ->
       Printf.sprintf "uq_cond([%s],[%s],%s,%s,%s)"
-	(fold_virgule (List.map (fun z -> String.uppercase z.lv_name) lvars))
-	(fold_virgule (List.map self#pl_rel compo_rels))
+	(Utils.fold_comma (List.map(fun z -> String.uppercase z.lv_name) lvars))
+	(Utils.fold_comma (List.map self#pl_rel compo_rels))
 	(self#relation r)
 	(self#pl_term t1)
 	(self#pl_term t2)
@@ -172,15 +168,8 @@ let prolog_header : string =
   ^ ":- export precondition_of/2.\n\n"
   ^ "dom(0,0,0,0).\n"
 
-let machdep : unit -> int = fun () ->
-  match Kernel.Machdep.get() with
-  | "x86_64" -> 64
-  | "x86_32" | "ppc_32" -> 32
-  | "x86_16" -> 16
-  | _ -> 32
 
-(* term -> 'a *)
-(* used for debugging *)
+
 let error_term : term -> 'a =
   fun term ->
     match term.term_node with
@@ -218,14 +207,6 @@ let error_term : term -> 'a =
     | Tlet _ -> failwith "Tlet"
     | _ -> Options.Self.abort "term: %a" Printer.pp_term term
 
-let fieldinfo_to_int : fieldinfo -> Integer.t =
-  fun fi ->
-    let rec aux cpt = function
-      | {forig_name=s}::_ when s = fi.forig_name -> Integer.of_int cpt
-      | _::t -> aux (cpt+1) t
-      | _ -> assert false
-    in
-    aux 0 fi.fcomp.cfields
 
 
 
@@ -251,7 +232,7 @@ class to_pl = object(self)
       | TVar v, TNoOffset -> self#logic_var v
 
       | TVar _, TField (fi, tof) ->
-	let i = PLConst (PLInt (fieldinfo_to_int fi)) in
+	let i = PLConst (PLInt (Utils.fieldinfo_to_int fi)) in
 	begin
 	  match self#term_lval (tlhost, tof) with
 	  | PLCont (tlhost', tof') -> PLCont (PLCont (tlhost', i), tof')
@@ -271,7 +252,7 @@ class to_pl = object(self)
 	PLCont (m', zero)
 
       | TMem _, TField (fi, tof) ->
-	let i = PLConst (PLInt (fieldinfo_to_int fi)) in
+	let i = PLConst (PLInt (Utils.fieldinfo_to_int fi)) in
 	begin
 	  match self#term_lval (tlhost, tof) with
 	  | PLCont (x, y) -> PLCont (PLCont (PLCont (x, i), y), zero)
@@ -323,9 +304,9 @@ let term_to_pl : term -> pl_term = fun t -> (new to_pl)#term t
 
 let rec create_input_from_type : typ -> pl_term -> unit =
   fun ty t ->
-    let maxuint = Cil.max_unsigned_number (machdep()) in
-    let maxint = Cil.max_signed_number (machdep()) in
-    let minint = Cil.min_signed_number (machdep()) in
+    let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
+    let maxint = Cil.max_signed_number (Utils.machdep()) in
+    let minint = Cil.min_signed_number (Utils.machdep()) in
     let bounds = function
       | IBool -> Integer.zero, Integer.one
       | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
@@ -502,7 +483,7 @@ let translate() =
       
       (* QUANTIF_PRECONDS *)
       let qp = List.map pp_pl_quantif !quantifs in
-      let qp = fold_virgule qp in
+      let qp = Utils.fold_comma qp in
       output chan(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
       output chan
 	(Printf.sprintf
@@ -512,7 +493,7 @@ let translate() =
       
       (* UNQUANTIF_PRECONDS *)
       let uqp = List.map pp_pl_rel !unquantifs in
-      let uqp = fold_virgule uqp in
+      let uqp = Utils.fold_comma uqp in
       output chan
 	(Printf.sprintf"unquantif_preconds('%s',[%s]).\n" func_name uqp);
       output chan
