@@ -247,14 +247,14 @@ let pcva_emitter =
 
 let compute_props props terms_at_Pre =
   (* Translate some parts of the pre-condition in Prolog *)
-  Native_precond.translate();
+  let native_precond_generated = Native_precond.translate() in
   Options.Self.feedback ~dkey:Options.dkey_native_precond
     "Prolog pre-condition %s generated"
-    (if !Native_precond.generated then "successfully" else "not");
+    (if native_precond_generated then "successfully" else "not");
   second_pass (Options.Temp_File.get()) props terms_at_Pre;
   let translated_properties = Utils.no_repeat !Prop_id.translated_properties in
   let test_params =
-    if !Native_precond.generated then
+    if native_precond_generated then
       Printf.sprintf "-pc-test-params %s" (Options.Precond_File.get())
     else
       ""
@@ -331,8 +331,7 @@ let compute_props props terms_at_Pre =
   ) translated_properties;
   Prop_id.translated_properties := [];
   Prop_id.all_paths := false;
-  Prop_id.typically := [];
-  Native_precond.generated := false
+  Prop_id.typically := []
 
 
 

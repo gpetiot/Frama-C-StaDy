@@ -415,7 +415,6 @@ let rec requires_to_prolog :
 
 
 
-let generated = ref false
 
 
 let translate () =
@@ -426,7 +425,7 @@ let translate () =
     (fun _ b -> if Cil.is_default_behavior b then bhv := Some b) kf;
   let bhv = !bhv in
   match bhv with
-  | None -> ()
+  | None -> false
   | Some bhv ->
     begin
       let subst pred  = (new Sd_subst.subst)#subst_pnamed pred [] [] [] [] in
@@ -516,6 +515,6 @@ let translate () =
 	(Printf.sprintf "precondition_of('%s','%s').\n" func_name precond_name);
       flush chan;
       close_out chan;
-      generated := true
+      true
     end
 
