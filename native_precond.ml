@@ -297,13 +297,16 @@ let rec create_input_from_type :
       d :: domains
 
     | TComp (ci,_,_) ->
-      let i = ref Integer.zero in
-      List.fold_left (fun doms field ->
-	let dom = create_input_from_type
-	  doms field.ftype (PLCont (t, PLConst (PLInt !i))) in
-	i := Integer.succ !i;
-	dom
-      ) domains ci.cfields
+      let rec aux doms fields i =
+	match fields with
+	| [] -> doms
+	| f :: fields' ->
+	  let doms' =
+	    create_input_from_type doms f.ftype (PLCont (t, PLConst (PLInt i)))
+	  in
+	  aux doms' fields' (Integer.succ i)
+      in
+      aux domains ci.cfields Integer.zero
 
     | TPtr (ty',attr) ->
       let att = Cil.findAttribute "arraylen" attr in
