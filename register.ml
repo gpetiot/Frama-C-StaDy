@@ -477,12 +477,11 @@ let run() =
 	if behaviors <> [] || functions <> [] || properties <> [] then
 	  begin
 	    let gather p b = List.rev_append (properties_of_behavior b) p in
-	    let bhv_props = List.fold_left gather [] behaviors in
+	    let props = List.fold_left gather [] behaviors in
 	    let gather p f = List.rev_append (properties_of_function f) p in
-	    let fct_props = List.fold_left gather [] functions in
+	    let props = List.fold_left gather props functions in
 	    let gather p n = List.rev_append (properties_of_name n) p in
-	    let nam_props = List.fold_left gather [] properties in
-	    List.rev_append bhv_props (List.rev_append fct_props nam_props)
+	    List.fold_left gather props properties
 	  end
 	else
 	  Property_status.fold (fun p l -> p :: l) [] 
