@@ -215,54 +215,32 @@ class to_pl = object(self)
       | None -> PLLVar lv
       | Some v -> PLCVar v
 
-  method term_lval : term_lval -> pl_term =
-    fun ((tlhost, toffset) as tlval) ->
-      let zero = PLConst (PLInt Integer.zero) in
-      match (tlhost, toffset) with
-      | TResult _, _
-      | TVar _, TModel _
-      | TMem _, TModel _ ->
-	Options.Self.debug ~dkey:Options.dkey_native_precond "tlval: %a"
-	  Printer.pp_term_lval tlval;
+  method term_offset : pl_term list -> term_offset -> pl_term list =
+    fun ret offset ->
+      match offset with
+      | TNoOffset -> List.rev ret
+      | TField (fi, tof) ->
+	let i = PLConst (PLInt (Utils.fieldinfo_to_int fi)) in
+	self#term_offset (i :: ret) tof
+      | TModel _ ->
+	Options.Self.debug ~dkey:Options.dkey_native_precond "TModel: %a"
+	  Printer.pp_term_offset offset;
 	assert false
-
-      | TVar v, TNoOffset -> self#logic_var v
-
-      | TVar _, TField (fi, tof) ->
-	let i = PLConst (PLInt (Utils.fieldinfo_to_int fi)) in
-	begin
-	  match self#term_lval (tlhost, tof) with
-	  | PLCont (tlhost', tof') -> PLCont (PLCont (tlhost', i), tof')
-	  | x -> PLCont (x, i)
-	end
-
-      | TVar _, TIndex (t, tof) ->
+      | TIndex (t, tof) ->
 	let i = self#term t in
-	begin
-	  match self#term_lval (tlhost, tof) with
-	  | PLCont (tlhost', tof') -> PLCont (PLCont (tlhost', i), tof')
-	  | x -> PLCont (x, i)
-	end
+	self#term_offset (i :: ret) tof
+	  
+  method term_lhost : term_lhost -> pl_term =
+    function
+    | TVar v -> self#logic_var v
+    | TResult _ -> assert false
+    | TMem m -> PLCont (self#term m, PLConst (PLInt Integer.zero))
 
-      | TMem m, TNoOffset ->
-	let m' = self#term m in
-	PLCont (m', zero)
-
-      | TMem _, TField (fi, tof) ->
-	let i = PLConst (PLInt (Utils.fieldinfo_to_int fi)) in
-	begin
-	  match self#term_lval (tlhost, tof) with
-	  | PLCont (x, y) -> PLCont (PLCont (PLCont (x, i), y), zero)
-	  | x -> PLCont (PLCont (x, i), zero)
-	end
-      
-      | TMem _, TIndex (t, tof) ->
-	let i = self#term t in
-	begin
-	  match self#term_lval (tlhost, tof) with
-	  | PLCont (x, y) -> PLCont (PLCont (PLCont (x, i), y), zero)
-	  | x -> PLCont (PLCont (x, i), zero)
-	end
+  method term_lval : term_lval -> pl_term =
+    fun (tlhost, toffset) ->
+      let tlhost' = self#term_lhost tlhost in
+      let toffsets = self#term_offset [] toffset in
+      List.fold_left (fun t tof -> PLCont (t, tof)) tlhost' toffsets
 
   method term : term -> pl_term =
     fun t ->
@@ -313,8 +291,7 @@ let rec create_input_from_type :
       | _ -> Integer.zero, maxuint
     in
     match (Cil.unrollType ty) with
-    | TEnum ({ekind=ik},_)
-    | TInt (ik,_) ->
+    | TEnum ({ekind=ik},_) | TInt (ik,_) ->
       let b_min, b_max = bounds ik in
       let d = PLIntDom (t, b_min, b_max) in
       d :: domains
@@ -327,6 +304,7 @@ let rec create_input_from_type :
 	i := Integer.succ !i;
 	dom
       ) domains ci.cfields
+
     | TPtr (ty',attr) ->
       let att = Cil.findAttribute "arraylen" attr in
       if att <> [] then
