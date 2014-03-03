@@ -52,7 +52,6 @@ type pl_quantif = logic_var list * pl_rel list * pl_rel
 
 
 
-let domains = ref ([] : pl_domain list)
 let unquantifs = ref ([] : pl_rel list)
 let quantifs = ref ([] : pl_quantif list)
 
@@ -302,8 +301,9 @@ let term_to_pl : term -> pl_term = fun t -> (new to_pl)#term t
 
 
 
-let rec create_input_from_type : typ -> pl_term -> unit =
-  fun ty t ->
+let rec create_input_from_type :
+    pl_domain list -> typ -> pl_term -> pl_domain list =
+  fun domains ty t ->
     let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
     let maxint = Cil.max_signed_number (Utils.machdep()) in
     let minint = Cil.min_signed_number (Utils.machdep()) in
@@ -319,29 +319,32 @@ let rec create_input_from_type : typ -> pl_term -> unit =
     | TInt (ik,_) ->
       let b_min, b_max = bounds ik in
       let d = PLIntDom (t, b_min, b_max) in
-      domains := d :: !domains
+      d :: domains
 
     | TComp (ci,_,_) ->
       let i = ref Integer.zero in
-      List.iter (fun field ->
-	create_input_from_type field.ftype (PLCont (t, PLConst (PLInt !i)));
-	i := Integer.succ !i
-      ) ci.cfields
-
+      List.fold_left (fun doms field ->
+	let dom = create_input_from_type
+	  doms field.ftype (PLCont (t, PLConst (PLInt !i))) in
+	i := Integer.succ !i;
+	dom
+      ) domains ci.cfields
     | TPtr (ty',attr) ->
-      let a = Cil.findAttribute "arraylen" attr in
-      if a <> [] then
-	List.iter (function
-	| AInt ii ->
-	  let d = PLIntDom (PLDim t, ii, ii) in
-	  domains := d :: !domains;
-	  create_input_from_type ty' (PLContAll t)
-	| _ -> ()) a
+      let att = Cil.findAttribute "arraylen" attr in
+      if att <> [] then
+	let is_array_len = function AInt _ -> true | _ -> false in
+	if List.exists is_array_len att then
+	  match List.find is_array_len att with
+	  | AInt ii ->
+	    let d = PLIntDom (PLDim t, ii, ii) in
+	    create_input_from_type (d :: domains) ty' (PLContAll t)
+	  | _ -> assert false
+	else
+	  assert false
       else
 	begin
 	  let d = PLIntDom (PLDim t, Integer.zero, maxuint) in
-	  domains := d :: !domains;
-	  create_input_from_type ty' (PLContAll t)
+	  create_input_from_type (d :: domains) ty' (PLContAll t)
 	end
     
     | _ ->
@@ -353,9 +356,7 @@ let rec create_input_from_type : typ -> pl_term -> unit =
 
 
 
-let create_input_val : varinfo -> unit =
-  fun v ->
-    create_input_from_type v.vtype (PLCVar v)
+
 
 
 
@@ -447,12 +448,13 @@ let translate() =
       Options.Self.feedback ~dkey:Options.dkey_native_precond
 	"non-default behaviors ignored!";
       let formals = Kernel_function.get_formals kf in
-      List.iter create_input_val formals;
+      let create_input d v = create_input_from_type d v.vtype (PLCVar v) in
+      let domains = List.fold_left create_input [] formals in
       List.iter requires_to_prolog requires;
       let chan = open_out (Options.Precond_File.get()) in
       output chan prolog_header;
 
-      let complex_d, simple_d = List.partition is_complex_domain !domains in
+      let complex_d, simple_d = List.partition is_complex_domain domains in
       
       (* DOM *)
       List.iter (fun x ->
@@ -509,7 +511,6 @@ let translate() =
 	(Printf.sprintf "precondition_of('%s','%s').\n" func_name precond_name);
       flush chan;
       close_out chan;
-      domains := [];
       unquantifs := [];
       quantifs := [];
       generated := true
