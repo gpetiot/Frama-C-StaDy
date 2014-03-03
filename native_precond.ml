@@ -48,12 +48,10 @@ type pl_rel = pl_term * relation * pl_term
 
 type pl_quantif = logic_var list * pl_rel list * pl_rel
 
+type pl_constraint = PLUnquantif of pl_rel | PLQuantif of pl_quantif
 
 
 
-
-let unquantifs = ref ([] : pl_rel list)
-let quantifs = ref ([] : pl_quantif list)
 
 
 let rec is_complex_term : pl_term -> bool =
@@ -360,32 +358,28 @@ let rec create_input_from_type :
 
 
 
-let valid_to_prolog : term -> unit =
+let valid_to_prolog : term -> pl_constraint =
   fun term ->
     match term.term_node with
-    | Tempty_set -> ()
     | TLval _ ->
       let t = term_to_pl term in
-      let uq = (PLDim t, Req, PLConst (PLInt Integer.one)) in
-      unquantifs := uq :: !unquantifs
+      PLUnquantif (PLDim t, Req, PLConst (PLInt Integer.one))
 
     | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
       let t' = term_to_pl t in
       let x' = term_to_pl x in
       let one = PLConst (PLInt(Integer.one)) in
-      let uq = (PLDim t', Req, PLBinOp (x', PlusA, one)) in
-      unquantifs := uq :: !unquantifs
+      PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one))
 
     | _ -> error_term term
 
 
 
-let rel_to_prolog : relation -> term -> term -> unit =
+let rel_to_prolog : relation -> term -> term -> pl_constraint =
   fun rel term1 term2 ->
     let var1 = term_to_pl term1 in
     let var2 = term_to_pl term2 in
-    let uq = (var1, rel, var2) in
-    unquantifs := uq :: !unquantifs
+    PLUnquantif (var1, rel, var2)
     
 
 
@@ -393,18 +387,22 @@ let rel_to_prolog : relation -> term -> term -> unit =
 
 
 
-let rec requires_to_prolog : predicate named -> unit =
-  fun pred ->
+let rec requires_to_prolog :
+    pl_constraint list -> predicate named -> pl_constraint list =
+  fun constraints pred ->
     try
       match pred.content with
-      | Pand (p1, p2) -> requires_to_prolog p1; requires_to_prolog p2
-      | Ptrue -> ()
-      | Pvalid (_, term) | Pvalid_read (_, term) -> valid_to_prolog term
-      | Pforall (_quantif, _pn) -> ()
-      | Prel (rel, pn1, pn2) -> rel_to_prolog rel pn1 pn2
+      | Pand (p1, p2) ->
+	requires_to_prolog (requires_to_prolog constraints p1) p2
+      | Ptrue -> constraints
+      | Pvalid(_,t) | Pvalid_read(_,t) -> (valid_to_prolog t) :: constraints
+      | Pforall (_quantif, _pn) -> constraints
+      | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
       | _ -> assert false
     with
-    | _ -> Options.Self.warning "%a unsupported" Printer.pp_predicate_named pred
+    | _ ->
+      Options.Self.warning "%a unsupported" Printer.pp_predicate_named pred;
+      constraints
 
 
 
@@ -420,7 +418,7 @@ let rec requires_to_prolog : predicate named -> unit =
 let generated = ref false
 
 
-let translate() =
+let translate () =
   let kf = fst (Globals.entry_point()) in
   let func_name = Kernel_function.get_name kf in
   let bhv = ref None in
@@ -437,23 +435,30 @@ let translate() =
       let typically = List.filter (fun (s,_,_) -> s = "typically")
 	bhv.b_extended in
       let typically = List.map (fun (_,_,pred) -> pred) typically in
-      List.iter (fun l ->
-	let ll = List.map Logic_const.pred_of_id_pred l in
-	let ll = List.map subst ll in
-	let new_props = List.map (Property.ip_of_requires kf Kglobal bhv) l in
-	List.iter Property_status.register new_props;
-	Prop_id.typically := List.rev_append new_props !Prop_id.typically;
-	List.iter requires_to_prolog ll
-      ) typically;
+      let constraints =
+	List.fold_left (fun c l ->
+	  let ll = List.map Logic_const.pred_of_id_pred l in
+	  let ll = List.map subst ll in
+	  let new_props = List.map (Property.ip_of_requires kf Kglobal bhv) l in
+	  List.iter Property_status.register new_props;
+	  Prop_id.typically := List.rev_append new_props !Prop_id.typically;
+	  List.fold_left requires_to_prolog c ll
+	) [] typically
+      in
       Options.Self.feedback ~dkey:Options.dkey_native_precond
 	"non-default behaviors ignored!";
       let formals = Kernel_function.get_formals kf in
       let create_input d v = create_input_from_type d v.vtype (PLCVar v) in
       let domains = List.fold_left create_input [] formals in
-      List.iter requires_to_prolog requires;
+      let constraints =List.fold_left requires_to_prolog constraints requires in
+      let is_quantif = function PLQuantif _ -> true |  _ -> false in
+      let quantifs, unquantifs = List.partition is_quantif constraints in
+      let unfold = function PLQuantif q -> q | _ -> assert false in
+      let quantifs = List.map unfold quantifs in
+      let unfold = function PLUnquantif q -> q | _ -> assert false in
+      let unquantifs = List.map unfold unquantifs in
       let chan = open_out (Options.Precond_File.get()) in
       output chan prolog_header;
-
       let complex_d, simple_d = List.partition is_complex_domain domains in
       
       (* DOM *)
@@ -484,7 +489,7 @@ let translate() =
 	   precond_name func_name);
       
       (* QUANTIF_PRECONDS *)
-      let qp = List.map pp_pl_quantif !quantifs in
+      let qp = List.map pp_pl_quantif quantifs in
       let qp = Utils.fold_comma qp in
       output chan(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
       output chan
@@ -494,7 +499,7 @@ let translate() =
       
       
       (* UNQUANTIF_PRECONDS *)
-      let uqp = List.map pp_pl_rel !unquantifs in
+      let uqp = List.map pp_pl_rel unquantifs in
       let uqp = Utils.fold_comma uqp in
       output chan
 	(Printf.sprintf"unquantif_preconds('%s',[%s]).\n" func_name uqp);
@@ -511,8 +516,6 @@ let translate() =
 	(Printf.sprintf "precondition_of('%s','%s').\n" func_name precond_name);
       flush chan;
       close_out chan;
-      unquantifs := [];
-      quantifs := [];
       generated := true
     end
 
