@@ -85,74 +85,74 @@
                         k = 0;
                         {
                            if(((l1+l2)-k)<0)pathcrawler_assert_exception("Variant non positive",10);
-                           if(!((k) == i+j)) pathcrawler_assert_exception("Loop invariant not established!", 4);
-                           if(!((0 <= (k)) && ((k) <= l1+l2))) pathcrawler_assert_exception("Loop invariant not established!", 19);
-                           if(!((0 <= (j)) && ((j) <= (l2)))) pathcrawler_assert_exception("Loop invariant not established!", 12);
-                           if(!((0 <= (i)) && ((i) <= (l1)))) pathcrawler_assert_exception("Loop invariant not established!", 7);
-                           while (1) {
-                             int old_variant_10 = (l1+l2)-k;
+                           if(!((k) == i+j))pathcrawler_assert_exception("Loop invariant not established!", 4);if(!((0 <= (k)) && ((k) <= l1+l2)))pathcrawler_assert_exception("Loop invariant not established!", 19);if(!((0 <= (j)) && ((j) <= (l2))))pathcrawler_assert_exception("Loop invariant not established!", 12);if(!((0 <= (i)) && ((i) <= (l1))))pathcrawler_assert_exception("Loop invariant not established!", 7);while (1) {
+                                                                                        int old_variant_10 = (l1+l2)-k;
                     {
-                                                               if (i < l1) {
-                                                                 if (! (j < l2)) break;
-                                                               }
-                                                               else break;
-                                                               if (*(t1 + i) < *(t2 + j)) {
-                                                                 *(t3 + k) = *(t1 + i);
-                                                                 i ++;
-                                                               }
-                                                               else {
-                                                                 *(t3 + k) = *(t2 + j);
-                                                                 j ++;
-                                                               }
-                                                               k ++;
-                                                             }if(!((0 <= (i)) && ((i) <= (l1)))) pathcrawler_assert_exception("Loop invariant not preserved!", 7);
-                             if(!((0 <= (j)) && ((j) <= (l2)))) pathcrawler_assert_exception("Loop invariant not preserved!", 12);
-                             if(!((0 <= (k)) && ((k) <= l1+l2))) pathcrawler_assert_exception("Loop invariant not preserved!", 19);
-                             if(!((k) == i+j)) pathcrawler_assert_exception("Loop invariant not preserved!", 4);
-                             if((old_variant_10)<0)pathcrawler_assert_exception("Variant non positive",10);
-                             if(((l1+l2)-k) >= old_variant_10) pathcrawler_assert_exception("Variant non decreasing",10);
-                             }
-                              
+                                                                                        if (
+                                                                                        i < l1) {
+                                                                                        if (! (
+                                                                                        j < l2)) 
+                                                                                        break;
+                                                                                        }
+                                                                                        else 
+                                                                                        break;
+                                                                                        if (
+                                                                                        *(
+                                                                                        t1 + i) < *(
+                                                                                        t2 + j)) {
+                                                                                        *(t3 + k) = *(
+                                                                                        t1 + i);
+                                                                                        i ++;
+                                                                                        }
+                                                                                        else {
+                                                                                        *(t3 + k) = *(
+                                                                                        t2 + j);
+                                                                                        j ++;
+                                                                                        }
+                                                                                        k ++;
+                                                                                        }if(!((0 <= (i)) && ((i) <= (l1))))pathcrawler_assert_exception("Loop invariant not preserved!", 7);if(!((0 <= (j)) && ((j) <= (l2))))pathcrawler_assert_exception("Loop invariant not preserved!", 12);if(!((0 <= (k)) && ((k) <= l1+l2)))pathcrawler_assert_exception("Loop invariant not preserved!", 19);if(!((k) == i+j))pathcrawler_assert_exception("Loop invariant not preserved!", 4);
+                                                                                        if((old_variant_10)<0)pathcrawler_assert_exception("Variant non positive",10);
+                                                                                        if(((l1+l2)-k) >= old_variant_10) pathcrawler_assert_exception("Variant non decreasing",10);
+                                                                                        }
+                                                                                         
                         }
                         {
                            if((l1-i)<0)pathcrawler_assert_exception("Variant non positive",16);
-                           if(!((k) == i+j)) pathcrawler_assert_exception("Loop invariant not established!", 6);
-                           if(!((0 <= (k)) && ((k) <= l1+l2))) pathcrawler_assert_exception("Loop invariant not established!", 0);
-                           if(!((0 <= (i)) && ((i) <= (l1)))) pathcrawler_assert_exception("Loop invariant not established!", 15);
-                           while (1) {
-                             int old_variant_16 = l1-i;
+                           if(!((k) == i+j))pathcrawler_assert_exception("Loop invariant not established!", 6);if(!((0 <= (k)) && ((k) <= l1+l2)))pathcrawler_assert_exception("Loop invariant not established!", 0);if(!((0 <= (i)) && ((i) <= (l1))))pathcrawler_assert_exception("Loop invariant not established!", 15);while (1) {
+                                                                                        int old_variant_16 = l1-i;
                     {
-                                                          if (! (i < l1)) break;
-                                                          *(t3 + k) = *(t1 + i);
-                                                          i ++;
-                                                          k ++;
-                                                        }if(!((0 <= (i)) && ((i) <= (l1)))) pathcrawler_assert_exception("Loop invariant not preserved!", 15);
-                             if(!((0 <= (k)) && ((k) <= l1+l2))) pathcrawler_assert_exception("Loop invariant not preserved!", 0);
-                             if(!((k) == i+j)) pathcrawler_assert_exception("Loop invariant not preserved!", 6);
-                             if((old_variant_16)<0)pathcrawler_assert_exception("Variant non positive",16);
-                             if((l1-i) >= old_variant_16) pathcrawler_assert_exception("Variant non decreasing",16);
-                             }
-                              
+                                                                                        if (! (
+                                                                                        i < l1)) 
+                                                                                        break;
+                                                                                        *(
+                                                                                        t3 + k) = *(
+                                                                                        t1 + i);
+                                                                                        i ++;
+                                                                                        k ++;
+                                                                                        }if(!((0 <= (i)) && ((i) <= (l1))))pathcrawler_assert_exception("Loop invariant not preserved!", 15);if(!((0 <= (k)) && ((k) <= l1+l2)))pathcrawler_assert_exception("Loop invariant not preserved!", 0);if(!((k) == i+j))pathcrawler_assert_exception("Loop invariant not preserved!", 6);
+                                                                                        if((old_variant_16)<0)pathcrawler_assert_exception("Variant non positive",16);
+                                                                                        if((l1-i) >= old_variant_16) pathcrawler_assert_exception("Variant non decreasing",16);
+                                                                                        }
+                                                                                         
                         }
                         {
                            if((l2-j)<0)pathcrawler_assert_exception("Variant non positive",21);
-                           if(!((k) == i+j)) pathcrawler_assert_exception("Loop invariant not established!", 9);
-                           if(!((0 <= (k)) && ((k) <= l1+l2))) pathcrawler_assert_exception("Loop invariant not established!", 2);
-                           if(!((0 <= (j)) && ((j) <= (l2)))) pathcrawler_assert_exception("Loop invariant not established!", 18);
-                           while (1) {
-                             int old_variant_21 = l2-j;
+                           if(!((k) == i+j))pathcrawler_assert_exception("Loop invariant not established!", 9);if(!((0 <= (k)) && ((k) <= l1+l2)))pathcrawler_assert_exception("Loop invariant not established!", 2);if(!((0 <= (j)) && ((j) <= (l2))))pathcrawler_assert_exception("Loop invariant not established!", 18);while (1) {
+                                                                                        int old_variant_21 = l2-j;
                     {
-                                                          if (! (j < l2)) break;
-                                                          *(t3 + k) = *(t2 + j);
-                                                          j ++;
-                                                          k ++;
-                                                        }if(!((0 <= (j)) && ((j) <= (l2)))) pathcrawler_assert_exception("Loop invariant not preserved!", 18);
-                             if(!((0 <= (k)) && ((k) <= l1+l2))) pathcrawler_assert_exception("Loop invariant not preserved!", 2);
-                             if(!((k) == i+j)) pathcrawler_assert_exception("Loop invariant not preserved!", 9);
-                             if((old_variant_21)<0)pathcrawler_assert_exception("Variant non positive",21);
-                             if((l2-j) >= old_variant_21) pathcrawler_assert_exception("Variant non decreasing",21);
-                             }
-                              
+                                                                                        if (! (
+                                                                                        j < l2)) 
+                                                                                        break;
+                                                                                        *(
+                                                                                        t3 + k) = *(
+                                                                                        t2 + j);
+                                                                                        j ++;
+                                                                                        k ++;
+                                                                                        }if(!((0 <= (j)) && ((j) <= (l2))))pathcrawler_assert_exception("Loop invariant not preserved!", 18);if(!((0 <= (k)) && ((k) <= l1+l2)))pathcrawler_assert_exception("Loop invariant not preserved!", 2);if(!((k) == i+j))pathcrawler_assert_exception("Loop invariant not preserved!", 9);
+                                                                                        if((old_variant_21)<0)pathcrawler_assert_exception("Variant non positive",21);
+                                                                                        if((l2-j) >= old_variant_21) pathcrawler_assert_exception("Variant non decreasing",21);
+                                                                                        }
+                                                                                         
                         }
                         {
                           int __stady_pred_5 = 1;
