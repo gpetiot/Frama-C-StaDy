@@ -14,7 +14,17 @@ PLUGIN_TESTS_DIRS := \
 	quick_sort \
 	tcas \
 	first_subset \
-	next_subset
+	next_subset \
+	deleteSubstr0 \
+	deleteSubstr1a \
+	deleteSubstr1b \
+	deleteSubstr1c \
+	deleteSubstr1d \
+	deleteSubstr2a \
+	deleteSubstr2b \
+	deleteSubstr2c \
+	deleteSubstr3 \
+	deleteSubstr4
 PLUGIN_PTESTS_OPTS := -j 1
 
 PLUGIN_CMO	:= \
