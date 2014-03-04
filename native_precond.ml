@@ -48,7 +48,10 @@ type pl_rel = pl_term * relation * pl_term
 
 type pl_quantif = logic_var list * pl_rel list * pl_rel
 
-type pl_constraint = PLUnquantif of pl_rel | PLQuantif of pl_quantif
+type pl_constraint =
+| PLUnquantif of pl_rel
+| PLQuantif of pl_quantif
+| PLDomain of pl_domain
 
 
 
@@ -344,7 +347,8 @@ let valid_to_prolog : term -> pl_constraint =
     match term.term_node with
     | TLval _ ->
       let t = term_to_pl term in
-      PLUnquantif (PLDim t, Req, PLConst (PLInt Integer.one))
+      (*PLUnquantif (PLDim t, Req, PLConst (PLInt Integer.one))*)
+      PLDomain (PLIntDom (PLDim t, Integer.one, Integer.one))
 
     | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
       let t' = term_to_pl t in
@@ -427,16 +431,46 @@ let translate () =
       in
       Options.Self.feedback ~dkey:Options.dkey_native_precond
 	"non-default behaviors ignored!";
-      let formals = Kernel_function.get_formals kf in
-      let create_input d v = create_input_from_type d v.vtype (PLCVar v) in
-      let domains = List.fold_left create_input [] formals in
+      
+      
       let constraints =List.fold_left requires_to_prolog constraints requires in
+      let is_domain = function PLDomain _ -> true | _ -> false in
+      let domains, constraints = List.partition is_domain constraints in
+      let unfold = function PLDomain d -> d | _ -> assert false in
+      let domains = List.map unfold domains in
       let is_quantif = function PLQuantif _ -> true |  _ -> false in
       let quantifs, unquantifs = List.partition is_quantif constraints in
       let unfold = function PLQuantif q -> q | _ -> assert false in
       let quantifs = List.map unfold quantifs in
       let unfold = function PLUnquantif q -> q | _ -> assert false in
       let unquantifs = List.map unfold unquantifs in
+      let formals = Kernel_function.get_formals kf in
+      let create_input d v = create_input_from_type d v.vtype (PLCVar v) in
+      let domains = List.fold_left create_input domains formals in
+
+
+      let domains_tbl = Hashtbl.create 32 in
+      let is_int_domain = function PLIntDom _ -> true | _ -> false in
+      let int_doms, float_doms = List.partition is_int_domain domains in
+      List.iter (function
+      | PLIntDom (t, i1, i2) ->
+	begin
+	  try
+	    let lower, upper = Hashtbl.find domains_tbl t in
+	    let lower' = Integer.max lower i1 in
+	    let upper' = Integer.min upper i2 in
+	    Hashtbl.replace domains_tbl t (lower', upper')
+	  with Not_found -> Hashtbl.add domains_tbl t (i1, i2)
+	end
+      | PLFloatDom _ -> assert false
+      ) int_doms;
+
+      
+      let domains = Hashtbl.fold (fun k (v,w) doms ->
+	PLIntDom (k,v,w) :: doms) domains_tbl float_doms in
+      
+
+
       let chan = open_out (Options.Precond_File.get()) in
       output chan prolog_header;
       let complex_d, simple_d = List.partition is_complex_domain domains in

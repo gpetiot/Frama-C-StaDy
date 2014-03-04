@@ -14,9 +14,9 @@
 [stady:generated-pl] dom('quick_sort', cont('arr',_), [], int([-2147483648..2147483647])).
 [stady:generated-pl] dom('pathcrawler__quick_sort_precond',A,B,C) :- dom('quick_sort',A,B,C).
 [stady:generated-pl] create_input_vals('quick_sort', Ins):-
+[stady:generated-pl] create_input_val('elements', int([-2147483648..2147483647]),Ins),
 [stady:generated-pl] create_input_val(dim('end'), int([0..4294967295]),Ins),
 [stady:generated-pl] create_input_val(dim('beg'), int([0..4294967295]),Ins),
-[stady:generated-pl] create_input_val('elements', int([-2147483648..2147483647]),Ins),
 [stady:generated-pl] create_input_val(dim('arr'), int([0..4294967295]),Ins),
 [stady:generated-pl] true.
 [stady:generated-pl] create_input_vals('pathcrawler__quick_sort_precond',Ins) :- create_input_vals('quick_sort',Ins).
