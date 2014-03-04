@@ -250,8 +250,12 @@ class to_pl = object(self)
     fun t ->
       match t.term_node with
       | TLogic_coerce (_, t') -> self#term t'
+      | TConst (LEnum {eival={enode=Const (CInt64 (ii,_,_))}})
       | TConst (Integer (ii, _)) -> PLConst (PLInt ii)
+      | TConst (LEnum {eival={enode=Const (CReal (f,_,_))}})
       | TConst (LReal {r_nearest=f}) -> PLConst (PLFloat f)
+      | TConst (LEnum {eival={enode=Const (CChr c)}})
+      | TConst (LChr c) -> PLConst (PLInt (Integer.of_int (int_of_char c)))
       | TLval tl -> self#term_lval tl
       | TBinOp(op,x,y)-> PLBinOp (self#term x, op, self#term y)
       | TUnOp (Neg, term) ->
@@ -277,7 +281,15 @@ end
 
 
 
-let term_to_pl : term -> pl_term = fun t -> (new to_pl)#term t
+let term_to_pl : term -> pl_term =
+  fun t ->
+    try
+      (new to_pl)#term t
+    with
+    | _ ->
+      Options.Self.debug ~dkey:Options.dkey_native_precond
+	"term_to_pl: %a" Printer.pp_term t;
+      assert false
 
 
 
