@@ -50,7 +50,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen) {
   @ requires \valid(substr + (0..sublen-1));
   @ requires \separated(dest+(0..strlen-1), substr+(0..sublen-1));
   @ requires \separated(dest+(0..strlen-1), str+(0..strlen-1));
-  @ typically strlen <= 5;
+  @ typically strlen <= 3;
   @ assigns dest[0..strlen-1];
   @ behavior not_present:
   @   assumes !(\exists integer i; 0 <= i < strlen-sublen && 
