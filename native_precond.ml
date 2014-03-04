@@ -61,7 +61,8 @@ let rec is_complex_term : pl_term -> bool =
   function
   | PLBinOp (t1,_,t2) -> is_complex_term t1 || is_complex_term t2
   | PLDim t -> is_complex_term t
-  | PLContAll _ | PLCont _ -> true
+  | PLContAll _ -> true
+  | PLCont (t1,t2) -> is_complex_term t1 || is_complex_term t2
   | PLConst _ | PLLVar _ | PLCVar _ -> false
 
 let is_complex_domain : pl_domain -> bool =
@@ -342,19 +343,28 @@ let rec create_input_from_type :
 
 
 
-let valid_to_prolog : term -> pl_constraint =
+let valid_to_prolog : term -> pl_constraint list =
   fun term ->
+    let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
     match term.term_node with
     | TLval _ ->
       let t = term_to_pl term in
-      (*PLUnquantif (PLDim t, Req, PLConst (PLInt Integer.one))*)
-      PLDomain (PLIntDom (PLDim t, Integer.one, Integer.one))
+      [ PLDomain (PLIntDom (PLDim t, Integer.one, maxuint)) ]
 
     | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
       let t' = term_to_pl t in
       let x' = term_to_pl x in
-      let one = PLConst (PLInt(Integer.one)) in
-      PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one))
+      let one =  PLConst (PLInt(Integer.one)) in
+      begin
+	match x' with
+	| PLConst (PLInt i) ->
+	  let i' = Integer.add i Integer.one in
+	  [ PLDomain (PLIntDom (PLDim t', i', maxuint)) ]
+
+	| _ ->
+	  [ PLDomain (PLIntDom (PLDim t', Integer.one, maxuint));
+	    PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
+      end
 
     | _ -> error_term term
 
@@ -380,7 +390,8 @@ let rec requires_to_prolog :
       | Pand (p1, p2) ->
 	requires_to_prolog (requires_to_prolog constraints p1) p2
       | Ptrue -> constraints
-      | Pvalid(_,t) | Pvalid_read(_,t) -> (valid_to_prolog t) :: constraints
+      | Pvalid(_,t) | Pvalid_read(_,t) ->
+	List.rev_append (List.rev (valid_to_prolog t)) constraints
       | Pforall (_quantif, _pn) -> constraints
       | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
       | _ -> assert false
@@ -458,7 +469,7 @@ let translate () =
 	  try
 	    let lower, upper = Hashtbl.find domains_tbl t in
 	    let lower' = Integer.max lower i1 in
-	    let upper' = Integer.min upper i2 in
+	    let upper' = Integer.max upper i2 in
 	    Hashtbl.replace domains_tbl t (lower', upper')
 	  with Not_found -> Hashtbl.add domains_tbl t (i1, i2)
 	end
@@ -468,6 +479,7 @@ let translate () =
       
       let domains = Hashtbl.fold (fun k (v,w) doms ->
 	PLIntDom (k,v,w) :: doms) domains_tbl float_doms in
+      let domains = List.rev domains in
       
 
 

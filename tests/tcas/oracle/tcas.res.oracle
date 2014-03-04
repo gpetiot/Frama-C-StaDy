@@ -11,13 +11,13 @@
                      dom(0,0,0,0).
 [stady:generated-pl] dom('pathcrawler__entry_point_precond',A,B,C) :- dom('entry_point',A,B,C).
 [stady:generated-pl] create_input_vals('entry_point', Ins):-
-[stady:generated-pl] create_input_val('other_rac', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val('down_separation', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val('up_separation', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val('alt_layer_value', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val('other_tracked_alt', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val('own_tracked_alt', int([-2147483648..2147483647]),Ins),
 [stady:generated-pl] create_input_val('two_of_three_reports_valid', int([-2147483648..2147483647]),Ins),
+[stady:generated-pl] create_input_val('own_tracked_alt', int([-2147483648..2147483647]),Ins),
+[stady:generated-pl] create_input_val('other_tracked_alt', int([-2147483648..2147483647]),Ins),
+[stady:generated-pl] create_input_val('alt_layer_value', int([-2147483648..2147483647]),Ins),
+[stady:generated-pl] create_input_val('up_separation', int([-2147483648..2147483647]),Ins),
+[stady:generated-pl] create_input_val('down_separation', int([-2147483648..2147483647]),Ins),
+[stady:generated-pl] create_input_val('other_rac', int([-2147483648..2147483647]),Ins),
 [stady:generated-pl] true.
 [stady:generated-pl] create_input_vals('pathcrawler__entry_point_precond',Ins) :- create_input_vals('entry_point',Ins).
 [stady:generated-pl] quantif_preconds('entry_point',[]).

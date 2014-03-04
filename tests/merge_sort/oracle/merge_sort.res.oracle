@@ -10,13 +10,13 @@
                      :- export precondition_of/2.
                      
                      dom(0,0,0,0).
-[stady:generated-pl] dom('merge_sort', cont('ret',_), [], int([-2147483648..2147483647])).
 [stady:generated-pl] dom('merge_sort', cont('table',_), [], int([-2147483648..2147483647])).
+[stady:generated-pl] dom('merge_sort', cont('ret',_), [], int([-2147483648..2147483647])).
 [stady:generated-pl] dom('pathcrawler__merge_sort_precond',A,B,C) :- dom('merge_sort',A,B,C).
 [stady:generated-pl] create_input_vals('merge_sort', Ins):-
+[stady:generated-pl] create_input_val(dim('table'), int([1..4294967295]),Ins),
+[stady:generated-pl] create_input_val(dim('ret'), int([1..4294967295]),Ins),
 [stady:generated-pl] create_input_val('l', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val(dim('ret'), int([0..4294967295]),Ins),
-[stady:generated-pl] create_input_val(dim('table'), int([0..4294967295]),Ins),
 [stady:generated-pl] true.
 [stady:generated-pl] create_input_vals('pathcrawler__merge_sort_precond',Ins) :- create_input_vals('merge_sort',Ins).
 [stady:generated-pl] quantif_preconds('merge_sort',[]).

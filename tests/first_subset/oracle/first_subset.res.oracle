@@ -12,8 +12,8 @@
 [stady:generated-pl] dom('firstSubset', cont('s',_), [], int([-2147483648..2147483647])).
 [stady:generated-pl] dom('pathcrawler__firstSubset_precond',A,B,C) :- dom('firstSubset',A,B,C).
 [stady:generated-pl] create_input_vals('firstSubset', Ins):-
+[stady:generated-pl] create_input_val(dim('s'), int([1..4294967295]),Ins),
 [stady:generated-pl] create_input_val('n', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val(dim('s'), int([0..4294967295]),Ins),
 [stady:generated-pl] true.
 [stady:generated-pl] create_input_vals('pathcrawler__firstSubset_precond',Ins) :- create_input_vals('firstSubset',Ins).
 [stady:generated-pl] quantif_preconds('firstSubset',[]).

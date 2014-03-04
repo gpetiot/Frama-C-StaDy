@@ -9,16 +9,16 @@
                      :- export precondition_of/2.
                      
                      dom(0,0,0,0).
-[stady:generated-pl] dom('merge_arrays', cont('t3',_), [], int([-2147483648..2147483647])).
-[stady:generated-pl] dom('merge_arrays', cont('t2',_), [], int([-2147483648..2147483647])).
 [stady:generated-pl] dom('merge_arrays', cont('t1',_), [], int([-2147483648..2147483647])).
+[stady:generated-pl] dom('merge_arrays', cont('t2',_), [], int([-2147483648..2147483647])).
+[stady:generated-pl] dom('merge_arrays', cont('t3',_), [], int([-2147483648..2147483647])).
 [stady:generated-pl] dom('pathcrawler__merge_arrays_precond',A,B,C) :- dom('merge_arrays',A,B,C).
 [stady:generated-pl] create_input_vals('merge_arrays', Ins):-
-[stady:generated-pl] create_input_val('l2', int([-2147483648..2147483647]),Ins),
+[stady:generated-pl] create_input_val(dim('t1'), int([1..4294967295]),Ins),
+[stady:generated-pl] create_input_val(dim('t2'), int([1..4294967295]),Ins),
+[stady:generated-pl] create_input_val(dim('t3'), int([1..4294967295]),Ins),
 [stady:generated-pl] create_input_val('l1', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val(dim('t3'), int([0..4294967295]),Ins),
-[stady:generated-pl] create_input_val(dim('t2'), int([0..4294967295]),Ins),
-[stady:generated-pl] create_input_val(dim('t1'), int([0..4294967295]),Ins),
+[stady:generated-pl] create_input_val('l2', int([-2147483648..2147483647]),Ins),
 [stady:generated-pl] true.
 [stady:generated-pl] create_input_vals('pathcrawler__merge_arrays_precond',Ins) :- create_input_vals('merge_arrays',Ins).
 [stady:generated-pl] quantif_preconds('merge_arrays',[]).

@@ -12,8 +12,8 @@
 [stady:generated-pl] dom('num_of', cont('t',_), [], int([-2147483648..2147483647])).
 [stady:generated-pl] dom('pathcrawler__num_of_precond',A,B,C) :- dom('num_of',A,B,C).
 [stady:generated-pl] create_input_vals('num_of', Ins):-
+[stady:generated-pl] create_input_val(dim('t'), int([1..4294967295]),Ins),
 [stady:generated-pl] create_input_val('n', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val(dim('t'), int([0..4294967295]),Ins),
 [stady:generated-pl] true.
 [stady:generated-pl] create_input_vals('pathcrawler__num_of_precond',Ins) :- create_input_vals('num_of',Ins).
 [stady:generated-pl] quantif_preconds('num_of',[]).
