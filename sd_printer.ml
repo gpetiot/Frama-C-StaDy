@@ -316,9 +316,7 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.fprintf Format.str_formatter "%a" self#logic_var lv;
       Format.flush_str_formatter()
     | TResult _ -> assert false
-    | TMem t ->
-      let v = self#term_and_var fmt t in
-      "*(" ^ v ^ ")"
+    | TMem t -> let v = self#term_and_var fmt t in "*(" ^ v ^ ")"
 
   method private term_offset_and_var fmt toffset =
     match toffset with
@@ -353,7 +351,6 @@ class sd_printer props terms_at_Pre () = object(self)
       end
     | _ -> super#term_lval fmt t
 
-
   method private at_least_one_prop kf behaviors =
     List.fold_left (fun res b ->
       res ||
@@ -364,8 +361,6 @@ class sd_printer props terms_at_Pre () = object(self)
 	in
 	List.fold_left at_least_one false b.b_post_cond
     ) false behaviors
-
-
 
   method private fundecl fmt f =
     Options.Self.debug ~dkey:Options.dkey_second_pass "IN fundecl";
@@ -531,7 +526,6 @@ class sd_printer props terms_at_Pre () = object(self)
 	  ) tbl
 	with Not_found -> ()
       end;
-
     self#block ~braces:true fmt f.sbody;
     begin
       match postcond with
@@ -549,8 +543,6 @@ class sd_printer props terms_at_Pre () = object(self)
       (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore);
     Options.Self.debug ~dkey:Options.dkey_second_pass "OUT fundecl"
   (* end of fundecl *)
-
-
 
   method private bhv_assumes_begin fmt bhv loc =
     if bhv.b_assumes <> [] then
@@ -576,9 +568,6 @@ class sd_printer props terms_at_Pre () = object(self)
     Format.fprintf fmt "pathcrawler_assert_exception(\"%s\", %i);" msg id;
     Format.fprintf fmt "@]@]";
     Prop_id.translated_properties := prop :: !Prop_id.translated_properties
-
-
-      
 
   method! private annotated_stmt next fmt stmt =
     self#stmt_labels fmt stmt;
@@ -845,16 +834,6 @@ class sd_printer props terms_at_Pre () = object(self)
     if has_code_annots then Format.fprintf fmt "@]@\n}"
   (* end of annotated_stmt *)
 
-
-	
-
-
-	
-
-
-
-
-
   method! global fmt g =
     if first_global then
       begin
@@ -954,10 +933,8 @@ class sd_printer props terms_at_Pre () = object(self)
       if print_var vi then begin
 	if Cil.isFunctionType vi.vtype then self#in_current_function vi;
 	self#opt_funspec fmt funspec;
-	begin
-	  self#line_directive fmt l;
-	  Format.fprintf fmt "%a@\n@\n" self#vdecl_complete vi
-	end;
+	self#line_directive fmt l;
+	Format.fprintf fmt "%a@\n@\n" self#vdecl_complete vi;
 	if Cil.isFunctionType vi.vtype then self#out_current_function
       end
     | GAsm (s, l) ->
@@ -970,18 +947,11 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.fprintf fmt "/*@@@ %a@ */@\n" self#global_annotation decl
     | GText s  -> if s <> "//" then Format.fprintf fmt "%s@\n" s
   (* end of global *)
-	
-
-
-
-
 
   (* prints a predicate and returns the name of the variable containing the
      return value *)
   method private predicate_named_and_var fmt pred_named =
     self#predicate_and_var fmt pred_named.content
-
-
 
   (* factorization of predicate_and_var for \exists and \forall  *)
   method private quantif_predicate_and_var ~forall fmt logic_vars hyps goal =
@@ -1015,8 +985,6 @@ class sd_printer props terms_at_Pre () = object(self)
     Format.fprintf fmt "}@\n";
     var
   (* end of quantif_predicate_and_var *)
-
-
 
   (* prints a predicate and returns the name of the variable containing the
      return value *)
@@ -1081,8 +1049,4 @@ class sd_printer props terms_at_Pre () = object(self)
       Options.Self.warning "%a unsupported" Printer.pp_predicate pred;
       "1"
 (* end of pred_and_var *)
-	
-
-
-
 end (* end of printer class *)
