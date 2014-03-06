@@ -428,13 +428,9 @@ let rec requires_to_prolog :
 let translate () =
   let kf = fst (Globals.entry_point()) in
   let func_name = Kernel_function.get_name kf in
-  let bhv = ref None in
-  Annotations.iter_behaviors
-    (fun _ b -> if Cil.is_default_behavior b then bhv := Some b) kf;
-  let bhv = !bhv in
-  match bhv with
-  | None -> false
-  | Some bhv ->
+  let only_default _ b r = if Cil.is_default_behavior b then b :: r else r in
+  match Annotations.fold_behaviors only_default kf [] with
+  | [ bhv ] ->
     begin
       let subst pred  = (new Sd_subst.subst)#subst_pnamed pred [] [] [] [] in
       let requires = List.map Logic_const.pred_of_id_pred bhv.b_requires in
@@ -556,4 +552,5 @@ let translate () =
       close_out chan;
       true
     end
+  | _ -> false
 
