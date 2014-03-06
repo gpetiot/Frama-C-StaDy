@@ -212,18 +212,18 @@ let second_pass filename props terms_at_Pre =
   Kernel.Unicode.set false;
   let out = open_out filename in
   let fmt = Format.formatter_of_out_channel out in
-  let module P = Printer_builder.Make
-	(struct class printer = Sd_printer.sd_printer props terms_at_Pre end) in
-  P.pp_file fmt (Ast.get());
+  let printer = new Sd_printer.sd_printer props terms_at_Pre () in
+  printer#file fmt (Ast.get());
   flush out;
   close_out out;
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
-  P.pp_file fmt (Ast.get());
+  printer#file fmt (Ast.get());
   let dkey = Options.dkey_generated_c in
   Format.pp_print_flush fmt();
   Options.Self.debug ~dkey "%s" (Buffer.contents buf);
-  Buffer.clear buf
+  Buffer.clear buf;
+  printer#translated_properties()
 
 
 
@@ -251,8 +251,8 @@ let compute_props props terms_at_Pre =
   Options.Self.feedback ~dkey:Options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
-  second_pass (Options.Temp_File.get()) props terms_at_Pre;
-  let translated_properties = Utils.no_repeat !Prop_id.translated_properties in
+  let translated_props =
+    second_pass (Options.Temp_File.get()) props terms_at_Pre in
   let test_params =
     if native_precond_generated then
       Printf.sprintf "-pc-test-params %s" (Options.Precond_File.get())
@@ -328,8 +328,7 @@ let compute_props props terms_at_Pre =
       let hyps = !Prop_id.typically in
       if !Prop_id.all_paths then
 	Property_status.emit pcva_emitter ~hyps prop ~distinct status
-  ) translated_properties;
-  Prop_id.translated_properties := [];
+  ) translated_props;
   Prop_id.all_paths := false;
   Prop_id.typically := []
 
@@ -365,102 +364,42 @@ let setup_props_bijection () =
 
 
 
-let properties_of_behavior name =
-  Globals.Functions.fold (fun kf props ->
-    Annotations.fold_behaviors (fun _ b p ->
-      if b.b_name = name then
-	List.rev_append (Property.ip_all_of_behavior kf Kglobal b) p
-      else
-	p
-    ) kf props
-  ) []
+let properties_of_behavior : string -> Property.t list =
+  fun name ->
+    Property_status.fold (fun p ret ->
+      match Property.get_behavior p with
+      | Some b when b.b_name = name -> p :: ret
+      | _ -> ret
+    ) []
 
 
 
-let properties_of_function name =
-  let props = ref [] in
-  Globals.Functions.iter (fun kf ->
-    let kf_name = Kernel_function.get_name kf in
-    if kf_name = name then
-      begin
-	Annotations.iter_behaviors (fun _ bhv ->
-	  let new_props = Property.ip_all_of_behavior kf Kglobal bhv in
-	  props := List.rev_append new_props !props
-	) kf;
-	let o = object
-	  inherit Visitor.frama_c_inplace
-	  method! vstmt_aux stmt =
-	    let f s =
-	      Annotations.iter_code_annot (fun _ ca ->
-		let p = Property.ip_of_code_annot kf s ca in
-		props := List.rev_append p !props
-	      ) s;
-	      s
-	    in
-	    Cil.ChangeDoChildrenPost(stmt, f)
-	end in
+let properties_of_function : string -> Property.t list =
+  fun name ->
+    Property_status.fold (fun p ret ->
+      match Property.get_kf p with
+      | Some kf when (Kernel_function.get_name kf) = name -> p :: ret
+      | _ -> ret
+    ) []
+
+
+
+let properties_of_name : string -> Property.t list =
+  fun name ->
+    Property_status.fold (fun p ret ->
+      let str =
 	try
-	  let fundec = Kernel_function.get_definition kf in
-	  ignore (Visitor.visitFramacFunction o fundec)
-	with _ -> ()
-      end
-  );
-  !props
-
-
-
-let properties_of_name name =
-  let props = ref [] in
-  Globals.Functions.iter (fun kf ->
-    Annotations.iter_behaviors (fun _ bhv ->
-      List.iter (fun id_pred ->
-	if List.mem name id_pred.ip_name then
-	  let p = Property.ip_of_requires kf Kglobal bhv id_pred in
-	  props := p :: !props
-      ) bhv.b_requires;
-      List.iter (fun (tk,id_pred) ->
-	if List.mem name id_pred.ip_name then
-	  let p = Property.ip_of_ensures kf Kglobal bhv (tk,id_pred) in
-	  props := p :: !props
-      ) bhv.b_post_cond;
-    ) kf;
-    let o = object
-      inherit Visitor.frama_c_inplace
-      method! vstmt_aux stmt =
-	let f s =
-	  Annotations.iter_code_annot (fun _ ca ->
-	    match ca.annot_content with
-	    | AAssert(_,{name=l})
-	    | AInvariant(_,_,{name=l}) ->
-	      if List.mem name l then
-		let p = Property.ip_of_code_annot kf s ca in
-		props := List.rev_append p !props
-	    | AStmtSpec(_,{spec_behavior=bhvs}) ->
-	      List.iter (fun b ->
-		List.iter (fun id_pred ->
-		  if List.mem name id_pred.ip_name then
-		    let p = Property.ip_of_requires kf (Kstmt s) b id_pred in
-		    props := p :: !props
-		) b.b_requires;
-		List.iter (fun (tk,id_pred) ->
-		  if List.mem name id_pred.ip_name then
-		    let p =
-		      Property.ip_of_ensures kf (Kstmt s) b (tk,id_pred) in
-		    props := p :: !props
-		) b.b_post_cond;
-	      ) bhvs
-	    | _ -> ()
-	  ) s;
-	  s
-	in
-	Cil.ChangeDoChildrenPost(stmt, f)
-    end in
-    try
-      let fundec = Kernel_function.get_definition kf in
-      ignore (Visitor.visitFramacFunction o fundec)
-    with _ -> ()
-  );
-  !props
+	  let buf = Buffer.create 32 in
+	  let fmt = Format.formatter_of_buffer buf in
+	  Property.short_pretty fmt p;
+	  Format.pp_print_flush fmt ();
+	  let str = Buffer.contents buf in
+	  Buffer.clear buf;
+	  str
+	with _ -> ""
+      in
+      if str <> "" && str = name then p :: ret else ret
+    ) []
 
 
 

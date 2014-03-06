@@ -34,8 +34,7 @@ let rec extract_terms : term -> term * term =
 
 (* generate guards for logic vars, e.g.:
    [0 <= a <= 10; x <= b <= y]
-   TODO: what is the 2nd value of the returned tuple (logic_var list) ???
-*)
+   TODO: what is the 2nd value of the returned tuple (logic_var list) ??? *)
 let rec compute_guards
     : (term*relation*logic_var*relation*term)list ->
   logic_var list ->
@@ -93,6 +92,13 @@ class sd_printer props terms_at_Pre () = object(self)
   val mutable in_old_term = false
   val mutable in_old_ptr = false
   val mutable first_global = true
+
+  (* we can only modify the property_status of the properties that have really
+     been translated into pathcrawler_assert_exception *)
+  val mutable translated_properties = []
+
+  (* getter *)
+  method translated_properties() = Utils.no_repeat translated_properties
     
   (* unmodified *)  
   method private in_current_function vi =
@@ -559,7 +565,7 @@ class sd_printer props terms_at_Pre () = object(self)
       var;
     Format.fprintf fmt "pathcrawler_assert_exception(\"%s\", %i);" msg id;
     Format.fprintf fmt "@]@]";
-    Prop_id.translated_properties := prop :: !Prop_id.translated_properties
+    translated_properties <- prop :: translated_properties
 
   method! private annotated_stmt next fmt stmt =
     self#stmt_labels fmt stmt;
@@ -608,8 +614,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	      begin
 		let id = Prop_id.to_id prop in
 		self#bhv_assumes_begin fmt b pred.ip_loc;
-		self#pc_assert_exception
-		  fmt pred.ip_content pred.ip_loc
+		self#pc_assert_exception fmt pred.ip_content pred.ip_loc
 		  "Stmt Pre-condition!" id prop;
 		self#bhv_assumes_end fmt b
 	      end
@@ -629,8 +634,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		      begin
 			let id = Prop_id.to_id prop in
 			self#bhv_assumes_begin fmt b pred.ip_loc;
-			self#pc_assert_exception
-			  fmt pred.ip_content pred.ip_loc
+			self#pc_assert_exception fmt pred.ip_content pred.ip_loc
 			  "Stmt Post-condition!" id prop;
 			self#bhv_assumes_end fmt b
 		      end
@@ -748,8 +752,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	    Format.fprintf fmt
 	      "@[<v 2>if((%s)<0)pathcrawler_assert_exception(\"Variant non positive\",%i);@]@\n"
 	      term' id;
-	    Prop_id.translated_properties :=
-	      prop :: !Prop_id.translated_properties;
+	    translated_properties <- prop :: translated_properties;
 	    begin_loop :=
 	      (fun fmt ->
 		let term' = self#term_and_var fmt term in
@@ -764,8 +767,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		Format.fprintf fmt
 		  "@[<v 2>if((%s) >= old_variant_%i) pathcrawler_assert_exception(\"Variant non decreasing\",%i);@]@\n"
 		  term' id id;
-		Prop_id.translated_properties :=
-		  prop :: !Prop_id.translated_properties)
+		translated_properties <- prop :: translated_properties)
 	    :: !end_loop
 	  end
       | _ -> ()
