@@ -116,38 +116,31 @@ let lengths_from_requires :
 	begin
 	  let kf_name = Kernel_function.get_name kf in
 	  let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
-
-	  Annotations.iter_behaviors (fun _ bhv ->
-	    List.iter (fun id_pred ->
-	      let pred = id_pred.ip_content in
-	      let c = new Sd_subst.subst in
-	      let pred = c#subst_pred pred [] [] [] [] in
-
-	      let o = object
-		inherit Visitor.frama_c_inplace
-
-		method! vpredicate p =
-		  match p with
-		  | Pvalid(_, t) | Pvalid_read(_, t) ->
-		    begin
-		      try
-			let varinfo, term = extract_from_valid t in
-			let terms =
-			  try Cil_datatype.Varinfo.Hashtbl.find kf_tbl varinfo
-			  with Not_found -> []
-			in
-			let terms = Utils.append_end terms term in
-			Cil_datatype.Varinfo.Hashtbl.replace
-			  kf_tbl varinfo terms;
-			Cil.DoChildren
-		      with
-		      | _ -> Cil.DoChildren
-		    end
+	  let o = object
+	    inherit Visitor.frama_c_inplace
+	    method! vpredicate p =
+	      match p with
+	      | Pvalid(_, t) | Pvalid_read(_, t) ->
+		begin
+		  try
+		    let v, term = extract_from_valid t in
+		    let terms =
+		      try Cil_datatype.Varinfo.Hashtbl.find kf_tbl v
+		      with Not_found -> []
+		    in
+		    let terms = Utils.append_end terms term in
+		    Cil_datatype.Varinfo.Hashtbl.replace kf_tbl v terms;
+		    Cil.DoChildren
+		  with
 		  | _ -> Cil.DoChildren
-	      end
-	      in
-	      
-	      ignore (Visitor.visitFramacPredicate o pred)
+		end
+	      | _ -> Cil.DoChildren
+	  end
+	  in
+	  Annotations.iter_behaviors (fun _ bhv ->
+	    List.iter (fun p ->
+	      let p' = (new Sd_subst.subst)#subst_pred p.ip_content [][][][] in
+	      ignore (Visitor.visitFramacPredicate o p')
 	    ) bhv.b_requires
 	  ) kf;
 	  (* TODO: handle arrays with constant size *)
@@ -178,27 +171,20 @@ let at_from_formals :
     Globals.Functions.iter (fun kf ->
       let vi = Kernel_function.get_vi kf in
       if not (Cil.is_unused_builtin vi) then
-	begin
-	  let kf_name = Kernel_function.get_name kf in
-	  let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
-	  let lengths_tbl = Datatype.String.Hashtbl.find lengths kf_name in
-	  let formals = Kernel_function.get_formals kf in
-	  List.iter (fun vi ->
-	    let terms =
-	      try Cil_datatype.Varinfo.Hashtbl.find lengths_tbl vi
-	      with Not_found -> []
-	    in
-	    Cil_datatype.Varinfo.Hashtbl.add kf_tbl vi terms
-	  ) formals;
-	  Globals.Vars.iter (fun vi _ ->
-	    let terms =
-	      try Cil_datatype.Varinfo.Hashtbl.find lengths_tbl vi
-	      with Not_found -> []
-	    in
-	    Cil_datatype.Varinfo.Hashtbl.add kf_tbl vi terms
-	  );
-	  Datatype.String.Hashtbl.add terms_at_Pre kf_name kf_tbl
-	end
+	let kf_name = Kernel_function.get_name kf in
+	let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
+	let lengths_tbl = Datatype.String.Hashtbl.find lengths kf_name in
+	let formals = Kernel_function.get_formals kf in
+	let add v = 
+	  let terms =
+	    try Cil_datatype.Varinfo.Hashtbl.find lengths_tbl v
+	    with Not_found -> []
+	  in
+	  Cil_datatype.Varinfo.Hashtbl.add kf_tbl v terms
+	in
+	List.iter add formals;
+	Globals.Vars.iter (fun v _ -> add v);
+	Datatype.String.Hashtbl.add terms_at_Pre kf_name kf_tbl
     );
     Options.Self.debug ~dkey:Options.dkey_at "AT:";
     print_strtbl_vartbl_terms terms_at_Pre Options.dkey_at;
@@ -350,8 +336,7 @@ let setup_props_bijection () =
     let fc_builtin = "__fc_builtin_for_normalization.i" in
     if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
       begin
-	Datatype.Int.Hashtbl.add
-	  Prop_id.id_to_prop_tbl !property_id property;
+	Datatype.Int.Hashtbl.add Prop_id.id_to_prop_tbl !property_id property;
 	Property.Hashtbl.add Prop_id.prop_to_id_tbl property !property_id;
 	property_id := !property_id + 1
       end
