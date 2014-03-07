@@ -258,6 +258,7 @@ class sd_printer props terms_at_Pre () = object(self)
   (* special treatment for \old terms *)
   method private term_node_and_var fmt t =
     match t.term_node with
+    | Tnull -> "0"
     | TConst(Integer(i,_)) ->
       if (Integer.to_string i) = "-2147483648" then
 	"(-2147483647-1)"
