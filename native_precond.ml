@@ -2,10 +2,7 @@
 open Cil_types
 
 
-let output chan str =
-  Options.Self.debug ~dkey:Options.dkey_generated_pl "%s" str;
-  output_string chan str
-    
+
 
 let typically_typer ~typing_context ~loc bhv ps =
   match ps with
@@ -57,6 +54,7 @@ type pl_constraint =
 
 
 
+
 let rec is_complex_term : pl_term -> bool =
   function
   | PLBinOp (t1,_,t2) -> is_complex_term t1 || is_complex_term t2
@@ -66,13 +64,7 @@ let rec is_complex_term : pl_term -> bool =
   | PLConst _ | PLLVar _ | PLCVar _ -> false
 
 let is_complex_domain : pl_domain -> bool =
-  function PLIntDom (t,_,_)| PLFloatDom (t,_,_) -> is_complex_term t
-
-
-
-
-
-
+  function PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> is_complex_term t
 
 class pl_printer = object(self)
   method pl_constant : pl_constant -> string =
@@ -149,14 +141,10 @@ class pl_printer = object(self)
 	(self#pl_term t2)
 end
 
-
 let pp_pl_term = (new pl_printer)#pl_term
 let pp_pl_domain = (new pl_printer)#pl_domain
 let pp_pl_rel = (new pl_printer)#pl_rel
 let pp_pl_quantif = (new pl_printer)#pl_quantif
-
-
-
 
 let prolog_header : string =
   ":- module(test_parameters).\n"
@@ -168,8 +156,6 @@ let prolog_header : string =
   ^ ":- export strategy/2.\n"
   ^ ":- export precondition_of/2.\n\n"
   ^ "dom(0,0,0,0).\n"
-
-
 
 let error_term : term -> 'a =
   fun term ->
@@ -207,10 +193,6 @@ let error_term : term -> 'a =
     | Tcomprehension _ -> failwith "Tcomprehension"
     | Tlet _ -> failwith "Tlet"
     | _ -> Options.Self.abort "term: %a" Printer.pp_term term
-
-
-
-
 
 class to_pl = object(self)
   method logic_var : logic_var -> pl_term =
@@ -271,16 +253,6 @@ class to_pl = object(self)
       | _ -> error_term t
 end
 
-
-
-
-
-
-
-
-
-
-
 let term_to_pl : term -> pl_term =
   fun t ->
     try
@@ -291,9 +263,7 @@ let term_to_pl : term -> pl_term =
 	"term_to_pl: %a" Printer.pp_term t;
       assert false
 
-
-
-let rec create_input_from_type :
+let rec input_from_type :
     pl_domain list -> typ -> pl_term -> pl_domain list =
   fun domains ty t ->
     let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
@@ -309,21 +279,15 @@ let rec create_input_from_type :
     match (Cil.unrollType ty) with
     | TEnum ({ekind=ik},_) | TInt (ik,_) ->
       let b_min, b_max = bounds ik in
-      let d = PLIntDom (t, b_min, b_max) in
-      d :: domains
-
+      PLIntDom (t, b_min, b_max) :: domains
     | TComp (ci,_,_) ->
-      let rec aux doms fields i =
-	match fields with
+      let rec aux doms i = function
 	| [] -> doms
-	| f :: fields' ->
-	  let doms' =
-	    create_input_from_type doms f.ftype (PLCont (t, PLConst (PLInt i)))
-	  in
-	  aux doms' fields' (Integer.succ i)
+	| f :: fields ->
+	  let d = input_from_type doms f.ftype (PLCont (t, PLConst(PLInt i))) in
+	  aux d (Integer.succ i) fields
       in
-      aux domains ci.cfields Integer.zero
-
+      aux domains Integer.zero ci.cfields
     | TPtr (ty',attr) ->
       let att = Cil.findAttribute "arraylen" attr in
       if att <> [] then
@@ -332,28 +296,17 @@ let rec create_input_from_type :
 	  match List.find is_array_len att with
 	  | AInt ii ->
 	    let d = PLIntDom (PLDim t, ii, ii) in
-	    create_input_from_type (d :: domains) ty' (PLContAll t)
+	    input_from_type (d :: domains) ty' (PLContAll t)
 	  | _ -> assert false
 	else
 	  assert false
       else
-	begin
-	  let d = PLIntDom (PLDim t, Integer.zero, maxuint) in
-	  create_input_from_type (d :: domains) ty' (PLContAll t)
-	end
-    
+	let d = PLIntDom (PLDim t, Integer.zero, maxuint) in
+	input_from_type (d :: domains) ty' (PLContAll t)
     | _ ->
-      Options.Self.feedback "create_input_from_type (%a) (%s)"
+      Options.Self.feedback "input_from_type (%a) (%s)"
 	Printer.pp_typ ty (pp_pl_term t);
       assert false
-
-
-
-
-
-
-
-
 
 let valid_to_prolog : term -> pl_constraint list =
   fun term ->
@@ -362,7 +315,6 @@ let valid_to_prolog : term -> pl_constraint list =
     | TLval _ ->
       let t = term_to_pl term in
       [ PLDomain (PLIntDom (PLDim t, Integer.one, maxuint)) ]
-
     | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
       let t' = term_to_pl t in
       let x' = term_to_pl x in
@@ -372,35 +324,24 @@ let valid_to_prolog : term -> pl_constraint list =
 	| PLConst (PLInt i) ->
 	  let i' = Integer.add i Integer.one in
 	  [ PLDomain (PLIntDom (PLDim t', i', maxuint)) ]
-
 	| _ ->
 	  [ PLDomain (PLIntDom (PLDim t', Integer.one, maxuint));
 	    PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
       end
-
     | _ -> error_term term
-
-
 
 let rel_to_prolog : relation -> term -> term -> pl_constraint =
   fun rel term1 term2 ->
     let var1 = term_to_pl term1 in
     let var2 = term_to_pl term2 in
     PLUnquantif (var1, rel, var2)
-    
-
-
-
-
-
 
 let rec requires_to_prolog :
     pl_constraint list -> predicate named -> pl_constraint list =
   fun constraints pred ->
     try
       match pred.content with
-      | Pand (p1, p2) ->
-	requires_to_prolog (requires_to_prolog constraints p1) p2
+      | Pand (p, q) -> requires_to_prolog (requires_to_prolog constraints p) q
       | Ptrue -> constraints
       | Pvalid(_,t) | Pvalid_read(_,t) ->
 	List.rev_append (List.rev (valid_to_prolog t)) constraints
@@ -412,18 +353,9 @@ let rec requires_to_prolog :
       Options.Self.warning "%a unsupported" Printer.pp_predicate_named pred;
       constraints
 
-
-
-
-
-
-
-
-
-
-
-
-
+let output chan str =
+  Options.Self.debug ~dkey:Options.dkey_generated_pl "%s" str;
+  output_string chan str
 
 let translate () =
   let kf = fst (Globals.entry_point()) in
@@ -450,8 +382,6 @@ let translate () =
       in
       Options.Self.feedback ~dkey:Options.dkey_native_precond
 	"non-default behaviors ignored!";
-      
-      
       let constraints =List.fold_left requires_to_prolog constraints requires in
       let is_domain = function PLDomain _ -> true | _ -> false in
       let domains, constraints = List.partition is_domain constraints in
@@ -464,88 +394,67 @@ let translate () =
       let unfold = function PLUnquantif q -> q | _ -> assert false in
       let unquantifs = List.map unfold unquantifs in
       let formals = Kernel_function.get_formals kf in
-      let create_input d v = create_input_from_type d v.vtype (PLCVar v) in
+      let create_input d v = input_from_type d v.vtype (PLCVar v) in
       let domains = List.fold_left create_input domains formals in
-
-
       let domains_tbl = Hashtbl.create 32 in
       let is_int_domain = function PLIntDom _ -> true | _ -> false in
       let int_doms, float_doms = List.partition is_int_domain domains in
-      List.iter (function
-      | PLIntDom (t, i1, i2) ->
-	begin
-	  try
-	    let lower, upper = Hashtbl.find domains_tbl t in
-	    let lower' = Integer.max lower i1 in
-	    let upper' = Integer.max upper i2 in
-	    Hashtbl.replace domains_tbl t (lower', upper')
-	  with Not_found -> Hashtbl.add domains_tbl t (i1, i2)
-	end
-      | PLFloatDom _ -> assert false
-      ) int_doms;
-
-      
-      let domains = Hashtbl.fold (fun k (v,w) doms ->
-	PLIntDom (k,v,w) :: doms) domains_tbl float_doms in
+      let merge_int_doms = function
+	| PLIntDom (t, i1, i2) ->
+	  begin
+	    try
+	      let lower, upper = Hashtbl.find domains_tbl t in
+	      let lower' = Integer.max lower i1 in
+	      let upper' = Integer.max upper i2 in
+	      Hashtbl.replace domains_tbl t (lower', upper')
+	    with Not_found -> Hashtbl.add domains_tbl t (i1, i2)
+	  end
+	| PLFloatDom _ -> assert false
+      in
+      List.iter merge_int_doms int_doms;
+      let add_int_dom_to_list k (v,w) doms =  PLIntDom (k,v,w) :: doms in
+      let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
       let domains = List.rev domains in
-      
-
-
       let chan = open_out (Options.Precond_File.get()) in
       output chan prolog_header;
       let complex_d, simple_d = List.partition is_complex_domain domains in
-      
-      (* DOM *)
-      List.iter (fun x ->
-	output chan (Printf.sprintf "dom('%s', %s).\n"
-		       func_name
-		       (pp_pl_domain true x)
-	)
-      ) complex_d;
-
       let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
-      output chan (Printf.sprintf "dom('%s',A,B,C) :- dom('%s',A,B,C).\n"
-		     precond_name func_name);
+      let same_constraint_for_precond before after =
+	output chan (Printf.sprintf "%s('%s',%s) :- %s('%s',%s).\n"
+		       before precond_name after before func_name after)
+      in
+
+      (* DOM *)
+      let pp_complex_d x =
+	Printf.sprintf "dom('%s', %s).\n" func_name (pp_pl_domain true x) in
+      List.iter (fun x -> output chan (pp_complex_d x)) complex_d;
+      same_constraint_for_precond "dom" "A,B,C";
       
       (* CREATE_INPUT_VALS *)
       output chan (Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
-
-      List.iter (fun s ->
-	output chan (Printf.sprintf "  create_input_val(%s,Ins),\n"
-		       (pp_pl_domain false s)
-	)
-      ) simple_d;
-
+      let pp_simple_d x =
+	Printf.sprintf "  create_input_val(%s,Ins),\n" (pp_pl_domain false x) in
+      List.iter (fun x -> output chan (pp_simple_d x)) simple_d;
       output chan "  true.\n";
-      output chan
-	(Printf.sprintf
-	   "create_input_vals('%s',Ins) :- create_input_vals('%s',Ins).\n"
-	   precond_name func_name);
+      same_constraint_for_precond "create_input_vals" "Ins";
       
       (* QUANTIF_PRECONDS *)
       let qp = List.map pp_pl_quantif quantifs in
       let qp = Utils.fold_comma qp in
       output chan(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
-      output chan
-	(Printf.sprintf
-	   "quantif_preconds('%s',A) :- quantif_preconds('%s',A).\n"
-	   precond_name func_name);
-      
-      
+      same_constraint_for_precond "quantif_preconds" "A";
+     
       (* UNQUANTIF_PRECONDS *)
       let uqp = List.map pp_pl_rel unquantifs in
       let uqp = Utils.fold_comma uqp in
       output chan
 	(Printf.sprintf"unquantif_preconds('%s',[%s]).\n" func_name uqp);
-      output chan
-	(Printf.sprintf
-	   "unquantif_preconds('%s',A) :- unquantif_preconds('%s',A).\n"
-	   precond_name func_name);
-
-
+      same_constraint_for_precond "unquantif_preconds" "A";
+      
+      (* STRATEGY *)
       output chan (Printf.sprintf "strategy('%s',[]).\n" func_name);
-      output chan (Printf.sprintf "strategy('%s',A) :- strategy('%s',A).\n"
-		     precond_name func_name);
+      same_constraint_for_precond "strategy" "A";
+
       output chan
 	(Printf.sprintf "precondition_of('%s','%s').\n" func_name precond_name);
       flush chan;
@@ -553,4 +462,3 @@ let translate () =
       true
     end
   | _ -> false
-
