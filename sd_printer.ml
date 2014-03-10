@@ -34,8 +34,7 @@ let rec extract_terms : term -> term * term =
 
 (* generate guards for logic vars, e.g.:
    [0 <= a <= 10; x <= b <= y]
-   TODO: what is the 2nd value of the returned tuple (logic_var list) ???
-*)
+   TODO: what is the 2nd value of the returned tuple (logic_var list) ??? *)
 let rec compute_guards
     : (term*relation*logic_var*relation*term)list ->
   logic_var list ->
@@ -77,7 +76,7 @@ let rec compute_guards
 
 
 
-
+type ext_quantifier = Max | Min | Sum | Product | NumOf
 
 
 
@@ -93,6 +92,13 @@ class sd_printer props terms_at_Pre () = object(self)
   val mutable in_old_term = false
   val mutable in_old_ptr = false
   val mutable first_global = true
+
+  (* we can only modify the property_status of the properties that have really
+     been translated into pathcrawler_assert_exception *)
+  val mutable translated_properties = []
+
+  (* getter *)
+  method translated_properties() = Utils.no_repeat translated_properties
     
   (* unmodified *)  
   method private in_current_function vi =
@@ -171,25 +177,15 @@ class sd_printer props terms_at_Pre () = object(self)
   (* support of the litteral value of INT_MIN *)
   method! exp fmt e =
     match e.enode with
-    | UnOp(Neg,{enode=Const(CInt64 (_,_,str))},_) ->
-      begin
-	match str with
-	| Some s when s = "2147483648" -> Format.fprintf fmt "(-2147483467-1)"
-	| _ -> super#exp fmt e
-      end
+    | UnOp(Neg,{enode=Const(CInt64 (_,_,Some s))},_) when s = "2147483648" ->
+      Format.fprintf fmt "(-2147483467-1)"
     | _ -> super#exp fmt e
 
   (* unmodified *)
   method! term fmt t = self#term_node fmt t
 
-  (* special treatment for \old terms *)
   method! term_node fmt t =
     match t.term_node with
-    | TConst(Integer(i,_)) ->
-      if (Integer.to_string i) = "-2147483648" then
-	Format.fprintf fmt "(-2147483647-1)"
-      else
-	super#term_node fmt t
     | Tat(_, StmtLabel _) ->
       if current_function <> None then
 	Options.Self.warning "%a unsupported" Printer.pp_term t;
@@ -216,8 +212,129 @@ class sd_printer props terms_at_Pre () = object(self)
 	      Options.Self.warning "%a unsupported" Printer.pp_term t;
 	    super#term_node fmt t
 	  end
-    | _ -> super#term_node fmt t	 
+    | _ -> super#term_node fmt t
+
+  method private term_and_var fmt t = self#term_node_and_var fmt t
+
+  (* \min, \max, \sum, \product and \numof *)
+  method private lambda_and_var fmt li lower upper q t =
+    let builtin_name = li.l_var_info.lv_name in
+    let var = "__stady_term_" ^ (string_of_int pred_cpt) in
+    let iter = q.lv_name in
+    let kind = if builtin_name = "\\min" then Min
+      else if builtin_name = "\\max" then Max
+      else if builtin_name = "\\sum" then Sum
+      else if builtin_name = "\\product" then Product
+      else if builtin_name = "\\numof" then NumOf
+      else assert false
+    in
+    pred_cpt <- pred_cpt + 1;
+    Format.fprintf fmt "int %s = %s;@\n"
+      var
+      (match kind with
+      | Sum | NumOf -> "0"
+      | Product -> "1"
+      | Min | Max -> "-1" (* undefined here *) );
+    Format.fprintf fmt "{@\n";
+    Format.fprintf fmt "int %s;@\n" iter;
+    let low = self#term_and_var fmt lower in
+    let up = self#term_and_var fmt upper in
+    Format.fprintf fmt "for(%s=%s; %s <= %s; %s++) {@\n" iter low iter up iter;
+    let lambda_term = self#term_and_var fmt t in
+    begin
+      match kind with
+      | Sum -> Format.fprintf fmt "%s += %s;@\n" var lambda_term
+      | NumOf -> Format.fprintf fmt "if(%s) { %s ++; }@\n" lambda_term var
+      | Product -> Format.fprintf fmt "%s *= %s;@\n" var lambda_term
+      | Min -> Format.fprintf fmt "if(%s < %s) { %s = %s; }@\n"
+	lambda_term var var lambda_term
+      | Max -> Format.fprintf fmt "if(%s > %s) { %s = %s; }@\n"
+	lambda_term var var lambda_term
+    end;
+    Format.fprintf fmt "}@\n";
+    Format.fprintf fmt "}@\n";
+    var
+
+  (* special treatment for \old terms *)
+  method private term_node_and_var fmt t =
+    match t.term_node with
+    | Tnull -> "0"
+    | TConst(Integer(i,_)) ->
+      if (Integer.to_string i) = "-2147483648" then
+	"(-2147483647-1)"
+      else
+	(Format.fprintf Format.str_formatter "%a" super#term_node t;
+	 Format.flush_str_formatter())
+    | Tapp (li,[],[lower;upper;{term_node=Tlambda([q],t)}]) ->
+      self#lambda_and_var fmt li lower upper q t
+    | Tat(_, StmtLabel _) ->
+      if current_function <> None then
+	Options.Self.warning "%a unsupported" Printer.pp_term t;
+      Format.fprintf Format.str_formatter "%a" super#term_node t;
+      Format.flush_str_formatter()
+    | Tat(term,LogicLabel(_,stringlabel)) ->
+      if stringlabel = "Old" || stringlabel = "Pre" then
+	begin
+	  let is_ptr =
+	    match term.term_node with TLval(TMem _,_) -> true | _ -> false in
+	  if is_ptr then in_old_ptr <- true;
+	  in_old_term <- true;
+	  let v = self#term_and_var fmt term in
+	  if is_ptr then in_old_ptr <- false;
+	  in_old_term <- false;
+	  v
+	end
+      else
+	(* label Post is only encoutered in post-conditions, and \at(t,Post)
+	   in a post-condition is t *)
+	if stringlabel = "Post" then
+	  self#term_and_var fmt term
+	else
+	  begin
+	    if current_function <> None then
+	      Options.Self.warning "%a unsupported" Printer.pp_term t;
+	    Format.fprintf Format.str_formatter "%a" super#term_node t;
+	    Format.flush_str_formatter()
+	  end
+    | TLogic_coerce (_, t) -> self#term_and_var fmt t
+    | TCoerce (t, _) -> self#term_and_var fmt t
+    | TLval tlval -> self#tlval_and_var fmt tlval
+    | _ ->
+      Format.fprintf Format.str_formatter "%a" super#term_node t;
+      Format.flush_str_formatter()
       
+  method private tlval_and_var fmt (tlhost, toffset) =
+    match tlhost with
+    | TResult _ ->
+      Format.fprintf Format.str_formatter "%a" self#term_lval (tlhost,toffset);
+      Format.flush_str_formatter()
+    | _ ->
+      let lhost = self#term_lhost_and_var fmt tlhost in
+      let offset = self#term_offset_and_var fmt toffset in
+      "(" ^ lhost ^ ")" ^ offset
+
+  method private term_lhost_and_var fmt lhost =
+    match lhost with
+    | TVar lv ->
+      Format.fprintf Format.str_formatter "%a" self#logic_var lv;
+      Format.flush_str_formatter()
+    | TResult _ -> assert false
+    | TMem t -> let v = self#term_and_var fmt t in "*(" ^ v ^ ")"
+
+  method private term_offset_and_var fmt toffset =
+    match toffset with
+    | TNoOffset -> ""
+    | TField (fi, tof) ->
+      let v = self#term_offset_and_var fmt tof in
+      "." ^ fi.fname ^ v
+    | TModel (mi, tof) ->
+      let v = self#term_offset_and_var fmt tof in
+      "." ^ mi.mi_name ^ v
+    | TIndex (t, tof) ->
+      let t = self#term_and_var fmt t in
+      let v = self#term_offset_and_var fmt tof in
+      "[" ^ t ^ "]" ^ v
+
   (* modify result_varinfo when the function returns something *)
   method private compute_result_varinfo f =
     List.iter (fun stmt ->
@@ -237,10 +354,16 @@ class sd_printer props terms_at_Pre () = object(self)
       end
     | _ -> super#term_lval fmt t
 
-
-
-
-
+  method private at_least_one_prop kf behaviors =
+    List.fold_left (fun res b ->
+      res ||
+	let at_least_one res (tk,pred) =
+	  res ||
+	    let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
+	    List.mem prop props
+	in
+	List.fold_left at_least_one false b.b_post_cond
+    ) false behaviors
 
   method private fundecl fmt f =
     Options.Self.debug ~dkey:Options.dkey_second_pass "IN fundecl";
@@ -249,15 +372,6 @@ class sd_printer props terms_at_Pre () = object(self)
       Kernel_function.get_name (fst(Globals.entry_point())) in
     let kf = Globals.Functions.find_by_name f.svar.vname in
     let behaviors = Annotations.behaviors kf in
-    let pc_assert_exception fmt pred loc msg id =
-      let p = (new Sd_subst.subst)#subst_pred pred [][][][] in
-      let var = self#predicate_and_var fmt p in
-      Format.fprintf fmt "@[<hv>%a@[<v 2>if(!%s)"
-	(fun fmt -> self#line_directive ~forcefile:false fmt) loc
-	var;
-      Format.fprintf fmt "pathcrawler_assert_exception(\"%s\", %i);" msg id;
-      Format.fprintf fmt "@]@]"
-    in
     let entering_ghost = f.svar.vghost && not was_ghost in
     self#compute_result_varinfo f;
     (* BEGIN precond (entry-point) *)
@@ -272,27 +386,14 @@ class sd_printer props terms_at_Pre () = object(self)
 	       Format.fprintf fmt "%s_precond" entry_point_name)))
 	  (TFun(Cil.intType,x,y,z));
 	List.iter (fun b ->
-	  List.iter (fun pred ->
-	    if b.b_assumes <> [] then
-	      begin
-		let vars = List.map (fun a ->
-		  let p =
-		    (new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
-		  self#predicate_and_var fmt p
-		) b.b_assumes in
-		Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
-		  (fun fmt -> self#line_directive ~forcefile:false fmt)
-		  pred.ip_loc;
-		List.iter (fun v -> Format.fprintf fmt "%s &&" v) vars;
-		Format.fprintf fmt " 1 ) {@\n"
-	      end;
-	    let p = (new Sd_subst.subst)#subst_pred pred.ip_content [][][][] in
-	    let var = self#predicate_and_var fmt p in
+	  List.iter (fun p ->
+	    self#bhv_assumes_begin fmt b p.ip_loc;
+	    let v = self#predicate_and_var fmt (self#subst_pred p.ip_content) in
 	    Format.fprintf fmt "@[<hv>%a@[<v 2>if (!%s) return 0;@]@]"
-	      (fun fmt -> self#line_directive ~forcefile:false fmt) pred.ip_loc
-	      var;
-	    if b.b_assumes <> [] then Format.fprintf fmt "}@\n@]@]"
-	  ) b.b_requires;
+	      (fun fmt -> self#line_directive ~forcefile:false fmt) p.ip_loc
+	      v;
+	    self#bhv_assumes_end fmt b
+	  ) b.b_requires
 	) behaviors;
 	Format.fprintf fmt "return 1;@]@]@\n}@\n@\n"
       end;
@@ -303,52 +404,25 @@ class sd_printer props terms_at_Pre () = object(self)
       self#vdecl f.svar;
     (* body. *)
     if entering_ghost then is_ghost <- true;
-    (*if List.length behaviors > 0 then*) Format.fprintf fmt "@[<h 2>{@\n";
+    Format.fprintf fmt "@[<h 2>{@\n";
     (* BEGIN precond (not entry-point) *)
     if f.svar.vname <> entry_point_name then
-      begin
-	List.iter (fun b ->
-	  List.iter (fun pred ->
-	    let prop = Property.ip_of_requires kf Kglobal b pred in
-	    if List.mem prop props then
-	      let id = Prop_id.to_id prop in
-	      if b.b_assumes <> [] then
-		begin
-		  let vars = List.map (fun a ->
-		    let p =
-		      (new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
-		    self#predicate_and_var fmt p
-		  ) b.b_assumes in
-		  Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
-		    (fun fmt -> self#line_directive ~forcefile:false fmt)
-		    pred.ip_loc;
-		  List.iter (fun v -> Format.fprintf fmt "%s &&" v) vars;
-		  Format.fprintf fmt " 1 ) {@\n"
-		end;
-	      pc_assert_exception
-		fmt pred.ip_content pred.ip_loc "Pre-condition!" id;
-	      Prop_id.translated_properties :=
-		prop :: !Prop_id.translated_properties;
-	      if b.b_assumes <> [] then Format.fprintf fmt "}@\n@]@]"
-	  ) b.b_requires
-	) behaviors
-      end;
+      List.iter (fun b ->
+	List.iter (fun pred ->
+	  let prop = Property.ip_of_requires kf Kglobal b pred in
+	  if List.mem prop props then
+	    let id = Prop_id.to_id prop in
+	    self#bhv_assumes_begin fmt b pred.ip_loc;
+	    self#pc_assert_exception
+	      fmt pred.ip_content pred.ip_loc "Pre-condition!" id prop;
+	    self#bhv_assumes_end fmt b
+	) b.b_requires
+      ) behaviors;
     (* END precond (not entry-point) *)
     (* BEGIN postcond *)
     postcond <-
       if List.length behaviors > 0 then
-	let at_least_one_prop =
-	  List.fold_left (fun res b ->
-	    res ||
-	      let at_least_one res (tk,pred) =
-		res ||
-		  let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
-		  List.mem prop props
-	      in
-	      List.fold_left at_least_one false b.b_post_cond
-	  ) false behaviors
-	in
-	if at_least_one_prop then
+	if self#at_least_one_prop kf behaviors then
 	  Some (fun fmt ->
 	    Format.fprintf fmt "@[<h 2>{@\n";
 	    List.iter (fun b ->
@@ -356,25 +430,10 @@ class sd_printer props terms_at_Pre () = object(self)
 		let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
 		if List.mem prop props then
 		  let id = Prop_id.to_id prop in
-		  if b.b_assumes <> [] then
-		    begin
-		      let vars = List.map (fun a ->
-			let p =
-			  (new Sd_subst.subst)#subst_pred a.ip_content [][][][]
-			in
-			self#predicate_and_var fmt p
-		      ) b.b_assumes in
-		      Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
-			(fun fmt -> self#line_directive ~forcefile:false fmt)
-			pred.ip_loc;
-		      List.iter (fun v -> Format.fprintf fmt "%s && " v) vars;
-		      Format.fprintf fmt " 1) {@\n"
-		    end;
-		  pc_assert_exception
-		    fmt pred.ip_content pred.ip_loc "Post-condition!" id;
-		  Prop_id.translated_properties :=
-		    prop :: !Prop_id.translated_properties;
-		  if b.b_assumes <> [] then Format.fprintf fmt "}@\n@]@]@\n"
+		  self#bhv_assumes_begin fmt b pred.ip_loc;
+		  self#pc_assert_exception
+		    fmt pred.ip_content pred.ip_loc "Post-condition!" id prop;
+		  self#bhv_assumes_end fmt b
 	      ) b.b_post_cond
 	    ) behaviors;
 	    Format.fprintf fmt "@\n}@]@\n"
@@ -411,12 +470,14 @@ class sd_printer props terms_at_Pre () = object(self)
 	      let stars =
 		stars "" ((List.length terms)-(List.length indices)-1) in
 	      let ty = extract_ptr_typ v.vtype in
-	      Format.fprintf fmt "old_ptr_%s%s = malloc((%a)*sizeof(%a%s));@\n"
-		v.vname all_indices self#term h (self#typ None)	ty stars;
+	      let h' = self#term_and_var fmt h in
+	      Format.fprintf fmt "old_ptr_%s%s = malloc((%s)*sizeof(%a%s));@\n"
+		v.vname all_indices h' (self#typ None) ty stars;
 	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
 	      Format.fprintf fmt "int %s;@\n" iterator;
-	      Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
-		iterator iterator self#term h iterator;
+	      let h' = self#term_and_var fmt h in
+	      Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
+		iterator iterator h' iterator;
 	      iter_counter := !iter_counter + 1;
 	      alloc_aux (Utils.append_end indices iterator) t;
 	      Format.fprintf fmt "}@\n"
@@ -437,7 +498,7 @@ class sd_printer props terms_at_Pre () = object(self)
       with Not_found -> ()
     end;
     dealloc <- (* dealloc variables for \at terms *)
-      Some begin fun fmt ->
+      Some (fun fmt ->
 	try
 	  let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
 	  let iter_counter = ref 0 in
@@ -450,8 +511,9 @@ class sd_printer props terms_at_Pre () = object(self)
 	      | h :: t ->
 		let iterator = "__stady_iter_" ^(string_of_int !iter_counter) in
 		Format.fprintf fmt "int %s;@\n" iterator;
-		Format.fprintf fmt "for (%s = 0; %s < %a; %s++) {@\n"
-		  iterator iterator self#term h iterator;
+		let h' = self#term_and_var fmt h in
+		Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
+		  iterator iterator h' iterator;
 		let all_indices = List.fold_left concat_indice "" indices in
 		iter_counter := !iter_counter + 1;
 		let indices = Utils.append_end indices iterator in
@@ -462,8 +524,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	    dealloc_aux [] terms
 	  ) tbl
 	with Not_found -> ()
-      end;
-
+      );
     self#block ~braces:true fmt f.sbody;
     begin
       match postcond with
@@ -475,312 +536,193 @@ class sd_printer props terms_at_Pre () = object(self)
       | Some de_alloc -> de_alloc fmt; dealloc <- None
       | None -> ()
     end;
-    (*if List.length behaviors > 0 then*) Format.fprintf fmt "@.}";
+    Format.fprintf fmt "@.}";
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
       (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore);
     Options.Self.debug ~dkey:Options.dkey_second_pass "OUT fundecl"
   (* end of fundecl *)
 
+  method private subst_pred p = (new Sd_subst.subst)#subst_pred p [] [] [] []
 
+  method private bhv_assumes_begin fmt bhv loc =
+    if bhv.b_assumes <> [] then
+      let vars = List.map (fun a ->
+	self#predicate_and_var fmt (self#subst_pred a.ip_content)
+      ) bhv.b_assumes in
+      Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
+	(fun fmt -> self#line_directive ~forcefile:false fmt) loc;
+      List.iter (fun v -> Format.fprintf fmt "%s && " v) vars;
+      Format.fprintf fmt "1) {@\n"
+	
+  method private bhv_assumes_end fmt bhv =
+    if bhv.b_assumes <> [] then Format.fprintf fmt "}@\n@]@]"
 
+  method private pc_assert_exception fmt pred loc msg id prop =
+    let var = self#predicate_and_var fmt (self#subst_pred pred) in
+    Format.fprintf fmt "@[<hv>%a@[<v 2>if(!%s)"
+      (fun fmt -> self#line_directive ~forcefile:false fmt) loc var;
+    Format.fprintf fmt "pathcrawler_assert_exception(\"%s\", %i);" msg id;
+    Format.fprintf fmt "@]@]";
+    translated_properties <- prop :: translated_properties
 
+  method private bhv_guard_begin fmt behaviors loc =
+    if behaviors <> [] then
+      begin
+	let vars = List.map (fun assumes ->
+	  List.map (fun a ->
+	    self#predicate_and_var fmt (self#subst_pred a.ip_content)
+	  ) assumes
+	) behaviors in
+	Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
+	  (fun fmt -> self#line_directive ~forcefile:false fmt) loc;
+	List.iter (fun assumes ->
+	  Format.fprintf fmt "(";
+	  List.iter (fun a -> Format.fprintf fmt "%s && " a) assumes;
+	  Format.fprintf fmt "1 ) || "
+	) vars;
+	Format.fprintf fmt "0) {@\n"
+      end
 
-
-
-      
+  method private bhv_guard_end fmt behaviors =
+    if behaviors <> [] then Format.fprintf fmt "}@\n@]@]"
 
   method! private annotated_stmt next fmt stmt =
+    Format.pp_open_hvbox fmt 2;
     self#stmt_labels fmt stmt;
+    Format.pp_open_hvbox fmt 0;
     let kf = Kernel_function.find_englobing_kf stmt in
     let begin_loop = ref [] in
     let end_loop = ref [] in
     let has_code_annots = List.length (Annotations.code_annot stmt) > 0 in
     let end_contract = ref [] in
-    if has_code_annots then Format.fprintf fmt "{@[<h 2>@\n";
-    Annotations.iter_code_annot (fun _emitter ca ->
-      begin
-	let behaviors =
-	  match ca.annot_content with
-	  | AAssert (b,_)
-	  | AStmtSpec (b,_)
-	  | AInvariant (b,_,_) -> b
-	  | _ -> []
-	in
-	let behaviors =
-	  List.map (fun bname ->
-	    let ret = ref [] in
-	    Annotations.iter_behaviors (fun _emit beh ->
-	      if beh.b_name = bname then
-		ret := beh.b_assumes
-	    ) kf;
-	    !ret
-	  ) behaviors
-	in
-	let pc_assert_exception fmt pred msg id prop =
-	  let p = (new Sd_subst.subst)#subst_pnamed pred [][][][] in
-	  let var = self#predicate_named_and_var fmt p in
-	  Format.fprintf fmt
-	    "@[<v 2>if(!%s) pathcrawler_assert_exception(\"%s\", %i);@]@\n"
-	    var msg id;
-	  Prop_id.translated_properties :=
-	    prop :: !Prop_id.translated_properties
-	in
+    let loc = Cil_datatype.Stmt.loc stmt in
+    if has_code_annots then Format.fprintf fmt "%a@[<v 2>{@\n"
+      (fun fmt -> self#line_directive ~forcefile:false fmt) loc;
+    Annotations.iter_code_annot (fun _ ca ->
+      let bhv_names =
 	match ca.annot_content with
-	| AStmtSpec (_,bhvs) ->
-	  let pc_assert_exception fmt pred msg id =
-	    let p = (new Sd_subst.subst)#subst_pred pred [][][][] in
-	    let var = self#predicate_and_var fmt p in
-	    Format.fprintf fmt
-	      "@[<v 2>if(!%s) pathcrawler_assert_exception(\"%s\",%i);@]@\n"
-	      var msg id
-	  in
-	  begin
-	    if behaviors <> [] then
+	| AAssert (b,_) | AStmtSpec (b,_) | AInvariant (b,_,_) -> b
+	| _ -> []
+      in
+      let behaviors =
+	List.map (fun bname ->
+	  Annotations.fold_behaviors (fun _ b ret ->
+	    if b.b_name = bname then b.b_assumes else ret
+	  ) kf []
+	) bhv_names
+      in
+      match ca.annot_content with
+      | AStmtSpec (_,bhvs) ->
+	self#bhv_guard_begin fmt behaviors loc;
+	List.iter (fun b ->
+	  List.iter (fun pred ->
+	    let prop = Property.ip_of_requires kf (Kstmt stmt) b pred in
+	    if List.mem prop props then
 	      begin
-		let vars = List.map (fun assumes ->
-		  List.map (fun a ->
-		    let p =
-		      (new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
-		    self#predicate_and_var fmt p
-		  ) assumes
-		) behaviors in
-		Format.fprintf fmt "@[<v 2>if (";
-		List.iter (fun assumes ->
-		  Format.fprintf fmt "(";
-		  List.iter (fun a -> Format.fprintf fmt "%s &&" a) assumes;
-		  Format.fprintf fmt " 1 ) || "
-		) vars;
-		Format.fprintf fmt " 0 )@]{@[";
-	      end;
-	    List.iter (fun b ->
-	      let assumes fmt =
-		if b.b_assumes <> [] then
-		  begin
-		    let vars = List.map (fun a ->
-		      let p =
-			(new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
-		      self#predicate_and_var fmt p
-		    ) b.b_assumes in
-		    Format.fprintf fmt "@[<v 2>if (";
-		    List.iter (fun v -> Format.fprintf fmt "%s &&" v) vars;
-		    Format.fprintf fmt " 1 )"
-		  end
-	      in
-	      List.iter (fun pred ->
-		let prop = Property.ip_of_requires kf (Kstmt stmt) b pred in
-		if List.mem prop props then
-		  begin
-		    let id = Prop_id.to_id prop in
-		    assumes fmt;
-		    pc_assert_exception
-		      fmt pred.ip_content "Stmt Pre-condition!" id;
-		    Prop_id.translated_properties :=
-		      prop :: !Prop_id.translated_properties;
-		    Format.fprintf fmt "@]"
-		  end
-	      ) b.b_requires
-	    ) bhvs.spec_behavior;
-	    if behaviors <> [] then Format.fprintf fmt "@]}";
-	  end;
-	  let contract =
-	    if List.length bhvs.spec_behavior > 0 then
-	      let at_least_one_prop =
-		List.fold_left (fun res b ->
-		  if res then true
-		  else
-		    List.fold_left (
-		      fun res (tk,pred) ->
-			if res then true
-			else
-			  let prop = Property.ip_of_ensures
-			    kf (Kstmt stmt) b (tk,pred) in
-			  List.mem prop props
-		    ) false b.b_post_cond
-		) false bhvs.spec_behavior
-	      in
-	      if at_least_one_prop then
-		Some (fun fmt ->
-		  Format.fprintf fmt "@[<h 2>{@\n";
-		  List.iter (fun b ->
-		    let assumes fmt =
-		      if b.b_assumes <> [] then
-			begin
-			  let vars = List.map (fun a ->
-			    let p =
-			      (new Sd_subst.subst)#subst_pred a.ip_content
-				[][][][]
-			    in
-			    self#predicate_and_var fmt p
-			  ) b.b_assumes in
-			  Format.fprintf fmt "@[<v 2>if (@[<hv>";
-			  List.iter (fun v->Format.fprintf fmt "%s && " v) vars;
-			  Format.fprintf fmt " 1@])@\n"
-			end
-		    in
-		    List.iter (fun (tk,pred) ->
-		      let prop = Property.ip_of_ensures
-			kf (Kstmt stmt) b (tk,pred) in
-		      if List.mem prop props then
-			begin
-			  let id = Prop_id.to_id prop in
-			  assumes fmt;
-			  pc_assert_exception
-			    fmt pred.ip_content "Stmt Post-condition!" id;
-			  Prop_id.translated_properties :=
-			    prop :: !Prop_id.translated_properties;
-			  Format.fprintf fmt "@]@\n"
-			end
-		    ) b.b_post_cond
-		  ) bhvs.spec_behavior;
-		  Format.fprintf fmt "@]@\n}@\n"
-		)
-	      else
-		None
+		let id = Prop_id.to_id prop in
+		self#bhv_assumes_begin fmt b pred.ip_loc;
+		self#pc_assert_exception fmt pred.ip_content pred.ip_loc
+		  "Stmt Pre-condition!" id prop;
+		self#bhv_assumes_end fmt b
+	      end
+	  ) b.b_requires
+	) bhvs.spec_behavior;
+	self#bhv_guard_end fmt behaviors;
+	let contract =
+	  if List.length bhvs.spec_behavior > 0 then
+	    if self#at_least_one_prop kf bhvs.spec_behavior then
+	      Some (fun fmt ->
+		Format.fprintf fmt "%a@[<v 2>{@\n"
+		  (fun fmt -> self#line_directive ~forcefile:false fmt) loc;
+		List.iter (fun b ->
+		  List.iter (fun (tk,pred) ->
+		    let prop = Property.ip_of_ensures
+		      kf (Kstmt stmt) b (tk,pred) in
+		    if List.mem prop props then
+		      begin
+			let id = Prop_id.to_id prop in
+			self#bhv_assumes_begin fmt b pred.ip_loc;
+			self#pc_assert_exception fmt pred.ip_content pred.ip_loc
+			  "Stmt Post-condition!" id prop;
+			self#bhv_assumes_end fmt b
+		      end
+		  ) b.b_post_cond
+		) bhvs.spec_behavior;
+		Format.fprintf fmt "}@\n @]"
+	      )
 	    else
-	      None in
+	      None
+	  else
+	    None
+	in
+	begin
+	  match contract with
+	  | None -> ()
+	  | Some c ->
+	    let new_contract fmt =
+	      self#bhv_guard_begin fmt behaviors loc;
+	      c fmt;
+	      self#bhv_guard_end fmt behaviors
+	    in
+	    end_contract := new_contract :: !end_contract
+	end
+      | AAssert (_,pred) ->
+	let prop = Property.ip_of_code_annot_single kf stmt ca in
+	if List.mem prop props then
+	  let id = Prop_id.to_id prop in
+	  self#bhv_guard_begin fmt behaviors loc;
+	  self#pc_assert_exception fmt pred.content pred.loc "Assert!" id prop;
+	  self#bhv_guard_end fmt behaviors
+      | AInvariant (_,true,pred) ->
+	let prop = Property.ip_of_code_annot_single kf stmt ca in
+	if List.mem prop props then
+	  let id = Prop_id.to_id prop in
+	  let f fmt msg =
+	    self#bhv_guard_begin fmt behaviors loc;
+	    self#pc_assert_exception fmt pred.content pred.loc msg id prop;
+	    self#bhv_guard_end fmt behaviors
+	  in
+	  f fmt "Loop invariant not established!";
+	  end_loop :=
+	    (fun fmt -> f fmt "Loop invariant not preserved!") :: !end_loop
+      | AVariant (term,_) ->
+	let prop = Property.ip_of_code_annot_single kf stmt ca in
+	if List.mem prop props then
 	  begin
-	    match contract with
-	    | None -> ()
-	    | Some c ->
-	      let new_contract fmt =
-		if behaviors <> [] then
-		  begin
-		    let vars = List.map (fun assumes ->
-		      List.map (fun a ->
-			let p =
-			  (new Sd_subst.subst)#subst_pred a.ip_content [][][][]
-			in
-			self#predicate_and_var fmt p
-		      ) assumes
-		    ) behaviors in
-		    Format.fprintf fmt "@[<v 2>if (";
-		    List.iter (fun assumes ->
-		      Format.fprintf fmt "(";
-		      List.iter (fun a -> Format.fprintf fmt "%s &&" a) assumes;
-		      Format.fprintf fmt " 1 ) || "
-		    ) vars;
-		    Format.fprintf fmt " 0 )@] {@[";
-		  end;
-		c fmt;
-		if behaviors <> [] then
-		  Format.fprintf fmt "@]}"
-	      in
-	      end_contract := new_contract :: !end_contract
+	    let id = Prop_id.to_id prop in
+	    let term' = self#term_and_var fmt term in
+	    Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) < 0)"
+	      (fun fmt -> self#line_directive ~forcefile:false fmt) loc term';
+	    Format.fprintf fmt
+	      "pathcrawler_assert_exception(\"Variant non positive\",%i);" id;
+	    Format.fprintf fmt "@]@]";
+	    translated_properties <- prop :: translated_properties;
+	    begin_loop :=
+	      (fun fmt ->
+		let term' = self#term_and_var fmt term in
+		Format.fprintf fmt "int old_variant_%i = %s;@\n" id term')
+	    :: !begin_loop;
+	    end_loop :=
+	      (fun fmt ->
+		Format.fprintf fmt "@[<hv>%a@[<v 2>if ((old_variant_%i) < 0)"
+		  (fun fmt -> self#line_directive ~forcefile:false fmt) loc id;
+		Format.fprintf fmt
+		  "pathcrawler_assert_exception(\"Variant non positive\",%i);"
+		  id;
+		Format.fprintf fmt "@]@]";
+		let term' = self#term_and_var fmt term in
+		Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) >= old_variant_%i)"
+		  (fun fmt -> self#line_directive ~forcefile:false fmt) loc
+		  term' id;
+		Format.fprintf fmt
+		  "pathcrawler_assert_exception(\"Variant non decreasing\",%i);"
+		  id;
+		Format.fprintf fmt "@]@]";
+		translated_properties <- prop :: translated_properties)
+	    :: !end_loop
 	  end
-	| AAssert (_,pred) ->
-	  let prop = Property.ip_of_code_annot_single kf stmt ca in
-	  if List.mem prop props then
-	    begin
-	      let id = Prop_id.to_id prop in
-	      if behaviors = [] then
-		pc_assert_exception fmt pred "Assert!" id prop
-	      else
-		begin
-		  let vars = List.map (fun assumes ->
-		    List.map (fun a ->
-		      let p =
-			(new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
-		      self#predicate_and_var fmt p
-		    ) assumes
-		  ) behaviors in
-		  Format.fprintf fmt "@[<v 2>if (";
-		  List.iter (fun assumes ->
-		    Format.fprintf fmt "(";
-		    List.iter (fun a -> Format.fprintf fmt "%s &&" a) assumes;
-		    Format.fprintf fmt " 1 ) || "
-		  ) vars;
-		  Format.fprintf fmt " 0 )@]";
-		  pc_assert_exception fmt pred "Assert!" id prop
-		end
-	    end
-	| AInvariant (_,true,pred) ->
-	  let prop = Property.ip_of_code_annot_single kf stmt ca in
-	  if List.mem prop props then
-	    begin
-	      let id = Prop_id.to_id prop in
-	      if behaviors = [] then
-		begin
-		  pc_assert_exception
-		    fmt pred "Loop invariant not established!" id prop;
-		  end_loop :=
-		    (fun fmt ->
-		      pc_assert_exception fmt pred
-			"Loop invariant not preserved!" id prop)
-		  :: !end_loop
-		end
-	      else
-		begin
-		  let vars = List.map (fun assumes ->
-		    List.map (fun a ->
-		      let p =
-			(new Sd_subst.subst)#subst_pred a.ip_content [][][][] in
-		      self#predicate_and_var fmt p
-		    ) assumes
-		  ) behaviors in
-		  Format.fprintf fmt "@[<v 2>if (";
-		  List.iter (fun assumes ->
-		    Format.fprintf fmt "(";
-		    List.iter (fun a -> Format.fprintf fmt "%s &&" a) assumes;
-		    Format.fprintf fmt " 1 ) || "
-		  ) vars;
-		  Format.fprintf fmt " 0 )@]";
-		  pc_assert_exception
-		    fmt pred "Loop invariant not established!" id prop;
-		  end_loop :=
-		    (fun fmt ->
-		      let vars = List.map (fun assumes ->
-			List.map (fun a ->
-			  let p =
-			    (new Sd_subst.subst)#subst_pred a.ip_content
-			      [][][][]
-			  in
-			  self#predicate_and_var fmt p
-			) assumes
-		      ) behaviors in
-		      Format.fprintf fmt "@[<v 2>if (";
-		      List.iter (fun assumes ->
-			Format.fprintf fmt "(";
-			List.iter (fun a ->
-			  Format.fprintf fmt "%s &&" a
-			) assumes;
-			Format.fprintf fmt " 1 ) || "
-		      ) vars;
-		      Format.fprintf fmt " 0 )@]";
-		      pc_assert_exception
-			fmt pred "Loop invariant not preserved!" id prop)
-		  :: !end_loop
-		end
-	    end
-	| AVariant (term,_) ->
-	  let prop = Property.ip_of_code_annot_single kf stmt ca in
-	  if List.mem prop props then
-	    begin
-	      let id = Prop_id.to_id prop in
-	      Format.fprintf fmt
-		"@[<v 2>if((%a)<0)pathcrawler_assert_exception(\"Variant non positive\",%i);@]@\n"
-		self#term term id;
-	      Prop_id.translated_properties :=
-		prop :: !Prop_id.translated_properties;
-	      begin_loop :=
-		(fun fmt ->
-		  Format.fprintf
-		    fmt "int old_variant_%i = %a;\n" id self#term term)
-	      :: !begin_loop;
-	      end_loop :=
-		(fun fmt ->
-		  Format.fprintf fmt
-		    "@[<v 2>if((old_variant_%i)<0)pathcrawler_assert_exception(\"Variant non positive\",%i);@]@\n"
-		    id id;
-		  Format.fprintf fmt
-		    "@[<v 2>if((%a) >= old_variant_%i) pathcrawler_assert_exception(\"Variant non decreasing\",%i);@]@\n"
-		    self#term term id id;
-		  Prop_id.translated_properties :=
-		    prop :: !Prop_id.translated_properties)
-	      :: !end_loop
-	    end
-	| _ -> ()
-      end
+      | _ -> ()
     ) stmt;
     begin
       match stmt.skind with
@@ -806,18 +748,10 @@ class sd_printer props terms_at_Pre () = object(self)
       | _ -> self#stmtkind next fmt stmt.skind
     end;
     List.iter (fun contract -> contract fmt) !end_contract;
-    if has_code_annots then Format.fprintf fmt "@]@\n}"
+    if has_code_annots then Format.fprintf fmt "}@\n @]";
+    Format.pp_close_box fmt ();
+    Format.pp_close_box fmt ()
   (* end of annotated_stmt *)
-
-
-	
-
-
-	
-
-
-
-
 
   method! global fmt g =
     if first_global then
@@ -918,10 +852,8 @@ class sd_printer props terms_at_Pre () = object(self)
       if print_var vi then begin
 	if Cil.isFunctionType vi.vtype then self#in_current_function vi;
 	self#opt_funspec fmt funspec;
-	begin
-	  self#line_directive fmt l;
-	  Format.fprintf fmt "%a@\n@\n" self#vdecl_complete vi
-	end;
+	self#line_directive fmt l;
+	Format.fprintf fmt "%a@\n@\n" self#vdecl_complete vi;
 	if Cil.isFunctionType vi.vtype then self#out_current_function
       end
     | GAsm (s, l) ->
@@ -934,18 +866,11 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.fprintf fmt "/*@@@ %a@ */@\n" self#global_annotation decl
     | GText s  -> if s <> "//" then Format.fprintf fmt "%s@\n" s
   (* end of global *)
-	
-
-
-
-
 
   (* prints a predicate and returns the name of the variable containing the
      return value *)
   method private predicate_named_and_var fmt pred_named =
     self#predicate_and_var fmt pred_named.content
-
-
 
   (* factorization of predicate_and_var for \exists and \forall  *)
   method private quantif_predicate_and_var ~forall fmt logic_vars hyps goal =
@@ -961,13 +886,15 @@ class sd_printer props terms_at_Pre () = object(self)
     Format.fprintf fmt "int %s = %i;@\n" var (if forall then 1 else 0);
     Format.fprintf fmt "{@\n";
     Format.fprintf fmt "int %s;@\n" iter;
-    Format.fprintf fmt "for (%s = %a%s; %s %a %a && %s %s; %s++) {@\n"
+    let t1' = self#term_and_var fmt t1 in
+    let t2' = self#term_and_var fmt t2 in
+    Format.fprintf fmt "for (%s = %s%s; %s %a %s && %s %s; %s++) {@\n"
       iter
-      self#term t1
+      t1'
       (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
       iter
       self#relation r2
-      self#term t2
+      t2'
       (if forall then "" else "!")
       var
       iter;
@@ -978,8 +905,6 @@ class sd_printer props terms_at_Pre () = object(self)
     var
   (* end of quantif_predicate_and_var *)
 
-
-
   (* prints a predicate and returns the name of the variable containing the
      return value *)
   method private predicate_and_var fmt pred =
@@ -988,9 +913,10 @@ class sd_printer props terms_at_Pre () = object(self)
     | Pfalse -> "0"
     | Pvalid(_,term) | Pvalid_read(_,term) ->
       let x, y = extract_terms term in
+      let x',y' = self#term_and_var fmt x, self#term_and_var fmt y in
       Format.fprintf Format.str_formatter
-	"((%a) >= 0 && (pathcrawler_dimension(%a) > (%a)))"
-	self#term y self#term x self#term y;
+	"((%s) >= 0 && (pathcrawler_dimension(%s) > (%s)))"
+	y' x' y';
       Format.flush_str_formatter()
     | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
       self#quantif_predicate_and_var ~forall:true fmt logic_vars hyps goal
@@ -1031,8 +957,9 @@ class sd_printer props terms_at_Pre () = object(self)
 	pred1_var pred2_var pred2_var pred1_var;
       Format.flush_str_formatter()
     | Prel(rel,t1,t2) ->
-      Format.fprintf Format.str_formatter "(%a %a %a)"
-	self#term t1 self#relation rel self#term t2;
+      let t1', t2' = self#term_and_var fmt t1, self#term_and_var fmt t2 in
+      Format.fprintf Format.str_formatter "(%s %a %s)"
+	t1' self#relation rel t2';
       Format.flush_str_formatter()
     | Pat (p,_) ->
       Options.Self.warning "%a unsupported!" Printer.pp_predicate pred;
@@ -1041,8 +968,4 @@ class sd_printer props terms_at_Pre () = object(self)
       Options.Self.warning "%a unsupported" Printer.pp_predicate pred;
       "1"
 (* end of pred_and_var *)
-	
-
-
-
 end (* end of printer class *)

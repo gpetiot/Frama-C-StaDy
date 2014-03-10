@@ -116,38 +116,31 @@ let lengths_from_requires :
 	begin
 	  let kf_name = Kernel_function.get_name kf in
 	  let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
-
-	  Annotations.iter_behaviors (fun _ bhv ->
-	    List.iter (fun id_pred ->
-	      let pred = id_pred.ip_content in
-	      let c = new Sd_subst.subst in
-	      let pred = c#subst_pred pred [] [] [] [] in
-
-	      let o = object
-		inherit Visitor.frama_c_inplace
-
-		method! vpredicate p =
-		  match p with
-		  | Pvalid(_, t) | Pvalid_read(_, t) ->
-		    begin
-		      (*try*)
-			let varinfo, term = extract_from_valid t in
-			let terms =
-			  try Cil_datatype.Varinfo.Hashtbl.find kf_tbl varinfo
-			  with Not_found -> []
-			in
-			let terms = Utils.append_end terms term in
-			Cil_datatype.Varinfo.Hashtbl.replace
-			  kf_tbl varinfo terms;
-			Cil.DoChildren
-		      (*with
-		      | _ -> Cil.DoChildren*)
-		    end
+	  let o = object
+	    inherit Visitor.frama_c_inplace
+	    method! vpredicate p =
+	      match p with
+	      | Pvalid(_, t) | Pvalid_read(_, t) ->
+		begin
+		  try
+		    let v, term = extract_from_valid t in
+		    let terms =
+		      try Cil_datatype.Varinfo.Hashtbl.find kf_tbl v
+		      with Not_found -> []
+		    in
+		    let terms = Utils.append_end terms term in
+		    Cil_datatype.Varinfo.Hashtbl.replace kf_tbl v terms;
+		    Cil.DoChildren
+		  with
 		  | _ -> Cil.DoChildren
-	      end
-	      in
-	      
-	      ignore (Visitor.visitFramacPredicate o pred)
+		end
+	      | _ -> Cil.DoChildren
+	  end
+	  in
+	  Annotations.iter_behaviors (fun _ bhv ->
+	    List.iter (fun p ->
+	      let p' = (new Sd_subst.subst)#subst_pred p.ip_content [][][][] in
+	      ignore (Visitor.visitFramacPredicate o p')
 	    ) bhv.b_requires
 	  ) kf;
 	  (* TODO: handle arrays with constant size *)
@@ -178,27 +171,20 @@ let at_from_formals :
     Globals.Functions.iter (fun kf ->
       let vi = Kernel_function.get_vi kf in
       if not (Cil.is_unused_builtin vi) then
-	begin
-	  let kf_name = Kernel_function.get_name kf in
-	  let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
-	  let lengths_tbl = Datatype.String.Hashtbl.find lengths kf_name in
-	  let formals = Kernel_function.get_formals kf in
-	  List.iter (fun vi ->
-	    let terms =
-	      try Cil_datatype.Varinfo.Hashtbl.find lengths_tbl vi
-	      with Not_found -> []
-	    in
-	    Cil_datatype.Varinfo.Hashtbl.add kf_tbl vi terms
-	  ) formals;
-	  Globals.Vars.iter (fun vi _ ->
-	    let terms =
-	      try Cil_datatype.Varinfo.Hashtbl.find lengths_tbl vi
-	      with Not_found -> []
-	    in
-	    Cil_datatype.Varinfo.Hashtbl.add kf_tbl vi terms
-	  );
-	  Datatype.String.Hashtbl.add terms_at_Pre kf_name kf_tbl
-	end
+	let kf_name = Kernel_function.get_name kf in
+	let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
+	let lengths_tbl = Datatype.String.Hashtbl.find lengths kf_name in
+	let formals = Kernel_function.get_formals kf in
+	let add v = 
+	  let terms =
+	    try Cil_datatype.Varinfo.Hashtbl.find lengths_tbl v
+	    with Not_found -> []
+	  in
+	  Cil_datatype.Varinfo.Hashtbl.add kf_tbl v terms
+	in
+	List.iter add formals;
+	Globals.Vars.iter (fun v _ -> add v);
+	Datatype.String.Hashtbl.add terms_at_Pre kf_name kf_tbl
     );
     Options.Self.debug ~dkey:Options.dkey_at "AT:";
     print_strtbl_vartbl_terms terms_at_Pre Options.dkey_at;
@@ -212,18 +198,18 @@ let second_pass filename props terms_at_Pre =
   Kernel.Unicode.set false;
   let out = open_out filename in
   let fmt = Format.formatter_of_out_channel out in
-  let module P = Printer_builder.Make
-	(struct class printer = Sd_printer.sd_printer props terms_at_Pre end) in
-  P.pp_file fmt (Ast.get());
+  let printer = new Sd_printer.sd_printer props terms_at_Pre () in
+  printer#file fmt (Ast.get());
   flush out;
   close_out out;
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
-  P.pp_file fmt (Ast.get());
+  printer#file fmt (Ast.get());
   let dkey = Options.dkey_generated_c in
   Format.pp_print_flush fmt();
   Options.Self.debug ~dkey "%s" (Buffer.contents buf);
-  Buffer.clear buf
+  Buffer.clear buf;
+  printer#translated_properties()
 
 
 
@@ -247,14 +233,14 @@ let pcva_emitter =
 
 let compute_props props terms_at_Pre =
   (* Translate some parts of the pre-condition in Prolog *)
-  Native_precond.translate();
+  let native_precond_generated = Native_precond.translate() in
   Options.Self.feedback ~dkey:Options.dkey_native_precond
     "Prolog pre-condition %s generated"
-    (if !Native_precond.generated then "successfully" else "not");
-  second_pass (Options.Temp_File.get()) props terms_at_Pre;
-  let translated_properties = Utils.no_repeat !Prop_id.translated_properties in
+    (if native_precond_generated then "successfully" else "not");
+  let translated_props =
+    second_pass (Options.Temp_File.get()) props terms_at_Pre in
   let test_params =
-    if !Native_precond.generated then
+    if native_precond_generated then
       Printf.sprintf "-pc-test-params %s" (Options.Precond_File.get())
     else
       ""
@@ -328,11 +314,9 @@ let compute_props props terms_at_Pre =
       let hyps = !Prop_id.typically in
       if !Prop_id.all_paths then
 	Property_status.emit pcva_emitter ~hyps prop ~distinct status
-  ) translated_properties;
-  Prop_id.translated_properties := [];
+  ) translated_props;
   Prop_id.all_paths := false;
-  Prop_id.typically := [];
-  Native_precond.generated := false
+  Prop_id.typically := []
 
 
 
@@ -352,8 +336,7 @@ let setup_props_bijection () =
     let fc_builtin = "__fc_builtin_for_normalization.i" in
     if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
       begin
-	Datatype.Int.Hashtbl.add
-	  Prop_id.id_to_prop_tbl !property_id property;
+	Datatype.Int.Hashtbl.add Prop_id.id_to_prop_tbl !property_id property;
 	Property.Hashtbl.add Prop_id.prop_to_id_tbl property !property_id;
 	property_id := !property_id + 1
       end
@@ -366,102 +349,42 @@ let setup_props_bijection () =
 
 
 
-let properties_of_behavior name =
-  Globals.Functions.fold (fun kf props ->
-    Annotations.fold_behaviors (fun _ b p ->
-      if b.b_name = name then
-	List.rev_append (Property.ip_all_of_behavior kf Kglobal b) p
-      else
-	p
-    ) kf props
-  ) []
+let properties_of_behavior : string -> Property.t list =
+  fun name ->
+    Property_status.fold (fun p ret ->
+      match Property.get_behavior p with
+      | Some b when b.b_name = name -> p :: ret
+      | _ -> ret
+    ) []
 
 
 
-let properties_of_function name =
-  let props = ref [] in
-  Globals.Functions.iter (fun kf ->
-    let kf_name = Kernel_function.get_name kf in
-    if kf_name = name then
-      begin
-	Annotations.iter_behaviors (fun _ bhv ->
-	  let new_props = Property.ip_all_of_behavior kf Kglobal bhv in
-	  props := List.rev_append new_props !props
-	) kf;
-	let o = object
-	  inherit Visitor.frama_c_inplace
-	  method! vstmt_aux stmt =
-	    let f s =
-	      Annotations.iter_code_annot (fun _ ca ->
-		let p = Property.ip_of_code_annot kf s ca in
-		props := List.rev_append p !props
-	      ) s;
-	      s
-	    in
-	    Cil.ChangeDoChildrenPost(stmt, f)
-	end in
+let properties_of_function : string -> Property.t list =
+  fun name ->
+    Property_status.fold (fun p ret ->
+      match Property.get_kf p with
+      | Some kf when (Kernel_function.get_name kf) = name -> p :: ret
+      | _ -> ret
+    ) []
+
+
+
+let properties_of_name : string -> Property.t list =
+  fun name ->
+    Property_status.fold (fun p ret ->
+      let str =
 	try
-	  let fundec = Kernel_function.get_definition kf in
-	  ignore (Visitor.visitFramacFunction o fundec)
-	with _ -> ()
-      end
-  );
-  !props
-
-
-
-let properties_of_name name =
-  let props = ref [] in
-  Globals.Functions.iter (fun kf ->
-    Annotations.iter_behaviors (fun _ bhv ->
-      List.iter (fun id_pred ->
-	if List.mem name id_pred.ip_name then
-	  let p = Property.ip_of_requires kf Kglobal bhv id_pred in
-	  props := p :: !props
-      ) bhv.b_requires;
-      List.iter (fun (tk,id_pred) ->
-	if List.mem name id_pred.ip_name then
-	  let p = Property.ip_of_ensures kf Kglobal bhv (tk,id_pred) in
-	  props := p :: !props
-      ) bhv.b_post_cond;
-    ) kf;
-    let o = object
-      inherit Visitor.frama_c_inplace
-      method! vstmt_aux stmt =
-	let f s =
-	  Annotations.iter_code_annot (fun _ ca ->
-	    match ca.annot_content with
-	    | AAssert(_,{name=l})
-	    | AInvariant(_,_,{name=l}) ->
-	      if List.mem name l then
-		let p = Property.ip_of_code_annot kf s ca in
-		props := List.rev_append p !props
-	    | AStmtSpec(_,{spec_behavior=bhvs}) ->
-	      List.iter (fun b ->
-		List.iter (fun id_pred ->
-		  if List.mem name id_pred.ip_name then
-		    let p = Property.ip_of_requires kf (Kstmt s) b id_pred in
-		    props := p :: !props
-		) b.b_requires;
-		List.iter (fun (tk,id_pred) ->
-		  if List.mem name id_pred.ip_name then
-		    let p =
-		      Property.ip_of_ensures kf (Kstmt s) b (tk,id_pred) in
-		    props := p :: !props
-		) b.b_post_cond;
-	      ) bhvs
-	    | _ -> ()
-	  ) s;
-	  s
-	in
-	Cil.ChangeDoChildrenPost(stmt, f)
-    end in
-    try
-      let fundec = Kernel_function.get_definition kf in
-      ignore (Visitor.visitFramacFunction o fundec)
-    with _ -> ()
-  );
-  !props
+	  let buf = Buffer.create 32 in
+	  let fmt = Format.formatter_of_buffer buf in
+	  Property.short_pretty fmt p;
+	  Format.pp_print_flush fmt ();
+	  let str = Buffer.contents buf in
+	  Buffer.clear buf;
+	  str
+	with _ -> ""
+      in
+      if str <> "" && str = name then p :: ret else ret
+    ) []
 
 
 
@@ -478,12 +401,11 @@ let run() =
 	if behaviors <> [] || functions <> [] || properties <> [] then
 	  begin
 	    let gather p b = List.rev_append (properties_of_behavior b) p in
-	    let bhv_props = List.fold_left gather [] behaviors in
+	    let props = List.fold_left gather [] behaviors in
 	    let gather p f = List.rev_append (properties_of_function f) p in
-	    let fct_props = List.fold_left gather [] functions in
+	    let props = List.fold_left gather props functions in
 	    let gather p n = List.rev_append (properties_of_name n) p in
-	    let nam_props = List.fold_left gather [] properties in
-	    List.rev_append bhv_props (List.rev_append fct_props nam_props)
+	    List.fold_left gather props properties
 	  end
 	else
 	  Property_status.fold (fun p l -> p :: l) [] 

@@ -25,7 +25,8 @@ class subst = object(self)
 	    x, self#subst_term y labels args quantifs) new_args in
 	begin
 	  match li.l_body with
-	  | LBnone -> Options.Self.not_yet_implemented "LBnone"
+	  | LBnone ->
+	    Options.Self.not_yet_implemented "LBnone in predicate application"
 	  | LBreads _ -> Options.Self.not_yet_implemented "LBreads"
 	  | LBterm _ -> Options.Self.not_yet_implemented "LBterm"
 	  | LBpred {content=p} ->
@@ -55,7 +56,8 @@ class subst = object(self)
       let lv = li.l_var_info in
       begin
 	match li.l_body with
-	| LBnone -> Options.Self.not_yet_implemented "LBnone"
+	| LBnone ->
+	  Options.Self.not_yet_implemented "LBnone in \\let (predicate)"
 	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
 	| LBterm t' ->
 	  let t'' = self#subst_term t' labels args quantifs in
@@ -128,6 +130,15 @@ class subst = object(self)
     | TCastE (ty,t) -> TCastE (ty, self#subst_term t labels args quantifs)
     | TAddrOf _ -> Options.Self.not_yet_implemented "TAddrOf"
     | TStartOf _ -> Options.Self.not_yet_implemented "TStartOf"
+    | Tapp (li,[],[lower;upper;({term_node=Tlambda([_],_)} as lambda)]) ->
+      let builtin_name = li.l_var_info.lv_name in
+      if builtin_name = "\\min" || builtin_name = "\\max" ||
+	builtin_name = "\\sum" || builtin_name = "\\product" ||
+	builtin_name = "\\numof" then
+	Tapp (li,[],[self#subst_term lower labels args quantifs;
+		     self#subst_term upper labels args quantifs;
+		     self#subst_term lambda labels args quantifs])
+      else assert false (* unreachable *)
     | Tapp (li,lassoc,params) ->
       let new_labels =
 	List.map (fun (x,y) -> x, self#subst_label y labels) lassoc in
@@ -137,7 +148,8 @@ class subst = object(self)
 	  x, self#subst_term y labels args quantifs) new_args in
       begin
 	match li.l_body with
-	| LBnone -> Options.Self.not_yet_implemented "LBnone"
+	| LBnone ->
+	  Options.Self.not_yet_implemented "LBnone in term application"
 	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
 	| LBterm{term_node=t} -> self#subst_tnode t new_labels new_args quantifs
 	| LBpred _ -> Options.Self.not_yet_implemented "LBpred"
@@ -189,7 +201,7 @@ class subst = object(self)
       let lv = li.l_var_info in
       begin
 	match li.l_body with
-	| LBnone -> Options.Self.not_yet_implemented "LBnone"
+	| LBnone -> Options.Self.not_yet_implemented "LBnone in \\let (term)"
 	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
 	| LBterm t' ->
 	  let t'' = self#subst_term t' labels args quantifs in
