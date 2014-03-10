@@ -85,8 +85,8 @@ class sd_printer props terms_at_Pre () = object(self)
   inherit Printer.extensible_printer () as super
 
   val mutable pred_cpt = 0
-  val mutable postcond = None
-  val mutable dealloc = None
+  val mutable postcond = ignore
+  val mutable dealloc = ignore
   val mutable result_varinfo = None
   val mutable current_function = None
   val mutable in_old_term = false
@@ -357,10 +357,8 @@ class sd_printer props terms_at_Pre () = object(self)
   method private at_least_one_prop kf behaviors =
     List.fold_left (fun res b ->
       res ||
-	let at_least_one res (tk,pred) =
-	  res ||
-	    let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
-	    List.mem prop props
+	let at_least_one res k =
+	  res || (List.mem (Property.ip_of_ensures kf Kglobal b k) props)
 	in
 	List.fold_left at_least_one false b.b_post_cond
     ) false behaviors
@@ -421,27 +419,23 @@ class sd_printer props terms_at_Pre () = object(self)
     (* END precond (not entry-point) *)
     (* BEGIN postcond *)
     postcond <-
-      if List.length behaviors > 0 then
-	if self#at_least_one_prop kf behaviors then
-	  Some (fun fmt ->
-	    Format.fprintf fmt "@[<h 2>{@\n";
-	    List.iter (fun b ->
-	      List.iter (fun (tk,pred) ->
-		let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
-		if List.mem prop props then
-		  let id = Prop_id.to_id prop in
-		  self#bhv_assumes_begin fmt b pred.ip_loc;
-		  self#pc_assert_exception
-		    fmt pred.ip_content pred.ip_loc "Post-condition!" id prop;
-		  self#bhv_assumes_end fmt b
-	      ) b.b_post_cond
-	    ) behaviors;
-	    Format.fprintf fmt "@\n}@]@\n"
-	  )
-	else
-	  None
+      if self#at_least_one_prop kf behaviors then
+	fun fmt ->
+	  Format.fprintf fmt "@[<h 2>{@\n";
+	  List.iter (fun b ->
+	    List.iter (fun (tk,pred) ->
+	      let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
+	      if List.mem prop props then
+		let id = Prop_id.to_id prop in
+		self#bhv_assumes_begin fmt b pred.ip_loc;
+		self#pc_assert_exception
+		  fmt pred.ip_content pred.ip_loc "Post-condition!" id prop;
+		self#bhv_assumes_end fmt b
+	    ) b.b_post_cond
+	  ) behaviors;
+	  Format.fprintf fmt "@\n}@]@\n"
       else
-	None;
+	ignore;
     (* END postcond *)
     (* alloc variables for \at terms *)
     let concat_indice str ind = str ^ "[" ^ ind ^ "]" in
@@ -498,44 +492,37 @@ class sd_printer props terms_at_Pre () = object(self)
       with Not_found -> ()
     end;
     dealloc <- (* dealloc variables for \at terms *)
-      Some (fun fmt ->
-	try
-	  let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
-	  let iter_counter = ref 0 in
-	  Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v terms ->
-	    let rec dealloc_aux indices = function
-	      | [] -> ()
-	      | _ :: [] ->
-		let all_indices = List.fold_left concat_indice "" indices in
-		Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
-	      | h :: t ->
-		let iterator = "__stady_iter_" ^(string_of_int !iter_counter) in
-		Format.fprintf fmt "int %s;@\n" iterator;
-		let h' = self#term_and_var fmt h in
-		Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
-		  iterator iterator h' iterator;
-		let all_indices = List.fold_left concat_indice "" indices in
-		iter_counter := !iter_counter + 1;
-		let indices = Utils.append_end indices iterator in
-		dealloc_aux indices t;
-		Format.fprintf fmt "}@\n";
-		Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
-	    in
-	    dealloc_aux [] terms
-	  ) tbl
-	with Not_found -> ()
-      );
+      (try
+	 fun fmt ->
+	   let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
+	   let iter_counter = ref 0 in
+	   Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v terms ->
+	     let rec dealloc_aux indices = function
+	       | [] -> ()
+	       | _ :: [] ->
+		 let all_indices = List.fold_left concat_indice "" indices in
+		 Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
+	       | h :: t ->
+		 let iterator = "__stady_iter_"^(string_of_int !iter_counter) in
+		 Format.fprintf fmt "int %s;@\n" iterator;
+		 let h' = self#term_and_var fmt h in
+		 Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
+		   iterator iterator h' iterator;
+		 let all_indices = List.fold_left concat_indice "" indices in
+		 iter_counter := !iter_counter + 1;
+		 let indices = Utils.append_end indices iterator in
+		 dealloc_aux indices t;
+		 Format.fprintf fmt "}@\n";
+		 Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
+	     in
+	     dealloc_aux [] terms
+	   ) tbl
+       with Not_found -> ignore);
     self#block ~braces:true fmt f.sbody;
-    begin
-      match postcond with
-      | Some post_cond -> post_cond fmt; postcond <- None
-      | None -> ()
-    end;
-    begin
-      match dealloc with
-      | Some de_alloc -> de_alloc fmt; dealloc <- None
-      | None -> ()
-    end;
+    postcond fmt;
+    postcond <- ignore;
+    dealloc fmt;
+    dealloc <- ignore;
     Format.fprintf fmt "@.}";
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
@@ -630,43 +617,30 @@ class sd_printer props terms_at_Pre () = object(self)
 	) bhvs.spec_behavior;
 	self#bhv_guard_end fmt behaviors;
 	let contract =
-	  if List.length bhvs.spec_behavior > 0 then
-	    if self#at_least_one_prop kf bhvs.spec_behavior then
-	      Some (fun fmt ->
-		Format.fprintf fmt "%a@[<v 2>{@\n"
-		  (fun fmt -> self#line_directive ~forcefile:false fmt) loc;
-		List.iter (fun b ->
-		  List.iter (fun (tk,pred) ->
-		    let prop = Property.ip_of_ensures
-		      kf (Kstmt stmt) b (tk,pred) in
-		    if List.mem prop props then
-		      begin
-			let id = Prop_id.to_id prop in
-			self#bhv_assumes_begin fmt b pred.ip_loc;
-			self#pc_assert_exception fmt pred.ip_content pred.ip_loc
-			  "Stmt Post-condition!" id prop;
-			self#bhv_assumes_end fmt b
-		      end
-		  ) b.b_post_cond
-		) bhvs.spec_behavior;
-		Format.fprintf fmt "}@\n @]"
-	      )
-	    else
-	      None
-	  else
-	    None
-	in
-	begin
-	  match contract with
-	  | None -> ()
-	  | Some c ->
-	    let new_contract fmt =
+	  if self#at_least_one_prop kf bhvs.spec_behavior then
+	    fun fmt ->
 	      self#bhv_guard_begin fmt behaviors loc;
-	      c fmt;
+	      Format.fprintf fmt "%a@[<v 2>{@\n"
+		(fun fmt -> self#line_directive ~forcefile:false fmt) loc;
+	      List.iter (fun b ->
+		List.iter (fun ((_,pred) as k) ->
+		  let prop = Property.ip_of_ensures kf (Kstmt stmt) b k in
+		  if List.mem prop props then
+		    begin
+		      let id = Prop_id.to_id prop in
+		      self#bhv_assumes_begin fmt b pred.ip_loc;
+		      self#pc_assert_exception fmt pred.ip_content pred.ip_loc
+			"Stmt Post-condition!" id prop;
+		      self#bhv_assumes_end fmt b
+		    end
+		) b.b_post_cond
+	      ) bhvs.spec_behavior;
+	      Format.fprintf fmt "}@\n @]";
 	      self#bhv_guard_end fmt behaviors
-	    in
-	    end_contract := new_contract :: !end_contract
-	end
+	  else
+	    ignore
+	in
+	end_contract := contract :: !end_contract
       | AAssert (_,pred) ->
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
@@ -734,16 +708,10 @@ class sd_printer props terms_at_Pre () = object(self)
 	List.iter (fun s -> s fmt) !end_loop;
 	Format.fprintf fmt "}@\n @]"
       | Return _ ->
-	begin
-	  match postcond with
-	  | Some post_cond -> post_cond fmt; postcond <- None
-	  | None -> ()
-	end;
-	begin
-	  match dealloc with
-	  | Some de_alloc -> de_alloc fmt; dealloc <- None
-	  | None -> ()
-	end;
+	postcond fmt;
+	postcond <- ignore;
+	dealloc fmt;
+	dealloc <- ignore;
 	self#stmtkind next fmt stmt.skind
       | _ -> self#stmtkind next fmt stmt.skind
     end;
