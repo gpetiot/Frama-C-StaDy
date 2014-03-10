@@ -76,10 +76,6 @@ let rec compute_guards
 
 
 
-type ext_quantifier = Max | Min | Sum | Product | NumOf
-
-
-
 
 class sd_printer props terms_at_Pre () = object(self)
   inherit Printer.extensible_printer () as super
@@ -192,15 +188,13 @@ class sd_printer props terms_at_Pre () = object(self)
       super#term_node fmt t
     | Tat(term,LogicLabel(_,stringlabel)) ->
       if stringlabel = "Old" || stringlabel = "Pre" then
-	begin
-	  let is_ptr =
-	    match term.term_node with TLval(TMem _,_) -> true | _ -> false in
-	  if is_ptr then in_old_ptr <- true;
-	  in_old_term <- true;
-	  self#term fmt term;
-	  if is_ptr then in_old_ptr <- false;
-	  in_old_term <- false
-	end
+	let is_ptr =
+	  match term.term_node with TLval(TMem _,_) -> true | _ -> false in
+	if is_ptr then in_old_ptr <- true;
+	in_old_term <- true;
+	self#term fmt term;
+	if is_ptr then in_old_ptr <- false;
+	in_old_term <- false
       else
 	(* label Post is only encoutered in post-conditions, and \at(t,Post)
 	   in a post-condition is t *)
@@ -221,36 +215,38 @@ class sd_printer props terms_at_Pre () = object(self)
     let builtin_name = li.l_var_info.lv_name in
     let var = "__stady_term_" ^ (string_of_int pred_cpt) in
     let iter = q.lv_name in
-    let kind = if builtin_name = "\\min" then Min
-      else if builtin_name = "\\max" then Max
-      else if builtin_name = "\\sum" then Sum
-      else if builtin_name = "\\product" then Product
-      else if builtin_name = "\\numof" then NumOf
-      else assert false
+    let init = match builtin_name with
+      | s when s = "\\min" -> "-1" (* undefined here *)
+      | s when s = "\\max" -> "-1" (* undefined here *)
+      | s when s = "\\sum" -> "0"
+      | s when s = "\\product" -> "1"
+      | s when s = "\\numof" -> "0"
+      | _ -> assert false
     in
     pred_cpt <- pred_cpt + 1;
-    Format.fprintf fmt "int %s = %s;@\n"
-      var
-      (match kind with
-      | Sum | NumOf -> "0"
-      | Product -> "1"
-      | Min | Max -> "-1" (* undefined here *) );
+    Format.fprintf fmt "int %s = %s;@\n" var init;
     Format.fprintf fmt "{@\n";
     Format.fprintf fmt "int %s;@\n" iter;
     let low = self#term_and_var fmt lower in
     let up = self#term_and_var fmt upper in
     Format.fprintf fmt "for(%s=%s; %s <= %s; %s++) {@\n" iter low iter up iter;
     let lambda_term = self#term_and_var fmt t in
-    begin
-      match kind with
-      | Sum -> Format.fprintf fmt "%s += %s;@\n" var lambda_term
-      | NumOf -> Format.fprintf fmt "if(%s) { %s ++; }@\n" lambda_term var
-      | Product -> Format.fprintf fmt "%s *= %s;@\n" var lambda_term
-      | Min -> Format.fprintf fmt "if(%s < %s) { %s = %s; }@\n"
-	lambda_term var var lambda_term
-      | Max -> Format.fprintf fmt "if(%s > %s) { %s = %s; }@\n"
-	lambda_term var var lambda_term
-    end;
+    let f = match builtin_name with
+      | s when s = "\\min" ->
+	fun fmt -> Format.fprintf fmt "if(%s < %s) { %s = %s; }@\n"
+	  lambda_term var var lambda_term
+      | s when s = "\\max" ->
+	fun fmt -> Format.fprintf fmt "if(%s > %s) { %s = %s; }@\n"
+	  lambda_term var var lambda_term
+      | s when s = "\\sum" ->
+	fun fmt -> Format.fprintf fmt "%s += %s;@\n" var lambda_term
+      | s when s = "\\product" ->
+	fun fmt -> Format.fprintf fmt "%s *= %s;@\n" var lambda_term
+      | s when s = "\\numof" ->
+	fun fmt -> Format.fprintf fmt "if(%s) { %s ++; }@\n" lambda_term var
+      | _ -> assert false
+    in
+    f fmt;
     Format.fprintf fmt "}@\n";
     Format.fprintf fmt "}@\n";
     var
@@ -274,16 +270,14 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.flush_str_formatter()
     | Tat(term,LogicLabel(_,stringlabel)) ->
       if stringlabel = "Old" || stringlabel = "Pre" then
-	begin
-	  let is_ptr =
-	    match term.term_node with TLval(TMem _,_) -> true | _ -> false in
-	  if is_ptr then in_old_ptr <- true;
-	  in_old_term <- true;
-	  let v = self#term_and_var fmt term in
-	  if is_ptr then in_old_ptr <- false;
-	  in_old_term <- false;
-	  v
-	end
+	let is_ptr =
+	  match term.term_node with TLval(TMem _,_) -> true | _ -> false in
+	if is_ptr then in_old_ptr <- true;
+	in_old_term <- true;
+	let v = self#term_and_var fmt term in
+	if is_ptr then in_old_ptr <- false;
+	in_old_term <- false;
+	v
       else
 	(* label Post is only encoutered in post-conditions, and \at(t,Post)
 	   in a post-condition is t *)
@@ -555,21 +549,19 @@ class sd_printer props terms_at_Pre () = object(self)
 
   method private bhv_guard_begin fmt behaviors loc =
     if behaviors <> [] then
-      begin
-	let vars = List.map (fun assumes ->
-	  List.map (fun a ->
-	    self#predicate_and_var fmt (self#subst_pred a.ip_content)
-	  ) assumes
-	) behaviors in
-	Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
-	  (fun fmt -> self#line_directive ~forcefile:false fmt) loc;
-	List.iter (fun assumes ->
-	  Format.fprintf fmt "(";
-	  List.iter (fun a -> Format.fprintf fmt "%s && " a) assumes;
-	  Format.fprintf fmt "1 ) || "
-	) vars;
-	Format.fprintf fmt "0) {@\n"
-      end
+      let vars = List.map (fun assumes ->
+	List.map (fun a ->
+	  self#predicate_and_var fmt (self#subst_pred a.ip_content)
+	) assumes
+      ) behaviors in
+      Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
+	(fun fmt -> self#line_directive ~forcefile:false fmt) loc;
+      List.iter (fun assumes ->
+	Format.fprintf fmt "(";
+	List.iter (fun a -> Format.fprintf fmt "%s && " a) assumes;
+	Format.fprintf fmt "1 ) || "
+      ) vars;
+      Format.fprintf fmt "0) {@\n"
 
   method private bhv_guard_end fmt behaviors =
     if behaviors <> [] then Format.fprintf fmt "}@\n@]@]"
@@ -606,13 +598,11 @@ class sd_printer props terms_at_Pre () = object(self)
 	  List.iter (fun pred ->
 	    let prop = Property.ip_of_requires kf (Kstmt stmt) b pred in
 	    if List.mem prop props then
-	      begin
-		let id = Prop_id.to_id prop in
-		self#bhv_assumes_begin fmt b pred.ip_loc;
-		self#pc_assert_exception fmt pred.ip_content pred.ip_loc
-		  "Stmt Pre-condition!" id prop;
-		self#bhv_assumes_end fmt b
-	      end
+	      let id = Prop_id.to_id prop in
+	      self#bhv_assumes_begin fmt b pred.ip_loc;
+	      self#pc_assert_exception fmt pred.ip_content pred.ip_loc
+		"Stmt Pre-condition!" id prop;
+	      self#bhv_assumes_end fmt b
 	  ) b.b_requires
 	) bhvs.spec_behavior;
 	self#bhv_guard_end fmt behaviors;
@@ -626,13 +616,11 @@ class sd_printer props terms_at_Pre () = object(self)
 		List.iter (fun ((_,pred) as k) ->
 		  let prop = Property.ip_of_ensures kf (Kstmt stmt) b k in
 		  if List.mem prop props then
-		    begin
-		      let id = Prop_id.to_id prop in
-		      self#bhv_assumes_begin fmt b pred.ip_loc;
-		      self#pc_assert_exception fmt pred.ip_content pred.ip_loc
-			"Stmt Post-condition!" id prop;
-		      self#bhv_assumes_end fmt b
-		    end
+		    let id = Prop_id.to_id prop in
+		    self#bhv_assumes_begin fmt b pred.ip_loc;
+		    self#pc_assert_exception fmt pred.ip_content pred.ip_loc
+		      "Stmt Post-condition!" id prop;
+		    self#bhv_assumes_end fmt b
 		) b.b_post_cond
 	      ) bhvs.spec_behavior;
 	      Format.fprintf fmt "}@\n @]";
@@ -663,39 +651,37 @@ class sd_printer props terms_at_Pre () = object(self)
       | AVariant (term,_) ->
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  begin
-	    let id = Prop_id.to_id prop in
-	    let term' = self#term_and_var fmt term in
-	    Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) < 0)"
-	      (fun fmt -> self#line_directive ~forcefile:false fmt) loc term';
-	    Format.fprintf fmt
-	      "pathcrawler_assert_exception(\"Variant non positive\",%i);" id;
-	    Format.fprintf fmt "@]@]";
-	    translated_properties <- prop :: translated_properties;
-	    begin_loop :=
-	      (fun fmt ->
-		let term' = self#term_and_var fmt term in
-		Format.fprintf fmt "int old_variant_%i = %s;@\n" id term')
-	    :: !begin_loop;
-	    end_loop :=
-	      (fun fmt ->
-		Format.fprintf fmt "@[<hv>%a@[<v 2>if ((old_variant_%i) < 0)"
-		  (fun fmt -> self#line_directive ~forcefile:false fmt) loc id;
-		Format.fprintf fmt
-		  "pathcrawler_assert_exception(\"Variant non positive\",%i);"
-		  id;
-		Format.fprintf fmt "@]@]";
-		let term' = self#term_and_var fmt term in
-		Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) >= old_variant_%i)"
-		  (fun fmt -> self#line_directive ~forcefile:false fmt) loc
-		  term' id;
-		Format.fprintf fmt
-		  "pathcrawler_assert_exception(\"Variant non decreasing\",%i);"
-		  id;
-		Format.fprintf fmt "@]@]";
-		translated_properties <- prop :: translated_properties)
-	    :: !end_loop
-	  end
+	  let id = Prop_id.to_id prop in
+	  let term' = self#term_and_var fmt term in
+	  Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) < 0)"
+	    (fun fmt -> self#line_directive ~forcefile:false fmt) loc term';
+	  Format.fprintf fmt
+	    "pathcrawler_assert_exception(\"Variant non positive\",%i);" id;
+	  Format.fprintf fmt "@]@]";
+	  translated_properties <- prop :: translated_properties;
+	  begin_loop :=
+	    (fun fmt ->
+	      let term' = self#term_and_var fmt term in
+	      Format.fprintf fmt "int old_variant_%i = %s;@\n" id term')
+	  :: !begin_loop;
+	  end_loop :=
+	    (fun fmt ->
+	      Format.fprintf fmt "@[<hv>%a@[<v 2>if ((old_variant_%i) < 0)"
+		(fun fmt -> self#line_directive ~forcefile:false fmt) loc id;
+	      Format.fprintf fmt
+		"pathcrawler_assert_exception(\"Variant non positive\",%i);"
+		id;
+	      Format.fprintf fmt "@]@]";
+	      let term' = self#term_and_var fmt term in
+	      Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) >= old_variant_%i)"
+		(fun fmt -> self#line_directive ~forcefile:false fmt) loc
+		term' id;
+	      Format.fprintf fmt
+		"pathcrawler_assert_exception(\"Variant non decreasing\",%i);"
+		id;
+	      Format.fprintf fmt "@]@]";
+	      translated_properties <- prop :: translated_properties)
+	  :: !end_loop
       | _ -> ()
     ) stmt;
     begin
