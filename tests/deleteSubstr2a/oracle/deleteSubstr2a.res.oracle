@@ -59,158 +59,146 @@
                         i = 0;
                         i = 0;
                         {
-                           if(((strlen-sublen)-i)<0)pathcrawler_assert_exception("Variant non positive",11);
-                           int __stady_pred_28 = 1;
-                           {
-                           int __q_k;
-                           for (__q_k = 0; __q_k < (i) &&  __stady_pred_28; __q_k++) {
-                           int __stady_pred_29 = 0;
-                           {
-                           int __q_l;
-                           for (__q_l = 0; __q_l < (sublen) && ! __stady_pred_29; __q_l++) {
-                           __stady_pred_29 = ((*(str+(__q_k+__q_l))) != (*(substr+__q_l)));
-                           }
-                           }
-                           __stady_pred_28 = __stady_pred_29;
-                           }
-                           }
-                           if(!__stady_pred_28)pathcrawler_assert_exception("Loop invariant not established!", 25);if(!((0 <= (i)) && ((i) <= strlen-sublen)))pathcrawler_assert_exception("Loop invariant not established!", 15);while (1) {
-                                                                                        int old_variant_11 = (strlen-sublen)-i;
-                    {
-                                                                                        if (! (
-                                                                                        i < 
-                                                                                        strlen - sublen)) 
-                                                                                        break;
-                                                                                        {
-                                                                                        int j;
-                                                                                        j = 0;
-                                                                                        j = 0;
-                                                                                        {
-                                                                                        if((sublen-j)<0)pathcrawler_assert_exception("Variant non positive",17);
-                                                                                        int __stady_pred_30 = 1;
-                                                                                        {
-                                                                                        int __q_k;
-                                                                                        for (__q_k = 0; __q_k < (j) &&  __stady_pred_30; __q_k++) {
-                                                                                        __stady_pred_30 = ((*(str+(i+__q_k))) == (*(substr+__q_k)));
-                                                                                        }
-                                                                                        }
-                                                                                        if(!__stady_pred_30)pathcrawler_assert_exception("Loop invariant not established!", 30);if(!((0 <= (j)) && ((j) <= (sublen))))pathcrawler_assert_exception("Loop invariant not established!", 19);while (1) {
-                                                                                        int old_variant_17 = sublen-j;
-                    {
-                                                                                        if (! (
-                                                                                        j < sublen)) 
-                                                                                        break;
-                                                                                        if (
-                                                                                        (int)*(
-                                                                                        str + (
-                                                                                        i + j)) != (int)*(
-                                                                                        substr + j)) 
-                                                                                        break;
-                                                                                        j ++;
-                                                                                        }if(!((0 <= (j)) && ((j) <= (sublen))))pathcrawler_assert_exception("Loop invariant not preserved!", 19);int __stady_pred_31 = 1;
-                                                                                        {
-                                                                                        int __q_k;
-                                                                                        for (__q_k = 0; __q_k < (j) &&  __stady_pred_31; __q_k++) {
-                                                                                        __stady_pred_31 = ((*(str+(i+__q_k))) == (*(substr+__q_k)));
-                                                                                        }
-                                                                                        }
-                                                                                        if(!__stady_pred_31)pathcrawler_assert_exception("Loop invariant not preserved!", 30);if((old_variant_17)<0)pathcrawler_assert_exception("Variant non positive",17);
-                                                                                        if((sublen-j) >= old_variant_17) pathcrawler_assert_exception("Variant non decreasing",17);
-                                                                                        }
-                                                                                         
-                                                                                        }
-                                                                                        if (
-                                                                                        j == sublen) {
-                                                                                        __retres = i;
-                                                                                        goto return_label;
-                                                                                        }
-                                                                                        }
-                                                                                        i ++;
-                                                                                        }if(!((0 <= (i)) && ((i) <= strlen-sublen)))pathcrawler_assert_exception("Loop invariant not preserved!", 15);int __stady_pred_32 = 1;
-                                                                                        {
-                                                                                        int __q_k;
-                                                                                        for (__q_k = 0; __q_k < (i) &&  __stady_pred_32; __q_k++) {
-                                                                                        int __stady_pred_33 = 0;
-                                                                                        {
-                                                                                        int __q_l;
-                                                                                        for (__q_l = 0; __q_l < (sublen) && ! __stady_pred_33; __q_l++) {
-                                                                                        __stady_pred_33 = ((*(str+(__q_k+__q_l))) != (*(substr+__q_l)));
-                                                                                        }
-                                                                                        }
-                                                                                        __stady_pred_32 = __stady_pred_33;
-                                                                                        }
-                                                                                        }
-                                                                                        if(!__stady_pred_32)pathcrawler_assert_exception("Loop invariant not preserved!", 25);if((old_variant_11)<0)pathcrawler_assert_exception("Variant non positive",11);
-                                                                                        if(((strlen-sublen)-i) >= old_variant_11) pathcrawler_assert_exception("Variant non decreasing",11);
-                                                                                        }
-                                                                                         
-                        }
+                          if (((strlen-sublen)-i) < 0)pathcrawler_assert_exception("Variant non positive",11);int __stady_pred_28 = 1;
+                          {
+                          int __q_k;
+                          for (__q_k = 0; __q_k < (i) &&  __stady_pred_28; __q_k++) {
+                          int __stady_pred_29 = 0;
+                          {
+                          int __q_l;
+                          for (__q_l = 0; __q_l < (sublen) && ! __stady_pred_29; __q_l++) {
+                          __stady_pred_29 = ((*(str+(__q_k+__q_l))) != (*(substr+__q_l)));
+                          }
+                          }
+                          __stady_pred_28 = __stady_pred_29;
+                          }
+                          }
+                          if(!__stady_pred_28)pathcrawler_assert_exception("Loop invariant not established!", 25);
+                          if(!((0 <= (i)) && ((i) <= strlen-sublen)))pathcrawler_assert_exception("Loop invariant not established!", 15);
+                          while (1) {
+                            int old_variant_11 = (strlen-sublen)-i;
+                            {
+                              if (! (i < strlen - sublen)) break;
+                              {
+                                int j;
+                                j = 0;
+                                j = 0;
+                                {
+                                  if ((sublen-j) < 0)pathcrawler_assert_exception("Variant non positive",17);int __stady_pred_30 = 1;
+                                  {
+                                  int __q_k;
+                                  for (__q_k = 0; __q_k < (j) &&  __stady_pred_30; __q_k++) {
+                                  __stady_pred_30 = ((*(str+(i+__q_k))) == (*(substr+__q_k)));
+                                  }
+                                  }
+                                  if(!__stady_pred_30)pathcrawler_assert_exception("Loop invariant not established!", 30);
+                                  if(!((0 <= (j)) && ((j) <= (sublen))))pathcrawler_assert_exception("Loop invariant not established!", 19);
+                                  while (1) {
+                                    int old_variant_17 = sublen-j;
+                                    {
+                                      if (! (j < sublen)) break;
+                                      if ((int)*(str + (i + j)) != (int)*(substr + j)) break;
+                                      j ++;
+                                    }if(!((0 <= (j)) && ((j) <= (sublen))))pathcrawler_assert_exception("Loop invariant not preserved!", 19);int __stady_pred_31 = 1;
+                                    {
+                                    int __q_k;
+                                    for (__q_k = 0; __q_k < (j) &&  __stady_pred_31; __q_k++) {
+                                    __stady_pred_31 = ((*(str+(i+__q_k))) == (*(substr+__q_k)));
+                                    }
+                                    }
+                                    if(!__stady_pred_31)pathcrawler_assert_exception("Loop invariant not preserved!", 30);
+                                    if ((old_variant_17) < 0)pathcrawler_assert_exception("Variant non positive",17);
+                                    if ((sublen-j) >= old_variant_17)pathcrawler_assert_exception("Variant non decreasing",17);}
+                                     }
+                                   
+                                if (j == sublen) {
+                                  __retres = i;
+                                  goto return_label;
+                                }
+                              }
+                              i ++;
+                            }if(!((0 <= (i)) && ((i) <= strlen-sublen)))pathcrawler_assert_exception("Loop invariant not preserved!", 15);int __stady_pred_32 = 1;
+                            {
+                            int __q_k;
+                            for (__q_k = 0; __q_k < (i) &&  __stady_pred_32; __q_k++) {
+                            int __stady_pred_33 = 0;
+                            {
+                            int __q_l;
+                            for (__q_l = 0; __q_l < (sublen) && ! __stady_pred_33; __q_l++) {
+                            __stady_pred_33 = ((*(str+(__q_k+__q_l))) != (*(substr+__q_l)));
+                            }
+                            }
+                            __stady_pred_32 = __stady_pred_33;
+                            }
+                            }
+                            if(!__stady_pred_32)pathcrawler_assert_exception("Loop invariant not preserved!", 25);
+                            if ((old_variant_11) < 0)pathcrawler_assert_exception("Variant non positive",11);
+                            if (((strlen-sublen)-i) >= old_variant_11)pathcrawler_assert_exception("Variant non decreasing",11);}
+                             }
+                           
                         __retres = -1;
                         return_label:
-                        {
-                          int __stady_pred_34 = 0;
                           {
-                          int __q_i;
-                          for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_34; __q_i++) {
-                          int __stady_pred_35 = 1;
-                          {
-                          int __q_j;
-                          for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_35; __q_j++) {
-                          __stady_pred_35 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
-                          }
-                          }
-                          __stady_pred_34 = __stady_pred_35;
-                          }
-                          }
-                          if (__stady_pred_34 &&  1) {
-                            if(!((0 <= __retres) && (__retres < old_strlen-old_sublen)))pathcrawler_assert_exception("Post-condition!", 23);}
-                            
-                          int __stady_pred_36 = 0;
-                          {
-                          int __q_i;
-                          for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_36; __q_i++) {
-                          int __stady_pred_37 = 1;
-                          {
-                          int __q_j;
-                          for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_37; __q_j++) {
-                          __stady_pred_37 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
-                          }
-                          }
-                          __stady_pred_36 = __stady_pred_37;
-                          }
-                          }
-                          if (__stady_pred_36 &&  1) {
-                            int __stady_pred_38 = 1;
+                            int __stady_pred_34 = 0;
+                            {
+                            int __q_i;
+                            for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_34; __q_i++) {
+                            int __stady_pred_35 = 1;
                             {
                             int __q_j;
-                            for (__q_j = 0; __q_j < (old_sublen) &&  __stady_pred_38; __q_j++) {
-                            __stady_pred_38 = ((*(old_str+(__retres+__q_j))) == (*(old_substr+__q_j)));
+                            for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_35; __q_j++) {
+                            __stady_pred_35 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
                             }
                             }
-                            if(!__stady_pred_38)pathcrawler_assert_exception("Post-condition!", 32);}
-                            
-                          int __stady_pred_39 = 1;
-                          {
-                          int __q_i;
-                          for (__q_i = 0; __q_i < strlen-sublen &&  __stady_pred_39; __q_i++) {
-                          int __stady_pred_40 = 0;
-                          {
-                          int __q_j;
-                          for (__q_j = 0; __q_j < (sublen) && ! __stady_pred_40; __q_j++) {
-                          __stady_pred_40 = ((*(str+(__q_i+__q_j))) != (*(substr+__q_j)));
-                          }
-                          }
-                          __stady_pred_39 = __stady_pred_40;
-                          }
-                          }
-                          if (__stady_pred_39 &&  1) {
-                            if(!(__retres == -1))pathcrawler_assert_exception("Post-condition!", 16);}
-                            
-                          
-                          }
-                        free(old_ptr_str);
-                        free(old_ptr_substr);
-                        return __retres;
+                            __stady_pred_34 = __stady_pred_35;
+                            }
+                            }
+                            if (__stady_pred_34 && 1) {
+                              if(!((0 <= __retres) && (__retres < old_strlen-old_sublen)))pathcrawler_assert_exception("Post-condition!", 23);}
+                              int __stady_pred_36 = 0;
+                            {
+                            int __q_i;
+                            for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_36; __q_i++) {
+                            int __stady_pred_37 = 1;
+                            {
+                            int __q_j;
+                            for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_37; __q_j++) {
+                            __stady_pred_37 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
+                            }
+                            }
+                            __stady_pred_36 = __stady_pred_37;
+                            }
+                            }
+                            if (__stady_pred_36 && 1) {
+                              int __stady_pred_38 = 1;
+                              {
+                              int __q_j;
+                              for (__q_j = 0; __q_j < (old_sublen) &&  __stady_pred_38; __q_j++) {
+                              __stady_pred_38 = ((*(old_str+(__retres+__q_j))) == (*(old_substr+__q_j)));
+                              }
+                              }
+                              if(!__stady_pred_38)pathcrawler_assert_exception("Post-condition!", 32);}
+                              int __stady_pred_39 = 1;
+                            {
+                            int __q_i;
+                            for (__q_i = 0; __q_i < strlen-sublen &&  __stady_pred_39; __q_i++) {
+                            int __stady_pred_40 = 0;
+                            {
+                            int __q_j;
+                            for (__q_j = 0; __q_j < (sublen) && ! __stady_pred_40; __q_j++) {
+                            __stady_pred_40 = ((*(str+(__q_i+__q_j))) != (*(substr+__q_j)));
+                            }
+                            }
+                            __stady_pred_39 = __stady_pred_40;
+                            }
+                            }
+                            if (__stady_pred_39 && 1) {
+                              if(!(__retres == -1))pathcrawler_assert_exception("Post-condition!", 16);}
+                              
+                            }
+                          free(old_ptr_str);
+                          free(old_ptr_substr);
+                          return __retres;
                       }
                     }
                     
@@ -257,35 +245,32 @@
                         if (start == -1) {
                           k = 0;
                           {
-                             if((strlen-k)<0)pathcrawler_assert_exception("Variant non positive",26);
-                             int __stady_pred_41 = 1;
-                             {
-                             int __q_m;
-                             for (__q_m = 0; __q_m < (k) &&  __stady_pred_41; __q_m++) {
-                             __stady_pred_41 = ((*(dest+__q_m)) == (*(old_ptr_str+__q_m)));
-                             }
-                             }
-                             if(!__stady_pred_41)pathcrawler_assert_exception("Loop invariant not established!", 24);while (1) {
-                                                                                        int old_variant_26 = strlen-k;
-                    {
-                                                                                        if (! (
-                                                                                        k < strlen)) 
-                                                                                        break;
-                                                                                        *(dest + k) = *(str + k);
-                                                                                        k ++;
-                                                                                        }int __stady_pred_42 = 1;
-                                                                                        {
-                                                                                        int __q_m;
-                                                                                        for (__q_m = 0; __q_m < (k) &&  __stady_pred_42; __q_m++) {
-                                                                                        __stady_pred_42 = ((*(dest+__q_m)) == (*(old_ptr_str+__q_m)));
-                                                                                        }
-                                                                                        }
-                                                                                        if(!__stady_pred_42)pathcrawler_assert_exception("Loop invariant not preserved!", 24);
-                                                                                        if((old_variant_26)<0)pathcrawler_assert_exception("Variant non positive",26);
-                                                                                        if((strlen-k) >= old_variant_26) pathcrawler_assert_exception("Variant non decreasing",26);
-                                                                                        }
-                                                                                         
-                          }
+                            if ((strlen-k) < 0)pathcrawler_assert_exception("Variant non positive",26);int __stady_pred_41 = 1;
+                            {
+                            int __q_m;
+                            for (__q_m = 0; __q_m < (k) &&  __stady_pred_41; __q_m++) {
+                            __stady_pred_41 = ((*(dest+__q_m)) == (*(old_ptr_str+__q_m)));
+                            }
+                            }
+                            if(!__stady_pred_41)pathcrawler_assert_exception("Loop invariant not established!", 24);
+                            while (1) {
+                              int old_variant_26 = strlen-k;
+                              {
+                                if (! (k < strlen)) break;
+                                *(dest + k) = *(str + k);
+                                k ++;
+                              }int __stady_pred_42 = 1;
+                              {
+                              int __q_m;
+                              for (__q_m = 0; __q_m < (k) &&  __stady_pred_42; __q_m++) {
+                              __stady_pred_42 = ((*(dest+__q_m)) == (*(old_ptr_str+__q_m)));
+                              }
+                              }
+                              if(!__stady_pred_42)pathcrawler_assert_exception("Loop invariant not preserved!", 24);
+                              if ((old_variant_26) < 0)pathcrawler_assert_exception("Variant non positive",26);
+                              if ((strlen-k) >= old_variant_26)pathcrawler_assert_exception("Variant non decreasing",26);}
+                               }
+                             
                           __retres = 0;
                           goto return_label;
                         }
@@ -307,124 +292,120 @@
                            
                         __retres = 1;
                         return_label:
-                        {
-                          int __stady_pred_43 = 0;
                           {
-                          int __q_i;
-                          for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_43; __q_i++) {
-                          int __stady_pred_44 = 1;
-                          {
-                          int __q_j;
-                          for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_44; __q_j++) {
-                          __stady_pred_44 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
-                          }
-                          }
-                          __stady_pred_43 = __stady_pred_44;
-                          }
-                          }
-                          if (!(__stady_pred_43) &&  1) {
-                            int __stady_pred_45 = 1;
-                            {
-                            int __q_k;
-                            for (__q_k = 0; __q_k < (old_strlen) &&  __stady_pred_45; __q_k++) {
-                            __stady_pred_45 = ((*(old_ptr_str+__q_k)) == (*(old_dest+__q_k)));
-                            }
-                            }
-                            if(!__stady_pred_45)pathcrawler_assert_exception("Post-condition!", 33);}
-                            
-                          int __stady_pred_46 = 0;
-                          {
-                          int __q_i;
-                          for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_46; __q_i++) {
-                          int __stady_pred_47 = 1;
-                          {
-                          int __q_j;
-                          for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_47; __q_j++) {
-                          __stady_pred_47 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
-                          }
-                          }
-                          __stady_pred_46 = __stady_pred_47;
-                          }
-                          }
-                          if (!(__stady_pred_46) &&  1) {
-                            if(!(__retres == 0))pathcrawler_assert_exception("Post-condition!", 5);}
-                            
-                          int __stady_pred_48 = 0;
-                          {
-                          int __q_i;
-                          for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_48; __q_i++) {
-                          int __stady_pred_49 = 1;
-                          {
-                          int __q_j;
-                          for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_49; __q_j++) {
-                          __stady_pred_49 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
-                          }
-                          }
-                          __stady_pred_48 = __stady_pred_49;
-                          }
-                          }
-                          if (__stady_pred_48 &&  1) {
-                            int __stady_pred_50 = 0;
+                            int __stady_pred_43 = 0;
                             {
                             int __q_i;
-                            for (__q_i = 0; __q_i < old_strlen-old_sublen && ! __stady_pred_50; __q_i++) {
-                            int __stady_pred_51 = 1;
+                            for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_43; __q_i++) {
+                            int __stady_pred_44 = 1;
                             {
                             int __q_j;
-                            for (__q_j = 0; __q_j < (old_sublen) &&  __stady_pred_51; __q_j++) {
-                            __stady_pred_51 = ((*(old_ptr_str+(__q_i+__q_j))) == (*(old_ptr_substr+__q_j)));
+                            for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_44; __q_j++) {
+                            __stady_pred_44 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
                             }
                             }
-                            int __stady_pred_52 = 1;
+                            __stady_pred_43 = __stady_pred_44;
+                            }
+                            }
+                            if (!(__stady_pred_43) && 1) {
+                              int __stady_pred_45 = 1;
+                              {
+                              int __q_k;
+                              for (__q_k = 0; __q_k < (old_strlen) &&  __stady_pred_45; __q_k++) {
+                              __stady_pred_45 = ((*(old_ptr_str+__q_k)) == (*(old_dest+__q_k)));
+                              }
+                              }
+                              if(!__stady_pred_45)pathcrawler_assert_exception("Post-condition!", 33);}
+                              int __stady_pred_46 = 0;
                             {
-                            int __q_k;
-                            for (__q_k = 0; __q_k < (__q_i) &&  __stady_pred_52; __q_k++) {
-                            __stady_pred_52 = ((*(old_ptr_str+__q_k)) == (*(old_dest+__q_k)));
-                            }
-                            }
-                            int __stady_pred_53 = 1;
+                            int __q_i;
+                            for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_46; __q_i++) {
+                            int __stady_pred_47 = 1;
                             {
-                            int __q_l;
-                            for (__q_l = (__q_i); __q_l < old_strlen-old_sublen &&  __stady_pred_53; __q_l++) {
-                            __stady_pred_53 = ((*(old_ptr_str+(__q_l+old_sublen))) == (*(old_dest+__q_l)));
+                            int __q_j;
+                            for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_47; __q_j++) {
+                            __stady_pred_47 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
                             }
                             }
-                            __stady_pred_50 = ((__stady_pred_51 && __stady_pred_52) && __stady_pred_53);
+                            __stady_pred_46 = __stady_pred_47;
                             }
                             }
-                            if(!__stady_pred_50)pathcrawler_assert_exception("Post-condition!", 29);}
-                            
-                          int __stady_pred_54 = 0;
-                          {
-                          int __q_i;
-                          for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_54; __q_i++) {
-                          int __stady_pred_55 = 1;
-                          {
-                          int __q_j;
-                          for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_55; __q_j++) {
-                          __stady_pred_55 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
-                          }
-                          }
-                          __stady_pred_54 = __stady_pred_55;
-                          }
-                          }
-                          if (__stady_pred_54 &&  1) {
-                            if(!(__retres == 1))pathcrawler_assert_exception("Post-condition!", 37);}
-                            
-                          
-                          }
-                        free(old_ptr_str);
-                        free(old_ptr_substr);
-                        free(old_ptr_dest);
-                        return __retres;
+                            if (!(__stady_pred_46) && 1) {
+                              if(!(__retres == 0))pathcrawler_assert_exception("Post-condition!", 5);}
+                              int __stady_pred_48 = 0;
+                            {
+                            int __q_i;
+                            for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_48; __q_i++) {
+                            int __stady_pred_49 = 1;
+                            {
+                            int __q_j;
+                            for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_49; __q_j++) {
+                            __stady_pred_49 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
+                            }
+                            }
+                            __stady_pred_48 = __stady_pred_49;
+                            }
+                            }
+                            if (__stady_pred_48 && 1) {
+                              int __stady_pred_50 = 0;
+                              {
+                              int __q_i;
+                              for (__q_i = 0; __q_i < old_strlen-old_sublen && ! __stady_pred_50; __q_i++) {
+                              int __stady_pred_51 = 1;
+                              {
+                              int __q_j;
+                              for (__q_j = 0; __q_j < (old_sublen) &&  __stady_pred_51; __q_j++) {
+                              __stady_pred_51 = ((*(old_ptr_str+(__q_i+__q_j))) == (*(old_ptr_substr+__q_j)));
+                              }
+                              }
+                              int __stady_pred_52 = 1;
+                              {
+                              int __q_k;
+                              for (__q_k = 0; __q_k < (__q_i) &&  __stady_pred_52; __q_k++) {
+                              __stady_pred_52 = ((*(old_ptr_str+__q_k)) == (*(old_dest+__q_k)));
+                              }
+                              }
+                              int __stady_pred_53 = 1;
+                              {
+                              int __q_l;
+                              for (__q_l = (__q_i); __q_l < old_strlen-old_sublen &&  __stady_pred_53; __q_l++) {
+                              __stady_pred_53 = ((*(old_ptr_str+(__q_l+old_sublen))) == (*(old_dest+__q_l)));
+                              }
+                              }
+                              __stady_pred_50 = ((__stady_pred_51 && __stady_pred_52) && __stady_pred_53);
+                              }
+                              }
+                              if(!__stady_pred_50)pathcrawler_assert_exception("Post-condition!", 29);}
+                              int __stady_pred_54 = 0;
+                            {
+                            int __q_i;
+                            for (__q_i = 0; __q_i < strlen-sublen && ! __stady_pred_54; __q_i++) {
+                            int __stady_pred_55 = 1;
+                            {
+                            int __q_j;
+                            for (__q_j = 0; __q_j < (sublen) &&  __stady_pred_55; __q_j++) {
+                            __stady_pred_55 = ((*(str+(__q_i+__q_j))) == (*(substr+__q_j)));
+                            }
+                            }
+                            __stady_pred_54 = __stady_pred_55;
+                            }
+                            }
+                            if (__stady_pred_54 && 1) {
+                              if(!(__retres == 1))pathcrawler_assert_exception("Post-condition!", 37);}
+                              
+                            }
+                          free(old_ptr_str);
+                          free(old_ptr_substr);
+                          free(old_ptr_dest);
+                          return __retres;
                       }
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:8:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:177:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:165:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:8:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:177:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:165:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_delete_substr utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_delete_substr ...

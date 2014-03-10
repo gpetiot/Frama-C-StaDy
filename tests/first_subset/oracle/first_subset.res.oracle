@@ -43,35 +43,33 @@
                         int k;
                         k = 0;
                         {
-                           if((n-k)<0)pathcrawler_assert_exception("Variant non positive",0);
-                           int __stady_pred_3 = 1;
-                           {
-                           int __q_i;
-                           for (__q_i = 0; __q_i < (k) &&  __stady_pred_3; __q_i++) {
-                           __stady_pred_3 = (((*(s+__q_i)) == 0) || ((*(s+__q_i)) == 1));
-                           }
-                           }
-                           if(!__stady_pred_3)pathcrawler_assert_exception("Loop invariant not established!", 5);if(!((0 <= (k)) && ((k) <= (n))))pathcrawler_assert_exception("Loop invariant not established!", 3);while (1) {
-                                                                                        int old_variant_0 = n-k;
-                    {
-                                                                                        if (! (
-                                                                                        k < n)) 
-                                                                                        break;
-                                                                                        *(
-                                                                                        s + k) = 0;
-                                                                                        k ++;
-                                                                                        }if(!((0 <= (k)) && ((k) <= (n))))pathcrawler_assert_exception("Loop invariant not preserved!", 3);int __stady_pred_4 = 1;
-                                                                                        {
-                                                                                        int __q_i;
-                                                                                        for (__q_i = 0; __q_i < (k) &&  __stady_pred_4; __q_i++) {
-                                                                                        __stady_pred_4 = (((*(s+__q_i)) == 0) || ((*(s+__q_i)) == 1));
-                                                                                        }
-                                                                                        }
-                                                                                        if(!__stady_pred_4)pathcrawler_assert_exception("Loop invariant not preserved!", 5);if((old_variant_0)<0)pathcrawler_assert_exception("Variant non positive",0);
-                                                                                        if((n-k) >= old_variant_0) pathcrawler_assert_exception("Variant non decreasing",0);
-                                                                                        }
-                                                                                         
-                        }
+                          if ((n-k) < 0)pathcrawler_assert_exception("Variant non positive",0);int __stady_pred_3 = 1;
+                          {
+                          int __q_i;
+                          for (__q_i = 0; __q_i < (k) &&  __stady_pred_3; __q_i++) {
+                          __stady_pred_3 = (((*(s+__q_i)) == 0) || ((*(s+__q_i)) == 1));
+                          }
+                          }
+                          if(!__stady_pred_3)pathcrawler_assert_exception("Loop invariant not established!", 5);
+                          if(!((0 <= (k)) && ((k) <= (n))))pathcrawler_assert_exception("Loop invariant not established!", 3);
+                          while (1) {
+                            int old_variant_0 = n-k;
+                            {
+                              if (! (k < n)) break;
+                              *(s + k) = 0;
+                              k ++;
+                            }if(!((0 <= (k)) && ((k) <= (n))))pathcrawler_assert_exception("Loop invariant not preserved!", 3);int __stady_pred_4 = 1;
+                            {
+                            int __q_i;
+                            for (__q_i = 0; __q_i < (k) &&  __stady_pred_4; __q_i++) {
+                            __stady_pred_4 = (((*(s+__q_i)) == 0) || ((*(s+__q_i)) == 1));
+                            }
+                            }
+                            if(!__stady_pred_4)pathcrawler_assert_exception("Loop invariant not preserved!", 5);
+                            if ((old_variant_0) < 0)pathcrawler_assert_exception("Variant non positive",0);
+                            if ((n-k) >= old_variant_0)pathcrawler_assert_exception("Variant non decreasing",0);}
+                             }
+                           
                         {
                           int __stady_pred_5 = 1;
                           {
@@ -88,10 +86,10 @@
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:13:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:60:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:13:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:60:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_firstSubset utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_firstSubset ...

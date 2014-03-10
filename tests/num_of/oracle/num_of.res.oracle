@@ -45,36 +45,33 @@
                         num = 0;
                         i = 0;
                         {
-                           if((n-i)<0)pathcrawler_assert_exception("Variant non positive",2);
-                           int __stady_term_3 = 0;
-                           {
-                           int k;
-                           for(k=0; k <= i-1; k++) {
-                           if(*(t+k)==0) { __stady_term_3 ++; }
-                           }
-                           }
-                           if(!((num) == __stady_term_3))pathcrawler_assert_exception("Loop invariant not established!", 6);if(!((0 <= (num)) && (((num) <= (i)) && ((i) <= (n)))))pathcrawler_assert_exception("Loop invariant not established!", 4);while (1) {
-                                                                                        int old_variant_2 = n-i;
-                    {
-                                                                                        if (! (
-                                                                                        i < n)) 
-                                                                                        break;
-                                                                                        if (
-                                                                                        *(
-                                                                                        t + i) == 0) num ++;
-                                                                                        i ++;
-                                                                                        }if(!((0 <= (num)) && (((num) <= (i)) && ((i) <= (n)))))pathcrawler_assert_exception("Loop invariant not preserved!", 4);int __stady_term_4 = 0;
-                                                                                        {
-                                                                                        int k;
-                                                                                        for(k=0; k <= i-1; k++) {
-                                                                                        if(*(t+k)==0) { __stady_term_4 ++; }
-                                                                                        }
-                                                                                        }
-                                                                                        if(!((num) == __stady_term_4))pathcrawler_assert_exception("Loop invariant not preserved!", 6);if((old_variant_2)<0)pathcrawler_assert_exception("Variant non positive",2);
-                                                                                        if((n-i) >= old_variant_2) pathcrawler_assert_exception("Variant non decreasing",2);
-                                                                                        }
-                                                                                         
-                        }
+                          if ((n-i) < 0)pathcrawler_assert_exception("Variant non positive",2);int __stady_term_3 = 0;
+                          {
+                          int k;
+                          for(k=0; k <= i-1; k++) {
+                          if(*(t+k)==0) { __stady_term_3 ++; }
+                          }
+                          }
+                          if(!((num) == __stady_term_3))pathcrawler_assert_exception("Loop invariant not established!", 6);
+                          if(!((0 <= (num)) && (((num) <= (i)) && ((i) <= (n)))))pathcrawler_assert_exception("Loop invariant not established!", 4);
+                          while (1) {
+                            int old_variant_2 = n-i;
+                            {
+                              if (! (i < n)) break;
+                              if (*(t + i) == 0) num ++;
+                              i ++;
+                            }if(!((0 <= (num)) && (((num) <= (i)) && ((i) <= (n)))))pathcrawler_assert_exception("Loop invariant not preserved!", 4);int __stady_term_4 = 0;
+                            {
+                            int k;
+                            for(k=0; k <= i-1; k++) {
+                            if(*(t+k)==0) { __stady_term_4 ++; }
+                            }
+                            }
+                            if(!((num) == __stady_term_4))pathcrawler_assert_exception("Loop invariant not preserved!", 6);
+                            if ((old_variant_2) < 0)pathcrawler_assert_exception("Variant non positive",2);
+                            if ((n-i) >= old_variant_2)pathcrawler_assert_exception("Variant non decreasing",2);}
+                             }
+                           
                         {
                           int __stady_term_5 = 0;
                           {
@@ -91,10 +88,10 @@
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:65:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:65:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_num_of utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_num_of ...

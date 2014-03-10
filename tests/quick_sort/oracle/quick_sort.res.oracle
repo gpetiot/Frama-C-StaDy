@@ -80,83 +80,67 @@
                                 goto return_label;
                               }
                               {
-                                 if((R-L)<0)pathcrawler_assert_exception("Variant non positive",7);
-                                 if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not established!", 3);while (1) {
-                                                                                        int old_variant_7 = R-L;
-                    {
-                                                                                        if (! (
-                                                                                        L < R)) 
-                                                                                        break;
-                                                                                        {
-                                                                                        
-                                                                                        if((R-L)<0)pathcrawler_assert_exception("Variant non positive",4);
-                                                                                        if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not established!", 11);while (1) {
-                                                                                        int old_variant_4 = R-L;
-                    {
-                                                                                        if (
-                                                                                        *(
-                                                                                        arr + R) >= piv) {
-                                                                                        if (! (
-                                                                                        L < R)) 
-                                                                                        break;
-                                                                                        }
-                                                                                        else 
-                                                                                        break;
-                                                                                        R --;
-                                                                                        }if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not preserved!", 11);if((old_variant_4)<0)pathcrawler_assert_exception("Variant non positive",4);
-                                                                                        if((R-L) >= old_variant_4) pathcrawler_assert_exception("Variant non decreasing",4);
-                                                                                        }
-                                                                                         
-                                                                                        }
-                                                                                        if (
-                                                                                        L < R) {
-                                                                                        int tmp;
-                                                                                        {
-                                                                                        /*sequence*/
-                                                                                        tmp = L;
-                                                                                        L ++;
-                                                                                        *(arr + tmp) = *(
-                                                                                        arr + R);
-                                                                                        }
-                                                                                        }
-                                                                                        {
-                                                                                        
-                                                                                        if((R-L)<0)pathcrawler_assert_exception("Variant non positive",9);
-                                                                                        if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not established!", 5);while (1) {
-                                                                                        int old_variant_9 = R-L;
-                    {
-                                                                                        if (
-                                                                                        *(
-                                                                                        arr + L) <= piv) {
-                                                                                        if (! (
-                                                                                        L < R)) 
-                                                                                        break;
-                                                                                        }
-                                                                                        else 
-                                                                                        break;
-                                                                                        L ++;
-                                                                                        }if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not preserved!", 5);if((old_variant_9)<0)pathcrawler_assert_exception("Variant non positive",9);
-                                                                                        if((R-L) >= old_variant_9) pathcrawler_assert_exception("Variant non decreasing",9);
-                                                                                        }
-                                                                                         
-                                                                                        }
-                                                                                        if (
-                                                                                        L < R) {
-                                                                                        int tmp_0;
-                                                                                        {
-                                                                                        /*sequence*/
-                                                                                        tmp_0 = R;
-                                                                                        R --;
-                                                                                        *(arr + tmp_0) = *(
-                                                                                        arr + L);
-                                                                                        }
-                                                                                        }
-                                                                                        }if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not preserved!", 3);
-                                                                                        if((old_variant_7)<0)pathcrawler_assert_exception("Variant non positive",7);
-                                                                                        if((R-L) >= old_variant_7) pathcrawler_assert_exception("Variant non decreasing",7);
-                                                                                        }
-                                                                                         
-                              }
+                                if ((R-L) < 0)pathcrawler_assert_exception("Variant non positive",7);
+                                if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not established!", 3);
+                                while (1) {
+                                  int old_variant_7 = R-L;
+                                  {
+                                    if (! (L < R)) break;
+                                    {
+                                      if ((R-L) < 0)pathcrawler_assert_exception("Variant non positive",4);
+                                      if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not established!", 11);
+                                      while (1) {
+                                        int old_variant_4 = R-L;
+                                        {
+                                          if (*(arr + R) >= piv) {
+                                            if (! (L < R)) break;
+                                          }
+                                          else break;
+                                          R --;
+                                        }if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not preserved!", 11);
+                                        if ((old_variant_4) < 0)pathcrawler_assert_exception("Variant non positive",4);
+                                        if ((R-L) >= old_variant_4)pathcrawler_assert_exception("Variant non decreasing",4);}
+                                         }
+                                       
+                                    if (L < R) {
+                                      int tmp;
+                                      {
+                                        /*sequence*/
+                                        tmp = L;
+                                        L ++;
+                                        *(arr + tmp) = *(arr + R);
+                                      }
+                                    }
+                                    {
+                                      if ((R-L) < 0)pathcrawler_assert_exception("Variant non positive",9);
+                                      if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not established!", 5);
+                                      while (1) {
+                                        int old_variant_9 = R-L;
+                                        {
+                                          if (*(arr + L) <= piv) {
+                                            if (! (L < R)) break;
+                                          }
+                                          else break;
+                                          L ++;
+                                        }if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not preserved!", 5);
+                                        if ((old_variant_9) < 0)pathcrawler_assert_exception("Variant non positive",9);
+                                        if ((R-L) >= old_variant_9)pathcrawler_assert_exception("Variant non decreasing",9);}
+                                         }
+                                       
+                                    if (L < R) {
+                                      int tmp_0;
+                                      {
+                                        /*sequence*/
+                                        tmp_0 = R;
+                                        R --;
+                                        *(arr + tmp_0) = *(arr + L);
+                                      }
+                                    }
+                                  }if(!((L) <= (R)))pathcrawler_assert_exception("Loop invariant not preserved!", 3);
+                                  if ((old_variant_7) < 0)pathcrawler_assert_exception("Variant non positive",7);
+                                  if ((R-L) >= old_variant_7)pathcrawler_assert_exception("Variant non decreasing",7);}
+                                   }
+                                 
                               *(arr + L) = piv;
                               *(beg + (i + 1)) = L + 1;
                               *(end + (i + 1)) = *(end + i);
@@ -172,28 +156,28 @@
                            
                         __retres = 0;
                         return_label:
-                        {
-                          int __stady_pred_1 = 1;
                           {
-                          int __q_i;
-                          for (__q_i = 0; __q_i < old_elements-1 &&  __stady_pred_1; __q_i++) {
-                          __stady_pred_1 = ((*(old_arr+__q_i)) <= (*(old_arr+(__q_i+1))));
-                          }
-                          }
-                          if(!__stady_pred_1)pathcrawler_assert_exception("Post-condition!", 8);if(!(__retres == 0))pathcrawler_assert_exception("Post-condition!", 12);
-                          }
-                        free(old_ptr_arr);
-                        free(old_ptr_beg);
-                        free(old_ptr_end);
-                        return __retres;
+                            int __stady_pred_1 = 1;
+                            {
+                            int __q_i;
+                            for (__q_i = 0; __q_i < old_elements-1 &&  __stady_pred_1; __q_i++) {
+                            __stady_pred_1 = ((*(old_arr+__q_i)) <= (*(old_arr+(__q_i+1))));
+                            }
+                            }
+                            if(!__stady_pred_1)pathcrawler_assert_exception("Post-condition!", 8);if(!(__retres == 0))pathcrawler_assert_exception("Post-condition!", 12);
+                            }
+                          free(old_ptr_arr);
+                          free(old_ptr_beg);
+                          free(old_ptr_end);
+                          return __retres;
                       }
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:158:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:142:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:158:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:142:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_quick_sort utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_quick_sort ...
