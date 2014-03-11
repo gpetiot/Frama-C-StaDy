@@ -7,76 +7,6 @@ let debug_builtins = Kernel.register_category "printer:builtins"
 let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
 
-(* to change a \valid to a pathcrawler_dimension *)
-let rec extract_terms : term -> term * term =
-  fun t ->
-    let loc = t.term_loc in
-    match t.term_node with
-    | TLval _ -> t, Cil.lzero ~loc ()
-    | TCastE (_,term)
-    | TCoerce (term,_)
-    | TAlignOfE term -> extract_terms term
-    | TBinOp ((PlusPI|IndexPI),x,{term_node = Trange(_,Some y)}) -> x,y
-    | TBinOp ((PlusPI|IndexPI),x,y) -> x,y
-    | TBinOp (MinusPI,x,y) ->
-      let einfo = {exp_type=t.term_type; exp_name=[]} in
-      x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
-    | TStartOf _ -> t, Cil.lzero ~loc ()
-    | TAddrOf (TVar _, TIndex _) ->
-      let lv = Cil.mkTermMem t TNoOffset in
-      let einfo = {exp_type=t.term_type;exp_name=[]} in
-      let te = Cil.term_of_exp_info loc(TLval lv) einfo in
-      extract_terms te
-    | _ -> Options.Self.not_yet_implemented "term: %a" Printer.pp_term t
-
-
-
-
-(* generate guards for logic vars, e.g.:
-   [0 <= a <= 10; x <= b <= y]
-   TODO: what is the 2nd value of the returned tuple (logic_var list) ??? *)
-let rec compute_guards
-    : (term*relation*logic_var*relation*term)list ->
-  logic_var list ->
-  predicate named ->
-  ((term*relation*logic_var*relation*term)list * logic_var list) =
-  fun acc vars p ->
-    match p.content with
-    | Pand({ content = Prel((Rlt | Rle) as r1, t11, t12) },
-	   { content = Prel((Rlt | Rle) as r2, t21, t22) }) ->
-      let rec terms t12 t21 = match t12.term_node, t21.term_node with
-	| TLval(TVar x1, TNoOffset), TLval(TVar x2, TNoOffset) -> 
-	  let v, vars = match vars with
-	    | [] -> assert false
-	    | v :: tl -> 
-	      match v.lv_type with
-	      | Ctype ty when Cil.isIntegralType ty -> v, tl
-	      | Linteger -> v, tl
-	      | Ltype _ as ty when Logic_const.is_boolean_type ty -> v, tl
-	      | Ctype _ | Ltype _ | Lvar _ | Lreal | Larrow _ -> assert false
-	  in
-	  if Cil_datatype.Logic_var.equal x1 x2
-	    && Cil_datatype.Logic_var.equal x1 v then
-	    (t11, r1, x1, r2, t22) :: acc, vars
-	  else
-	    assert false
-	| TLogic_coerce(_, t12), _ -> terms t12 t21 
-	| _, TLogic_coerce(_, t21) -> terms t12 t21
-	| TLval _, _ -> assert false
-	| _, _ -> assert false
-      in
-      terms t12 t21
-    | Pand(p1, p2) ->
-      let acc, vars = compute_guards acc vars p1 in
-      compute_guards acc vars p2
-    | _ ->
-      Options.Self.feedback "compute_guards of %a" Printer.pp_predicate_named p;
-      assert false
-
-
-
-
-
 class sd_printer props terms_at_Pre () = object(self)
   inherit Printer.extensible_printer () as super
 
@@ -831,7 +761,7 @@ class sd_printer props terms_at_Pre () = object(self)
     if (List.length logic_vars) > 1 then
       failwith "quantification on many variables unsupported!";
     let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-    let guards, vars = compute_guards [] logic_vars hyps in
+    let guards, vars = Utils.compute_guards [] logic_vars hyps in
     if vars <> [] then
       failwith "Unguarded variables in quantification!";
     let t1,r1,lv,r2,t2 = List.hd guards in
@@ -866,7 +796,7 @@ class sd_printer props terms_at_Pre () = object(self)
     | Ptrue -> "1"
     | Pfalse -> "0"
     | Pvalid(_,term) | Pvalid_read(_,term) ->
-      let x, y = extract_terms term in
+      let x, y = Utils.extract_terms term in
       let x',y' = self#term_and_var fmt x, self#term_and_var fmt y in
       Format.fprintf Format.str_formatter
 	"((%s) >= 0 && (pathcrawler_dimension(%s) > (%s)))"
