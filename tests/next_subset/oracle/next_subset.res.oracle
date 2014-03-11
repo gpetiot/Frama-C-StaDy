@@ -63,17 +63,17 @@
                         int k;
                         k = n - 1;
                         {
-                          if (((k)) < 0)pathcrawler_assert_exception("Variant non positive",3);
+                          if (((k)) < 0)pathcrawler_assert_exception("Variant non positive",4);
                           if(!((-1 <= (k)) && ((k) <= n-1)))pathcrawler_assert_exception("Loop invariant not established!", 6);
                           while (1) {
-                            int old_variant_3 = (k);
+                            int old_variant_4 = (k);
                             {
                               if (! (k >= 0)) break;
                               if (*(s + k) == 0) break;
                               k --;
                             }if(!((-1 <= (k)) && ((k) <= n-1)))pathcrawler_assert_exception("Loop invariant not preserved!", 6);
-                            if ((old_variant_3) < 0)pathcrawler_assert_exception("Variant non positive",3);
-                            if (((k)) >= old_variant_3)pathcrawler_assert_exception("Variant non decreasing",3);}
+                            if ((old_variant_4) < 0)pathcrawler_assert_exception("Variant non positive",4);
+                            if (((k)) >= old_variant_4)pathcrawler_assert_exception("Variant non decreasing",4);}
                              }
                            
                         if (k == -1) {
@@ -83,7 +83,7 @@
                         *(s + k) = 1;
                         i = k + 1;
                         {
-                          if ((n-i) < 0)pathcrawler_assert_exception("Variant non positive",10);int __stady_pred_10 = 1;
+                          if ((n-i) < 0)pathcrawler_assert_exception("Variant non positive",11);int __stady_pred_10 = 1;
                           {
                           int __q_i;
                           for (__q_i = 0; __q_i < (i) &&  __stady_pred_10; __q_i++) {
@@ -91,14 +91,14 @@
                           }
                           }
                           if(!__stady_pred_10)pathcrawler_assert_exception("Loop invariant not established!", 7);
-                          if(!((k+1 <= (i)) && ((i) <= (n))))pathcrawler_assert_exception("Loop invariant not established!", 2);
+                          if(!((k+1 <= (i)) && ((i) <= (n))))pathcrawler_assert_exception("Loop invariant not established!", 1);
                           while (1) {
-                            int old_variant_10 = n-i;
+                            int old_variant_11 = n-i;
                             {
                               if (! (i < n)) break;
                               *(s + i) = 0;
                               i ++;
-                            }if(!((k+1 <= (i)) && ((i) <= (n))))pathcrawler_assert_exception("Loop invariant not preserved!", 2);int __stady_pred_11 = 1;
+                            }if(!((k+1 <= (i)) && ((i) <= (n))))pathcrawler_assert_exception("Loop invariant not preserved!", 1);int __stady_pred_11 = 1;
                             {
                             int __q_i;
                             for (__q_i = 0; __q_i < (i) &&  __stady_pred_11; __q_i++) {
@@ -106,8 +106,8 @@
                             }
                             }
                             if(!__stady_pred_11)pathcrawler_assert_exception("Loop invariant not preserved!", 7);
-                            if ((old_variant_10) < 0)pathcrawler_assert_exception("Variant non positive",10);
-                            if ((n-i) >= old_variant_10)pathcrawler_assert_exception("Variant non decreasing",10);}
+                            if ((old_variant_11) < 0)pathcrawler_assert_exception("Variant non positive",11);
+                            if ((n-i) >= old_variant_11)pathcrawler_assert_exception("Variant non decreasing",11);}
                              }
                            
                         __retres = k;
@@ -120,7 +120,7 @@
                             __stady_pred_12 = (((*(old_s+__q_i)) == 0) || ((*(old_s+__q_i)) == 1));
                             }
                             }
-                            if(!__stady_pred_12)pathcrawler_assert_exception("Post-condition!", 11);if(!((-1 <= __retres) && (__retres < (old_n))))pathcrawler_assert_exception("Post-condition!", 14);int __stady_pred_13 = 1;
+                            if(!__stady_pred_12)pathcrawler_assert_exception("Post-condition!", 10);if(!((-1 <= __retres) && (__retres < (old_n))))pathcrawler_assert_exception("Post-condition!", 14);int __stady_pred_13 = 1;
                             if ((__retres == -1)) {
                             int __stady_pred_14 = 1;
                             {
@@ -131,7 +131,7 @@
                             }
                             __stady_pred_13 = __stady_pred_14;
                             }
-                            if(!__stady_pred_13)pathcrawler_assert_exception("Post-condition!", 5);int __stady_pred_15 = 1;
+                            if(!__stady_pred_13)pathcrawler_assert_exception("Post-condition!", 3);int __stady_pred_15 = 1;
                             if ((__retres != -1)) {
                             int __stady_pred_16 = 1;
                             {
@@ -146,7 +146,7 @@
                             if ((__retres != -1)) {
                             __stady_pred_17 = ((*(old_ptr_s+__retres)) < (*(old_s+__retres)));
                             }
-                            if(!__stady_pred_17)pathcrawler_assert_exception("Post-condition!", 13);
+                            if(!__stady_pred_17)pathcrawler_assert_exception("Post-condition!", 12);
                             }
                           free(old_ptr_s);
                           return __retres;

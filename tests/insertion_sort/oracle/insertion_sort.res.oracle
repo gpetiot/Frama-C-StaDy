@@ -45,7 +45,7 @@
                         int mv;
                         i = 1;
                         {
-                          if ((n-i) < 0)pathcrawler_assert_exception("Variant non positive",0);int __stady_pred_5 = 1;
+                          if ((n-i) < 0)pathcrawler_assert_exception("Variant non positive",1);int __stady_pred_5 = 1;
                           {
                           int __q_x;
                           for (__q_x = 0; __q_x < i-1 &&  __stady_pred_5; __q_x++) {
@@ -55,13 +55,13 @@
                           if(!__stady_pred_5)pathcrawler_assert_exception("Loop invariant not established!", 9);
                           if(!((1 <= (i)) && ((i) <= (n))))pathcrawler_assert_exception("Loop invariant not established!", 5);
                           while (1) {
-                            int old_variant_0 = n-i;
+                            int old_variant_1 = n-i;
                             {
                               if (! (i < n)) break;
                               mv = *(t + i);
                               j = i;
                               {
-                                if (((j)) < 0)pathcrawler_assert_exception("Variant non positive",3);int __stady_pred_6 = 1;
+                                if (((j)) < 0)pathcrawler_assert_exception("Variant non positive",4);int __stady_pred_6 = 1;
                                 {
                                 int __q_k;
                                 for (__q_k = (j); __q_k < (i) &&  __stady_pred_6; __q_k++) {
@@ -69,15 +69,15 @@
                                 }
                                 }
                                 if(!__stady_pred_6)pathcrawler_assert_exception("Loop invariant not established!", 11);
-                                if(!((0 <= (j)) && ((j) <= (i))))pathcrawler_assert_exception("Loop invariant not established!", 7);
+                                if(!((0 <= (j)) && ((j) <= (i))))pathcrawler_assert_exception("Loop invariant not established!", 6);
                                 while (1) {
-                                  int old_variant_3 = (j);
+                                  int old_variant_4 = (j);
                                   {
                                     if (! (j > 0)) break;
                                     if (*(t + (j - 1)) <= mv) break;
                                     *(t + j) = *(t + (j - 1));
                                     j --;
-                                  }if(!((0 <= (j)) && ((j) <= (i))))pathcrawler_assert_exception("Loop invariant not preserved!", 7);int __stady_pred_7 = 1;
+                                  }if(!((0 <= (j)) && ((j) <= (i))))pathcrawler_assert_exception("Loop invariant not preserved!", 6);int __stady_pred_7 = 1;
                                   {
                                   int __q_k;
                                   for (__q_k = (j); __q_k < (i) &&  __stady_pred_7; __q_k++) {
@@ -85,8 +85,8 @@
                                   }
                                   }
                                   if(!__stady_pred_7)pathcrawler_assert_exception("Loop invariant not preserved!", 11);
-                                  if ((old_variant_3) < 0)pathcrawler_assert_exception("Variant non positive",3);
-                                  if (((j)) >= old_variant_3)pathcrawler_assert_exception("Variant non decreasing",3);}
+                                  if ((old_variant_4) < 0)pathcrawler_assert_exception("Variant non positive",4);
+                                  if (((j)) >= old_variant_4)pathcrawler_assert_exception("Variant non decreasing",4);}
                                    }
                                  
                               *(t + j) = mv;
@@ -99,8 +99,8 @@
                             }
                             }
                             if(!__stady_pred_8)pathcrawler_assert_exception("Loop invariant not preserved!", 9);
-                            if ((old_variant_0) < 0)pathcrawler_assert_exception("Variant non positive",0);
-                            if ((n-i) >= old_variant_0)pathcrawler_assert_exception("Variant non decreasing",0);}
+                            if ((old_variant_1) < 0)pathcrawler_assert_exception("Variant non positive",1);
+                            if ((n-i) >= old_variant_1)pathcrawler_assert_exception("Variant non decreasing",1);}
                              }
                            
                         {

@@ -431,17 +431,17 @@
                         tmp = alt_sep_test();
                         {
                           if (((up_separation) >= (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((down_separation) < (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && 1) {
-                            if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 4);}
+                            if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 2);}
                             if (((up_separation) < (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((down_separation) >= (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && 1) {
                               if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 41);}
                               if (((up_separation) < (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((down_separation) < (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((up_separation) > (down_separation)) && 1) {
                                 if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 34);}
                                 if (((up_separation) < (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((down_separation) < (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((up_separation) < (down_separation)) && 1) {
-                                  if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 38);}
+                                  if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 39);}
                                   if (((up_separation) >= (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((down_separation) >= (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((own_tracked_alt) > (other_tracked_alt)) && 1) {
                                     if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 44);}
                                     if (((up_separation) >= (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((down_separation) >= (Positive_RA_Alt_Thresh)[(alt_layer_value)]) && ((own_tracked_alt) < (other_tracked_alt)) && 1) {
-                                      if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 6);}
+                                      if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 3);}
                                       if (((own_tracked_alt) > (other_tracked_alt)) && 1) {
                                         if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 11);}
                                         if (((own_tracked_alt) < (other_tracked_alt)) && 1) {
@@ -449,7 +449,7 @@
                                           if (((up_separation) > (down_separation)) && 1) {
                                             if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 16);}
                                             if (((up_separation) < (down_separation)) && 1) {
-                                              if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 39);}
+                                              if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 40);}
                                               
                           }
                         return tmp;
