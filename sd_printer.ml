@@ -193,6 +193,24 @@ class sd_printer props terms_at_Pre () = object(self)
 	 Format.flush_str_formatter())
     | Tapp (li,[],[lower;upper;{term_node=Tlambda([q],t)}]) ->
       self#lambda_and_var fmt li lower upper q t
+    | Tapp (li,_,[param]) ->
+      let var = self#term_and_var fmt param in
+      let builtin_name = li.l_var_info.lv_name in
+      let func_name =
+	if builtin_name = "\\cos" then "cos"
+	else if builtin_name = "\\abs" then "abs"
+	else if builtin_name = "\\sqrt" then "sqrt"
+	else assert false
+      in
+      Format.fprintf Format.str_formatter "%s(%s)" func_name var;
+      Format.flush_str_formatter()
+    | Tapp (li,_,[param1;param2]) ->
+      let var1 = self#term_and_var fmt param1 in
+      let var2 = self#term_and_var fmt param2 in
+      let builtin_name = li.l_var_info.lv_name in
+      let func_name = if builtin_name = "\\pow" then "pow" else assert false in
+      Format.fprintf Format.str_formatter "%s(%s%s,)" func_name var1 var2;
+      Format.flush_str_formatter()
     | Tat(_, StmtLabel _) ->
       if current_function <> None then
 	Options.Self.warning "%a unsupported" Printer.pp_term t;

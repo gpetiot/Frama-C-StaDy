@@ -142,14 +142,18 @@ class subst = object(self)
     | Tapp (li,lassoc,params) ->
       let new_labels =
 	List.map (fun (x,y) -> x, self#subst_label y labels) lassoc in
-      let new_args = List.map2 (fun x y -> x,y) li.l_profile params in
-      let new_args =
-	List.map (fun (x,y) ->
-	  x, self#subst_term y labels args quantifs) new_args in
+      let new_params =
+	List.map (fun x -> self#subst_term x labels args quantifs) params in
+      let new_args = List.map2 (fun x y -> x,y) li.l_profile new_params in
       begin
 	match li.l_body with
 	| LBnone ->
-	  Options.Self.not_yet_implemented "LBnone in term application"
+	  let builtin_name = li.l_var_info.lv_name in
+	  if builtin_name = "\\cos" || builtin_name = "\\abs" ||
+	    builtin_name = "\\sqrt" || builtin_name = "\\pow" then
+	    Tapp(li,new_labels,new_params)
+	  else
+	    Options.Self.not_yet_implemented "LBnone in term application"
 	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
 	| LBterm{term_node=t} -> self#subst_tnode t new_labels new_args quantifs
 	| LBpred _ -> Options.Self.not_yet_implemented "LBpred"
