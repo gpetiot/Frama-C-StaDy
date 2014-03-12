@@ -39,7 +39,7 @@ type pl_term =
 
 type pl_domain =
 | PLIntDom of pl_term * Integer.t * Integer.t
-| PLFloatDom of pl_term * float * float
+| PLFloatDom of pl_term * string * string
 
 type pl_rel = pl_term * relation * pl_term
 
@@ -70,7 +70,7 @@ class pl_printer = object(self)
   method pl_constant : pl_constant -> string =
     function
     | PLInt i -> Integer.to_string i
-    | PLFloat f -> string_of_float f
+    | PLFloat f -> "(" ^ (string_of_float f) ^ "0)"
       
   method is_float : pl_term -> bool =
     function
@@ -112,7 +112,7 @@ class pl_printer = object(self)
 	(if complex then "[], " else "")
 	(Integer.to_string a)
 	(Integer.to_string b)
-      | PLFloatDom (t',a,b) -> Printf.sprintf "%s, %sfloat([(%f)..(%f)])"
+      | PLFloatDom (t',a,b) -> Printf.sprintf "%s, %sfloat([(%s)..(%s)])"
 	(self#pl_term t') (if complex then "[], " else "") a b
 
   method relation : relation -> string =
@@ -269,17 +269,25 @@ let rec input_from_type :
     let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
     let maxint = Cil.max_signed_number (Utils.machdep()) in
     let minint = Cil.min_signed_number (Utils.machdep()) in
-    let bounds = function
+    let ibounds = function
       | IBool -> Integer.zero, Integer.one
       | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
       | IUChar -> Integer.zero, Integer.of_int 255
       | ik when Cil.isSigned ik -> minint, maxint
       | _ -> Integer.zero, maxuint
     in
+    let fbounds = function
+      | FFloat -> "+1.0e-37", "+1.0e+38"
+      | FDouble -> "+1.0e-307", "+1.0e+308"
+      | FLongDouble -> "+1.0e-307", "+1.0e+308"
+    in
     match (Cil.unrollType ty) with
     | TEnum ({ekind=ik},_) | TInt (ik,_) ->
-      let b_min, b_max = bounds ik in
+      let b_min, b_max = ibounds ik in
       PLIntDom (t, b_min, b_max) :: domains
+    | TFloat (fk,_) ->
+      let b_min, b_max = fbounds fk in
+      PLFloatDom (t, b_min, b_max) :: domains
     | TComp (ci,_,_) ->
       let rec aux doms i = function
 	| [] -> doms
