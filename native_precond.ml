@@ -277,9 +277,9 @@ let rec input_from_type :
       | _ -> Integer.zero, maxuint
     in
     let fbounds = function
-      | FFloat -> "+1.0e-37", "+1.0e+38"
-      | FDouble -> "+1.0e-307", "+1.0e+308"
-      | FLongDouble -> "+1.0e-307", "+1.0e+308"
+      | FFloat -> "-3.40282347e+38", "3.40282347e+38"
+      | FDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
+      | FLongDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
     in
     match (Cil.unrollType ty) with
     | TEnum ({ekind=ik},_) | TInt (ik,_) ->
