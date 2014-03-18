@@ -50,55 +50,28 @@ class sd_printer props terms_at_Pre () = object(self)
       self#vdecl v
       (if display_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
 
-  (* replace a varinfo by old_varinfo, according to the terms_at_Pre hashtbl *)
-  method! varinfo fmt v =
-    if in_old_term then
-      match current_function with
-      | Some f ->
-	begin
-	  let prefix =
-	    if (Cil.isPointerType v.vtype || Cil.isArrayType v.vtype)
-	      && in_old_ptr then "old_ptr" else "old"
-	  in
-	  try
-	    let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.vname in
-	    ignore (Cil_datatype.Varinfo.Hashtbl.find tbl v);
-	    super#varinfo fmt {v with vname=prefix^"_"^v.vname}
-	  with
-	  | Not_found ->
-	    Options.Self.feedback ~dkey:Options.dkey_at
-	      "%s_%s not found in terms_at_Pre" prefix v.vname;
-	    super#varinfo fmt v
-	end
-      | None -> super#varinfo fmt v
-    else
-      super#varinfo fmt v
-
   method! logic_var fmt v =
-    if in_old_term then
-      match current_function with
-      | Some f ->
-	begin
-	  let prefix =
-	    match v.lv_type with Ctype ty ->
-	      if (Cil.isPointerType ty || Cil.isArrayType ty)
-		&& in_old_ptr then "old_ptr" else "old"
-	    | _ -> "old"
-	  in
-	  try
-	    let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.vname in
-	    let vi = Extlib.the v.lv_origin in
-	    ignore (Cil_datatype.Varinfo.Hashtbl.find tbl vi);
-	    super#logic_var fmt {v with lv_name=prefix^"_"^v.lv_name}
-	  with
-	  | _ ->
-	    Options.Self.feedback ~dkey:Options.dkey_at
-	      "%s_%s not found in terms_at_Pre" prefix v.lv_name;
-	    super#logic_var fmt v
-	end
-      | None -> super#logic_var fmt v
-    else
-      super#logic_var fmt v
+    match current_function with
+    | Some f when in_old_term ->
+      begin
+	let prefix =
+	  match v.lv_type with Ctype ty ->
+	    if (Cil.isPointerType ty || Cil.isArrayType ty)
+	      && in_old_ptr then "old_ptr" else "old"
+	  | _ -> "old"
+	in
+	try
+	  let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.vname in
+	  let vi = Extlib.the v.lv_origin in
+	  ignore (Cil_datatype.Varinfo.Hashtbl.find tbl vi);
+	  super#logic_var fmt {v with lv_name=prefix^"_"^v.lv_name}
+	with
+	| _ ->
+	  Options.Self.feedback ~dkey:Options.dkey_at
+	    "%s_%s not found in terms_at_Pre" prefix v.lv_name;
+	  super#logic_var fmt v
+      end
+    | _ -> super#logic_var fmt v
 
   (* support of the litteral value of INT_MIN *)
   method! exp fmt e =
@@ -106,37 +79,6 @@ class sd_printer props terms_at_Pre () = object(self)
     | UnOp(Neg,{enode=Const(CInt64 (_,_,Some s))},_) when s = "2147483648" ->
       Format.fprintf fmt "(-2147483467-1)"
     | _ -> super#exp fmt e
-
-  (* unmodified *)
-  method! term fmt t = self#term_node fmt t
-
-  method! term_node fmt t =
-    match t.term_node with
-    | Tat(_, StmtLabel _) ->
-      if current_function <> None then
-	Options.Self.warning "%a unsupported" Printer.pp_term t;
-      super#term_node fmt t
-    | Tat(term,LogicLabel(_,stringlabel)) ->
-      if stringlabel = "Old" || stringlabel = "Pre" then
-	let is_ptr =
-	  match term.term_node with TLval(TMem _,_) -> true | _ -> false in
-	if is_ptr then in_old_ptr <- true;
-	in_old_term <- true;
-	self#term fmt term;
-	if is_ptr then in_old_ptr <- false;
-	in_old_term <- false
-      else
-	(* label Post is only encoutered in post-conditions, and \at(t,Post)
-	   in a post-condition is t *)
-	if stringlabel = "Post" then
-	  self#term fmt term
-	else
-	  begin
-	    if current_function <> None then
-	      Options.Self.warning "%a unsupported" Printer.pp_term t;
-	    super#term_node fmt t
-	  end
-    | _ -> super#term_node fmt t
 
   method private term_and_var fmt t = self#term_node_and_var fmt t
 
@@ -185,13 +127,14 @@ class sd_printer props terms_at_Pre () = object(self)
   method private term_node_and_var fmt t =
     match t.term_node with
     | Tnull -> "0"
+    | TCastE (_, t') -> self#term_and_var fmt t'
     | TConst(Integer(i,_)) ->
       if (Integer.to_string i) = "-2147483648" then
 	"(-2147483647-1)"
       else
 	(Format.fprintf Format.str_formatter "%a" super#term_node t;
 	 Format.flush_str_formatter())
-    | Tapp (li,[],[lower;upper;{term_node=Tlambda([q],t)}]) ->
+    | Tapp (li,_,[lower;upper;{term_node=Tlambda([q],t)}]) ->
       self#lambda_and_var fmt li lower upper q t
     | Tapp (li,_,[param]) ->
       let var = self#term_and_var fmt param in
@@ -209,7 +152,7 @@ class sd_printer props terms_at_Pre () = object(self)
       let var2 = self#term_and_var fmt param2 in
       let builtin_name = li.l_var_info.lv_name in
       let func_name = if builtin_name = "\\pow" then "pow" else assert false in
-      Format.fprintf Format.str_formatter "%s(%s%s,)" func_name var1 var2;
+      Format.fprintf Format.str_formatter "%s(%s,%s)" func_name var1 var2;
       Format.flush_str_formatter()
     | Tat(_, StmtLabel _) ->
       if current_function <> None then
@@ -229,7 +172,7 @@ class sd_printer props terms_at_Pre () = object(self)
       else
 	(* label Post is only encoutered in post-conditions, and \at(t,Post)
 	   in a post-condition is t *)
-	if stringlabel = "Post" then
+	if stringlabel = "Post" || stringlabel = "Here" then
 	  self#term_and_var fmt term
 	else
 	  begin
@@ -241,9 +184,32 @@ class sd_printer props terms_at_Pre () = object(self)
     | TLogic_coerce (_, t) -> self#term_and_var fmt t
     | TCoerce (t, _) -> self#term_and_var fmt t
     | TLval tlval -> self#tlval_and_var fmt tlval
-    | _ ->
+    | Tif (cond, then_b, else_b) ->
+      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+      pred_cpt <- pred_cpt + 1;
+      Format.fprintf fmt "int %s;@\n" var;
+      let cond' = self#term_and_var fmt cond in
+      Format.fprintf fmt "if (%s) {@\n" cond';
+      let then_b' = self#term_and_var fmt then_b in
+      Format.fprintf fmt "%s = %s;@\n" var then_b';
+      Format.fprintf fmt "}@\n";
+      Format.fprintf fmt "else {@\n";
+      let else_b' = self#term_and_var fmt else_b in
+      Format.fprintf fmt "%s = %s;@\n" var else_b';
+      Format.fprintf fmt "}@\n";
+      var
+    | TConst _ ->
       Format.fprintf Format.str_formatter "%a" super#term_node t;
       Format.flush_str_formatter()
+    | TBinOp(op, t1, t2) ->
+      let x = self#term_and_var fmt t1 and y = self#term_and_var fmt t2 in
+      Format.fprintf Format.str_formatter "(%s %a %s)" x self#binop op y;
+      Format.flush_str_formatter()
+    | TUnOp(op, t') ->
+      let x = self#term_and_var fmt t' in
+      Format.fprintf Format.str_formatter "(%a %s)" self#unop op x;
+      Format.flush_str_formatter()
+    | _ -> Utils.error_term t
       
   method private tlval_and_var fmt (tlhost, toffset) =
     match tlhost with
@@ -253,7 +219,7 @@ class sd_printer props terms_at_Pre () = object(self)
     | _ ->
       let lhost = self#term_lhost_and_var fmt tlhost in
       let offset = self#term_offset_and_var fmt toffset in
-      "(" ^ lhost ^ ")" ^ offset
+      if offset = "" then lhost else "(" ^ lhost ^ ")" ^ offset
 
   method private term_lhost_and_var fmt lhost =
     match lhost with
@@ -261,7 +227,7 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.fprintf Format.str_formatter "%a" self#logic_var lv;
       Format.flush_str_formatter()
     | TResult _ -> assert false
-    | TMem t -> let v = self#term_and_var fmt t in "*(" ^ v ^ ")"
+    | TMem t -> let v = self#term_and_var fmt t in "*" ^ v
 
   method private term_offset_and_var fmt toffset =
     match toffset with
@@ -297,16 +263,12 @@ class sd_printer props terms_at_Pre () = object(self)
     | _ -> super#term_lval fmt t
 
   method private at_least_one_prop kf behaviors =
-    List.fold_left (fun res b ->
-      res ||
-	let at_least_one res k =
-	  res || (List.mem (Property.ip_of_ensures kf Kglobal b k) props)
-	in
-	List.fold_left at_least_one false b.b_post_cond
-    ) false behaviors
+    let in_ensures b r k =
+      r || (List.mem (Property.ip_of_ensures kf Kglobal b k) props) in
+    let in_bhv r b = r || List.fold_left (in_ensures b) false b.b_post_cond in
+    List.fold_left in_bhv false behaviors
 
   method private fundecl fmt f =
-    Options.Self.debug ~dkey:Options.dkey_second_pass "IN fundecl";
     let was_ghost = is_ghost in
     let entry_point_name =
       Kernel_function.get_name (fst(Globals.entry_point())) in
@@ -381,16 +343,15 @@ class sd_printer props terms_at_Pre () = object(self)
     (* END postcond *)
     (* alloc variables for \at terms *)
     let concat_indice str ind = str ^ "[" ^ ind ^ "]" in
+    let rec array_to_ptr = function
+      | TArray(ty,_,_,attributes) -> TPtr(array_to_ptr ty, attributes)
+      | x -> x
+    in
+    let dig_type = function
+      | TPtr(ty,_) | TArray(ty,_,_,_) -> ty
+      | _ -> assert false
+    in
     begin
-      let rec extract_ptr_typ = function
-	| TPtr(ty,_)
-	| TArray(ty,_,_,_) -> extract_ptr_typ ty
-	| x -> x
-      in
-      let rec array_to_ptr = function
-	| TArray(ty,_,_,attributes) -> TPtr(array_to_ptr ty, attributes)
-	| x -> x
-      in
       try
 	let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
 	let iter_counter = ref 0 in
@@ -399,23 +360,20 @@ class sd_printer props terms_at_Pre () = object(self)
 	    (self#typ(Some(fun fmt -> Format.fprintf fmt "old_%s" v.vname)))
 	    (array_to_ptr v.vtype)
 	    v.vname;
-	  let rec alloc_aux indices = function
+	  let rec alloc_aux indices ty = function
 	    | h :: t ->
-	      let rec stars ret =function 0->ret | n -> stars (ret^"*") (n-1) in
 	      let all_indices = List.fold_left concat_indice "" indices in
-	      let stars =
-		stars "" ((List.length terms)-(List.length indices)-1) in
-	      let ty = extract_ptr_typ v.vtype in
+	      let ty = dig_type ty in
 	      let h' = self#term_and_var fmt h in
-	      Format.fprintf fmt "old_ptr_%s%s = malloc((%s)*sizeof(%a%s));@\n"
-		v.vname all_indices h' (self#typ None) ty stars;
+	      Format.fprintf fmt "old_ptr_%s%s = malloc((%s)*sizeof(%a));@\n"
+		v.vname all_indices h' (self#typ None) ty;
 	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
 	      Format.fprintf fmt "int %s;@\n" iterator;
 	      let h' = self#term_and_var fmt h in
 	      Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
 		iterator iterator h' iterator;
 	      iter_counter := !iter_counter + 1;
-	      alloc_aux (Utils.append_end indices iterator) t;
+	      alloc_aux (Utils.append_end indices iterator) ty t;
 	      Format.fprintf fmt "}@\n"
 	    | [] ->
 	      let all_indices = List.fold_left concat_indice "" indices in
@@ -428,7 +386,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		(self#typ(Some(fun fmt -> Format.fprintf fmt "old_ptr_%s"
 		  v.vname)))
 		(array_to_ptr v.vtype);
-	      alloc_aux [] terms
+	      alloc_aux [] v.vtype terms
 	    end
 	) tbl
       with Not_found -> ()
@@ -468,17 +426,15 @@ class sd_printer props terms_at_Pre () = object(self)
     Format.fprintf fmt "@.}";
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
-      (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore);
-    Options.Self.debug ~dkey:Options.dkey_second_pass "OUT fundecl"
+      (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
   (* end of fundecl *)
 
   method private subst_pred p = (new Sd_subst.subst)#subst_pred p [] [] [] []
 
   method private bhv_assumes_begin fmt bhv loc =
     if bhv.b_assumes <> [] then
-      let vars = List.map (fun a ->
-	self#predicate_and_var fmt (self#subst_pred a.ip_content)
-      ) bhv.b_assumes in
+      let f a = self#predicate_and_var fmt (self#subst_pred a.ip_content) in
+      let vars = List.map f bhv.b_assumes in
       Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
 	(fun fmt -> self#line_directive ~forcefile:false fmt) loc;
       List.iter (fun v -> Format.fprintf fmt "%s && " v) vars;
@@ -497,11 +453,9 @@ class sd_printer props terms_at_Pre () = object(self)
 
   method private bhv_guard_begin fmt behaviors loc =
     if behaviors <> [] then
-      let vars = List.map (fun assumes ->
-	List.map (fun a ->
-	  self#predicate_and_var fmt (self#subst_pred a.ip_content)
-	) assumes
-      ) behaviors in
+      let f a = self#predicate_and_var fmt (self#subst_pred a.ip_content) in
+      let g assumes_list = List.map f assumes_list in
+      let vars = List.map g behaviors in
       Format.fprintf fmt "@[<hv>%a@[<v 2>if ("
 	(fun fmt -> self#line_directive ~forcefile:false fmt) loc;
       List.iter (fun assumes ->
@@ -685,88 +639,17 @@ class sd_printer props terms_at_Pre () = object(self)
 	  Format.fprintf fmt "@\n";
 	  self#out_current_function
 	end
-    | GType (typ, l) ->
-      self#line_directive ~forcefile:true fmt l;
-      Format.fprintf fmt "typedef %a;@\n"
-	(self#typ (Some (fun fmt -> Format.fprintf fmt "%s" typ.tname)))
-	typ.ttype
-    | GEnumTag (enum, l) ->
-      self#line_directive fmt l;
-      if verbose then 
-        Format.fprintf fmt "/* Following enum is equivalent to %a */@\n" 
-          (self#typ None) 
-          (TInt(enum.ekind,[]));
-      Format.fprintf fmt "enum@[ %a {@\n%a@]@\n}%a;@\n"
-	self#varname enum.ename
-	(Pretty_utils.pp_list ~sep:",@\n"
-	   (fun fmt item ->
-	     Format.fprintf fmt "%s = %a"
-	       item.einame
-	       self#exp item.eival))
-	enum.eitems
-	self#attributes enum.eattr
-    | GEnumTagDecl (enum, l) -> (* This is a declaration of a tag *)
-      self#line_directive fmt l;
-      Format.fprintf fmt "enum %a;@\n" self#varname enum.ename
-    | GCompTag (comp, l) -> (* This is a definition of a tag *)
-      let n = comp.cname in
-      let su =
-	if comp.cstruct then "struct"
-	else "union"
-      in
-      let sto_mod, rest_attr = Cil.separateStorageModifiers comp.cattr in
-      self#line_directive ~forcefile:true fmt l;
-      Format.fprintf fmt "@[<3>%s%a %a {@\n%a@]@\n}%a;@\n"
-	su
-	self#attributes sto_mod
-	self#varname n
-	(Pretty_utils.pp_list ~sep:"@\n" self#fieldinfo)
-	comp.cfields
-	self#attributes rest_attr
-    | GCompTagDecl (comp, l) -> (* This is a declaration of a tag *)
-      self#line_directive fmt l;
-      Format.fprintf fmt "%s;@\n" (Cil.compFullName comp)
-    | GVar (vi, io, l) ->
-      if print_var vi then begin
-	self#line_directive ~forcefile:true fmt l;
-        if vi.vghost then Format.fprintf fmt "/*@@ ghost@ ";
-	self#vdecl fmt vi;
-	(match io.init with
-	  None -> ()
-	| Some i ->
-	  Format.fprintf fmt " = ";
-	  let islong =
-	    match i with
-	      CompoundInit (_, il) when List.length il >= 8 -> true
-	    | _ -> false
-	  in
-	  if islong then begin
-	    self#line_directive fmt l;
-	    Format.fprintf fmt "  @[@\n"
-	  end;
-	  self#init fmt i;
-	  if islong then Format.fprintf fmt "@]");
-	Format.fprintf fmt ";%t@\n" 
-          (if vi.vghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
-      end
     (* print global variable 'extern' declarations, and function prototypes *)
     | GVarDecl (funspec, vi, l) ->
-      if print_var vi then begin
-	if Cil.isFunctionType vi.vtype then self#in_current_function vi;
-	self#opt_funspec fmt funspec;
-	self#line_directive fmt l;
-	Format.fprintf fmt "%a@\n@\n" self#vdecl_complete vi;
-	if Cil.isFunctionType vi.vtype then self#out_current_function
-      end
-    | GAsm (s, l) ->
-      self#line_directive fmt l;
-      Format.fprintf fmt "__asm__(\"%s\");@\n" (Escape.escape_string s)
-    | GPragma (Attr(_an, _args), _l) -> Format.fprintf fmt "@\n"
-    | GPragma (AttrAnnot _, _) -> Format.fprintf fmt "@\n"
-    | GAnnot (decl,l) ->
-      self#line_directive fmt l;
-      Format.fprintf fmt "/*@@@ %a@ */@\n" self#global_annotation decl
-    | GText s  -> if s <> "//" then Format.fprintf fmt "%s@\n" s
+      if print_var vi then
+	begin
+	  if Cil.isFunctionType vi.vtype then self#in_current_function vi;
+	  self#opt_funspec fmt funspec;
+	  self#line_directive fmt l;
+	  Format.fprintf fmt "%a@\n@\n" self#vdecl_complete vi;
+	  if Cil.isFunctionType vi.vtype then self#out_current_function
+	end
+    | _ -> super#global fmt g
   (* end of global *)
 
   (* prints a predicate and returns the name of the variable containing the
@@ -817,7 +700,7 @@ class sd_printer props terms_at_Pre () = object(self)
       let x, y = Utils.extract_terms term in
       let x',y' = self#term_and_var fmt x, self#term_and_var fmt y in
       Format.fprintf Format.str_formatter
-	"((%s) >= 0 && (pathcrawler_dimension(%s) > (%s)))"
+	"(%s >= 0 && pathcrawler_dimension(%s) > %s)"
 	y' x' y';
       Format.flush_str_formatter()
     | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
@@ -828,7 +711,7 @@ class sd_printer props terms_at_Pre () = object(self)
     | Pexists _ -> failwith "\\exists not of the form \\exists ...; a && b;"
     | Pnot(pred1) ->
       let pred1_var = self#predicate_named_and_var fmt pred1 in
-      Format.fprintf Format.str_formatter "!(%s)" pred1_var;
+      Format.fprintf Format.str_formatter "(! %s)" pred1_var;
       Format.flush_str_formatter()
     | Pand(pred1,pred2) ->
       let pred1_var = self#predicate_named_and_var fmt pred1 in
@@ -855,7 +738,7 @@ class sd_printer props terms_at_Pre () = object(self)
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       let pred2_var = self#predicate_named_and_var fmt pred2 in
       Format.fprintf Format.str_formatter
-	"( ( !(%s) || %s ) && ( !(%s) || %s ) )"
+	"( ( (!%s) || %s ) && ( (!%s) || %s ) )"
 	pred1_var pred2_var pred2_var pred1_var;
       Format.flush_str_formatter()
     | Prel(rel,t1,t2) ->

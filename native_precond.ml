@@ -157,43 +157,6 @@ let prolog_header : string =
   ^ ":- export precondition_of/2.\n\n"
   ^ "dom(0,0,0,0).\n"
 
-let error_term : term -> 'a =
-  fun term ->
-    match term.term_node with
-    | TLogic_coerce _ -> failwith "TLogic_coerce"
-    | TBinOp _ -> failwith "TBinOp"
-    | Trange _ -> failwith "Rrange"
-    | TConst _ -> failwith "TConst"
-    | TLval _ -> failwith "TLval"
-    | TSizeOf _ -> failwith "TSizeOf"
-    | TSizeOfE _ -> failwith "TSizeOfE"
-    | TSizeOfStr _ -> failwith "TSizeOfStr"
-    | TAlignOf _ -> failwith "TAlignOf"
-    | TAlignOfE _ -> failwith "TAlignOfE"
-    | TUnOp _ -> failwith "TUnOp"
-    | TCastE _ -> failwith "TCastE"
-    | TAddrOf _ -> failwith "TAddrOf"
-    | TStartOf _ -> failwith "TStartOf"
-    | Tapp _ -> failwith "Tapp"
-    | Tlambda _ -> failwith "Tlambda"
-    | TDataCons _ -> failwith "TDataCons"
-    | Tif _ -> failwith "Tif"
-    | Tat (_,LogicLabel(_,str)) -> Options.Self.abort "Tat(_,%s)" str
-    | Tbase_addr _ -> failwith "Tbase_addr"
-    | Toffset _ -> failwith "Toffset"
-    | Tblock_length _ -> failwith "Tblock_length"
-    | TCoerce _ -> failwith "TCoerce"
-    | TCoerceE _ -> failwith "TCoerceE"
-    | TUpdate _ -> failwith "TUpdate"
-    | Ttypeof _ -> failwith "Ttypeof"
-    | Ttype _ -> failwith "Ttype"
-    | Tempty_set -> failwith "Tempty_set"
-    | Tunion _ -> failwith "Tunion"
-    | Tinter _ -> failwith "Tinter"
-    | Tcomprehension _ -> failwith "Tcomprehension"
-    | Tlet _ -> failwith "Tlet"
-    | _ -> Options.Self.abort "term: %a" Printer.pp_term term
-
 class to_pl = object(self)
   method logic_var : logic_var -> pl_term =
     fun lv ->
@@ -249,8 +212,9 @@ class to_pl = object(self)
 	      "term_to_compo_var: TUnOp";
 	    assert false
 	end
-      | Tat(t',LogicLabel(_,label)) when label = "Old" -> self#term t'
-      | _ -> error_term t
+      | Tat(t',LogicLabel(_,label)) when label = "Here" || label = "Old" ->
+	self#term t'
+      | _ -> Utils.error_term t
 end
 
 let term_to_pl : term -> pl_term =
@@ -336,7 +300,7 @@ let valid_to_prolog : term -> pl_constraint list =
 	  [ PLDomain (PLIntDom (PLDim t', Integer.one, maxuint));
 	    PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
       end
-    | _ -> error_term term
+    | _ -> Utils.error_term term
 
 let rel_to_prolog : relation -> term -> term -> pl_constraint =
   fun rel term1 term2 ->
@@ -358,7 +322,8 @@ let rec requires_to_prolog :
       | _ -> assert false
     with
     | _ ->
-      Options.Self.warning "%a unsupported" Printer.pp_predicate_named pred;
+      Options.Self.warning "Native Precondition:@\n%a unsupported"
+	Printer.pp_predicate_named pred;
       constraints
 
 let output chan str =

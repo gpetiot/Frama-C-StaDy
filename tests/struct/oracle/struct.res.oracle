@@ -38,9 +38,9 @@
                     };
                     int f_precond(struct S *s, struct S *s2, int n)
                     {
-                    if (!((0) >= 0 && (pathcrawler_dimension((s)) > (0)))) return 0;if (!((0 <= (n)) && ((n) <= 5))) return 0;
-                    if (!((0 <= (*((s))).i) && ((*((s))).i <= 10))) return 0;if (!((0) >= 0 && (pathcrawler_dimension((*((s))).p) > (0)))) return 0;
-                    if (!((0) >= 0 && (pathcrawler_dimension((s2)) > (0)))) return 0;if (!((9) >= 0 && (pathcrawler_dimension((*((s2))).p) > (9)))) return 0;return 1;
+                    if (!(0 >= 0 && pathcrawler_dimension(s) > 0)) return 0;if (!((0 <= n) && (n <= 5))) return 0;
+                    if (!((0 <= (*s).i) && ((*s).i <= 10))) return 0;if (!(0 >= 0 && pathcrawler_dimension((*s).p) > 0)) return 0;
+                    if (!(0 >= 0 && pathcrawler_dimension(s2) > 0)) return 0;if (!(9 >= 0 && pathcrawler_dimension((*s2).p) > 9)) return 0;return 1;
                     }
                     
                     int f(struct S *s, struct S *s2, int n)
