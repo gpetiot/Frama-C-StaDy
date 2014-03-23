@@ -1,8 +1,4 @@
 
-
-let compute_props : (Property.t list -> unit) ref = ref (fun _ -> ())
-
-
 let pc_panel (main_ui:Design.main_window_extension_points) =
   let vbox = GPack.vbox () in
   let packing = vbox#pack ~expand:true ~fill:true in
@@ -23,7 +19,7 @@ let pc_panel (main_ui:Design.main_window_extension_points) =
 
 let to_do_on_select
     (popup_factory:GMenu.menu GMenu.factory)
-    (main_ui:Design.main_window_extension_points) button_nb selected =
+    (main_ui:Design.main_window_extension_points) button_nb selected compute =
   match selected with
   | Pretty_source.PIP prop ->
     begin
@@ -61,21 +57,22 @@ let to_do_on_select
       | _ -> ()
     end;
     if button_nb = 3 then
-      let callback() = !compute_props [prop]; main_ui#redisplay() in
+      let callback() = compute [prop]; main_ui#redisplay() in
       ignore (popup_factory#add_item "Validate property with StaDy" ~callback)
   | _ -> ()
 
 
-let pc_selector menu (main_ui:Design.main_window_extension_points) ~button loc =
-  to_do_on_select menu main_ui button loc
+let pc_selector
+    compute menu (main_ui:Design.main_window_extension_points) ~button loc =
+  to_do_on_select menu main_ui button loc compute
 
 
 let main main_ui =
   Register.setup_props_bijection();
   let lengths = Register.lengths_from_requires() in
   let terms_at_Pre = Register.at_from_formals lengths in
-  compute_props := (fun props -> Register.compute_props props terms_at_Pre); 
+  let compute = (fun props -> Register.compute_props props terms_at_Pre) in
   main_ui#register_panel pc_panel;
-  main_ui#register_source_selector pc_selector
+  main_ui#register_source_selector (pc_selector compute)
 
 let () = Design.register_extension main

@@ -320,7 +320,6 @@ let compute_props props terms_at_Pre =
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
   in
-  List.iter Property_status.register strengthened_precond;
   List.iter (fun prop ->
     try
       let _ = States.TestFailures.find prop in
@@ -356,7 +355,16 @@ let setup_props_bijection () =
 	States.Id_To_Property.add !property_id property;
 	property_id := !property_id + 1
       end
-  )
+  );
+  let kf = fst (Globals.entry_point()) in
+  let strengthened_precond =
+    try
+      let bhv = Utils.default_behavior kf in
+      let typically_preds = Utils.typically_preds bhv in
+      List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
+    with _ -> []
+  in
+  List.iter Property_status.register strengthened_precond
 
 
 
