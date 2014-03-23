@@ -2,6 +2,21 @@
 open Cil_types
 
 
+let typically_typer ~typing_context ~loc bhv ps =
+  match ps with
+  | p::[] ->
+    bhv.b_extended <-
+      ("typically",42,
+       [Logic_const.new_predicate 
+           (typing_context.Logic_typing.type_predicate 
+	      (typing_context.Logic_typing.post_state [Normal]) 
+	      p)])
+    ::bhv.b_extended
+  | _ -> typing_context.Logic_typing.error loc
+    "expecting a predicate after keyword 'typically'"
+
+let () = Logic_typing.register_behavior_extension "typically" typically_typer
+
 
 let print_strtbl_vartbl_terms hashtbl dkey =
   Options.Self.debug ~dkey "========================";
@@ -14,13 +29,6 @@ let print_strtbl_vartbl_terms hashtbl dkey =
     Options.Self.debug ~dkey "----------------"
   ) hashtbl;
   Options.Self.debug ~dkey "========================"
-
-
-
-
-
-
-
 
 
 (* Extracts the varinfo of the variable and its inferred size as a term
@@ -233,10 +241,12 @@ let pcva_emitter =
 
 let compute_props props terms_at_Pre =
   (* Translate some parts of the pre-condition in Prolog *)
-  let native_precond_generated = Native_precond.translate() in
+  let native_precond_generated =
+    try Native_precond.translate() with _ -> false in
   Options.Self.feedback ~dkey:Options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
+  let kf = fst (Globals.entry_point()) in
   let translated_props =
     second_pass (Options.Temp_File.get()) props terms_at_Pre in
   let test_params =
@@ -303,6 +313,14 @@ let compute_props props terms_at_Pre =
   Options.Self.result "all-paths: %b" (States.All_Paths.get());
   Options.Self.result "%i test cases" (States.NbCases.get());
   let distinct = true in
+  let strengthened_precond =
+    try
+      let bhv = Utils.default_behavior kf in
+      let typically_preds = Utils.typically_preds bhv in
+      List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
+    with _ -> []
+  in
+  List.iter Property_status.register strengthened_precond;
   List.iter (fun prop ->
     try
       let _ = States.TestFailures.find prop in
@@ -311,11 +329,10 @@ let compute_props props terms_at_Pre =
     with
     | Not_found ->
       let status = Property_status.True in
-      let hyps = !Prop_id.typically in
+      let hyps = strengthened_precond in
       if States.All_Paths.get() then
 	Property_status.emit pcva_emitter ~hyps prop ~distinct status
-  ) translated_props;
-  Prop_id.typically := []
+  ) translated_props
 
 
 

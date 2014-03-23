@@ -2,28 +2,6 @@
 open Cil_types
 
 
-
-
-let typically_typer ~typing_context ~loc bhv ps =
-  match ps with
-  | p::[] ->
-    bhv.b_extended <-
-      ("typically",42,
-       [Logic_const.new_predicate 
-           (typing_context.Logic_typing.type_predicate 
-	      (typing_context.Logic_typing.post_state [Normal]) 
-	      p)])
-    ::bhv.b_extended
-  | _ -> typing_context.Logic_typing.error loc
-    "expecting a predicate after keyword 'typically'"
-
-let () = Logic_typing.register_behavior_extension "typically" typically_typer
-
-
-
-
-
-
 type pl_constant =
 | PLInt of Integer.t
 | PLFloat of float
@@ -333,105 +311,91 @@ let output chan str =
 let translate () =
   let kf = fst (Globals.entry_point()) in
   let func_name = Kernel_function.get_name kf in
-  let only_default _ b r = if Cil.is_default_behavior b then b :: r else r in
-  match Annotations.fold_behaviors only_default kf [] with
-  | [ bhv ] ->
-    begin
-      let subst pred  = (new Sd_subst.subst)#subst_pnamed pred [] [] [] [] in
-      let requires = List.map Logic_const.pred_of_id_pred bhv.b_requires in
-      let requires = List.map subst requires in
-      let typically = List.filter (fun (s,_,_) -> s = "typically")
-	bhv.b_extended in
-      let typically = List.map (fun (_,_,pred) -> pred) typically in
-      let constraints =
-	List.fold_left (fun c l ->
-	  let ll = List.map Logic_const.pred_of_id_pred l in
-	  let ll = List.map subst ll in
-	  let new_props = List.map (Property.ip_of_requires kf Kglobal bhv) l in
-	  List.iter Property_status.register new_props;
-	  Prop_id.typically := List.rev_append new_props !Prop_id.typically;
-	  List.fold_left requires_to_prolog c ll
-	) [] typically
-      in
-      Options.Self.feedback ~dkey:Options.dkey_native_precond
-	"non-default behaviors ignored!";
-      let constraints =List.fold_left requires_to_prolog constraints requires in
-      let is_domain = function PLDomain _ -> true | _ -> false in
-      let domains, constraints = List.partition is_domain constraints in
-      let unfold = function PLDomain d -> d | _ -> assert false in
-      let domains = List.map unfold domains in
-      let is_quantif = function PLQuantif _ -> true |  _ -> false in
-      let quantifs, unquantifs = List.partition is_quantif constraints in
-      let unfold = function PLQuantif q -> q | _ -> assert false in
-      let quantifs = List.map unfold quantifs in
-      let unfold = function PLUnquantif q -> q | _ -> assert false in
-      let unquantifs = List.map unfold unquantifs in
-      let formals = Kernel_function.get_formals kf in
-      let create_input d v = input_from_type d v.vtype (PLCVar v) in
-      let domains = List.fold_left create_input domains formals in
-      let domains_tbl = Hashtbl.create 32 in
-      let is_int_domain = function PLIntDom _ -> true | _ -> false in
-      let int_doms, float_doms = List.partition is_int_domain domains in
-      let merge_int_doms = function
-	| PLIntDom (t, i1, i2) ->
-	  begin
-	    try
-	      let lower, upper = Hashtbl.find domains_tbl t in
-	      let lower' = Integer.max lower i1 in
-	      let upper' = Integer.max upper i2 in
-	      Hashtbl.replace domains_tbl t (lower', upper')
-	    with Not_found -> Hashtbl.add domains_tbl t (i1, i2)
-	  end
-	| PLFloatDom _ -> assert false
-      in
-      List.iter merge_int_doms int_doms;
-      let add_int_dom_to_list k (v,w) doms =  PLIntDom (k,v,w) :: doms in
-      let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
-      let domains = List.rev domains in
-      let chan = open_out (Options.Precond_File.get()) in
-      output chan prolog_header;
-      let complex_d, simple_d = List.partition is_complex_domain domains in
-      let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
-      let same_constraint_for_precond before after =
-	output chan (Printf.sprintf "%s('%s',%s) :- %s('%s',%s).\n"
-		       before precond_name after before func_name after)
-      in
+  let bhv = Utils.default_behavior kf in
+  let subst pred  = (new Sd_subst.subst)#subst_pnamed pred [] [] [] [] in
+  let requires = List.map Logic_const.pred_of_id_pred bhv.b_requires in
+  let requires = List.map subst requires in
+  let typically_preds = Utils.typically_preds bhv in
+  let typically_preds = List.map Logic_const.pred_of_id_pred typically_preds in
+  let typically_preds = List.map subst typically_preds in
+  let constraints = List.fold_left requires_to_prolog [] typically_preds in
+  Options.Self.feedback ~dkey:Options.dkey_native_precond
+    "non-default behaviors ignored!";
+  let constraints =List.fold_left requires_to_prolog constraints requires in
+  let is_domain = function PLDomain _ -> true | _ -> false in
+  let domains, constraints = List.partition is_domain constraints in
+  let unfold = function PLDomain d -> d | _ -> assert false in
+  let domains = List.map unfold domains in
+  let is_quantif = function PLQuantif _ -> true |  _ -> false in
+  let quantifs, unquantifs = List.partition is_quantif constraints in
+  let unfold = function PLQuantif q -> q | _ -> assert false in
+  let quantifs = List.map unfold quantifs in
+  let unfold = function PLUnquantif q -> q | _ -> assert false in
+  let unquantifs = List.map unfold unquantifs in
+  let formals = Kernel_function.get_formals kf in
+  let create_input d v = input_from_type d v.vtype (PLCVar v) in
+  let domains = List.fold_left create_input domains formals in
+  let domains_tbl = Hashtbl.create 32 in
+  let is_int_domain = function PLIntDom _ -> true | _ -> false in
+  let int_doms, float_doms = List.partition is_int_domain domains in
+  let merge_int_doms = function
+    | PLIntDom (t, i1, i2) ->
+      begin
+	try
+	  let lower, upper = Hashtbl.find domains_tbl t in
+	  let lower' = Integer.max lower i1 in
+	  let upper' = Integer.max upper i2 in
+	  Hashtbl.replace domains_tbl t (lower', upper')
+	with Not_found -> Hashtbl.add domains_tbl t (i1, i2)
+      end
+    | PLFloatDom _ -> assert false
+  in
+  List.iter merge_int_doms int_doms;
+  let add_int_dom_to_list k (v,w) doms =  PLIntDom (k,v,w) :: doms in
+  let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
+  let domains = List.rev domains in
+  let chan = open_out (Options.Precond_File.get()) in
+  output chan prolog_header;
+  let complex_d, simple_d = List.partition is_complex_domain domains in
+  let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
+  let same_constraint_for_precond before after =
+    output chan (Printf.sprintf "%s('%s',%s) :- %s('%s',%s).\n"
+		   before precond_name after before func_name after)
+  in
 
       (* DOM *)
-      let pp_complex_d x =
-	Printf.sprintf "dom('%s', %s).\n" func_name (pp_pl_domain true x) in
-      List.iter (fun x -> output chan (pp_complex_d x)) complex_d;
-      same_constraint_for_precond "dom" "A,B,C";
-      
+  let pp_complex_d x =
+    Printf.sprintf "dom('%s', %s).\n" func_name (pp_pl_domain true x) in
+  List.iter (fun x -> output chan (pp_complex_d x)) complex_d;
+  same_constraint_for_precond "dom" "A,B,C";
+  
       (* CREATE_INPUT_VALS *)
-      output chan (Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
-      let pp_simple_d x =
-	Printf.sprintf "  create_input_val(%s,Ins),\n" (pp_pl_domain false x) in
-      List.iter (fun x -> output chan (pp_simple_d x)) simple_d;
-      output chan "  true.\n";
-      same_constraint_for_precond "create_input_vals" "Ins";
-      
+  output chan (Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
+  let pp_simple_d x =
+    Printf.sprintf "  create_input_val(%s,Ins),\n" (pp_pl_domain false x) in
+  List.iter (fun x -> output chan (pp_simple_d x)) simple_d;
+  output chan "  true.\n";
+  same_constraint_for_precond "create_input_vals" "Ins";
+  
       (* QUANTIF_PRECONDS *)
-      let qp = List.map pp_pl_quantif quantifs in
-      let qp = Utils.fold_comma qp in
-      output chan(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
-      same_constraint_for_precond "quantif_preconds" "A";
-     
+  let qp = List.map pp_pl_quantif quantifs in
+  let qp = Utils.fold_comma qp in
+  output chan(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
+  same_constraint_for_precond "quantif_preconds" "A";
+  
       (* UNQUANTIF_PRECONDS *)
-      let uqp = List.map pp_pl_rel unquantifs in
-      let uqp = Utils.fold_comma uqp in
-      output chan
-	(Printf.sprintf"unquantif_preconds('%s',[%s]).\n" func_name uqp);
-      same_constraint_for_precond "unquantif_preconds" "A";
-      
+  let uqp = List.map pp_pl_rel unquantifs in
+  let uqp = Utils.fold_comma uqp in
+  output chan
+    (Printf.sprintf"unquantif_preconds('%s',[%s]).\n" func_name uqp);
+  same_constraint_for_precond "unquantif_preconds" "A";
+  
       (* STRATEGY *)
-      output chan (Printf.sprintf "strategy('%s',[]).\n" func_name);
-      same_constraint_for_precond "strategy" "A";
+  output chan (Printf.sprintf "strategy('%s',[]).\n" func_name);
+  same_constraint_for_precond "strategy" "A";
 
-      output chan
-	(Printf.sprintf "precondition_of('%s','%s').\n" func_name precond_name);
-      flush chan;
-      close_out chan;
-      true
-    end
-  | _ -> false
+  output chan
+    (Printf.sprintf "precondition_of('%s','%s').\n" func_name precond_name);
+  flush chan;
+  close_out chan;
+  true

@@ -36,6 +36,18 @@ let machdep : unit -> int =
     | "x86_16" -> 16
     | _ -> 32
 
+let default_behavior : Cil_types.kernel_function -> Cil_types.funbehavior =
+  fun kf ->
+    List.find Cil.is_default_behavior (Annotations.behaviors kf)
+
+let typically_preds :
+    Cil_types.funbehavior -> Cil_types.identified_predicate list =
+  fun bhv ->
+    let typically = List.filter (fun (s,_,_) -> s = "typically")
+      bhv.Cil_types.b_extended in
+    let typically = List.map (fun (_,_,pred) -> pred) typically in
+    List.fold_left List.rev_append [] typically
+
 open Cil_types
 
 (* to change a \valid to a pathcrawler_dimension *)
