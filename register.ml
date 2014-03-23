@@ -300,7 +300,7 @@ let compute_props props terms_at_Pre =
   end;
   States.NbCases.mark_as_computed();
   States.TestFailures.mark_as_computed();
-  Options.Self.result "all-paths: %b" !Prop_id.all_paths;
+  Options.Self.result "all-paths: %b" (States.All_Paths.get());
   Options.Self.result "%i test cases" (States.NbCases.get());
   let distinct = true in
   List.iter (fun prop ->
@@ -312,10 +312,9 @@ let compute_props props terms_at_Pre =
     | Not_found ->
       let status = Property_status.True in
       let hyps = !Prop_id.typically in
-      if !Prop_id.all_paths then
+      if States.All_Paths.get() then
 	Property_status.emit pcva_emitter ~hyps prop ~distinct status
   ) translated_props;
-  Prop_id.all_paths := false;
   Prop_id.typically := []
 
 

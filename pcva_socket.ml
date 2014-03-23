@@ -76,7 +76,7 @@ let process_nb_test_cases : string -> unit =
   fun s -> States.NbCases.set (int_of_string s)
 
 let process_final_status : unit -> unit =
-  fun () -> Prop_id.all_paths := true
+  fun () -> States.All_Paths.set true
     
 
 

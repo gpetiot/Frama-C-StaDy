@@ -27,3 +27,8 @@ module NbCases = State_builder.Zero_ref
     let dependencies = [Ast.self]
    end)
 
+module All_Paths = State_builder.False_ref
+  (struct
+    let name = "PathCrawler.All_Paths"
+    let dependencies = [Ast.self]
+   end)
