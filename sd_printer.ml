@@ -313,7 +313,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	List.iter (fun pred ->
 	  let prop = Property.ip_of_requires kf Kglobal b pred in
 	  if List.mem prop props then
-	    let id = Prop_id.to_id prop in
+	    let id = Utils.to_id prop in
 	    self#bhv_assumes_begin fmt b pred.ip_loc;
 	    self#pc_assert_exception
 	      fmt pred.ip_content pred.ip_loc "Pre-condition!" id prop;
@@ -330,7 +330,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	    List.iter (fun (tk,pred) ->
 	      let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
 	      if List.mem prop props then
-		let id = Prop_id.to_id prop in
+		let id = Utils.to_id prop in
 		self#bhv_assumes_begin fmt b pred.ip_loc;
 		self#pc_assert_exception
 		  fmt pred.ip_content pred.ip_loc "Post-condition!" id prop;
@@ -500,7 +500,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	  List.iter (fun pred ->
 	    let prop = Property.ip_of_requires kf (Kstmt stmt) b pred in
 	    if List.mem prop props then
-	      let id = Prop_id.to_id prop in
+	      let id = Utils.to_id prop in
 	      self#bhv_assumes_begin fmt b pred.ip_loc;
 	      self#pc_assert_exception fmt pred.ip_content pred.ip_loc
 		"Stmt Pre-condition!" id prop;
@@ -518,7 +518,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		List.iter (fun ((_,pred) as k) ->
 		  let prop = Property.ip_of_ensures kf (Kstmt stmt) b k in
 		  if List.mem prop props then
-		    let id = Prop_id.to_id prop in
+		    let id = Utils.to_id prop in
 		    self#bhv_assumes_begin fmt b pred.ip_loc;
 		    self#pc_assert_exception fmt pred.ip_content pred.ip_loc
 		      "Stmt Post-condition!" id prop;
@@ -534,14 +534,14 @@ class sd_printer props terms_at_Pre () = object(self)
       | AAssert (_,pred) ->
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  let id = Prop_id.to_id prop in
+	  let id = Utils.to_id prop in
 	  self#bhv_guard_begin fmt behaviors loc;
 	  self#pc_assert_exception fmt pred.content pred.loc "Assert!" id prop;
 	  self#bhv_guard_end fmt behaviors
       | AInvariant (_,true,pred) ->
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  let id = Prop_id.to_id prop in
+	  let id = Utils.to_id prop in
 	  let f fmt msg =
 	    self#bhv_guard_begin fmt behaviors loc;
 	    self#pc_assert_exception fmt pred.content pred.loc msg id prop;
@@ -553,7 +553,7 @@ class sd_printer props terms_at_Pre () = object(self)
       | AVariant (term,_) ->
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  let id = Prop_id.to_id prop in
+	  let id = Utils.to_id prop in
 	  let term' = self#term_and_var fmt term in
 	  Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) < 0)"
 	    (fun fmt -> self#line_directive ~forcefile:false fmt) loc term';

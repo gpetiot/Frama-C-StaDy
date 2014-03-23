@@ -33,7 +33,7 @@ let process_test_case : string -> unit =
       in
       if s = "" then [] else aux [] s
     in
-    let prop = Prop_id.to_prop id_prop in
+    let prop = Utils.to_prop id_prop in
     let file = Options.Temp_File.get() in
     let func = Kernel_function.get_name (fst (Globals.entry_point ())) in
     let f = "testcases_" ^ (Filename.chop_extension file) in

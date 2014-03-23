@@ -343,8 +343,8 @@ let compute_props props terms_at_Pre =
 
 
 let setup_props_bijection () =
-  Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
-  Property.Hashtbl.clear Prop_id.prop_to_id_tbl;
+  States.Id_To_Property.clear();
+  States.Property_To_Id.clear();
   (* Bijection: unique_identifier <--> property *)
   let property_id = ref 0 in
   Property_status.iter (fun property ->
@@ -352,8 +352,8 @@ let setup_props_bijection () =
     let fc_builtin = "__fc_builtin_for_normalization.i" in
     if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
       begin
-	Datatype.Int.Hashtbl.add Prop_id.id_to_prop_tbl !property_id property;
-	Property.Hashtbl.add Prop_id.prop_to_id_tbl property !property_id;
+	States.Property_To_Id.add property !property_id;
+	States.Id_To_Property.add !property_id property;
 	property_id := !property_id + 1
       end
   )
@@ -441,7 +441,7 @@ let run() =
       Options.Self.debug ~dkey:Options.dkey_properties "selected properties:";
       List.iter (fun p ->
 	try
-	  let id = Prop_id.to_id p in
+	  let id = Utils.to_id p in
 	  Options.Self.debug ~dkey:Options.dkey_properties
 	    "%a (%i) found" Property.pretty p id
 	with _ -> Options.Self.debug ~dkey:Options.dkey_properties
@@ -460,8 +460,8 @@ let run() =
       Datatype.String.Hashtbl.clear terms_at_Pre;
       Datatype.String.Hashtbl.iter (fun _ tbl -> clear_in tbl) lengths;
       Datatype.String.Hashtbl.clear lengths;
-      Datatype.Int.Hashtbl.clear Prop_id.id_to_prop_tbl;
-      Property.Hashtbl.clear Prop_id.prop_to_id_tbl
+      States.Id_To_Property.clear();
+      States.Property_To_Id.clear()
     end
 
 

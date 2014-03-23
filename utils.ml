@@ -48,6 +48,10 @@ let typically_preds :
     let typically = List.map (fun (_,_,pred) -> pred) typically in
     List.fold_left List.rev_append [] typically
 
+let to_id = States.Property_To_Id.find
+let to_prop = States.Id_To_Property.find
+
+
 open Cil_types
 
 (* to change a \valid to a pathcrawler_dimension *)
