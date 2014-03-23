@@ -1,7 +1,7 @@
 
 FRAMAC_SHARE	:=$(shell frama-c.byte -print-path)
 FRAMAC_LIBDIR	:=$(shell frama-c.byte -print-libpath)
-PLUGIN_NAME	:= PCVA
+PLUGIN_NAME	:= StaDy
 
 PLUGIN_TESTS_DIRS := \
 	behaviors \

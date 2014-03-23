@@ -84,17 +84,17 @@ stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&
 --------------------------------------------------------------------------------
 
 [ Partial ] Post-condition (file tests/sum_array/sum_array.c, line 8)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/sum_array/sum_array.c, line 7)
 [    -    ] Pre-condition (file tests/sum_array/sum_array.c, line 7)
 [ Partial ] Loop variant at loop (file tests/sum_array/sum_array.c, line 17)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/sum_array/sum_array.c, line 7)
 [ Partial ] Invariant (file tests/sum_array/sum_array.c, line 13)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/sum_array/sum_array.c, line 7)
 [ Partial ] Invariant (file tests/sum_array/sum_array.c, line 14)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/sum_array/sum_array.c, line 7)
 [ Partial ] Default behavior
             By Frama-C kernel, with pending:

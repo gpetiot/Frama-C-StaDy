@@ -139,20 +139,20 @@ stady_temp.c:93:[kernel] warning: Calling undeclared function free. Old style K&
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/insertion_sort/insertion_sort.c, line 9)
-            by StaDyPlus.
+            by StaDy.
 [    -    ] Assigns (file tests/insertion_sort/insertion_sort.c, line 8)
 [  Valid  ] Loop variant at loop (file tests/insertion_sort/insertion_sort.c, line 20)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/insertion_sort/insertion_sort.c, line 30)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 15)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 16)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 25)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/insertion_sort/insertion_sort.c, line 26)
-            by StaDyPlus.
+            by StaDy.
 [    -    ] Default behavior
             tried with Frama-C kernel.
 

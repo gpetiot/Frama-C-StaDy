@@ -59,11 +59,11 @@
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition for 'X' (file tests/behaviors/behaviors.c, line 12)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Post-condition for 'Y' (file tests/behaviors/behaviors.c, line 19)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Post-condition for 'Z' (file tests/behaviors/behaviors.c, line 26)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Behavior 'X'
             by Frama-C kernel.
 [  Valid  ] Behavior 'Y'

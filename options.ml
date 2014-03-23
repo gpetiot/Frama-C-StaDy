@@ -1,7 +1,7 @@
 
 
 module Self = Plugin.Register (struct
-  let name = "StaDyPlus"
+  let name = "StaDy"
   let shortname = "stady"
   let help = ""
 end)

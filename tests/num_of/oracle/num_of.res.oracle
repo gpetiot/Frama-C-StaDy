@@ -108,18 +108,18 @@ stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&
 --------------------------------------------------------------------------------
 
 [ Partial ] Post-condition (file tests/num_of/num_of.c, line 10)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/num_of/num_of.c, line 8)
 [    -    ] Pre-condition (file tests/num_of/num_of.c, line 8)
 [    -    ] Assigns nothing
 [ Partial ] Loop variant at loop (file tests/num_of/num_of.c, line 20)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/num_of/num_of.c, line 8)
 [ Partial ] Invariant (file tests/num_of/num_of.c, line 15)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/num_of/num_of.c, line 8)
 [ Partial ] Invariant (file tests/num_of/num_of.c, line 16)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/num_of/num_of.c, line 8)
 [    -    ] Default behavior
             tried with Frama-C kernel.

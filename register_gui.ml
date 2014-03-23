@@ -17,7 +17,7 @@ let pc_panel (main_ui:Design.main_window_extension_points) =
   let callback() = Register.run(); main_ui#redisplay() in
   let on_press() = main_ui#protect ~cancelable:true callback in
   let _ = run_button#connect#pressed on_press in
-  "pcva", vbox#coerce, Some refresh
+  "stady", vbox#coerce, Some refresh
   
 
 
@@ -62,7 +62,7 @@ let to_do_on_select
     end;
     if button_nb = 3 then
       let callback() = !compute_props [prop]; main_ui#redisplay() in
-      ignore (popup_factory#add_item "Validate property with pcva" ~callback)
+      ignore (popup_factory#add_item "Validate property with StaDy" ~callback)
   | _ -> ()
 
 

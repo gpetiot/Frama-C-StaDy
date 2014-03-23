@@ -302,40 +302,40 @@ stady_temp.c:165:[kernel] warning: Calling undeclared function free. Old style K
 --------------------------------------------------------------------------------
 
 [ Partial ] Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 6)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 7)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 8)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Post-condition for 'present' (file tests/deleteSubstr0/deleteSubstr0.c, line 13)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Post-condition for 'present' (file tests/deleteSubstr0/deleteSubstr0.c, line 14)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Post-condition for 'not_present' (file tests/deleteSubstr0/deleteSubstr0.c, line 18)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Loop variant at loop (file tests/deleteSubstr0/deleteSubstr0.c, line 26)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Loop variant at loop (file tests/deleteSubstr0/deleteSubstr0.c, line 32)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Invariant (file tests/deleteSubstr0/deleteSubstr0.c, line 21)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Invariant (file tests/deleteSubstr0/deleteSubstr0.c, line 22)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Invariant (file tests/deleteSubstr0/deleteSubstr0.c, line 28)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Invariant (file tests/deleteSubstr0/deleteSubstr0.c, line 29)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr0/deleteSubstr0.c, line 44) of 'delete_substr'
 [ Partial ] Behavior 'not_present'
             By Frama-C kernel, with pending:

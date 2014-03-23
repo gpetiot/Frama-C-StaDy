@@ -189,33 +189,33 @@ stady_temp.c:136:[kernel] warning: Calling undeclared function free. Old style K
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/merge_arrays/merge_arrays.c, line 13)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 24)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 40)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 50)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 18)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 19)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 20)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 21)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 35)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 36)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 37)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 45)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 46)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 47)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Default behavior
             by Frama-C kernel.
 

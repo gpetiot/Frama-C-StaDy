@@ -429,7 +429,7 @@ stady_temp.c:165:[kernel] warning: Calling undeclared function free. Old style K
 --------------------------------------------------------------------------------
 
 [   Bug   ] Invariant (file tests/deleteSubstr2b/deleteSubstr2b.c, line 72)
-            by StaDyPlus.
+            by StaDy.
 
 --------------------------------------------------------------------------------
 --- Status Report Summary

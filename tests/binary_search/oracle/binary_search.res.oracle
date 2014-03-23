@@ -154,24 +154,24 @@ stady_temp.c:107:[kernel] warning: Calling undeclared function free. Old style K
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/binary_search/binary_search.c, line 12)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Post-condition (file tests/binary_search/binary_search.c, line 13)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Post-condition (file tests/binary_search/binary_search.c, line 14)
-            by StaDyPlus.
+            by StaDy.
 [    -    ] Assigns nothing
 [  Valid  ] Loop variant at loop (file tests/binary_search/binary_search.c, line 24)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/binary_search/binary_search.c, line 19)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/binary_search/binary_search.c, line 20)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Assertion (file tests/binary_search/binary_search.c, line 26)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Assertion (file tests/binary_search/binary_search.c, line 27)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Assertion (file tests/binary_search/binary_search.c, line 28)
-            by StaDyPlus.
+            by StaDy.
 [    -    ] Default behavior
             tried with Frama-C kernel.
 

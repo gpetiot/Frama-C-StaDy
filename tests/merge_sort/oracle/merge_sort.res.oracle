@@ -277,19 +277,19 @@ stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&
 --------------------------------------------------------------------------------
 
 [  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 6)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 7)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 20)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 13)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 14)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 15)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 16)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Default behavior
             by Frama-C kernel.
 
@@ -298,13 +298,13 @@ stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&
 --------------------------------------------------------------------------------
 
 [  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 34)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 35)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 44)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 39)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Default behavior
             by Frama-C kernel.
 
@@ -313,17 +313,17 @@ stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&
 --------------------------------------------------------------------------------
 
 [  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 55)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Pre-condition (file tests/merge_sort/merge_sort.c, line 56)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 68)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/merge_sort/merge_sort.c, line 75)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 65)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/merge_sort/merge_sort.c, line 72)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Default behavior
             by Frama-C kernel.
 
@@ -332,7 +332,7 @@ stady_temp.c:62:[kernel] warning: Calling undeclared function free. Old style K&
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/merge_sort/merge_sort.c, line 94)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Default behavior
             by Frama-C kernel.
 

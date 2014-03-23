@@ -347,9 +347,9 @@ stady_temp.c:165:[kernel] warning: Calling undeclared function free. Old style K
 --------------------------------------------------------------------------------
 
 [   Bug   ] Post-condition for 'not_present' (file tests/deleteSubstr1a/deleteSubstr1a.c, line 58)
-            by StaDyPlus.
+            by StaDy.
 [   Bug   ] Post-condition for 'not_present' (file tests/deleteSubstr1a/deleteSubstr1a.c, line 59)
-            by StaDyPlus.
+            by StaDy.
 [  Dead   ] Behavior 'not_present'
             Locally invalid, but unreachable.
             By Frama-C kernel because:

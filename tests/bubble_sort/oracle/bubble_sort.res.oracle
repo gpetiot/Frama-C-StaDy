@@ -131,18 +131,18 @@ stady_temp.c:85:[kernel] warning: Calling undeclared function free. Old style K&
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/bubble_sort/bubble_sort.c, line 9)
-            by StaDyPlus.
+            by StaDy.
 [    -    ] Assigns (file tests/bubble_sort/bubble_sort.c, line 8)
 [  Valid  ] Loop variant at loop (file tests/bubble_sort/bubble_sort.c, line 18)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/bubble_sort/bubble_sort.c, line 24)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/bubble_sort/bubble_sort.c, line 14)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/bubble_sort/bubble_sort.c, line 19)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/bubble_sort/bubble_sort.c, line 20)
-            by StaDyPlus.
+            by StaDy.
 [    -    ] Default behavior
             tried with Frama-C kernel.
 

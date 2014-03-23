@@ -106,14 +106,14 @@ stady_temp.c:60:[kernel] warning: Calling undeclared function free. Old style K&
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/first_subset/first_subset.c, line 11)
-            by StaDyPlus.
+            by StaDy.
 [    -    ] Assigns (file tests/first_subset/first_subset.c, line 10)
 [  Valid  ] Loop variant at loop (file tests/first_subset/first_subset.c, line 18)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/first_subset/first_subset.c, line 14)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/first_subset/first_subset.c, line 15)
-            by StaDyPlus.
+            by StaDy.
 [    -    ] Default behavior
             tried with Frama-C kernel.
 

@@ -464,37 +464,37 @@ stady_temp.c:149:[kernel] warning: Calling undeclared function free. Old style K
 --------------------------------------------------------------------------------
 
 [ Partial ] Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 6)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 7)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 8)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Post-condition for 'present' (file tests/deleteSubstr4/deleteSubstr4.c, line 14)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Post-condition for 'not_present' (file tests/deleteSubstr4/deleteSubstr4.c, line 18)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 28)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 35)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 22)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 23)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 30)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 31)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53) of 'delete_substr'
 [ Partial ] Behavior 'not_present'
             By Frama-C kernel, with pending:
@@ -509,46 +509,46 @@ stady_temp.c:149:[kernel] warning: Calling undeclared function free. Old style K
 
 [    -    ] Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Post-condition for 'not_present' (file tests/deleteSubstr4/deleteSubstr4.c, line 58)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Post-condition for 'not_present' (file tests/deleteSubstr4/deleteSubstr4.c, line 59)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Post-condition for 'present' (file tests/deleteSubstr4/deleteSubstr4.c, line 63)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Post-condition for 'present' (file tests/deleteSubstr4/deleteSubstr4.c, line 67)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 75)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 84)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 89)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 71)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 72)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Assertion (file tests/deleteSubstr4/deleteSubstr4.c, line 78)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 80)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 81)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 85)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 86)
-            By StaDyPlus, with pending:
+            By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Behavior 'not_present'
             By Frama-C kernel, with pending:

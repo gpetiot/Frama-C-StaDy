@@ -194,21 +194,21 @@ stady_temp.c:142:[kernel] warning: Calling undeclared function free. Old style K
 --------------------------------------------------------------------------------
 
 [  Valid  ] Post-condition (file tests/quick_sort/quick_sort.c, line 12)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Post-condition (file tests/quick_sort/quick_sort.c, line 13)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 32)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 36)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 43)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/quick_sort/quick_sort.c, line 29)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/quick_sort/quick_sort.c, line 33)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Invariant (file tests/quick_sort/quick_sort.c, line 40)
-            by StaDyPlus.
+            by StaDy.
 [  Valid  ] Default behavior
             by Frama-C kernel.
 

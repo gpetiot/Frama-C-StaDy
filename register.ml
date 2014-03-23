@@ -223,8 +223,8 @@ let second_pass filename props terms_at_Pre =
 
 
 
-let pcva_emitter =
-  Emitter.create "StaDyPlus" [Emitter.Property_status; Emitter.Funspec]
+let emitter =
+  Emitter.create "StaDy" [Emitter.Property_status; Emitter.Funspec]
     ~correctness:[] ~tuning:[]
 
 
@@ -325,13 +325,13 @@ let compute_props props terms_at_Pre =
     try
       let _ = States.TestFailures.find prop in
       let status = Property_status.False_and_reachable in
-      Property_status.emit pcva_emitter ~hyps:[] prop ~distinct status
+      Property_status.emit emitter ~hyps:[] prop ~distinct status
     with
     | Not_found ->
       let status = Property_status.True in
       let hyps = strengthened_precond in
       if States.All_Paths.get() then
-	Property_status.emit pcva_emitter ~hyps prop ~distinct status
+	Property_status.emit emitter ~hyps prop ~distinct status
   ) translated_props
 
 
@@ -470,7 +470,7 @@ let extern_run () =
   Options.Enabled.set true;
   run ()
 
-let extern_run = Dynamic.register ~plugin:"PCVA" ~journalize:true "run_pcva"
+let extern_run = Dynamic.register ~plugin:"stady" ~journalize:true "run_stady"
   (Datatype.func Datatype.unit Datatype.unit) extern_run
 
 
@@ -478,7 +478,7 @@ let extern_run = Dynamic.register ~plugin:"PCVA" ~journalize:true "run_pcva"
   
 let run =
   let deps = [Ast.self; Options.Enabled.self] in
-  let f, _self = State_builder.apply_once "pcva" deps run in
+  let f, _self = State_builder.apply_once "stady" deps run in
   f
     
 let () = Db.Main.extend run
