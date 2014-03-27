@@ -31,14 +31,14 @@ PLUGIN_TESTS_DIRS := \
 PLUGIN_PTESTS_OPTS := -j 1
 
 PLUGIN_CMO	:= \
-	options \
-	states \
-	utils \
+	sd_options \
+	sd_states \
+	sd_utils \
 	sd_subst \
-	pcva_socket \
-	native_precond \
+	sd_socket \
+	sd_native_precond \
 	sd_printer \
-	register
-PLUGIN_GUI_CMO 	:= register_gui 
+	sd_register
+PLUGIN_GUI_CMO 	:= sd_register_gui 
 include $(FRAMAC_SHARE)/Makefile.dynamic
 

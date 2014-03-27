@@ -112,8 +112,9 @@ class pl_printer = object(self)
   method pl_quantif : pl_quantif -> string =
     fun (lvars, compo_rels, (t1,r,t2)) ->
       Printf.sprintf "uq_cond([%s],[%s],%s,%s,%s)"
-	(Utils.fold_comma (List.map(fun z -> String.uppercase z.lv_name) lvars))
-	(Utils.fold_comma (List.map self#pl_rel compo_rels))
+	(Sd_utils.fold_comma
+	   (List.map(fun z -> String.uppercase z.lv_name) lvars))
+	(Sd_utils.fold_comma (List.map self#pl_rel compo_rels))
 	(self#relation r)
 	(self#pl_term t1)
 	(self#pl_term t2)
@@ -147,10 +148,10 @@ class to_pl = object(self)
       match offset with
       | TNoOffset -> List.rev ret
       | TField (fi, tof) ->
-	let i = PLConst (PLInt (Utils.fieldinfo_to_int fi)) in
+	let i = PLConst (PLInt (Sd_utils.fieldinfo_to_int fi)) in
 	self#term_offset (i :: ret) tof
       | TModel _ ->
-	Options.Self.debug ~dkey:Options.dkey_native_precond "TModel: %a"
+	Sd_options.Self.debug ~dkey:Sd_options.dkey_native_precond "TModel: %a"
 	  Printer.pp_term_offset offset;
 	assert false
       | TIndex (t, tof) ->
@@ -186,13 +187,13 @@ class to_pl = object(self)
 	  match (self#term term) with
 	  | PLConst (PLInt i) -> PLConst (PLInt (Integer.neg i))
 	  | _ ->
-	    Options.Self.debug ~dkey:Options.dkey_native_precond
+	    Sd_options.Self.debug ~dkey:Sd_options.dkey_native_precond
 	      "term_to_compo_var: TUnOp";
 	    assert false
 	end
       | Tat(t',LogicLabel(_,label)) when label = "Here" || label = "Old" ->
 	self#term t'
-      | _ -> Utils.error_term t
+      | _ -> Sd_utils.error_term t
 end
 
 let term_to_pl : term -> pl_term =
@@ -201,16 +202,16 @@ let term_to_pl : term -> pl_term =
       (new to_pl)#term t
     with
     | _ ->
-      Options.Self.debug ~dkey:Options.dkey_native_precond
+      Sd_options.Self.debug ~dkey:Sd_options.dkey_native_precond
 	"term_to_pl: %a" Printer.pp_term t;
       assert false
 
 let rec input_from_type :
     pl_domain list -> typ -> pl_term -> pl_domain list =
   fun domains ty t ->
-    let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
-    let maxint = Cil.max_signed_number (Utils.machdep()) in
-    let minint = Cil.min_signed_number (Utils.machdep()) in
+    let maxuint = Cil.max_unsigned_number (Sd_utils.machdep()) in
+    let maxint = Cil.max_signed_number (Sd_utils.machdep()) in
+    let minint = Cil.min_signed_number (Sd_utils.machdep()) in
     let ibounds = function
       | IBool -> Integer.zero, Integer.one
       | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
@@ -254,13 +255,13 @@ let rec input_from_type :
 	let d = PLIntDom (PLDim t, Integer.zero, maxuint) in
 	input_from_type (d :: domains) ty' (PLContAll t)
     | _ ->
-      Options.Self.feedback "input_from_type (%a) (%s)"
+      Sd_options.Self.feedback "input_from_type (%a) (%s)"
 	Printer.pp_typ ty (pp_pl_term t);
       assert false
 
 let valid_to_prolog : term -> pl_constraint list =
   fun term ->
-    let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
+    let maxuint = Cil.max_unsigned_number (Sd_utils.machdep()) in
     match term.term_node with
     | TLval _ ->
       let t = term_to_pl term in
@@ -278,7 +279,7 @@ let valid_to_prolog : term -> pl_constraint list =
 	  [ PLDomain (PLIntDom (PLDim t', Integer.one, maxuint));
 	    PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
       end
-    | _ -> Utils.error_term term
+    | _ -> Sd_utils.error_term term
 
 let rel_to_prolog : relation -> term -> term -> pl_constraint =
   fun rel term1 term2 ->
@@ -300,28 +301,28 @@ let rec requires_to_prolog :
       | _ -> assert false
     with
     | _ ->
-      Options.Self.warning "Native Precondition:@\n%a unsupported"
+      Sd_options.Self.warning "Native Precondition:@\n%a unsupported"
 	Printer.pp_predicate_named pred;
       constraints
 
 let output chan str =
-  Options.Self.debug ~dkey:Options.dkey_generated_pl "%s" str;
+  Sd_options.Self.debug ~dkey:Sd_options.dkey_generated_pl "%s" str;
   output_string chan str
 
 let translate () =
   let kf = fst (Globals.entry_point()) in
   let func_name = Kernel_function.get_name kf in
-  let bhv = Utils.default_behavior kf in
+  let bhv = Sd_utils.default_behavior kf in
   let subst pred  = (new Sd_subst.subst)#subst_pnamed pred [] [] [] [] in
   let requires = List.map Logic_const.pred_of_id_pred bhv.b_requires in
   let requires = List.map subst requires in
-  let typically_preds = Utils.typically_preds bhv in
+  let typically_preds = Sd_utils.typically_preds bhv in
   let typically_preds = List.map Logic_const.pred_of_id_pred typically_preds in
   let typically_preds = List.map subst typically_preds in
   let constraints = List.fold_left requires_to_prolog [] typically_preds in
-  Options.Self.feedback ~dkey:Options.dkey_native_precond
+  Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
     "non-default behaviors ignored!";
-  let constraints =List.fold_left requires_to_prolog constraints requires in
+  let constraints = List.fold_left requires_to_prolog constraints requires in
   let is_domain = function PLDomain _ -> true | _ -> false in
   let domains, constraints = List.partition is_domain constraints in
   let unfold = function PLDomain d -> d | _ -> assert false in
@@ -354,7 +355,7 @@ let translate () =
   let add_int_dom_to_list k (v,w) doms =  PLIntDom (k,v,w) :: doms in
   let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
   let domains = List.rev domains in
-  let chan = open_out (Options.Precond_File.get()) in
+  let chan = open_out (Sd_options.Precond_File.get()) in
   output chan prolog_header;
   let complex_d, simple_d = List.partition is_complex_domain domains in
   let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
@@ -379,13 +380,13 @@ let translate () =
   
       (* QUANTIF_PRECONDS *)
   let qp = List.map pp_pl_quantif quantifs in
-  let qp = Utils.fold_comma qp in
+  let qp = Sd_utils.fold_comma qp in
   output chan(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
   same_constraint_for_precond "quantif_preconds" "A";
   
       (* UNQUANTIF_PRECONDS *)
   let uqp = List.map pp_pl_rel unquantifs in
-  let uqp = Utils.fold_comma uqp in
+  let uqp = Sd_utils.fold_comma uqp in
   output chan
     (Printf.sprintf"unquantif_preconds('%s',[%s]).\n" func_name uqp);
   same_constraint_for_precond "unquantif_preconds" "A";

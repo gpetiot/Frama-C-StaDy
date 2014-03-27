@@ -19,21 +19,22 @@ let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
 let print_strtbl_vartbl_terms hashtbl dkey =
-  Options.Self.debug ~dkey "========================";
+  Sd_options.Self.debug ~dkey "========================";
   Datatype.String.Hashtbl.iter_sorted (fun f tbl ->
-    Options.Self.debug ~dkey "function '%s'" f;
+    Sd_options.Self.debug ~dkey "function '%s'" f;
     Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v ts ->
-      Options.Self.debug ~dkey "var '%s'" v.vname;
-      List.iter (fun t -> Options.Self.debug ~dkey "%a " Printer.pp_term t) ts
+      Sd_options.Self.debug ~dkey "var '%s'" v.vname;
+      List.iter (fun t -> Sd_options.Self.debug ~dkey "%a "Printer.pp_term t) ts
     ) tbl;
-    Options.Self.debug ~dkey "----------------"
+    Sd_options.Self.debug ~dkey "----------------"
   ) hashtbl;
-  Options.Self.debug ~dkey "========================"
+  Sd_options.Self.debug ~dkey "========================"
 
 
 (* Extracts the varinfo of the variable and its inferred size as a term
    from a term t as \valid(t). *)
 let rec extract_from_valid : term -> varinfo * term =
+  let dkey = Sd_options.dkey_lengths in
   fun t -> match t.term_node with
   | TBinOp((PlusPI|IndexPI),
 	   ({term_node=TLval(TVar v, _)} as _t1),
@@ -82,26 +83,25 @@ let rec extract_from_valid : term -> varinfo * term =
   | TLval (TMem _, TIndex _) -> assert false
 
 
-  | TStartOf _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+  | TStartOf _ -> Sd_options.Self.debug ~dkey
     "TStartOf \\valid(%a) ignored" Printer.pp_term t;
     assert false
-  | TAddrOf _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+  | TAddrOf _ -> Sd_options.Self.debug ~dkey
     "TAddrOf \\valid(%a) ignored" Printer.pp_term t;
     assert false
-  | TCoerce _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+  | TCoerce _ -> Sd_options.Self.debug ~dkey
     "TCoerce \\valid(%a) ignored" Printer.pp_term t;
     assert false
-  | TCoerceE _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+  | TCoerceE _ -> Sd_options.Self.debug ~dkey
     "TCoerceE \\valid(%a) ignored" Printer.pp_term t;
     assert false
-  | TLogic_coerce _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+  | TLogic_coerce _ -> Sd_options.Self.debug ~dkey
     "TLogic_coerce \\valid(%a) ignored" Printer.pp_term t;
     assert false
-  | TBinOp _ -> Options.Self.debug ~dkey:Options.dkey_lengths
+  | TBinOp _ -> Sd_options.Self.debug ~dkey
     "TBinOp \\valid(%a) ignored" Printer.pp_term t;
     assert false
-  | _ -> Options.Self.debug ~dkey:Options.dkey_lengths
-    "\\valid(%a) ignored" Printer.pp_term t;
+  | _ -> Sd_options.Self.debug ~dkey "\\valid(%a) ignored" Printer.pp_term t;
     assert false
 
 
@@ -136,7 +136,7 @@ let lengths_from_requires :
 		      try Cil_datatype.Varinfo.Hashtbl.find kf_tbl v
 		      with Not_found -> []
 		    in
-		    let terms = Utils.append_end terms term in
+		    let terms = Sd_utils.append_end terms term in
 		    Cil_datatype.Varinfo.Hashtbl.replace kf_tbl v terms;
 		    Cil.DoChildren
 		  with
@@ -156,8 +156,8 @@ let lengths_from_requires :
 	  Datatype.String.Hashtbl.add lengths kf_name kf_tbl
 	end
     );
-    Options.Self.debug ~dkey:Options.dkey_lengths "LENGTHS:";
-    print_strtbl_vartbl_terms lengths Options.dkey_lengths;
+    Sd_options.Self.debug ~dkey:Sd_options.dkey_lengths "LENGTHS:";
+    print_strtbl_vartbl_terms lengths Sd_options.dkey_lengths;
     lengths
 
 
@@ -194,8 +194,8 @@ let at_from_formals :
 	Globals.Vars.iter (fun v _ -> add v);
 	Datatype.String.Hashtbl.add terms_at_Pre kf_name kf_tbl
     );
-    Options.Self.debug ~dkey:Options.dkey_at "AT:";
-    print_strtbl_vartbl_terms terms_at_Pre Options.dkey_at;
+    Sd_options.Self.debug ~dkey:Sd_options.dkey_at "AT:";
+    print_strtbl_vartbl_terms terms_at_Pre Sd_options.dkey_at;
     terms_at_Pre
 
 
@@ -213,9 +213,9 @@ let second_pass filename props terms_at_Pre =
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
-  let dkey = Options.dkey_generated_c in
+  let dkey = Sd_options.dkey_generated_c in
   Format.pp_print_flush fmt();
-  Options.Self.debug ~dkey "%s" (Buffer.contents buf);
+  Sd_options.Self.debug ~dkey "%s" (Buffer.contents buf);
   Buffer.clear buf;
   printer#translated_properties()
 
@@ -242,32 +242,32 @@ let emitter =
 let compute_props props terms_at_Pre =
   (* Translate some parts of the pre-condition in Prolog *)
   let native_precond_generated =
-    try Native_precond.translate() with _ -> false in
-  Options.Self.feedback ~dkey:Options.dkey_native_precond
+    try Sd_native_precond.translate() with _ -> false in
+  Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
   let kf = fst (Globals.entry_point()) in
   let translated_props =
-    second_pass (Options.Temp_File.get()) props terms_at_Pre in
+    second_pass (Sd_options.Temp_File.get()) props terms_at_Pre in
   let test_params =
     if native_precond_generated then
-      Printf.sprintf "-pc-test-params %s" (Options.Precond_File.get())
+      Printf.sprintf "-pc-test-params %s" (Sd_options.Precond_File.get())
     else
       ""
   in
   let cmd =
     Printf.sprintf
       "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -pc -pc-validate-asserts %s -pc-com %s -pc-no-xml %s"
-      (Options.Temp_File.get())
+      (Sd_options.Temp_File.get())
       (Kernel_function.get_name (fst(Globals.entry_point())))
       test_params
-      (Options.Socket_Type.get())
-      (Options.PathCrawler_Options.get())
+      (Sd_options.Socket_Type.get())
+      (Sd_options.PathCrawler_Options.get())
   in
-  Options.Self.debug ~dkey:Options.dkey_socket "cmd: %s" cmd;
+  Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "cmd: %s" cmd;
   (* open socket with the generator *)
   begin
-    match Options.Socket_Type.get() with
+    match Sd_options.Socket_Type.get() with
     | s when s = "unix" ->
       let socket = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
       let name = "Pc2FcSocket" in
@@ -277,11 +277,11 @@ let compute_props props terms_at_Pre =
 	  Unix.listen socket 1;
 	  let ret = Unix.system cmd in
 	  let client, _ = Unix.accept socket in
-	  Pcva_socket.process_socket client;
-	  Pcva_socket.print_exit_code ret
+	  Sd_socket.process_socket client;
+	  Sd_socket.print_exit_code ret
 	with _ ->
 	  Unix.close socket;
-	  Options.Self.feedback ~dkey:Options.dkey_socket
+	  Sd_options.Self.feedback ~dkey:Sd_options.dkey_socket
 	    "error: unix socket now closed!"
       end;
       Unix.close socket;
@@ -294,42 +294,42 @@ let compute_props props terms_at_Pre =
 	  Unix.listen socket 1;
 	  let ret = Unix.system cmd in
 	  let client, _ = Unix.accept socket in
-	  Pcva_socket.process_socket client;
-	  Pcva_socket.print_exit_code ret
+	  Sd_socket.process_socket client;
+	  Sd_socket.print_exit_code ret
 	with _ ->
 	  Unix.close socket;
-	  Options.Self.feedback ~dkey:Options.dkey_socket
+	  Sd_options.Self.feedback ~dkey:Sd_options.dkey_socket
 	    "error: internet socket now closed!"
       end;
       Unix.close socket
     | _ (* stdio *) ->
       let chan = Unix.open_process_in cmd in
-      Pcva_socket.process_channel chan;
+      Sd_socket.process_channel chan;
       let ret = Unix.close_process_in chan in
-      Pcva_socket.print_exit_code ret
+      Sd_socket.print_exit_code ret
   end;
-  States.NbCases.mark_as_computed();
-  States.TestFailures.mark_as_computed();
-  Options.Self.result "all-paths: %b" (States.All_Paths.get());
-  Options.Self.result "%i test cases" (States.NbCases.get());
+  Sd_states.NbCases.mark_as_computed();
+  Sd_states.TestFailures.mark_as_computed();
+  Sd_options.Self.result "all-paths: %b" (Sd_states.All_Paths.get());
+  Sd_options.Self.result "%i test cases" (Sd_states.NbCases.get());
   let distinct = true in
   let strengthened_precond =
     try
-      let bhv = Utils.default_behavior kf in
-      let typically_preds = Utils.typically_preds bhv in
+      let bhv = Sd_utils.default_behavior kf in
+      let typically_preds = Sd_utils.typically_preds bhv in
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
   in
   List.iter (fun prop ->
     try
-      let _ = States.TestFailures.find prop in
+      let _ = Sd_states.TestFailures.find prop in
       let status = Property_status.False_and_reachable in
       Property_status.emit emitter ~hyps:[] prop ~distinct status
     with
     | Not_found ->
       let status = Property_status.True in
       let hyps = strengthened_precond in
-      if States.All_Paths.get() then
+      if Sd_states.All_Paths.get() then
 	Property_status.emit emitter ~hyps prop ~distinct status
   ) translated_props
 
@@ -342,8 +342,8 @@ let compute_props props terms_at_Pre =
 
 
 let setup_props_bijection () =
-  States.Id_To_Property.clear();
-  States.Property_To_Id.clear();
+  Sd_states.Id_To_Property.clear();
+  Sd_states.Property_To_Id.clear();
   (* Bijection: unique_identifier <--> property *)
   let property_id = ref 0 in
   Property_status.iter (fun property ->
@@ -351,16 +351,16 @@ let setup_props_bijection () =
     let fc_builtin = "__fc_builtin_for_normalization.i" in
     if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
       begin
-	States.Property_To_Id.add property !property_id;
-	States.Id_To_Property.add !property_id property;
+	Sd_states.Property_To_Id.add property !property_id;
+	Sd_states.Id_To_Property.add !property_id property;
 	property_id := !property_id + 1
       end
   );
   let kf = fst (Globals.entry_point()) in
   let strengthened_precond =
     try
-      let bhv = Utils.default_behavior kf in
-      let typically_preds = Utils.typically_preds bhv in
+      let bhv = Sd_utils.default_behavior kf in
+      let typically_preds = Sd_utils.typically_preds bhv in
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
   in
@@ -414,12 +414,12 @@ let properties_of_name : string -> Property.t list =
 
 
 let run() =
-  if Options.Enabled.get() then
+  if Sd_options.Enabled.get() then
     begin
       setup_props_bijection();
-      let properties = Options.Properties.get () in
-      let behaviors = Options.Behaviors.get () in
-      let functions = Options.Functions.get () in
+      let properties = Sd_options.Properties.get () in
+      let behaviors = Sd_options.Behaviors.get () in
+      let functions = Sd_options.Functions.get () in
 
       let props =
 	if behaviors <> [] || functions <> [] || properties <> [] then
@@ -446,13 +446,14 @@ let run() =
       ) props in
 
 
-      Options.Self.debug ~dkey:Options.dkey_properties "selected properties:";
+      Sd_options.Self.debug
+	~dkey:Sd_options.dkey_properties "selected properties:";
       List.iter (fun p ->
 	try
-	  let id = Utils.to_id p in
-	  Options.Self.debug ~dkey:Options.dkey_properties
+	  let id = Sd_utils.to_id p in
+	  Sd_options.Self.debug ~dkey:Sd_options.dkey_properties
 	    "%a (%i) found" Property.pretty p id
-	with _ -> Options.Self.debug ~dkey:Options.dkey_properties
+	with _ -> Sd_options.Self.debug ~dkey:Sd_options.dkey_properties
 	  "%a not found" Property.pretty p
       ) props;
 
@@ -468,14 +469,14 @@ let run() =
       Datatype.String.Hashtbl.clear terms_at_Pre;
       Datatype.String.Hashtbl.iter (fun _ tbl -> clear_in tbl) lengths;
       Datatype.String.Hashtbl.clear lengths;
-      States.Id_To_Property.clear();
-      States.Property_To_Id.clear()
+      Sd_states.Id_To_Property.clear();
+      Sd_states.Property_To_Id.clear()
     end
 
 
 
 let extern_run () =
-  Options.Enabled.set true;
+  Sd_options.Enabled.set true;
   run ()
 
 let extern_run = Dynamic.register ~plugin:"stady" ~journalize:true "run_stady"
@@ -485,7 +486,7 @@ let extern_run = Dynamic.register ~plugin:"stady" ~journalize:true "run_stady"
   
   
 let run =
-  let deps = [Ast.self; Options.Enabled.self] in
+  let deps = [Ast.self; Sd_options.Enabled.self] in
   let f, _self = State_builder.apply_once "stady" deps run in
   f
     

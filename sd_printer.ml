@@ -24,7 +24,7 @@ class sd_printer props terms_at_Pre () = object(self)
   val mutable translated_properties = []
 
   (* getter *)
-  method translated_properties() = Utils.no_repeat translated_properties
+  method translated_properties() = Sd_utils.no_repeat translated_properties
     
   (* unmodified *)  
   method private in_current_function vi =
@@ -67,7 +67,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	  super#logic_var fmt {v with lv_name=prefix^"_"^v.lv_name}
 	with
 	| _ ->
-	  Options.Self.feedback ~dkey:Options.dkey_at
+	  Sd_options.Self.feedback ~dkey:Sd_options.dkey_at
 	    "%s_%s not found in terms_at_Pre" prefix v.lv_name;
 	  super#logic_var fmt v
       end
@@ -156,7 +156,7 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.flush_str_formatter()
     | Tat(_, StmtLabel _) ->
       if current_function <> None then
-	Options.Self.warning "%a unsupported" Printer.pp_term t;
+	Sd_options.Self.warning "%a unsupported" Printer.pp_term t;
       Format.fprintf Format.str_formatter "%a" super#term_node t;
       Format.flush_str_formatter()
     | Tat(term,LogicLabel(_,stringlabel)) ->
@@ -177,7 +177,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	else
 	  begin
 	    if current_function <> None then
-	      Options.Self.warning "%a unsupported" Printer.pp_term t;
+	      Sd_options.Self.warning "%a unsupported" Printer.pp_term t;
 	    Format.fprintf Format.str_formatter "%a" super#term_node t;
 	    Format.flush_str_formatter()
 	  end
@@ -209,7 +209,7 @@ class sd_printer props terms_at_Pre () = object(self)
       let x = self#term_and_var fmt t' in
       Format.fprintf Format.str_formatter "(%a %s)" self#unop op x;
       Format.flush_str_formatter()
-    | _ -> Utils.error_term t
+    | _ -> Sd_utils.error_term t
       
   method private tlval_and_var fmt (tlhost, toffset) =
     match tlhost with
@@ -313,7 +313,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	List.iter (fun pred ->
 	  let prop = Property.ip_of_requires kf Kglobal b pred in
 	  if List.mem prop props then
-	    let id = Utils.to_id prop in
+	    let id = Sd_utils.to_id prop in
 	    self#bhv_assumes_begin fmt b pred.ip_loc;
 	    self#pc_assert_exception
 	      fmt pred.ip_content pred.ip_loc "Pre-condition!" id prop;
@@ -330,7 +330,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	    List.iter (fun (tk,pred) ->
 	      let prop = Property.ip_of_ensures kf Kglobal b (tk,pred) in
 	      if List.mem prop props then
-		let id = Utils.to_id prop in
+		let id = Sd_utils.to_id prop in
 		self#bhv_assumes_begin fmt b pred.ip_loc;
 		self#pc_assert_exception
 		  fmt pred.ip_content pred.ip_loc "Post-condition!" id prop;
@@ -373,7 +373,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	      Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
 		iterator iterator h' iterator;
 	      iter_counter := !iter_counter + 1;
-	      alloc_aux (Utils.append_end indices iterator) ty t;
+	      alloc_aux (Sd_utils.append_end indices iterator) ty t;
 	      Format.fprintf fmt "}@\n"
 	    | [] ->
 	      let all_indices = List.fold_left concat_indice "" indices in
@@ -410,7 +410,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		   iterator iterator h' iterator;
 		 let all_indices = List.fold_left concat_indice "" indices in
 		 iter_counter := !iter_counter + 1;
-		 let indices = Utils.append_end indices iterator in
+		 let indices = Sd_utils.append_end indices iterator in
 		 dealloc_aux indices t;
 		 Format.fprintf fmt "}@\n";
 		 Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
@@ -500,7 +500,7 @@ class sd_printer props terms_at_Pre () = object(self)
 	  List.iter (fun pred ->
 	    let prop = Property.ip_of_requires kf (Kstmt stmt) b pred in
 	    if List.mem prop props then
-	      let id = Utils.to_id prop in
+	      let id = Sd_utils.to_id prop in
 	      self#bhv_assumes_begin fmt b pred.ip_loc;
 	      self#pc_assert_exception fmt pred.ip_content pred.ip_loc
 		"Stmt Pre-condition!" id prop;
@@ -518,7 +518,7 @@ class sd_printer props terms_at_Pre () = object(self)
 		List.iter (fun ((_,pred) as k) ->
 		  let prop = Property.ip_of_ensures kf (Kstmt stmt) b k in
 		  if List.mem prop props then
-		    let id = Utils.to_id prop in
+		    let id = Sd_utils.to_id prop in
 		    self#bhv_assumes_begin fmt b pred.ip_loc;
 		    self#pc_assert_exception fmt pred.ip_content pred.ip_loc
 		      "Stmt Post-condition!" id prop;
@@ -534,14 +534,14 @@ class sd_printer props terms_at_Pre () = object(self)
       | AAssert (_,pred) ->
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  let id = Utils.to_id prop in
+	  let id = Sd_utils.to_id prop in
 	  self#bhv_guard_begin fmt behaviors loc;
 	  self#pc_assert_exception fmt pred.content pred.loc "Assert!" id prop;
 	  self#bhv_guard_end fmt behaviors
       | AInvariant (_,true,pred) ->
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  let id = Utils.to_id prop in
+	  let id = Sd_utils.to_id prop in
 	  let f fmt msg =
 	    self#bhv_guard_begin fmt behaviors loc;
 	    self#pc_assert_exception fmt pred.content pred.loc msg id prop;
@@ -553,7 +553,7 @@ class sd_printer props terms_at_Pre () = object(self)
       | AVariant (term,_) ->
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  let id = Utils.to_id prop in
+	  let id = Sd_utils.to_id prop in
 	  let term' = self#term_and_var fmt term in
 	  Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) < 0)"
 	    (fun fmt -> self#line_directive ~forcefile:false fmt) loc term';
@@ -662,7 +662,7 @@ class sd_printer props terms_at_Pre () = object(self)
     if (List.length logic_vars) > 1 then
       failwith "quantification on many variables unsupported!";
     let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-    let guards, vars = Utils.compute_guards [] logic_vars hyps in
+    let guards, vars = Sd_utils.compute_guards [] logic_vars hyps in
     if vars <> [] then
       failwith "Unguarded variables in quantification!";
     let t1,r1,lv,r2,t2 = List.hd guards in
@@ -697,7 +697,7 @@ class sd_printer props terms_at_Pre () = object(self)
     | Ptrue -> "1"
     | Pfalse -> "0"
     | Pvalid(_,term) | Pvalid_read(_,term) ->
-      let x, y = Utils.extract_terms term in
+      let x, y = Sd_utils.extract_terms term in
       let x',y' = self#term_and_var fmt x, self#term_and_var fmt y in
       Format.fprintf Format.str_formatter
 	"(%s >= 0 && pathcrawler_dimension(%s) > %s)"
@@ -747,10 +747,10 @@ class sd_printer props terms_at_Pre () = object(self)
 	t1' self#relation rel t2';
       Format.flush_str_formatter()
     | Pat (p,_) ->
-      Options.Self.warning "%a unsupported!" Printer.pp_predicate pred;
+      Sd_options.Self.warning "%a unsupported!" Printer.pp_predicate pred;
       self#predicate_named_and_var fmt p
     | _ ->
-      Options.Self.warning "%a unsupported" Printer.pp_predicate pred;
+      Sd_options.Self.warning "%a unsupported" Printer.pp_predicate pred;
       "1"
 (* end of pred_and_var *)
 end (* end of printer class *)

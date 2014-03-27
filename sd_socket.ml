@@ -3,7 +3,7 @@
 let cut : string -> int -> string * string =
   fun s n ->
     try (String.sub s 0 n), (String.sub s n ((String.length s)-n))
-    with _ -> Options.Self.abort "socket:cut \"%s\" %i" s n
+    with _ -> Sd_options.Self.abort "socket:cut \"%s\" %i" s n
 
 let process_test_case : string -> unit =
   fun s ->
@@ -19,8 +19,8 @@ let process_test_case : string -> unit =
     let id_prop = int_of_string str_prop in
     let kind, s = try cut_sep '|' s with _ -> s, "" in
     if kind <> "IN" && kind <> "OUTCONC" && kind <> "OUTSYMB" then
-      (Options.Self.debug ~dkey:Options.dkey_socket "wrong value for kind: %s"
-	 kind;
+      (Sd_options.Self.debug
+	 ~dkey:Sd_options.dkey_socket "wrong value for kind: %s" kind;
        assert false);
     let add_var_val acc str =
       try let x, y = cut_sep '=' str in (x,y)::acc
@@ -33,15 +33,15 @@ let process_test_case : string -> unit =
       in
       if s = "" then [] else aux [] s
     in
-    let prop = Utils.to_prop id_prop in
-    let file = Options.Temp_File.get() in
+    let prop = Sd_utils.to_prop id_prop in
+    let file = Sd_options.Temp_File.get() in
     let func = Kernel_function.get_name (fst (Globals.entry_point ())) in
     let f = "testcases_" ^ (Filename.chop_extension file) in
     let f = Filename.concat f func in
     let f = Filename.concat f "testdrivers" in
     let f = Filename.concat f ("TC_" ^ str_tc ^ ".c") in
     try
-      let tbl = States.TestFailures.find prop in
+      let tbl = Sd_states.TestFailures.find prop in
       try
 	let input,conc,symb = Datatype.String.Hashtbl.find tbl f in
 	let input, conc, symb =
@@ -50,7 +50,7 @@ let process_test_case : string -> unit =
 	  else input, conc, list_entries
 	in
 	Datatype.String.Hashtbl.replace tbl f (input,conc,symb);
-	States.TestFailures.replace prop tbl
+	Sd_states.TestFailures.replace prop tbl
       with
       | _ ->
 	let input, conc, symb =
@@ -59,7 +59,7 @@ let process_test_case : string -> unit =
 	  else [], [], list_entries
 	in
 	Datatype.String.Hashtbl.add tbl f (input,conc,symb);
-	States.TestFailures.replace prop tbl
+	Sd_states.TestFailures.replace prop tbl
     with
     | _ ->
       (* no counter-example for considered property *)
@@ -70,13 +70,13 @@ let process_test_case : string -> unit =
 	else [], [], list_entries
       in
       Datatype.String.Hashtbl.add new_tbl f (input,conc,symb);
-      States.TestFailures.add prop new_tbl
+      Sd_states.TestFailures.add prop new_tbl
 
 let process_nb_test_cases : string -> unit =
-  fun s -> States.NbCases.set (int_of_string s)
+  fun s -> Sd_states.NbCases.set (int_of_string s)
 
 let process_final_status : unit -> unit =
-  fun () -> States.All_Paths.set true
+  fun () -> Sd_states.All_Paths.set true
     
 
 
@@ -85,7 +85,7 @@ let process_final_status : unit -> unit =
    correspondante *)
 let process_string : string -> unit =
   fun s ->
-    Options.Self.debug ~dkey:Options.dkey_socket "'%s' received" s;
+    Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "'%s' received" s;
     try
       let s1, s2 = cut s 3 in
       if s1 = "TC|" then process_test_case s2
@@ -96,9 +96,10 @@ let process_string : string -> unit =
 	  let s1, _s2 = cut s 14 in
 	  if s1 = "FinalStatus|OK" then process_final_status ()
 	  else
-	    Options.Self.debug ~dkey:Options.dkey_socket "'%s' not processed" s
+	    Sd_options.Self.debug
+	      ~dkey:Sd_options.dkey_socket "'%s' not processed" s
     with _ ->
-      Options.Self.debug ~dkey:Options.dkey_socket "'%s' not processed" s
+      Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "'%s' not processed" s
 
 
 (* filtre les chaînes de caractères reçues, on ne traite que celles qui
@@ -133,5 +134,5 @@ let print_exit_code : Unix.process_status -> unit =
       | Unix.WSIGNALED _ ->  "killed"
       | Unix.WSTOPPED _ -> "stopped"
     in
-    Options.Self.feedback ~dkey:Options.dkey_socket "PathCrawler %s!" str
+    Sd_options.Self.feedback ~dkey:Sd_options.dkey_socket "PathCrawler %s!" str
     

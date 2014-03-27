@@ -48,8 +48,8 @@ let typically_preds :
     let typically = List.map (fun (_,_,pred) -> pred) typically in
     List.fold_left List.rev_append [] typically
 
-let to_id = States.Property_To_Id.find
-let to_prop = States.Id_To_Property.find
+let to_id = Sd_states.Property_To_Id.find
+let to_prop = Sd_states.Id_To_Property.find
 
 
 open Cil_types
@@ -74,7 +74,7 @@ let rec extract_terms : term -> term * term =
       let einfo = {exp_type=t.term_type;exp_name=[]} in
       let te = Cil.term_of_exp_info loc(TLval lv) einfo in
       extract_terms te
-    | _ -> Options.Self.not_yet_implemented "term: %a" Printer.pp_term t
+    | _ -> Sd_options.Self.not_yet_implemented "term: %a" Printer.pp_term t
 
 (* generate guards for logic vars, e.g.:
    [0 <= a <= 10; x <= b <= y]
@@ -114,7 +114,8 @@ let rec compute_guards
       let acc, vars = compute_guards acc vars p1 in
       compute_guards acc vars p2
     | _ ->
-      Options.Self.feedback "compute_guards of %a" Printer.pp_predicate_named p;
+      Sd_options.Self.feedback
+	"compute_guards of %a" Printer.pp_predicate_named p;
       assert false
 
 let error_term : term -> 'a =
@@ -138,7 +139,7 @@ let error_term : term -> 'a =
     | Tlambda _ -> failwith "Tlambda"
     | TDataCons _ -> failwith "TDataCons"
     | Tif _ -> failwith "Tif"
-    | Tat (_,LogicLabel(_,str)) -> Options.Self.abort "Tat(_,%s)" str
+    | Tat (_,LogicLabel(_,str)) -> Sd_options.Self.abort "Tat(_,%s)" str
     | Tbase_addr _ -> failwith "Tbase_addr"
     | Toffset _ -> failwith "Toffset"
     | Tblock_length _ -> failwith "Tblock_length"
@@ -152,4 +153,4 @@ let error_term : term -> 'a =
     | Tinter _ -> failwith "Tinter"
     | Tcomprehension _ -> failwith "Tcomprehension"
     | Tlet _ -> failwith "Tlet"
-    | _ -> Options.Self.abort "term: %a" Printer.pp_term term
+    | _ -> Sd_options.Self.abort "term: %a" Printer.pp_term term

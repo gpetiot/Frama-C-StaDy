@@ -10,7 +10,7 @@ let pc_panel (main_ui:Design.main_window_extension_points) =
   let set = Kernel.MainFunction.set in
   let refresh = Gtk_helper.on_string ~tooltip ~validator box_4 "main" get set in
   let run_button = GButton.button ~label:"Run" ~packing:(vbox#pack) () in
-  let callback() = Register.run(); main_ui#redisplay() in
+  let callback() = Sd_register.run(); main_ui#redisplay() in
   let on_press() = main_ui#protect ~cancelable:true callback in
   let _ = run_button#connect#pressed on_press in
   "stady", vbox#coerce, Some refresh
@@ -24,7 +24,7 @@ let to_do_on_select
   | Pretty_source.PIP prop ->
     begin
       try
-	let tbl = States.TestFailures.find prop in
+	let tbl = Sd_states.TestFailures.find prop in
 	if button_nb = 1 then
 	  let nb = Datatype.String.Hashtbl.length tbl in
 	  if nb > 0 then main_ui#pretty_information "%i counter-examples@." nb;
@@ -68,10 +68,10 @@ let pc_selector
 
 
 let main main_ui =
-  Register.setup_props_bijection();
-  let lengths = Register.lengths_from_requires() in
-  let terms_at_Pre = Register.at_from_formals lengths in
-  let compute = (fun props -> Register.compute_props props terms_at_Pre) in
+  Sd_register.setup_props_bijection();
+  let lengths = Sd_register.lengths_from_requires() in
+  let terms_at_Pre = Sd_register.at_from_formals lengths in
+  let compute = (fun props -> Sd_register.compute_props props terms_at_Pre) in
   main_ui#register_panel pc_panel;
   main_ui#register_source_selector (pc_selector compute)
 

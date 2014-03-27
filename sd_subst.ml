@@ -26,12 +26,12 @@ class subst = object(self)
 	begin
 	  match li.l_body with
 	  | LBnone ->
-	    Options.Self.not_yet_implemented "LBnone in predicate application"
-	  | LBreads _ -> Options.Self.not_yet_implemented "LBreads"
-	  | LBterm _ -> Options.Self.not_yet_implemented "LBterm"
+	    Sd_options.Self.not_yet_implemented"LBnone in predicate application"
+	  | LBreads _ -> Sd_options.Self.not_yet_implemented "LBreads"
+	  | LBterm _ -> Sd_options.Self.not_yet_implemented "LBterm"
 	  | LBpred {content=p} ->
 	    self#subst_pred p new_labels new_args preds quantifs
-	  | LBinductive _ -> Options.Self.not_yet_implemented "LBinductive"
+	  | LBinductive _ -> Sd_options.Self.not_yet_implemented "LBinductive"
 	end
     | Pseparated t -> Pseparated t
     | Prel (rel,t1,t2) -> Prel (rel,
@@ -57,15 +57,15 @@ class subst = object(self)
       begin
 	match li.l_body with
 	| LBnone ->
-	  Options.Self.not_yet_implemented "LBnone in \\let (predicate)"
-	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
+	  Sd_options.Self.not_yet_implemented "LBnone in \\let (predicate)"
+	| LBreads _ -> Sd_options.Self.not_yet_implemented "LBreads"
 	| LBterm t' ->
 	  let t'' = self#subst_term t' labels args quantifs in
 	  self#subst_pred p labels ((lv,t'')::args) preds quantifs
 	| LBpred {content=p'} ->
 	  let p'' = self#subst_pred p' labels args preds quantifs in
 	  self#subst_pred p labels args ((lv,p'')::preds) quantifs
-	| LBinductive _ -> Options.Self.not_yet_implemented "LBinductive"
+	| LBinductive _ -> Sd_options.Self.not_yet_implemented "LBinductive"
       end
     | Pforall (q,p) ->
       let q' = List.map (fun v -> {v with lv_name = "__q_" ^ v.lv_name}) q in
@@ -128,8 +128,8 @@ class subst = object(self)
 				  self#subst_term t1 labels args quantifs,
 				  self#subst_term t2 labels args quantifs)
     | TCastE (ty,t) -> TCastE (ty, self#subst_term t labels args quantifs)
-    | TAddrOf _ -> Options.Self.not_yet_implemented "TAddrOf"
-    | TStartOf _ -> Options.Self.not_yet_implemented "TStartOf"
+    | TAddrOf _ -> Sd_options.Self.not_yet_implemented "TAddrOf"
+    | TStartOf _ -> Sd_options.Self.not_yet_implemented "TStartOf"
     | Tapp (li,[],[lower;upper;({term_node=Tlambda([_],_)} as lambda)]) ->
       let builtin_name = li.l_var_info.lv_name in
       if builtin_name = "\\min" || builtin_name = "\\max" ||
@@ -153,14 +153,14 @@ class subst = object(self)
 	    builtin_name = "\\sqrt" || builtin_name = "\\pow" then
 	    Tapp(li,new_labels,new_params)
 	  else
-	    Options.Self.not_yet_implemented "LBnone in term application"
-	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
+	    Sd_options.Self.not_yet_implemented "LBnone in term application"
+	| LBreads _ -> Sd_options.Self.not_yet_implemented "LBreads"
 	| LBterm{term_node=t} -> self#subst_tnode t new_labels new_args quantifs
-	| LBpred _ -> Options.Self.not_yet_implemented "LBpred"
-	| LBinductive _ -> Options.Self.not_yet_implemented "LBinductive"
+	| LBpred _ -> Sd_options.Self.not_yet_implemented "LBpred"
+	| LBinductive _ -> Sd_options.Self.not_yet_implemented "LBinductive"
       end
     | Tlambda (q,t) -> Tlambda (q, self#subst_term t labels args quantifs)
-    | TDataCons _ -> Options.Self.not_yet_implemented "TDataCons"
+    | TDataCons _ -> Sd_options.Self.not_yet_implemented "TDataCons"
     | Tif (t1,t2,t3) -> Tif (self#subst_term t1 labels args quantifs,
 			     self#subst_term t2 labels args quantifs,
 			     self#subst_term t3 labels args quantifs)
@@ -189,7 +189,7 @@ class subst = object(self)
     | Tcomprehension (t,q,None) ->
       Tcomprehension (self#subst_term t labels args quantifs, q, None)
     | Tcomprehension (t,q,Some p) ->
-      Options.Self.warning
+      Sd_options.Self.warning
 	"Tcomprehension with predicate: \\let bindings ignored";
       Tcomprehension (self#subst_term t labels args quantifs, q,
 		      Some (self#subst_pnamed p labels args [] quantifs))
@@ -205,13 +205,13 @@ class subst = object(self)
       let lv = li.l_var_info in
       begin
 	match li.l_body with
-	| LBnone -> Options.Self.not_yet_implemented "LBnone in \\let (term)"
-	| LBreads _ -> Options.Self.not_yet_implemented "LBreads"
+	| LBnone -> Sd_options.Self.not_yet_implemented "LBnone in \\let (term)"
+	| LBreads _ -> Sd_options.Self.not_yet_implemented "LBreads"
 	| LBterm t' ->
 	  let t'' = self#subst_term t' labels args quantifs in
 	  self#subst_tnode t labels ((lv,t'')::args) quantifs
-	| LBpred _ -> Options.Self.not_yet_implemented "LBpred"
-	| LBinductive _ -> Options.Self.not_yet_implemented "LBinductive"
+	| LBpred _ -> Sd_options.Self.not_yet_implemented "LBpred"
+	| LBinductive _ -> Sd_options.Self.not_yet_implemented "LBinductive"
       end
 
   method subst_toffset offset labels args quantifs =
