@@ -38,9 +38,13 @@
                     };
                     int f_precond(struct S *s, struct S *s2, int n)
                     {
-                    if (!(0 >= 0 && pathcrawler_dimension(s) > 0)) return 0;if (!((0 <= n) && (n <= 5))) return 0;
-                    if (!((0 <= (*s).i) && ((*s).i <= 10))) return 0;if (!(0 >= 0 && pathcrawler_dimension((*s).p) > 0)) return 0;
-                    if (!(0 >= 0 && pathcrawler_dimension(s2) > 0)) return 0;if (!(9 >= 0 && pathcrawler_dimension((*s2).p) > 9)) return 0;return 1;
+                    if (!(0 >= 0 && pathcrawler_dimension(s) > 0)) return 0;
+                    if (!((0 <= n) && (n <= 5))) return 0;
+                    if (!((0 <= (*s).i) && ((*s).i <= 10))) return 0;
+                    if (!(0 >= 0 && pathcrawler_dimension((*s).p) > 0)) return 0;
+                    if (!(0 >= 0 && pathcrawler_dimension(s2) > 0)) return 0;
+                    if (!(9 >= 0 && pathcrawler_dimension((*s2).p) > 9)) return 0;
+                    return 1;
                     }
                     
                     int f(struct S *s, struct S *s2, int n)
@@ -76,11 +80,11 @@
                       }
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:19:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:42:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:23:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:46:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
-stady_temp.c:19:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:42:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:23:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:46:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_f utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_f ...

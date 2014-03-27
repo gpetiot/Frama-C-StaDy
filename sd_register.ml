@@ -9,7 +9,7 @@ let typically_typer ~typing_context ~loc bhv ps =
       ("typically",42,
        [Logic_const.new_predicate 
            (typing_context.Logic_typing.type_predicate 
-	      (typing_context.Logic_typing.post_state [Normal]) 
+	      (typing_context.Logic_typing.pre_state) 
 	      p)])
     ::bhv.b_extended
   | _ -> typing_context.Logic_typing.error loc
