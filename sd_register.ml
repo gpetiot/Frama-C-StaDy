@@ -19,16 +19,16 @@ let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
 let print_strtbl_vartbl_terms hashtbl dkey =
-  Sd_options.Self.debug ~dkey "========================";
-  Datatype.String.Hashtbl.iter_sorted (fun f tbl ->
+  let on_term t = Sd_options.Self.debug ~dkey "    %a "Printer.pp_term t in
+  let on_varinfo_tbl v ts =
+    Sd_options.Self.debug ~dkey "  var '%s'" v.vname;
+    List.iter on_term ts
+  in
+  let on_string_tbl f tbl =
     Sd_options.Self.debug ~dkey "function '%s'" f;
-    Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v ts ->
-      Sd_options.Self.debug ~dkey "var '%s'" v.vname;
-      List.iter (fun t -> Sd_options.Self.debug ~dkey "%a "Printer.pp_term t) ts
-    ) tbl;
-    Sd_options.Self.debug ~dkey "----------------"
-  ) hashtbl;
-  Sd_options.Self.debug ~dkey "========================"
+    Cil_datatype.Varinfo.Hashtbl.iter_sorted on_varinfo_tbl tbl;
+  in
+  Datatype.String.Hashtbl.iter_sorted on_string_tbl hashtbl
 
 
 (* Extracts the varinfo of the variable and its inferred size as a term
@@ -37,23 +37,21 @@ let rec extract_from_valid : term -> varinfo * term =
   let dkey = Sd_options.dkey_lengths in
   fun t -> match t.term_node with
   | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)} as _t1),
-	   ({term_node=Trange(_,Some bound)} as _t2)) ->
+	   ({term_node=TLval(TVar v, _)}),
+	   ({term_node=Trange(_,Some bound)})) ->
     let varinfo = Extlib.the v.lv_origin in
     let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
     let einfo = {exp_type=bound.term_type; exp_name=[]} in
     let term = Cil.term_of_exp_info t.term_loc tnode einfo in
     varinfo, term
-
   | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)} as _t1),
+	   ({term_node=TLval(TVar v, _)}),
 	   (t2 (* anything but a Trange *))) ->
     let varinfo = Extlib.the v.lv_origin in
     let tnode = TBinOp (PlusA, t2, Cil.lone ~loc:t.term_loc()) in
     let einfo = {exp_type=t2.term_type; exp_name=[]} in
     let term = Cil.term_of_exp_info t.term_loc tnode einfo in
     varinfo, term
-
   | TBinOp((PlusPI|IndexPI),
 	   ({term_node=TLval tlval}),
 	   ({term_node=Trange(_,Some bound)})) ->
@@ -62,9 +60,6 @@ let rec extract_from_valid : term -> varinfo * term =
     let term = Cil.term_of_exp_info t.term_loc tnode einfo in
     let varinfo, _ = extract_from_valid {t with term_node=TLval tlval} in
     varinfo, term
-    
-    
-
   | TLval (TVar v, TNoOffset) ->
     let varinfo = Extlib.the v.lv_origin in
     let term = Cil.lone ~loc:t.term_loc () in
@@ -72,8 +67,6 @@ let rec extract_from_valid : term -> varinfo * term =
   | TLval (TVar _, TField _) -> assert false
   | TLval (TVar _, TModel _) -> assert false
   | TLval (TVar _, TIndex _) -> assert false
-  
-
   | TLval (TMem m, TNoOffset) ->
     let varinfo, _ = extract_from_valid m in
     let term = Cil.lone ~loc:t.term_loc () in
@@ -81,8 +74,6 @@ let rec extract_from_valid : term -> varinfo * term =
   | TLval (TMem _, TField _) -> assert false
   | TLval (TMem _, TModel _) -> assert false
   | TLval (TMem _, TIndex _) -> assert false
-
-
   | TStartOf _ -> Sd_options.Self.debug ~dkey
     "TStartOf \\valid(%a) ignored" Printer.pp_term t;
     assert false
@@ -145,18 +136,17 @@ let lengths_from_requires :
 	      | _ -> Cil.DoChildren
 	  end
 	  in
-	  Annotations.iter_behaviors (fun _ bhv ->
-	    List.iter (fun p ->
-	      let p' = (new Sd_subst.subst)#subst_pred p.ip_content [][][][] in
-	      ignore (Visitor.visitFramacPredicate o p')
-	    ) bhv.b_requires
-	  ) kf;
+	  let on_requires p =
+	    let p' = (new Sd_subst.subst)#subst_pred p.ip_content [][][][] in
+	    ignore (Visitor.visitFramacPredicate o p')
+	  in
+	  let on_bhv _ bhv = List.iter on_requires bhv.b_requires in
+	  Annotations.iter_behaviors on_bhv kf;
 	  (* TODO: handle arrays with constant size *)
 	  (*Globals.Vars.iter (fun vi _ -> () );*)
 	  Datatype.String.Hashtbl.add lengths kf_name kf_tbl
 	end
     );
-    Sd_options.Self.debug ~dkey:Sd_options.dkey_lengths "LENGTHS:";
     print_strtbl_vartbl_terms lengths Sd_options.dkey_lengths;
     lengths
 
@@ -176,7 +166,7 @@ let at_from_formals :
     -> term list Cil_datatype.Varinfo.Hashtbl.t Datatype.String.Hashtbl.t =
   fun lengths ->
     let terms_at_Pre = Datatype.String.Hashtbl.create 32 in
-    Globals.Functions.iter (fun kf ->
+    let on_kf kf =
       let vi = Kernel_function.get_vi kf in
       if not (Cil.is_unused_builtin vi) then
 	let kf_name = Kernel_function.get_name kf in
@@ -193,8 +183,8 @@ let at_from_formals :
 	List.iter add formals;
 	Globals.Vars.iter (fun v _ -> add v);
 	Datatype.String.Hashtbl.add terms_at_Pre kf_name kf_tbl
-    );
-    Sd_options.Self.debug ~dkey:Sd_options.dkey_at "AT:";
+    in
+    Globals.Functions.iter on_kf;
     print_strtbl_vartbl_terms terms_at_Pre Sd_options.dkey_at;
     terms_at_Pre
 
@@ -346,16 +336,17 @@ let setup_props_bijection () =
   Sd_states.Property_To_Id.clear();
   (* Bijection: unique_identifier <--> property *)
   let property_id = ref 0 in
-  Property_status.iter (fun property ->
+  let fc_builtin = "__fc_builtin_for_normalization.i" in
+  let on_property property =
     let pos1,_ = Property.location property in
-    let fc_builtin = "__fc_builtin_for_normalization.i" in
     if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
       begin
 	Sd_states.Property_To_Id.add property !property_id;
 	Sd_states.Id_To_Property.add !property_id property;
 	property_id := !property_id + 1
       end
-  );
+  in
+  Property_status.iter on_property;
   let kf = fst (Globals.entry_point()) in
   let strengthened_precond =
     try
@@ -421,18 +412,17 @@ let run() =
       let behaviors = Sd_options.Behaviors.get () in
       let functions = Sd_options.Functions.get () in
 
+      let gather p b = List.rev_append (properties_of_behavior b) p in
+      let props = List.fold_left gather [] behaviors in
+      let gather p f = List.rev_append (properties_of_function f) p in
+      let props = List.fold_left gather props functions in
+      let gather p n = List.rev_append (properties_of_name n) p in
+      let props = List.fold_left gather props properties in
       let props =
-	if behaviors <> [] || functions <> [] || properties <> [] then
-	  begin
-	    let gather p b = List.rev_append (properties_of_behavior b) p in
-	    let props = List.fold_left gather [] behaviors in
-	    let gather p f = List.rev_append (properties_of_function f) p in
-	    let props = List.fold_left gather props functions in
-	    let gather p n = List.rev_append (properties_of_name n) p in
-	    List.fold_left gather props properties
-	  end
+	if props = [] then
+	  Property_status.fold (fun p l -> p :: l) []
 	else
-	  Property_status.fold (fun p l -> p :: l) [] 
+	  props
       in
 
       let props = List.filter (fun p ->
