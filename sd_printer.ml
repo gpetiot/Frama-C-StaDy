@@ -287,6 +287,12 @@ class sd_printer props terms_at_Pre () = object(self)
 	  let preconds =
 	    List.rev_append (List.rev (Sd_utils.typically_preds b)) b.b_requires
 	  in
+	  let not_translated p =
+	    Sd_states.Not_Translated_Predicates.fold_left
+	      (fun b e -> b || e = p.ip_id) false
+	  in
+	  (* TODO: add an option to translate anyway? (deleting the filter) *)
+	  let preconds = List.filter not_translated preconds in
 	  let do_precond p =
 	    let v = self#predicate_and_var fmt (self#subst_pred p.ip_content) in
 	    Format.fprintf fmt "@[<hv>%a@[<v 2>if (!%s) return 0;@]@]@\n"

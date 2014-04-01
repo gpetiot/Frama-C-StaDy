@@ -460,7 +460,8 @@ let run() =
       Datatype.String.Hashtbl.iter (fun _ tbl -> clear_in tbl) lengths;
       Datatype.String.Hashtbl.clear lengths;
       Sd_states.Id_To_Property.clear();
-      Sd_states.Property_To_Id.clear()
+      Sd_states.Property_To_Id.clear();
+      Sd_states.Not_Translated_Predicates.clear()
     end
 
 

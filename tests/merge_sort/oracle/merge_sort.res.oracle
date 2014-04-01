@@ -223,10 +223,7 @@
                     
                     int merge_sort_precond(int *table, int l, int *ret)
                     {
-                    if (!((1 <= l) && (l <= 3))) return 0;
                     if (!1) return 0;
-                    if (!((l - 1) >= 0 && pathcrawler_dimension(table) > (l - 1))) return 0;
-                    if (!((l - 1) >= 0 && pathcrawler_dimension(ret) > (l - 1))) return 0;
                     return 1;
                     }
                     

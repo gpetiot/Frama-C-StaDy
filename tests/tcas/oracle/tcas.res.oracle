@@ -387,11 +387,6 @@
                                             int other_tracked_alt, int alt_layer_value,
                                             int up_separation, int down_separation, int other_rac)
                     {
-                    if (!((300 <= other_tracked_alt) && (other_tracked_alt <= 1000))) return 0;
-                    if (!((300 <= own_tracked_alt) && (own_tracked_alt <= 1000))) return 0;
-                    if (!((0 <= alt_layer_value) && (alt_layer_value < 4))) return 0;
-                    if (!((0 <= other_rac) && (other_rac <= 2))) return 0;
-                    if (!((0 <= two_of_three_reports_valid) && (two_of_three_reports_valid <= 1))) return 0;
                     return 1;
                     }
                     

@@ -1,4 +1,7 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/next_subset/next_subset.c"
+[stady] warning: Native Precondition:
+                 ∀ ℤ __q_i;
+                   0 ≤ __q_i ∧ __q_i < n ⇒ *(s+__q_i) ≡ 0 ∨ *(s+__q_i) ≡ 1 unsupported
 [stady:generated-pl] :- module(test_parameters).
                      :- import create_input_val/3 from substitution.
                      :- export dom/4.
@@ -44,7 +47,7 @@
                     __stady_pred_9 = ((*(s + __q_i) == 0) || (*(s + __q_i) == 1));
                     }
                     }
-                    if (!((((n >= 0) && (n <= 3)) && ((n - 1) >= 0 && pathcrawler_dimension(s) > (n - 1))) && __stady_pred_9)) return 0;
+                    if (!__stady_pred_9) return 0;
                     return 1;
                     }
                     
@@ -84,17 +87,17 @@
                         *(s + k) = 1;
                         i = k + 1;
                         {
-                          if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",11);int __stady_pred_10 = 1;
+                          if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",12);int __stady_pred_10 = 1;
                           {
                           int __q_i;
                           for (__q_i = 0; __q_i < i &&  __stady_pred_10; __q_i++) {
                           __stady_pred_10 = ((*(s + __q_i) == 0) || (*(s + __q_i) == 1));
                           }
                           }
-                          if(!__stady_pred_10)pathcrawler_assert_exception("Loop invariant not established!", 7);
+                          if(!__stady_pred_10)pathcrawler_assert_exception("Loop invariant not established!", 8);
                           if(!(((k + 1) <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not established!", 1);
                           while (1) {
-                            int old_variant_11 = (n - i);
+                            int old_variant_12 = (n - i);
                             {
                               if (! (i < n)) break;
                               *(s + i) = 0;
@@ -107,9 +110,9 @@
                             __stady_pred_11 = ((*(s + __q_i) == 0) || (*(s + __q_i) == 1));
                             }
                             }
-                            if(!__stady_pred_11)pathcrawler_assert_exception("Loop invariant not preserved!", 7);
-                            if ((old_variant_11) < 0)pathcrawler_assert_exception("Variant non positive",11);
-                            if (((n - i)) >= old_variant_11)pathcrawler_assert_exception("Variant non decreasing",11);}
+                            if(!__stady_pred_11)pathcrawler_assert_exception("Loop invariant not preserved!", 8);
+                            if ((old_variant_12) < 0)pathcrawler_assert_exception("Variant non positive",12);
+                            if (((n - i)) >= old_variant_12)pathcrawler_assert_exception("Variant non decreasing",12);}
                              }
                            
                         __retres = k;
@@ -122,8 +125,8 @@
                             __stady_pred_12 = ((*(old_s + __q_i) == 0) || (*(old_s + __q_i) == 1));
                             }
                             }
-                            if(!__stady_pred_12)pathcrawler_assert_exception("Post-condition!", 10);
-                            if(!(((- 1) <= __retres) && (__retres < old_n)))pathcrawler_assert_exception("Post-condition!", 14);
+                            if(!__stady_pred_12)pathcrawler_assert_exception("Post-condition!", 11);
+                            if(!(((- 1) <= __retres) && (__retres < old_n)))pathcrawler_assert_exception("Post-condition!", 15);
                             int __stady_pred_13 = 1;
                             if ((__retres == (- 1))) {
                             int __stady_pred_14 = 1;
@@ -147,12 +150,12 @@
                             }
                             __stady_pred_15 = __stady_pred_16;
                             }
-                            if(!__stady_pred_15)pathcrawler_assert_exception("Post-condition!", 8);
+                            if(!__stady_pred_15)pathcrawler_assert_exception("Post-condition!", 9);
                             int __stady_pred_17 = 1;
                             if ((__retres != (- 1))) {
                             __stady_pred_17 = (*(old_ptr_s + __retres) < *(old_s + __retres));
                             }
-                            if(!__stady_pred_17)pathcrawler_assert_exception("Post-condition!", 12);
+                            if(!__stady_pred_17)pathcrawler_assert_exception("Post-condition!", 13);
                             
                             }
                           free(old_ptr_s);
@@ -180,8 +183,6 @@ stady_temp.c:135:[kernel] warning: Calling undeclared function free. Old style K
 --- Properties of Function 'nextSubset'
 --------------------------------------------------------------------------------
 
-[  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 15)
-            by StaDy.
 [  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 16)
             by StaDy.
 [  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 17)
@@ -190,16 +191,18 @@ stady_temp.c:135:[kernel] warning: Calling undeclared function free. Old style K
             by StaDy.
 [  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 19)
             by StaDy.
-[    -    ] Assigns (file tests/next_subset/next_subset.c, line 14)
-[  Valid  ] Loop variant at loop (file tests/next_subset/next_subset.c, line 26)
+[  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 20)
             by StaDy.
-[  Valid  ] Loop variant at loop (file tests/next_subset/next_subset.c, line 33)
+[    -    ] Assigns (file tests/next_subset/next_subset.c, line 15)
+[  Valid  ] Loop variant at loop (file tests/next_subset/next_subset.c, line 27)
             by StaDy.
-[  Valid  ] Invariant (file tests/next_subset/next_subset.c, line 23)
+[  Valid  ] Loop variant at loop (file tests/next_subset/next_subset.c, line 34)
             by StaDy.
-[  Valid  ] Invariant (file tests/next_subset/next_subset.c, line 29)
+[  Valid  ] Invariant (file tests/next_subset/next_subset.c, line 24)
             by StaDy.
 [  Valid  ] Invariant (file tests/next_subset/next_subset.c, line 30)
+            by StaDy.
+[  Valid  ] Invariant (file tests/next_subset/next_subset.c, line 31)
             by StaDy.
 [    -    ] Default behavior
             tried with Frama-C kernel.

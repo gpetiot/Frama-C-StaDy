@@ -52,3 +52,11 @@ module Id_To_Property =
       let dependencies = [Ast.self]
       let size = 64
      end)
+
+module Not_Translated_Predicates =
+  State_builder.List_ref (Datatype.Int)
+    (struct
+      let name = "Not_Translated_Predicates"
+      let dependencies = [Ast.self]
+      let size = 64
+     end)

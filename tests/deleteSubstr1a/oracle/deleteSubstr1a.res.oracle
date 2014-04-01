@@ -199,11 +199,6 @@
                     int delete_substr_precond(char *str, int strlen, char *substr, int sublen,
                                               char *dest)
                     {
-                    if (!(strlen <= 2)) return 0;
-                    if (!((0 < sublen) && (sublen <= strlen))) return 0;
-                    if (!((strlen - 1) >= 0 && pathcrawler_dimension(str) > (strlen - 1))) return 0;
-                    if (!((strlen - 1) >= 0 && pathcrawler_dimension(dest) > (strlen - 1))) return 0;
-                    if (!((sublen - 1) >= 0 && pathcrawler_dimension(substr) > (sublen - 1))) return 0;
                     if (!1) return 0;
                     if (!1) return 0;
                     return 1;

@@ -290,22 +290,15 @@ let rel_to_prolog : relation -> term -> term -> pl_constraint =
 let rec requires_to_prolog :
     pl_constraint list -> predicate named -> pl_constraint list =
   fun constraints pred ->
-    try
-      match pred.content with
-      | Pand (p, q) -> requires_to_prolog (requires_to_prolog constraints p) q
-      | Ptrue -> constraints
-      | Pvalid(_,t) | Pvalid_read(_,t) ->
-	List.rev_append (List.rev (valid_to_prolog t)) constraints
-      | Pforall (_quantif, _pn) -> constraints
-      | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
-      | Pat(p, LogicLabel(_,stringlabel)) when stringlabel = "Here" ->
-	requires_to_prolog constraints p
-      | _ -> assert false
-    with
-    | _ ->
-      Sd_options.Self.warning "Native Precondition:@\n%a unsupported"
-	Printer.pp_predicate_named pred;
-      constraints
+    match pred.content with
+    | Pand (p, q) -> requires_to_prolog (requires_to_prolog constraints p) q
+    | Ptrue -> constraints
+    | Pvalid(_,t) | Pvalid_read(_,t) ->
+      List.rev_append (List.rev (valid_to_prolog t)) constraints
+    | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
+    | Pat(p, LogicLabel(_,stringlabel)) when stringlabel = "Here" ->
+      requires_to_prolog constraints p
+    | _ -> assert false
 
 let output chan str =
   Sd_options.Self.debug ~dkey:Sd_options.dkey_generated_pl "%s" str;
@@ -315,16 +308,27 @@ let translate () =
   let kf = fst (Globals.entry_point()) in
   let func_name = Kernel_function.get_name kf in
   let bhv = Sd_utils.default_behavior kf in
-  let subst pred  = (new Sd_subst.subst)#subst_pnamed pred [] [] [] [] in
-  let requires = List.map Logic_const.pred_of_id_pred bhv.b_requires in
-  let requires = List.map subst requires in
+  let subst pred = (new Sd_subst.subst)#subst_pnamed pred [] [] [] [] in
+  let requires_preds = bhv.b_requires in
   let typically_preds = Sd_utils.typically_preds bhv in
-  let typically_preds = List.map Logic_const.pred_of_id_pred typically_preds in
-  let typically_preds = List.map subst typically_preds in
-  let constraints = List.fold_left requires_to_prolog [] typically_preds in
+  let f constraints id_pred =
+    let pnamed = Logic_const.pred_of_id_pred id_pred in
+    let pnamed = subst pnamed in
+    try
+      requires_to_prolog constraints pnamed
+    with
+    | _ ->
+      Sd_options.Self.warning "Native Precondition:@\n%a unsupported"
+	Printer.pp_predicate_named pnamed;
+      (* this predicate has not been translated in Prolog, we must translate it
+	 in C. *)
+      Sd_states.Not_Translated_Predicates.add id_pred.ip_id;
+      constraints
+  in
+  let constraints = List.fold_left f [] typically_preds in
+  let constraints = List.fold_left f constraints requires_preds in
   Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
     "non-default behaviors ignored!";
-  let constraints = List.fold_left requires_to_prolog constraints requires in
   let is_domain = function PLDomain _ -> true | _ -> false in
   let domains, constraints = List.partition is_domain constraints in
   let unfold = function PLDomain d -> d | _ -> assert false in
