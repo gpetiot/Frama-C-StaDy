@@ -199,8 +199,6 @@
                     int delete_substr_precond(char *str, int strlen, char *substr, int sublen,
                                               char *dest)
                     {
-                    if (!1) return 0;
-                    if (!1) return 0;
                     return 1;
                     }
                     

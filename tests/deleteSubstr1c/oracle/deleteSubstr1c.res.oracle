@@ -199,8 +199,6 @@
                     int delete_substr_precond(char *str, int strlen, char *substr, int sublen,
                                               char *dest)
                     {
-                    if (!1) return 0;
-                    if (!1) return 0;
                     return 1;
                     }
                     
@@ -359,10 +357,10 @@ stady_temp.c:157:[kernel] warning: Calling undeclared function free. Old style K
 [pc] Starting lanceur_pathcrawler__delete_substr_precond (isc version)
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] TEST GENERATION WARNING!!!
-[pc] Bad projection on input values of expression old_ptr_str__delete_substr[(__q_l__delete_substr+old_sublen__delete_substr)] in the constraint corresponding to the 1st subcondition (or only condition) at line number 295 of file stady_temp.c.
+[pc] Bad projection on input values of expression old_ptr_str__delete_substr[(__q_l__delete_substr+old_sublen__delete_substr)] in the constraint corresponding to the 1st subcondition (or only condition) at line number 293 of file stady_temp.c.
 [pc] Please check your test context and source code for uninitialised variables.
 [pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(3) in the constraint corresponding to the 1st subcondition (or only condition) at line number 295 of file stady_temp.c.
+[pc] Unexpected failure of goal write_status_prefix_and_path(3) in the constraint corresponding to the 1st subcondition (or only condition) at line number 293 of file stady_temp.c.
 [pc] Please report this bug.
 [pc] generation finished
 [stady] all-paths: true

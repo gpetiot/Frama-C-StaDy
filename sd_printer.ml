@@ -295,8 +295,9 @@ class sd_printer props terms_at_Pre () = object(self)
 	  let preconds = List.filter not_translated preconds in
 	  let do_precond p =
 	    let v = self#predicate_and_var fmt (self#subst_pred p.ip_content) in
-	    Format.fprintf fmt "@[<hv>%a@[<v 2>if (!%s) return 0;@]@]@\n"
-	      (fun fmt -> self#line_directive ~forcefile:false fmt) p.ip_loc v
+	    if v <> "1" then (* '1' is for untreated predicates *)
+	      Format.fprintf fmt "@[<hv>%a@[<v 2>if (!%s) return 0;@]@]@\n"
+		(fun fmt -> self#line_directive ~forcefile:false fmt) p.ip_loc v
 	  in
 	  if preconds <> [] then
 	    begin
