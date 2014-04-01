@@ -298,6 +298,8 @@ let rec requires_to_prolog :
 	List.rev_append (List.rev (valid_to_prolog t)) constraints
       | Pforall (_quantif, _pn) -> constraints
       | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
+      | Pat(p, LogicLabel(_,stringlabel)) when stringlabel = "Here" ->
+	requires_to_prolog constraints p
       | _ -> assert false
     with
     | _ ->

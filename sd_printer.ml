@@ -11,8 +11,8 @@ class sd_printer props terms_at_Pre () = object(self)
   inherit Printer.extensible_printer () as super
 
   val mutable pred_cpt = 0
-  val mutable postcond = ignore
-  val mutable dealloc = ignore
+  val mutable postcond : Format.formatter -> unit = ignore
+  val mutable dealloc : Format.formatter -> unit = ignore
   val mutable result_varinfo = None
   val mutable current_function = None
   val mutable in_old_term = false
@@ -226,17 +226,13 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.fprintf Format.str_formatter "%a" self#logic_var lv;
       Format.flush_str_formatter()
     | TResult _ -> assert false
-    | TMem t -> let v = self#term_and_var fmt t in "*" ^ v
+    | TMem t -> "*" ^ (self#term_and_var fmt t)
 
   method private term_offset_and_var fmt toffset =
     match toffset with
     | TNoOffset -> ""
-    | TField (fi, tof) ->
-      let v = self#term_offset_and_var fmt tof in
-      "." ^ fi.fname ^ v
-    | TModel (mi, tof) ->
-      let v = self#term_offset_and_var fmt tof in
-      "." ^ mi.mi_name ^ v
+    | TField (fi, tof) -> "." ^ fi.fname ^ (self#term_offset_and_var fmt tof)
+    | TModel (mi, tof) -> "." ^ mi.mi_name ^ (self#term_offset_and_var fmt tof)
     | TIndex (t, tof) ->
       let t = self#term_and_var fmt t in
       let v = self#term_offset_and_var fmt tof in
@@ -491,10 +487,10 @@ class sd_printer props terms_at_Pre () = object(self)
     self#stmt_labels fmt stmt;
     Format.pp_open_hvbox fmt 0;
     let kf = Kernel_function.find_englobing_kf stmt in
-    let begin_loop = ref [] in
-    let end_loop = ref [] in
+    let begin_loop = ref ([]: (Format.formatter -> unit) list) in
+    let end_loop = ref ([]: (Format.formatter -> unit) list) in
     let has_code_annots = List.length (Annotations.code_annot stmt) > 0 in
-    let end_contract = ref [] in
+    let end_contract = ref ([]: (Format.formatter -> unit) list) in
     let loc = Cil_datatype.Stmt.loc stmt in
     if has_code_annots then Format.fprintf fmt "%a@[<v 2>{@\n"
       (fun fmt -> self#line_directive ~forcefile:false fmt) loc;
@@ -775,6 +771,8 @@ class sd_printer props terms_at_Pre () = object(self)
       Format.fprintf Format.str_formatter "(%s %a %s)"
 	t1' self#relation rel t2';
       Format.flush_str_formatter()
+    | Pat(p, LogicLabel(_,stringlabel)) when stringlabel = "Here" ->
+      self#predicate_named_and_var fmt p
     | Pat (p,_) ->
       Sd_options.Self.warning "%a unsupported!" Printer.pp_predicate pred;
       self#predicate_named_and_var fmt p
