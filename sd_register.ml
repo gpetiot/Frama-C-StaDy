@@ -355,7 +355,8 @@ let setup_props_bijection () =
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
   in
-  List.iter Property_status.register strengthened_precond
+  let register p = try Property_status.register p with _ -> () in
+  List.iter register strengthened_precond
 
 
 
