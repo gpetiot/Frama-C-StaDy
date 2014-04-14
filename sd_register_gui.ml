@@ -68,11 +68,14 @@ let pc_selector
 
 
 let main main_ui =
-  Sd_register.setup_props_bijection();
-  let lengths = Sd_register.lengths_from_requires() in
-  let terms_at_Pre = Sd_register.at_from_formals lengths in
-  let compute = (fun props -> Sd_register.compute_props props terms_at_Pre) in
-  main_ui#register_panel pc_panel;
-  main_ui#register_source_selector (pc_selector compute)
+  try
+    Sd_register.setup_props_bijection();
+    let lengths = Sd_register.lengths_from_requires() in
+    let terms_at_Pre = Sd_register.at_from_formals lengths in
+    let compute = (fun props -> Sd_register.compute_props props terms_at_Pre) in
+    main_ui#register_panel pc_panel;
+    main_ui#register_source_selector (pc_selector compute)
+  with _ -> ()
+
 
 let () = Design.register_extension main
