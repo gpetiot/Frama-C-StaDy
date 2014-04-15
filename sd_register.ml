@@ -264,11 +264,17 @@ let compute_props props terms_at_Pre =
       begin
 	try
 	  Unix.bind socket (Unix.ADDR_UNIX name);
-	  Unix.listen socket 1;
+	  Unix.listen socket 2;
 	  let ret = Unix.system cmd in
-	  let client, _ = Unix.accept socket in
-	  Sd_socket.process_socket client;
-	  Sd_socket.print_exit_code ret
+	  let rec aux cpt =
+	    if cpt = 3 then ()
+	    else
+	      let client, _ = Unix.accept socket in
+	      Sd_socket.process_socket client;
+	      Sd_socket.print_exit_code ret;
+	      aux (cpt+1)
+	  in
+	  aux 0
 	with _ ->
 	  Unix.close socket;
 	  Sd_options.Self.feedback ~dkey:Sd_options.dkey_socket
@@ -281,11 +287,17 @@ let compute_props props terms_at_Pre =
       begin
 	try
 	  Unix.bind socket(Unix.ADDR_INET(Unix.inet_addr_loopback,2222));
-	  Unix.listen socket 1;
+	  Unix.listen socket 2;
 	  let ret = Unix.system cmd in
-	  let client, _ = Unix.accept socket in
-	  Sd_socket.process_socket client;
-	  Sd_socket.print_exit_code ret
+	  let rec aux cpt =
+	    if cpt = 3 then ()
+	    else
+              let client, _ = Unix.accept socket in
+	      Sd_socket.process_socket client;
+	      Sd_socket.print_exit_code ret;
+	      aux (cpt+1)
+	  in
+	  aux 0
 	with _ ->
 	  Unix.close socket;
 	  Sd_options.Self.feedback ~dkey:Sd_options.dkey_socket
