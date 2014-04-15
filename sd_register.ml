@@ -312,6 +312,7 @@ let compute_props props terms_at_Pre =
   end;
   Sd_states.NbCases.mark_as_computed();
   Sd_states.TestFailures.mark_as_computed();
+  Sd_states.Unreachable_Stmts.mark_as_computed();
   Sd_options.Self.result "all-paths: %b" (Sd_states.All_Paths.get());
   Sd_options.Self.result "%i test cases" (Sd_states.NbCases.get());
   let distinct = true in
@@ -465,6 +466,12 @@ let run() =
       let terms_at_Pre = at_from_formals lengths in
       compute_props props terms_at_Pre;
 
+      if Sd_states.All_Paths.get() then
+	begin
+	  Sd_states.Unreachable_Stmts.iter (fun sid _ ->
+	    Sd_options.Self.feedback "stmt %i still unreachable" sid
+	  )
+	end;
 
       (* cleaning *)
       let clear_in = Cil_datatype.Varinfo.Hashtbl.clear in

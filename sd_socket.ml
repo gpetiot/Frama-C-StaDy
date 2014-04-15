@@ -78,6 +78,10 @@ let process_nb_test_cases : string -> unit =
 let process_final_status : unit -> unit =
   fun () -> Sd_states.All_Paths.set true
     
+let process_reachable : string -> unit =
+  fun s ->
+    let sid = int_of_string s in
+    Sd_states.Unreachable_Stmts.remove sid
 
 
 (* le mot-clé au début de la chaîne permet de savoir que faire des données
@@ -92,9 +96,12 @@ let process_string : string -> unit =
 	let s1, s2 = cut s 5 in
 	if s1 = "NbTC|" then process_nb_test_cases s2
 	else
-	  let s1, _s2 = cut s 14 in
-	  if s1 = "FinalStatus|OK" then process_final_status ()
-	  else assert false
+	  let s1, s2 = cut s 10 in
+	  if s1 = "REACHABLE:" then process_reachable s2
+	  else
+	    let s1, _s2 = cut s 14 in
+	    if s1 = "FinalStatus|OK" then process_final_status ()
+	    else assert false
     with _ ->
       Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "'%s' not processed" s
 

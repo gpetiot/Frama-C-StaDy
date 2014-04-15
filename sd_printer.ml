@@ -19,6 +19,9 @@ class sd_printer props terms_at_Pre () = object(self)
   val mutable in_old_ptr = false
   val mutable first_global = true
 
+  (* list of (stmtkind * stmt) used for testing reachibility of some stmts *)
+  val mutable stmts_to_reach = []
+
   (* we can only modify the property_status of the properties that have really
      been translated into pathcrawler_assert_exception *)
   val mutable translated_properties = []
@@ -643,12 +646,48 @@ class sd_printer props terms_at_Pre () = object(self)
     Format.pp_close_box fmt ()
   (* end of annotated_stmt *)
 
+  method! stmtkind (next: stmt) fmt s =
+    let has_added_reachable_stmt =
+      try
+	let stmt = List.assoc s stmts_to_reach in
+	Format.fprintf fmt "{ pathcrawler_to_framac(\"@@FC:REACHABLE:%i\");@\n"
+	  stmt.sid;
+	true
+      with Not_found -> false
+    in
+    let kf = Kernel_function.find_englobing_kf (Extlib.the self#current_stmt) in
+    begin
+      match s with
+      | If(_exp,b1,b2,_loc) ->
+	begin
+      	  match b1.bstmts with
+      	  | first_stmt :: _ ->
+      	    Sd_options.Self.feedback "%i to reach" first_stmt.sid;
+	    Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
+      	    stmts_to_reach <- (first_stmt.skind, first_stmt) :: stmts_to_reach
+      	  | _ -> ()
+	end;
+	begin
+      	  match b2.bstmts with
+      	  | first_stmt :: _ ->
+      	    Sd_options.Self.feedback "%i to reach" first_stmt.sid;
+	    Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
+      	    stmts_to_reach <- (first_stmt.skind, first_stmt) :: stmts_to_reach
+      	  | _ -> ()
+	end;
+	super#stmtkind next fmt s
+      | _ -> super#stmtkind next fmt s
+    end;
+    if has_added_reachable_stmt then
+      Format.fprintf fmt " }@\n"
+
   method! global fmt g =
     if first_global then
       begin
 	Format.fprintf fmt
 	  "extern int pathcrawler_assert_exception(char*,int);@\n";
 	Format.fprintf fmt "extern int pathcrawler_dimension(void*);@\n";
+	Format.fprintf fmt "extern void pathcrawler_to_framac(char*);@\n";
 	first_global <- false
       end;
     match g with

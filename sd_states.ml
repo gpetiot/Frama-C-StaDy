@@ -60,3 +60,15 @@ module Not_Translated_Predicates =
       let dependencies = [Ast.self]
       let size = 64
      end)
+
+module Unreachable_Stmts =
+  State_builder.Hashtbl
+    (Datatype.Int.Hashtbl)
+    (Datatype.Pair
+       (Cil_datatype.Stmt)
+       (Cil_datatype.Kf))
+    (struct
+      let name = "Unreachable_Stmts"
+      let dependencies = [Ast.self]
+      let size = 64
+     end)
