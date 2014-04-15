@@ -85,7 +85,6 @@ let process_final_status : unit -> unit =
    correspondante *)
 let process_string : string -> unit =
   fun s ->
-    Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "'%s' received" s;
     try
       let s1, s2 = cut s 3 in
       if s1 = "TC|" then process_test_case s2
@@ -95,9 +94,7 @@ let process_string : string -> unit =
 	else
 	  let s1, _s2 = cut s 14 in
 	  if s1 = "FinalStatus|OK" then process_final_status ()
-	  else
-	    Sd_options.Self.debug
-	      ~dkey:Sd_options.dkey_socket "'%s' not processed" s
+	  else assert false
     with _ ->
       Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "'%s' not processed" s
 
@@ -110,8 +107,11 @@ let rec process_channel : in_channel -> unit =
       let str = input_line c in
       begin
 	if str <> "" then
+	  let dkey = Sd_options.dkey_socket in
+	  Sd_options.Self.debug ~dkey "'%s' received" str;
 	  let prefix, suffix = cut str 4 in
 	  if prefix = "@FC:" then process_string suffix
+	  else Sd_options.Self.debug ~dkey "'%s' not processed" str
       end;
       process_channel c
     with End_of_file -> ()
