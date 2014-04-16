@@ -78,10 +78,16 @@ let process_nb_test_cases : string -> unit =
 let process_final_status : unit -> unit =
   fun () -> Sd_states.All_Paths.set true
     
-let process_reachable : string -> unit =
+let process_reachable_stmt : string -> unit =
   fun s ->
     let sid = int_of_string s in
     Sd_states.Unreachable_Stmts.remove sid
+
+let process_reachable_bhv : string-> unit =
+  fun s ->
+    let id = int_of_string s in
+    let kf,bhv,_ = Sd_states.Behavior_Reachability.find id in
+    Sd_states.Behavior_Reachability.replace id (kf,bhv,true)
 
 
 (* le mot-clé au début de la chaîne permet de savoir que faire des données
@@ -99,9 +105,12 @@ let process_string : string -> unit =
 	  let s1, _s2 = cut s 14 in
 	  if s1 = "FinalStatus|OK" then process_final_status ()
 	  else
-	    let s1, s2 = cut s 15 in
-	    if s1 = "REACHABLE_STMT:" then process_reachable s2
-	    else assert false
+	    let s1, s2 = cut s 14 in
+	    if s1 = "REACHABLE_BHV:" then process_reachable_bhv s2
+	    else
+	      let s1, s2 = cut s 15 in
+	      if s1 = "REACHABLE_STMT:" then process_reachable_stmt s2
+	      else assert false
     with _ ->
       Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "'%s' not processed" s
 

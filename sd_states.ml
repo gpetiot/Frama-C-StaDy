@@ -72,3 +72,16 @@ module Unreachable_Stmts =
       let dependencies = [Ast.self]
       let size = 64
      end)
+
+module Behavior_Reachability =
+  State_builder.Hashtbl
+    (Datatype.Int.Hashtbl)
+    (Datatype.Triple
+       (Cil_datatype.Kf)
+       (Cil_datatype.Funbehavior)
+       (Datatype.Bool))
+    (struct
+      let name = "Behavior_Reachability"
+      let dependencies = [Ast.self]
+      let size = 64
+     end)

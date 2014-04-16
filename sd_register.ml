@@ -194,18 +194,21 @@ let at_from_formals :
 
 let second_pass filename props terms_at_Pre =
   Kernel.Unicode.set false;
-  let out = open_out filename in
-  let fmt = Format.formatter_of_out_channel out in
   let printer = new Sd_printer.sd_printer props terms_at_Pre () in
-  printer#file fmt (Ast.get());
-  flush out;
-  close_out out;
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
   let dkey = Sd_options.dkey_generated_c in
+  let out_file = open_out filename in
+  Sd_options.Self.debug ~dkey "generated C file:";
+  let dkeys = Sd_options.Self.Debug_category.get() in
+  if Datatype.String.Set.mem "generated-c" dkeys then
+    Buffer.output_buffer stdout buf;
+  Buffer.output_buffer out_file buf;
   Format.pp_print_flush fmt();
-  Sd_options.Self.debug ~dkey "%s" (Buffer.contents buf);
+  flush stdout;
+  flush out_file;
+  close_out out_file;
   Buffer.clear buf;
   printer#translated_properties()
 
@@ -340,6 +343,13 @@ let compute_props props terms_at_Pre =
       Sd_states.Unreachable_Stmts.iter (fun sid (stmt, kf) ->
 	Sd_options.Self.feedback "stmt %i unreachable" sid;
 	Annotations.add_assert ~kf emitter stmt Logic_const.pfalse
+      );
+      Sd_states.Behavior_Reachability.iter (fun bhv_id (kf,bhv,is_reachable) ->
+	Sd_options.Self.feedback "behavior '%s' (id: %i) of function '%s' %s"
+	  bhv.b_name
+	  bhv_id
+	  (Kernel_function.get_name kf)
+	  (if is_reachable then "reachable" else "not reachable")
       )
     end
 
