@@ -57,8 +57,12 @@
                           while (1) {
                             int old_variant_3 = (n - i);
                             {
-                              if (! (i < n)) break;
-                              if (*(t + i) == 0) num ++;
+                              if (! (i < n)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:6");
+                                             break; }
+                                             
+                              if (*(t + i) == 0) { pathcrawler_to_framac("@FC:REACHABLE_STMT:9");
+                                                 num ++; }
+                                                 
                               i ++;
                             }if(!((0 <= num) && ((num <= i) && (i <= n))))pathcrawler_assert_exception("Loop invariant not preserved!", 2);
                             int __stady_term_4 = 0;
@@ -89,11 +93,11 @@
                       }
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:64:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:15:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:69:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
-stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:64:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:15:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:69:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_num_of utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_num_of ...

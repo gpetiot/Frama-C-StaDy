@@ -334,7 +334,14 @@ let compute_props props terms_at_Pre =
       let hyps = strengthened_precond in
       if Sd_states.All_Paths.get() then
 	Property_status.emit emitter ~hyps prop ~distinct status
-  ) translated_props
+  ) translated_props;
+  if Sd_states.All_Paths.get() && strengthened_precond = [] then
+    begin
+      Sd_states.Unreachable_Stmts.iter (fun sid (stmt, kf) ->
+	Sd_options.Self.feedback "stmt %i unreachable" sid;
+	Annotations.add_assert ~kf emitter stmt Logic_const.pfalse
+      )
+    end
 
 
 
@@ -466,12 +473,6 @@ let run() =
       let terms_at_Pre = at_from_formals lengths in
       compute_props props terms_at_Pre;
 
-      if Sd_states.All_Paths.get() then
-	begin
-	  Sd_states.Unreachable_Stmts.iter (fun sid _ ->
-	    Sd_options.Self.feedback "stmt %i still unreachable" sid
-	  )
-	end;
 
       (* cleaning *)
       let clear_in = Cil_datatype.Varinfo.Hashtbl.clear in

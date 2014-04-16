@@ -67,19 +67,35 @@
                           while (1) {
                             int old_variant_23 = (iEnd - j);
                             {
-                              if (! (j < iEnd)) break;
+                              if (! (j < iEnd)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:9");
+                                                break; }
+                                                
                               if (i0 < iRight) {
-                                if (i1 >= iEnd) goto _LOR;
+                                { pathcrawler_to_framac("@FC:REACHABLE_STMT:14");
+                                if (i1 >= iEnd) { pathcrawler_to_framac("@FC:REACHABLE_STMT:15");
+                                                goto _LOR; }
+                                                
                                 else 
+                                  { pathcrawler_to_framac("@FC:REACHABLE_STMT:17");
                                   if (*(A + i0) <= *(A + i1)) {
-                                    _LOR: *(B + j) = *(A + i0);
-                                          i0 ++;
+                                    _LOR:
+                                      { pathcrawler_to_framac("@FC:REACHABLE_STMT:18");
+                                      *(B + j) = *(A + i0);
+                                      i0 ++; }
+                                      
                                   }
-                                  else goto _LAND;
+                                  else { pathcrawler_to_framac("@FC:REACHABLE_STMT:21");
+                                       goto _LAND; }
+                                        }
+                                   }
+                                
                               }
                               else {
-                                _LAND: *(B + j) = *(A + i1);
-                                       i1 ++;
+                                _LAND:
+                                  { pathcrawler_to_framac("@FC:REACHABLE_STMT:22");
+                                  *(B + j) = *(A + i1);
+                                  i1 ++; }
+                                  
                               }
                               j ++;
                             }if(!((iLeft <= j) && (j <= iEnd)))pathcrawler_assert_exception("Loop invariant not preserved!", 9);
@@ -124,7 +140,9 @@
                           while (1) {
                             int old_variant_3 = (n - i);
                             {
-                              if (! (i < n)) break;
+                              if (! (i < n)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:32");
+                                             break; }
+                                             
                               *(A + i) = *(B + i);
                               i ++;
                             }if(!((0 <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not preserved!", 0);
@@ -144,7 +162,12 @@
                       int old_y = y;
                       {
                         int tmp;
-                        if (x <= y) tmp = x; else tmp = y;
+                        if (x <= y) { pathcrawler_to_framac("@FC:REACHABLE_STMT:40");
+                                    tmp = x; }
+                                    
+                        else { pathcrawler_to_framac("@FC:REACHABLE_STMT:41");
+                             tmp = y; }
+                             
                         return tmp;
                       }
                     }
@@ -177,7 +200,9 @@
                           while (1) {
                             int old_variant_11 = (n - width);
                             {
-                              if (! (width < n)) break;
+                              if (! (width < n)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:48");
+                                                 break; }
+                                                 
                               {
                                 int i;
                                 i = 0;
@@ -187,7 +212,9 @@
                                   while (1) {
                                     int old_variant_8 = (n - i);
                                     {
-                                      if (! (i < n)) break;
+                                      if (! (i < n)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:54");
+                                                     break; }
+                                                     
                                       {
                                         int tmp;
                                         int tmp_0;
@@ -262,11 +289,11 @@
                       }
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:10:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:64:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:11:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:81:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
-stady_temp.c:10:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:64:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:11:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:81:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort ...

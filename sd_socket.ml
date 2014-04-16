@@ -96,11 +96,11 @@ let process_string : string -> unit =
 	let s1, s2 = cut s 5 in
 	if s1 = "NbTC|" then process_nb_test_cases s2
 	else
-	  let s1, s2 = cut s 10 in
-	  if s1 = "REACHABLE:" then process_reachable s2
+	  let s1, _s2 = cut s 14 in
+	  if s1 = "FinalStatus|OK" then process_final_status ()
 	  else
-	    let s1, _s2 = cut s 14 in
-	    if s1 = "FinalStatus|OK" then process_final_status ()
+	    let s1, s2 = cut s 15 in
+	    if s1 = "REACHABLE_STMT:" then process_reachable s2
 	    else assert false
     with _ ->
       Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "'%s' not processed" s

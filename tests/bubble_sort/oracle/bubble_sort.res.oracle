@@ -54,7 +54,9 @@
                           while (1) {
                             int old_variant_10 = (n - i);
                             {
-                              if (! (i < n)) break;
+                              if (! (i < n)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:8");
+                                             break; }
+                                             
                               j = 0;
                               {
                                 if (((((n - i) - 1) - j)) < 0)pathcrawler_assert_exception("Variant non positive",7);int __stady_pred_3 = 1;
@@ -69,10 +71,14 @@
                                 while (1) {
                                   int old_variant_7 = (((n - i) - 1) - j);
                                   {
-                                    if (! (j < (n - i) - 1)) break;
+                                    if (! (j < (n - i) - 1)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:14");
+                                                             break; }
+                                                             
                                     if (*(A + j) > *(A + (j + 1))) {
                                       int x;
-                                      x = *(A + j);
+                                      { pathcrawler_to_framac("@FC:REACHABLE_STMT:19");
+                                      x = *(A + j); }
+                                      
                                       *(A + j) = *(A + (j + 1));
                                       *(A + (j + 1)) = x;
                                     }
@@ -112,11 +118,11 @@
                       }
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:13:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:87:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:94:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
-stady_temp.c:13:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:87:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:94:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_bubble_sort utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_bubble_sort ...

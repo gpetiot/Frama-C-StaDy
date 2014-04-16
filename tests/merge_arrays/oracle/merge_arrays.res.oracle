@@ -29,7 +29,7 @@
 [stady:generated-pl] create_input_vals('pathcrawler__merge_arrays_precond',Ins) :- create_input_vals('merge_arrays',Ins).
 [stady:generated-pl] quantif_preconds('merge_arrays',[]).
 [stady:generated-pl] quantif_preconds('pathcrawler__merge_arrays_precond',A) :- quantif_preconds('merge_arrays',A).
-[stady:generated-pl] unquantif_preconds('merge_arrays',[cond(egal,dim('t3'),+(int(math), -(int(math), +(int(math), 'l1', 'l2'), 1), 1),pre), cond(egal,dim('t2'),+(int(math), -(int(math), 'l2', 1), 1),pre), cond(egal,dim('t1'),+(int(math), -(int(math), 'l1', 1), 1),pre), cond(infegal,'l2',3,pre), cond(infegal,0,'l2',pre), cond(infegal,'l1',3,pre), cond(infegal,0,'l1',pre)]).
+[stady:generated-pl] unquantif_preconds('merge_arrays',[cond(egal,dim('t3'),+(int(math), -(int(math), +(int(math), 'l1', 'l2'), 1), 1),pre), cond(egal,dim('t2'),+(int(math), -(int(math), 'l2', 1), 1),pre), cond(egal,dim('t1'),+(int(math), -(int(math), 'l1', 1), 1),pre), cond(infegal,0,'l2',pre), cond(infegal,0,'l1',pre), cond(infegal,'l1',3,pre), cond(infegal,'l2',3,pre)]).
 [stady:generated-pl] unquantif_preconds('pathcrawler__merge_arrays_precond',A) :- unquantif_preconds('merge_arrays',A).
 [stady:generated-pl] strategy('merge_arrays',[]).
 [stady:generated-pl] strategy('pathcrawler__merge_arrays_precond',A) :- strategy('merge_arrays',A).
@@ -98,15 +98,25 @@
                             int old_variant_12 = ((l1 + l2) - k);
                             {
                               if (i < l1) {
-                                if (! (j < l2)) break;
+                                { pathcrawler_to_framac("@FC:REACHABLE_STMT:8");
+                                if (! (j < l2)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:9");
+                                                break; }
+                                                 }
+                                
                               }
-                              else break;
+                              else { pathcrawler_to_framac("@FC:REACHABLE_STMT:10");
+                                   break; }
+                                   
                               if (*(t1 + i) < *(t2 + j)) {
-                                *(t3 + k) = *(t1 + i);
+                                { pathcrawler_to_framac("@FC:REACHABLE_STMT:14");
+                                *(t3 + k) = *(t1 + i); }
+                                
                                 i ++;
                               }
                               else {
-                                *(t3 + k) = *(t2 + j);
+                                { pathcrawler_to_framac("@FC:REACHABLE_STMT:16");
+                                *(t3 + k) = *(t2 + j); }
+                                
                                 j ++;
                               }
                               k ++;
@@ -126,7 +136,9 @@
                           while (1) {
                             int old_variant_19 = (l1 - i);
                             {
-                              if (! (i < l1)) break;
+                              if (! (i < l1)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:22");
+                                              break; }
+                                              
                               *(t3 + k) = *(t1 + i);
                               i ++;
                               k ++;
@@ -145,7 +157,9 @@
                           while (1) {
                             int old_variant_2 = (l2 - j);
                             {
-                              if (! (j < l2)) break;
+                              if (! (j < l2)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:30");
+                                              break; }
+                                              
                               *(t3 + k) = *(t2 + j);
                               j ++;
                               k ++;
@@ -174,11 +188,11 @@
                       }
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:29:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:136:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:30:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:151:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
-stady_temp.c:29:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:136:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:30:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:151:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_arrays utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_arrays ...
@@ -194,40 +208,73 @@ stady_temp.c:136:[kernel] warning: Calling undeclared function free. Old style K
 --- Properties of Function 'merge_arrays'
 --------------------------------------------------------------------------------
 
-[  Valid  ] Post-condition (file tests/merge_arrays/merge_arrays.c, line 13)
-            by StaDy.
-[  Valid  ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 24)
-            by StaDy.
-[  Valid  ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 40)
-            by StaDy.
-[  Valid  ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 50)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 18)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 19)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 20)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 21)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 35)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 36)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 37)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 45)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 46)
-            by StaDy.
-[  Valid  ] Invariant (file tests/merge_arrays/merge_arrays.c, line 47)
-            by StaDy.
-[  Valid  ] Default behavior
-            by Frama-C kernel.
+[ Partial ] Post-condition (file tests/merge_arrays/merge_arrays.c, line 15)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[    -    ] Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+[    -    ] Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 26)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 42)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 52)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 20)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 21)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 22)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 23)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 37)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 38)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 39)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 47)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 48)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 49)
+            By StaDy, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+[ Partial ] Default behavior
+            By Frama-C kernel, with pending:
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
 
 --------------------------------------------------------------------------------
 --- Status Report Summary
 --------------------------------------------------------------------------------
-    15 Completely validated
-    15 Total
+    15 Locally validated
+     2 To be validated
+    17 Total
 --------------------------------------------------------------------------------

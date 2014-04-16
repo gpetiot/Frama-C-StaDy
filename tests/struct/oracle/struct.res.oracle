@@ -61,11 +61,15 @@
                       {
                         int __retres;
                         if (s->i) {
-                          __retres = 1;
+                          { pathcrawler_to_framac("@FC:REACHABLE_STMT:3");
+                          __retres = 1; }
+                          
                           goto return_label;
                         }
                         else {
-                          __retres = -1;
+                          { pathcrawler_to_framac("@FC:REACHABLE_STMT:4");
+                          __retres = -1; }
+                          
                           goto return_label;
                         }
                         return_label: free(old_ptr_s);
@@ -74,11 +78,11 @@
                       }
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:17:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:40:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:18:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:45:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
-stady_temp.c:17:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:40:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:18:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:45:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_f utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_f ...

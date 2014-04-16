@@ -72,8 +72,12 @@
                           while (1) {
                             int old_variant_4 = k;
                             {
-                              if (! (k >= 0)) break;
-                              if (*(s + k) == 0) break;
+                              if (! (k >= 0)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:5");
+                                              break; }
+                                              
+                              if (*(s + k) == 0) { pathcrawler_to_framac("@FC:REACHABLE_STMT:9");
+                                                 break; }
+                                                 
                               k --;
                             }if(!(((- 1) <= k) && (k <= (n - 1))))pathcrawler_assert_exception("Loop invariant not preserved!", 6);
                             if ((old_variant_4) < 0)pathcrawler_assert_exception("Variant non positive",4);
@@ -81,7 +85,9 @@
                              }
                            
                         if (k == -1) {
-                          __retres = -1;
+                          { pathcrawler_to_framac("@FC:REACHABLE_STMT:14");
+                          __retres = -1; }
+                          
                           goto return_label;
                         }
                         *(s + k) = 1;
@@ -99,7 +105,9 @@
                           while (1) {
                             int old_variant_12 = (n - i);
                             {
-                              if (! (i < n)) break;
+                              if (! (i < n)) { pathcrawler_to_framac("@FC:REACHABLE_STMT:21");
+                                             break; }
+                                             
                               *(s + i) = 0;
                               i ++;
                             }if(!(((k + 1) <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not preserved!", 1);
@@ -163,11 +171,11 @@
                       }
                     }
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:32:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:135:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:33:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:144:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
-stady_temp.c:32:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:135:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:33:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:144:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_nextSubset utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_nextSubset ...
