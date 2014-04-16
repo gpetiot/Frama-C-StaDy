@@ -569,43 +569,33 @@ int entry_point(int two_of_three_reports_valid, int own_tracked_alt,
     tmp = alt_sep_test();
     {
       if ((up_separation >= (Positive_RA_Alt_Thresh)[alt_layer_value]) && (down_separation < (Positive_RA_Alt_Thresh)[alt_layer_value]) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:0");
         if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 2);
         }
       if ((up_separation < (Positive_RA_Alt_Thresh)[alt_layer_value]) && (down_separation >= (Positive_RA_Alt_Thresh)[alt_layer_value]) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:1");
         if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 41);
         }
       if ((up_separation < (Positive_RA_Alt_Thresh)[alt_layer_value]) && (down_separation < (Positive_RA_Alt_Thresh)[alt_layer_value]) && (up_separation > down_separation) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:2");
         if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 34);
         }
       if ((up_separation < (Positive_RA_Alt_Thresh)[alt_layer_value]) && (down_separation < (Positive_RA_Alt_Thresh)[alt_layer_value]) && (up_separation < down_separation) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:3");
         if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 39);
         }
       if ((up_separation >= (Positive_RA_Alt_Thresh)[alt_layer_value]) && (down_separation >= (Positive_RA_Alt_Thresh)[alt_layer_value]) && (own_tracked_alt > other_tracked_alt) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:4");
         if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 44);
         }
       if ((up_separation >= (Positive_RA_Alt_Thresh)[alt_layer_value]) && (down_separation >= (Positive_RA_Alt_Thresh)[alt_layer_value]) && (own_tracked_alt < other_tracked_alt) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:5");
         if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 3);
         }
       if ((own_tracked_alt > other_tracked_alt) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:6");
         if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 11);
         }
       if ((own_tracked_alt < other_tracked_alt) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:7");
         if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 35);
         }
       if ((up_separation > down_separation) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:8");
         if(!(tmp != 2))pathcrawler_assert_exception("Post-condition!", 16);
         }
       if ((up_separation < down_separation) && 1) {
-        pathcrawler_to_framac("@FC:REACHABLE_BHV:9");
         if(!(tmp != 1))pathcrawler_assert_exception("Post-condition!", 40);
         }
       

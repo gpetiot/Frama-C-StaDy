@@ -19,7 +19,7 @@ let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
 let print_strtbl_vartbl_terms hashtbl dkey =
-  let on_term t = Sd_options.Self.debug ~dkey "    %a "Printer.pp_term t in
+  let on_term t = Sd_options.Self.debug ~dkey "    %a " Printer.pp_term t in
   let on_varinfo_tbl v ts =
     Sd_options.Self.debug ~dkey "  var '%s'" v.vname;
     List.iter on_term ts
@@ -344,13 +344,13 @@ let compute_props props terms_at_Pre =
 	Sd_options.Self.feedback "stmt %i unreachable" sid;
 	Annotations.add_assert ~kf emitter stmt Logic_const.pfalse
       );
-      Sd_states.Behavior_Reachability.iter (fun bhv_id (kf,bhv,is_reachable) ->
-	Sd_options.Self.feedback "behavior '%s' (id: %i) of function '%s' %s"
-	  bhv.b_name
-	  bhv_id
-	  (Kernel_function.get_name kf)
-	  (if is_reachable then "reachable" else "not reachable")
-      )
+      if Sd_options.Behavior_Reachability.get() then
+	Sd_states.Behavior_Reachability.iter (fun _ (kf,bhv,is_reachable) ->
+	  Sd_options.Self.feedback "behavior '%s' of function '%s' %s"
+	    bhv.b_name
+	    (Kernel_function.get_name kf)
+	    (if is_reachable then "reachable" else "not reachable")
+	)
     end
 
 
@@ -492,7 +492,8 @@ let run() =
       Datatype.String.Hashtbl.clear lengths;
       Sd_states.Id_To_Property.clear();
       Sd_states.Property_To_Id.clear();
-      Sd_states.Not_Translated_Predicates.clear()
+      Sd_states.Not_Translated_Predicates.clear();
+      Sd_states.Behavior_Reachability.clear()
     end
 
 

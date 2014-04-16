@@ -342,7 +342,8 @@ class sd_printer props terms_at_Pre () = object(self)
     (* END precond (not entry-point) *)
     (* BEGIN postcond *)
     postcond <-
-      if self#at_least_one_prop kf behaviors then
+      if (self#at_least_one_prop kf behaviors)
+	|| (Sd_options.Behavior_Reachability.get()) then
 	fun fmt ->
 	  Format.fprintf fmt "@[<h 2>{@\n";
 	  List.iter (fun b ->
@@ -355,12 +356,12 @@ class sd_printer props terms_at_Pre () = object(self)
 	      self#pc_assert_exception
 		fmt pred.ip_content pred.ip_loc "Post-condition!" id prop
 	    in
-	    (*if post <> [] then*)
-	      (* disabled for the info on behavior reachability *)
+	    if post <> [] || (Sd_options.Behavior_Reachability.get()) then
 	      begin
 		self#bhv_assumes_begin fmt b loc;
 
-		if not (Cil.is_default_behavior b) then
+		if not (Cil.is_default_behavior b)
+		  && (Sd_options.Behavior_Reachability.get()) then
 		  begin
 		    Format.fprintf fmt
 		      "pathcrawler_to_framac(\"@@FC:REACHABLE_BHV:%i\");@\n"

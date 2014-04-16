@@ -59,6 +59,11 @@ module Properties = Self.StringList (struct
   let help = ""
 end)
 
+module Behavior_Reachability = Self.False (struct
+  let option_name = "-stady-bhv-reach"
+  let help = "compute reachability of each function's behavior"
+end)
+
 
 (* Debug Keys *)
 
