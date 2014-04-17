@@ -18,6 +18,10 @@ class sd_printer props terms_at_Pre () = object(self)
   val mutable in_old_term = false
   val mutable in_old_ptr = false
   val mutable first_global = true
+  val mutable bhv_to_reach_cpt = 0
+
+  (* list of (stmtkind * stmt) used for testing reachibility of some stmts *)
+  val mutable stmts_to_reach = []
 
   (* we can only modify the property_status of the properties that have really
      been translated into pathcrawler_assert_exception *)
@@ -338,7 +342,8 @@ class sd_printer props terms_at_Pre () = object(self)
     (* END precond (not entry-point) *)
     (* BEGIN postcond *)
     postcond <-
-      if self#at_least_one_prop kf behaviors then
+      if (self#at_least_one_prop kf behaviors)
+	|| (Sd_options.Behavior_Reachability.get()) then
 	fun fmt ->
 	  Format.fprintf fmt "@[<h 2>{@\n";
 	  List.iter (fun b ->
@@ -351,9 +356,22 @@ class sd_printer props terms_at_Pre () = object(self)
 	      self#pc_assert_exception
 		fmt pred.ip_content pred.ip_loc "Post-condition!" id prop
 	    in
-	    if post <> [] then
+	    if post <> [] || (Sd_options.Behavior_Reachability.get()) then
 	      begin
 		self#bhv_assumes_begin fmt b loc;
+
+		if not (Cil.is_default_behavior b)
+		  && (Sd_options.Behavior_Reachability.get()) then
+		  begin
+		    Format.fprintf fmt
+		      "pathcrawler_to_framac(\"@@FC:REACHABLE_BHV:%i\");@\n"
+		      bhv_to_reach_cpt;
+		    Sd_states.Behavior_Reachability.replace
+		      bhv_to_reach_cpt
+		      (kf, b, false);
+		    bhv_to_reach_cpt <- bhv_to_reach_cpt+1
+		  end;
+
 		List.iter do_postcond post;
 		self#bhv_assumes_end fmt b
 	      end
@@ -643,12 +661,51 @@ class sd_printer props terms_at_Pre () = object(self)
     Format.pp_close_box fmt ()
   (* end of annotated_stmt *)
 
+  method! stmtkind (next: stmt) fmt s =
+    let cur_stmt = Extlib.the self#current_stmt in
+    let has_added_reachable_stmt =
+      if List.mem cur_stmt.sid stmts_to_reach then
+	(Format.fprintf fmt
+	   "{ pathcrawler_to_framac(\"@@FC:REACHABLE_STMT:%i\");@\n"
+	   cur_stmt.sid;
+	 true)
+      else false
+    in
+    let kf = Kernel_function.find_englobing_kf cur_stmt in
+    begin
+      match s with
+      | If(_exp,b1,b2,_loc) ->
+	begin
+      	  match b1.bstmts with
+      	  | first_stmt :: _ ->
+      	    Sd_options.Self.debug ~dkey:Sd_options.dkey_reach
+	      "stmt %i to reach" first_stmt.sid;
+	    Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
+      	    stmts_to_reach <- first_stmt.sid :: stmts_to_reach
+      	  | _ -> ()
+	end;
+	begin
+      	  match b2.bstmts with
+      	  | first_stmt :: _ ->
+	    Sd_options.Self.debug ~dkey:Sd_options.dkey_reach
+	      "stmt %i to reach" first_stmt.sid;
+	    Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
+      	    stmts_to_reach <- first_stmt.sid :: stmts_to_reach
+      	  | _ -> ()
+	end;
+	super#stmtkind next fmt s
+      | _ -> super#stmtkind next fmt s
+    end;
+    if has_added_reachable_stmt then
+      Format.fprintf fmt " }@\n"
+
   method! global fmt g =
     if first_global then
       begin
 	Format.fprintf fmt
 	  "extern int pathcrawler_assert_exception(char*,int);@\n";
 	Format.fprintf fmt "extern int pathcrawler_dimension(void*);@\n";
+	Format.fprintf fmt "extern void pathcrawler_to_framac(char*);@\n";
 	first_global <- false
       end;
     match g with

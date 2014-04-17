@@ -59,6 +59,11 @@ module Properties = Self.StringList (struct
   let help = ""
 end)
 
+module Behavior_Reachability = Self.False (struct
+  let option_name = "-stady-bhv-reach"
+  let help = "compute reachability of each function's behavior"
+end)
+
 
 (* Debug Keys *)
 
@@ -69,3 +74,4 @@ let dkey_lengths = Self.register_category "lengths"
 let dkey_at = Self.register_category "at"
 let dkey_generated_c = Self.register_category "generated-c"
 let dkey_properties = Self.register_category "properties"
+let dkey_reach = Self.register_category "reach"
