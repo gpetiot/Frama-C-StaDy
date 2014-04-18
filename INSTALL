@@ -1,0 +1,116 @@
+--------------------------------------------------------------------------------
+                          INSTALLATION INSTRUCTIONS
+--------------------------------------------------------------------------------
+
+Successfully installing Frama-C and PathCrawler is a prerequisite to StaDy.
+KLEE is not required, although StaDy may be able to interact with it in the
+future.
+
+
+
+================================================================================
+                                FRAMA-C
+================================================================================
+
+$ git clone git@git.frama-c.com:frama-c/frama-c.git
+$ cd frama-c
+$ ./configure
+$ make
+$ sudo make install
+$ cd ..
+
+
+================================================================================
+                            PATHCRAWLER (closed source)
+================================================================================
+
+$ git clone git@git.frama-c.com:pathcrawler/pathcrawler.git
+$ cd pathcrawler
+$ autoconf
+$ ./configure
+$ make
+$ sudo make install
+$ cd ..
+
+
+================================================================================
+                   KLEE (out-of-date but self-contained package)
+================================================================================
+
+$ sudo apt-get install cde
+
+Download the self-contained package:
+   http://keeda.stanford.edu/~pgbovine/klee-cde-package.v2.tar.bz2 (dead?)
+
+$ export PATH=".../klee-cde-package/bin":$PATH
+$ export C_INCLUDE_PATH=".../klee-cde-package/cde-root/home/pgbovine/klee/include":$C_INCLUDE_PATH
+$ export CPLUS_INCLUDE_PATH=".../klee-cde-package/cde-root/home/pgbovine/klee/include":$CPLUS_INCLUDE_PATH
+
+Edit the klee-cde-package/bin/* scripts to run:
+   cde-exec
+intead of:
+   $DN/../cde-exec       #  because that is for 32 bits
+
+
+
+================================================================================
+                                STADY
+================================================================================
+
+$ git clone git@git.frama-c.com:gpetiot/pcva.git
+$ cd pcva
+$ make
+$ sudo make install
+$ cd ..
+
+
+
+
+
+
+
+
+
+
+I tried to install an up-to-date version of KLEE/LLVM/STP but I failed.
+ignore this:
+================================================================================
+                           KLEE (up-to-date version)
+================================================================================
+
+Prerequisites:
+$ sudo apt-get install g++ curl python-minimal git bison flex bc libcap-dev gcc-4.8-plugin-dev
+
+STP:
+$ svn co -r 1180 https://stp-fast-prover.svn.sourceforge.net/svnroot/stp-fast-prover/trunk/stp
+$ cd stp
+$ ./scripts/configure --with-fpic
+$ make OPTIMIZE=-O2         #CFLAGS_M32=install        not necessary ?
+$ sudo make install
+$ ulimit -s unlimited       #run before using STP (and thus KLEE)
+$ cd ..
+
+LLVM:
+$ sudo apt-get remove llvm llvm-gcc
+$ git clone http://llvm.org/git/llvm.git
+$ cd llvm
+$ ./configure --enable-optimized --enable-assertions
+$ make
+$ sudo make install
+$ cd ..
+
+DRAGONEGG:
+$ git clone https://github.com/chapuni/dragonegg.git
+$ cd dragonegg
+$ make
+Add llvm-gcc as an alias to 'gcc -fplugin=./dragonegg.so'
+$ cd ..
+
+
+KLEE:
+$ git clone https://github.com/klee/klee.git
+$ cd klee
+...
+! PROBLEM HERE !
+...
+$ cd ..
