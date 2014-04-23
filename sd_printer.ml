@@ -7,7 +7,103 @@ let debug_builtins = Kernel.register_category "printer:builtins"
 let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
 
-class sd_printer props terms_at_Pre () = object(self)
+
+(* Extracts the varinfo of the variable and its inferred size as a term
+   from a term t as \valid(t). *)
+let rec extract_from_valid : term -> varinfo * term =
+  fun t -> match t.term_node with
+  | TBinOp((PlusPI|IndexPI),
+	   ({term_node=TLval(TVar v, _)}),
+	   ({term_node=Trange(_,Some bound)})) ->
+    let varinfo = Extlib.the v.lv_origin in
+    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
+    let einfo = {exp_type=bound.term_type; exp_name=[]} in
+    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
+    varinfo, term
+  | TBinOp((PlusPI|IndexPI),
+	   ({term_node=TLval(TVar v, _)}),
+	   (t2 (* anything but a Trange *))) ->
+    let varinfo = Extlib.the v.lv_origin in
+    let tnode = TBinOp (PlusA, t2, Cil.lone ~loc:t.term_loc()) in
+    let einfo = {exp_type=t2.term_type; exp_name=[]} in
+    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
+    varinfo, term
+  | TBinOp((PlusPI|IndexPI),
+	   ({term_node=TLval tlval}),
+	   ({term_node=Trange(_,Some bound)})) ->
+    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
+    let einfo = {exp_type=bound.term_type; exp_name=[]} in
+    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
+    let varinfo, _ = extract_from_valid {t with term_node=TLval tlval} in
+    varinfo, term
+  | TLval (TVar v, TNoOffset) ->
+    let varinfo = Extlib.the v.lv_origin in
+    let term = Cil.lone ~loc:t.term_loc () in
+    varinfo, term
+  | TLval (TVar _, TField _) -> assert false
+  | TLval (TVar _, TModel _) -> assert false
+  | TLval (TVar _, TIndex _) -> assert false
+  | TLval (TMem m, TNoOffset) ->
+    let varinfo, _ = extract_from_valid m in
+    let term = Cil.lone ~loc:t.term_loc () in
+    varinfo, term
+  | TLval (TMem _, TField _) -> assert false
+  | TLval (TMem _, TModel _) -> assert false
+  | TLval (TMem _, TIndex _) -> assert false
+  | TStartOf _ -> Sd_options.Self.abort "TStartOf \\valid(%a)" Printer.pp_term t
+  | TAddrOf _ -> Sd_options.Self.abort "TAddrOf \\valid(%a)" Printer.pp_term t
+  | TCoerce _ -> Sd_options.Self.abort "TCoerce \\valid(%a)" Printer.pp_term t
+  | TCoerceE _ -> Sd_options.Self.abort "TCoerceE \\valid(%a)" Printer.pp_term t
+  | TLogic_coerce _ ->
+    Sd_options.Self.abort "TLogic_coerce \\valid(%a)" Printer.pp_term t
+  | TBinOp _ -> Sd_options.Self.abort "TBinOp \\valid(%a)" Printer.pp_term t
+  | _ -> Sd_options.Self.abort "\\valid(%a)" Printer.pp_term t
+
+
+(* Computes and returns a hashtable such that :
+   -  var1 => inferred size for var1
+   -  var2 => inferred size for var2
+   -  ...
+   - var n => inferred size for varn *)
+let lengths_from_requires :
+    kernel_function -> term list Cil_datatype.Varinfo.Hashtbl.t =
+  fun kf ->
+    let vi = Kernel_function.get_vi kf in
+    let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
+    let o = object
+      inherit Visitor.frama_c_inplace
+      method! vpredicate p =
+	match p with
+	| Pvalid(_, t) | Pvalid_read(_, t) ->
+	  begin
+	    try
+	      let v, term = extract_from_valid t in
+	      let terms =
+		try Cil_datatype.Varinfo.Hashtbl.find kf_tbl v
+		with Not_found -> []
+	      in
+	      let terms = Sd_utils.append_end terms term in
+	      Cil_datatype.Varinfo.Hashtbl.replace kf_tbl v terms;
+	      Cil.DoChildren
+	    with
+	    | _ -> Cil.DoChildren
+	  end
+	| _ -> Cil.DoChildren
+    end
+    in
+    let on_requires p =
+      let p' = (new Sd_subst.subst)#subst_pred p.ip_content [][][][] in
+      ignore (Visitor.visitFramacPredicate o p')
+    in
+    let on_bhv _ bhv = List.iter on_requires bhv.b_requires in
+    if not (Cil.is_unused_builtin vi) then
+      (* TODO: handle arrays with constant size *)
+      (*Globals.Vars.iter (fun vi _ -> () );*)
+      Annotations.iter_behaviors on_bhv kf;
+    kf_tbl
+
+
+class sd_printer props () = object(self)
   inherit Printer.extensible_printer () as super
 
   val mutable pred_cpt = 0
@@ -19,6 +115,7 @@ class sd_printer props terms_at_Pre () = object(self)
   val mutable in_old_ptr = false
   val mutable first_global = true
   val mutable bhv_to_reach_cpt = 0
+  val mutable visited_globals = []
 
   (* list of (stmtkind * stmt) used for testing reachibility of some stmts *)
   val mutable stmts_to_reach = []
@@ -386,51 +483,62 @@ class sd_printer props terms_at_Pre () = object(self)
     in
     let dig_type x = dig_type (Cil.unrollTypeDeep x) in
     begin
-      try
-	let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
-	let iter_counter = ref 0 in
-	Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v terms ->
-	  Format.fprintf fmt "%a = %s;@\n"
-	    (self#typ(Some(fun fmt -> Format.fprintf fmt "old_%s" v.vname)))
-	    (array_to_ptr v.vtype)
-	    v.vname;
-	  let rec alloc_aux indices ty = function
-	    | h :: t ->
-	      let all_indices = List.fold_left concat_indice "" indices in
-	      let ty = dig_type ty in
-	      let h' = self#term_and_var fmt h in
-	      Format.fprintf fmt "old_ptr_%s%s = malloc((%s)*sizeof(%a));@\n"
-		v.vname all_indices h' (self#typ None) ty;
-	      let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
-	      Format.fprintf fmt "int %s;@\n" iterator;
-	      let h' = self#term_and_var fmt h in
-	      Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
-		iterator iterator h' iterator;
-	      iter_counter := !iter_counter + 1;
-	      alloc_aux (Sd_utils.append_end indices iterator) ty t;
-	      Format.fprintf fmt "}@\n"
-	    | [] ->
-	      let all_indices = List.fold_left concat_indice "" indices in
-	      Format.fprintf fmt "old_ptr_%s%s = %s%s;@\n"
-		v.vname all_indices v.vname all_indices
-	  in
-	  if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
-	    begin
-	      Format.fprintf fmt "%a;@\n"
-		(self#typ(Some(fun fmt -> Format.fprintf fmt "old_ptr_%s"
-		  v.vname)))
-		(array_to_ptr v.vtype);
-	      alloc_aux [] v.vtype terms
-	    end
-	) tbl
-      with Not_found -> ()
+      let iter_counter = ref 0 in
+      let lengths = lengths_from_requires kf in
+
+      let do_varinfo v =
+	let terms =
+	  try Cil_datatype.Varinfo.Hashtbl.find lengths v
+	  with Not_found -> []
+	in
+	Format.fprintf fmt "%a = %s;@\n"
+	  (self#typ(Some(fun fmt -> Format.fprintf fmt "old_%s" v.vname)))
+	  (array_to_ptr v.vtype)
+	  v.vname;
+	let rec alloc_aux indices ty = function
+	  | h :: t ->
+	    let all_indices = List.fold_left concat_indice "" indices in
+	    let ty = dig_type ty in
+	    let h' = self#term_and_var fmt h in
+	    Format.fprintf fmt "old_ptr_%s%s = malloc((%s)*sizeof(%a));@\n"
+	      v.vname all_indices h' (self#typ None) ty;
+	    let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
+	    Format.fprintf fmt "int %s;@\n" iterator;
+	    let h' = self#term_and_var fmt h in
+	    Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
+	      iterator iterator h' iterator;
+	    iter_counter := !iter_counter + 1;
+	    alloc_aux (Sd_utils.append_end indices iterator) ty t;
+	    Format.fprintf fmt "}@\n"
+	  | [] ->
+	    let all_indices = List.fold_left concat_indice "" indices in
+	    Format.fprintf fmt "old_ptr_%s%s = %s%s;@\n"
+	      v.vname all_indices v.vname all_indices
+	in
+	if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
+	  begin
+	    Format.fprintf fmt "%a;@\n"
+	      (self#typ(Some(fun fmt -> Format.fprintf fmt "old_ptr_%s"
+		v.vname)))
+	      (array_to_ptr v.vtype);
+	    alloc_aux [] v.vtype terms
+	  end
+      in
+
+      List.iter do_varinfo visited_globals;
+      List.iter do_varinfo (Kernel_function.get_formals kf)
     end;
     dealloc <- (* dealloc variables for \at terms *)
       (try
 	 fun fmt ->
-	   let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
 	   let iter_counter = ref 0 in
-	   Cil_datatype.Varinfo.Hashtbl.iter_sorted (fun v terms ->
+	   let lengths = lengths_from_requires kf in
+
+	   let do_varinfo v =
+	     let terms =
+	       try Cil_datatype.Varinfo.Hashtbl.find lengths v
+	       with Not_found -> []
+	     in
 	     let rec dealloc_aux indices = function
 	       | [] -> ()
 	       | _ :: [] ->
@@ -450,7 +558,10 @@ class sd_printer props terms_at_Pre () = object(self)
 		 Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
 	     in
 	     dealloc_aux [] terms
-	   ) tbl
+	   in
+
+	   List.iter do_varinfo visited_globals;
+	   List.iter do_varinfo (Kernel_function.get_formals kf)
        with Not_found -> ignore);
     self#block ~braces:true fmt f.sbody;
     postcond fmt;
@@ -735,6 +846,9 @@ class sd_printer props terms_at_Pre () = object(self)
 	  Format.fprintf fmt "%a@\n@\n" self#vdecl_complete vi;
 	  if Cil.isFunctionType vi.vtype then self#out_current_function
 	end
+    | GVar (vi, _, _) ->
+      visited_globals <- vi :: visited_globals;
+      super#global fmt g
     | _ -> super#global fmt g
   (* end of global *)
 

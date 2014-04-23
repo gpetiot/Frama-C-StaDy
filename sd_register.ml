@@ -18,170 +18,9 @@ let typically_typer ~typing_context ~loc bhv ps =
 let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
-let print_strtbl_vartbl_terms hashtbl dkey =
-  let on_term t = Sd_options.Self.debug ~dkey "    %a " Printer.pp_term t in
-  let on_varinfo_tbl v ts =
-    Sd_options.Self.debug ~dkey "  var '%s'" v.vname;
-    List.iter on_term ts
-  in
-  let on_string_tbl f tbl =
-    Sd_options.Self.debug ~dkey "function '%s'" f;
-    Cil_datatype.Varinfo.Hashtbl.iter_sorted on_varinfo_tbl tbl;
-  in
-  Datatype.String.Hashtbl.iter_sorted on_string_tbl hashtbl
-
-
-(* Extracts the varinfo of the variable and its inferred size as a term
-   from a term t as \valid(t). *)
-let rec extract_from_valid : term -> varinfo * term =
-  fun t -> match t.term_node with
-  | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)}),
-	   ({term_node=Trange(_,Some bound)})) ->
-    let varinfo = Extlib.the v.lv_origin in
-    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
-    let einfo = {exp_type=bound.term_type; exp_name=[]} in
-    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
-    varinfo, term
-  | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)}),
-	   (t2 (* anything but a Trange *))) ->
-    let varinfo = Extlib.the v.lv_origin in
-    let tnode = TBinOp (PlusA, t2, Cil.lone ~loc:t.term_loc()) in
-    let einfo = {exp_type=t2.term_type; exp_name=[]} in
-    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
-    varinfo, term
-  | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval tlval}),
-	   ({term_node=Trange(_,Some bound)})) ->
-    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
-    let einfo = {exp_type=bound.term_type; exp_name=[]} in
-    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
-    let varinfo, _ = extract_from_valid {t with term_node=TLval tlval} in
-    varinfo, term
-  | TLval (TVar v, TNoOffset) ->
-    let varinfo = Extlib.the v.lv_origin in
-    let term = Cil.lone ~loc:t.term_loc () in
-    varinfo, term
-  | TLval (TVar _, TField _) -> assert false
-  | TLval (TVar _, TModel _) -> assert false
-  | TLval (TVar _, TIndex _) -> assert false
-  | TLval (TMem m, TNoOffset) ->
-    let varinfo, _ = extract_from_valid m in
-    let term = Cil.lone ~loc:t.term_loc () in
-    varinfo, term
-  | TLval (TMem _, TField _) -> assert false
-  | TLval (TMem _, TModel _) -> assert false
-  | TLval (TMem _, TIndex _) -> assert false
-  | TStartOf _ -> Sd_options.Self.abort "TStartOf \\valid(%a)" Printer.pp_term t
-  | TAddrOf _ -> Sd_options.Self.abort "TAddrOf \\valid(%a)" Printer.pp_term t
-  | TCoerce _ -> Sd_options.Self.abort "TCoerce \\valid(%a)" Printer.pp_term t
-  | TCoerceE _ -> Sd_options.Self.abort "TCoerceE \\valid(%a)" Printer.pp_term t
-  | TLogic_coerce _ ->
-    Sd_options.Self.abort "TLogic_coerce \\valid(%a)" Printer.pp_term t
-  | TBinOp _ -> Sd_options.Self.abort "TBinOp \\valid(%a)" Printer.pp_term t
-  | _ -> Sd_options.Self.abort "\\valid(%a)" Printer.pp_term t
-
-
-
-(* Computes and returns a hashtable such that :
-   function_name1 =>
-   -  var1 => inferred size for var1
-   -  var2 => inferred size for var2
-   function_name2 =>
-   -  ...
-*)
-let lengths_from_requires :
-    unit
-    -> term list Cil_datatype.Varinfo.Hashtbl.t Datatype.String.Hashtbl.t =
-  fun () ->
-    let lengths = Datatype.String.Hashtbl.create 32 in
-    Globals.Functions.iter (fun kf ->
-      let vi = Kernel_function.get_vi kf in
-      if not (Cil.is_unused_builtin vi) then
-	begin
-	  let kf_name = Kernel_function.get_name kf in
-	  let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
-	  let o = object
-	    inherit Visitor.frama_c_inplace
-	    method! vpredicate p =
-	      match p with
-	      | Pvalid(_, t) | Pvalid_read(_, t) ->
-		begin
-		  try
-		    let v, term = extract_from_valid t in
-		    let terms =
-		      try Cil_datatype.Varinfo.Hashtbl.find kf_tbl v
-		      with Not_found -> []
-		    in
-		    let terms = Sd_utils.append_end terms term in
-		    Cil_datatype.Varinfo.Hashtbl.replace kf_tbl v terms;
-		    Cil.DoChildren
-		  with
-		  | _ -> Cil.DoChildren
-		end
-	      | _ -> Cil.DoChildren
-	  end
-	  in
-	  let on_requires p =
-	    let p' = (new Sd_subst.subst)#subst_pred p.ip_content [][][][] in
-	    ignore (Visitor.visitFramacPredicate o p')
-	  in
-	  let on_bhv _ bhv = List.iter on_requires bhv.b_requires in
-	  Annotations.iter_behaviors on_bhv kf;
-	  (* TODO: handle arrays with constant size *)
-	  (*Globals.Vars.iter (fun vi _ -> () );*)
-	  Datatype.String.Hashtbl.add lengths kf_name kf_tbl
-	end
-    );
-    print_strtbl_vartbl_terms lengths Sd_options.dkey_lengths;
-    lengths
-
-
-
-
-
-(* Computes and returns a hashtable such that :
-   function_name1 =>
-   -  formal var1 => size of var1 saved
-   -  formal var2 => size of var2 saved
-   function_name2 =>
-   -  ...
-*)
-let at_from_formals :
-    term list Cil_datatype.Varinfo.Hashtbl.t Datatype.String.Hashtbl.t
-    -> term list Cil_datatype.Varinfo.Hashtbl.t Datatype.String.Hashtbl.t =
-  fun lengths ->
-    let terms_at_Pre = Datatype.String.Hashtbl.create 32 in
-    let on_kf kf =
-      let vi = Kernel_function.get_vi kf in
-      if not (Cil.is_unused_builtin vi) then
-	let kf_name = Kernel_function.get_name kf in
-	let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
-	let lengths_tbl = Datatype.String.Hashtbl.find lengths kf_name in
-	let formals = Kernel_function.get_formals kf in
-	let add v = 
-	  let terms =
-	    try Cil_datatype.Varinfo.Hashtbl.find lengths_tbl v
-	    with Not_found -> []
-	  in
-	  Cil_datatype.Varinfo.Hashtbl.add kf_tbl v terms
-	in
-	List.iter add formals;
-	Globals.Vars.iter (fun v _ -> add v);
-	Datatype.String.Hashtbl.add terms_at_Pre kf_name kf_tbl
-    in
-    Globals.Functions.iter on_kf;
-    print_strtbl_vartbl_terms terms_at_Pre Sd_options.dkey_at;
-    terms_at_Pre
-
-
-
-
-
-let second_pass filename props terms_at_Pre =
+let second_pass filename props =
   Kernel.Unicode.set false;
-  let printer = new Sd_printer.sd_printer props terms_at_Pre () in
+  let printer = new Sd_printer.sd_printer props () in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
@@ -200,26 +39,12 @@ let second_pass filename props terms_at_Pre =
   printer#translated_properties()
 
 
-
-
-
 let emitter =
   Emitter.create "StaDy" [Emitter.Property_status; Emitter.Funspec]
     ~correctness:[] ~tuning:[]
 
 
-
-
-
-
-
-
-
-
-
-
-
-let compute_props props terms_at_Pre =
+let compute_props props =
   (* Translate some parts of the pre-condition in Prolog *)
   let native_precond_generated =
     try Sd_native_precond.translate() with _ -> false in
@@ -228,7 +53,7 @@ let compute_props props terms_at_Pre =
     (if native_precond_generated then "successfully" else "not");
   let kf = fst (Globals.entry_point()) in
   let translated_props =
-    second_pass (Sd_options.Temp_File.get()) props terms_at_Pre in
+    second_pass (Sd_options.Temp_File.get()) props in
   let test_params =
     if native_precond_generated then
       Printf.sprintf "-pc-test-params %s" (Sd_options.Precond_File.get())
@@ -341,13 +166,6 @@ let compute_props props terms_at_Pre =
     end
 
 
-
-
-
-
-
-
-
 let setup_props_bijection () =
   Sd_states.Id_To_Property.clear();
   Sd_states.Property_To_Id.clear();
@@ -376,12 +194,6 @@ let setup_props_bijection () =
   List.iter register strengthened_precond
 
 
-
-
-
-
-
-
 let properties_of_behavior : string -> Property.t list =
   fun name ->
     Property_status.fold (fun p ret ->
@@ -391,7 +203,6 @@ let properties_of_behavior : string -> Property.t list =
     ) []
 
 
-
 let properties_of_function : string -> Property.t list =
   fun name ->
     Property_status.fold (fun p ret ->
@@ -399,7 +210,6 @@ let properties_of_function : string -> Property.t list =
       | Some kf when (Kernel_function.get_name kf) = name -> p :: ret
       | _ -> ret
     ) []
-
 
 
 let properties_of_name : string -> Property.t list =
@@ -418,8 +228,6 @@ let properties_of_name : string -> Property.t list =
       in
       if str <> "" && str = name then p :: ret else ret
     ) []
-
-
 
 
 let run() =
@@ -465,24 +273,15 @@ let run() =
 	  "%a not found" Property.pretty p
       ) props;
 
-      
-      let lengths = lengths_from_requires() in
-      let terms_at_Pre = at_from_formals lengths in
-      compute_props props terms_at_Pre;
+      compute_props props;
 
 
       (* cleaning *)
-      let clear_in = Cil_datatype.Varinfo.Hashtbl.clear in
-      Datatype.String.Hashtbl.iter (fun _ tbl -> clear_in tbl) terms_at_Pre;
-      Datatype.String.Hashtbl.clear terms_at_Pre;
-      Datatype.String.Hashtbl.iter (fun _ tbl -> clear_in tbl) lengths;
-      Datatype.String.Hashtbl.clear lengths;
       Sd_states.Id_To_Property.clear();
       Sd_states.Property_To_Id.clear();
       Sd_states.Not_Translated_Predicates.clear();
       Sd_states.Behavior_Reachability.clear()
     end
-
 
 
 let extern_run () =
@@ -493,12 +292,9 @@ let extern_run = Dynamic.register ~plugin:"stady" ~journalize:true "run_stady"
   (Datatype.func Datatype.unit Datatype.unit) extern_run
 
 
-  
-  
 let run =
   let deps = [Ast.self; Sd_options.Enabled.self] in
   let f, _self = State_builder.apply_once "stady" deps run in
   f
     
 let () = Db.Main.extend run
-  
