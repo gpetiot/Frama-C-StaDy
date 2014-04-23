@@ -386,10 +386,12 @@ class sd_printer props terms_at_Pre () = object(self)
       | TArray(ty,_,_,attributes) -> TPtr(array_to_ptr ty, attributes)
       | x -> x
     in
+    let array_to_ptr x = array_to_ptr (Cil.unrollTypeDeep x) in
     let dig_type = function
       | TPtr(ty,_) | TArray(ty,_,_,_) -> ty
-      | _ -> assert false
+      | ty -> Sd_options.Self.abort "dig_type %a" (self#typ None) ty
     in
+    let dig_type x = dig_type (Cil.unrollTypeDeep x) in
     begin
       try
 	let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.svar.vname in
