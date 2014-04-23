@@ -56,7 +56,7 @@ class sd_printer props terms_at_Pre () = object(self)
 
   method! logic_var fmt v =
     match current_function with
-    | Some f when in_old_term ->
+    | Some _ when in_old_term ->
       begin
 	let prefix =
 	  match v.lv_type with Ctype ty ->
@@ -64,16 +64,9 @@ class sd_printer props terms_at_Pre () = object(self)
 	      && in_old_ptr then "old_ptr" else "old"
 	  | _ -> "old"
 	in
-	try
-	  let tbl = Datatype.String.Hashtbl.find terms_at_Pre f.vname in
-	  let vi = Extlib.the v.lv_origin in
-	  ignore (Cil_datatype.Varinfo.Hashtbl.find tbl vi);
-	  super#logic_var fmt {v with lv_name=prefix^"_"^v.lv_name}
-	with
-	| _ ->
-	  Sd_options.Self.feedback ~dkey:Sd_options.dkey_at
-	    "%s_%s not found in terms_at_Pre" prefix v.lv_name;
-	  super#logic_var fmt v
+	match v.lv_origin with
+	  Some _ -> super#logic_var fmt {v with lv_name=prefix^"_"^v.lv_name}
+	| None -> super#logic_var fmt v
       end
     | _ -> super#logic_var fmt v
 
