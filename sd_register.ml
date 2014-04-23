@@ -34,7 +34,6 @@ let print_strtbl_vartbl_terms hashtbl dkey =
 (* Extracts the varinfo of the variable and its inferred size as a term
    from a term t as \valid(t). *)
 let rec extract_from_valid : term -> varinfo * term =
-  let dkey = Sd_options.dkey_lengths in
   fun t -> match t.term_node with
   | TBinOp((PlusPI|IndexPI),
 	   ({term_node=TLval(TVar v, _)}),
@@ -74,26 +73,14 @@ let rec extract_from_valid : term -> varinfo * term =
   | TLval (TMem _, TField _) -> assert false
   | TLval (TMem _, TModel _) -> assert false
   | TLval (TMem _, TIndex _) -> assert false
-  | TStartOf _ -> Sd_options.Self.debug ~dkey
-    "TStartOf \\valid(%a) ignored" Printer.pp_term t;
-    assert false
-  | TAddrOf _ -> Sd_options.Self.debug ~dkey
-    "TAddrOf \\valid(%a) ignored" Printer.pp_term t;
-    assert false
-  | TCoerce _ -> Sd_options.Self.debug ~dkey
-    "TCoerce \\valid(%a) ignored" Printer.pp_term t;
-    assert false
-  | TCoerceE _ -> Sd_options.Self.debug ~dkey
-    "TCoerceE \\valid(%a) ignored" Printer.pp_term t;
-    assert false
-  | TLogic_coerce _ -> Sd_options.Self.debug ~dkey
-    "TLogic_coerce \\valid(%a) ignored" Printer.pp_term t;
-    assert false
-  | TBinOp _ -> Sd_options.Self.debug ~dkey
-    "TBinOp \\valid(%a) ignored" Printer.pp_term t;
-    assert false
-  | _ -> Sd_options.Self.debug ~dkey "\\valid(%a) ignored" Printer.pp_term t;
-    assert false
+  | TStartOf _ -> Sd_options.Self.abort "TStartOf \\valid(%a)" Printer.pp_term t
+  | TAddrOf _ -> Sd_options.Self.abort "TAddrOf \\valid(%a)" Printer.pp_term t
+  | TCoerce _ -> Sd_options.Self.abort "TCoerce \\valid(%a)" Printer.pp_term t
+  | TCoerceE _ -> Sd_options.Self.abort "TCoerceE \\valid(%a)" Printer.pp_term t
+  | TLogic_coerce _ ->
+    Sd_options.Self.abort "TLogic_coerce \\valid(%a)" Printer.pp_term t
+  | TBinOp _ -> Sd_options.Self.abort "TBinOp \\valid(%a)" Printer.pp_term t
+  | _ -> Sd_options.Self.abort "\\valid(%a)" Printer.pp_term t
 
 
 
