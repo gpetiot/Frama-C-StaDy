@@ -840,8 +840,7 @@ class sd_printer props () = object(self)
     | GVarDecl (funspec, vi, l) ->
       if print_var vi then
 	begin
-	  if Cil.isFunctionType vi.vtype then self#in_current_function vi
-	  else visited_globals <- vi :: visited_globals;
+	  if Cil.isFunctionType vi.vtype then self#in_current_function vi;
 	  self#opt_funspec fmt funspec;
 	  self#line_directive fmt l;
 	  Format.fprintf fmt "%a@\n@\n" self#vdecl_complete vi;
