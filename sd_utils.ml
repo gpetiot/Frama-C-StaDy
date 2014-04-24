@@ -13,10 +13,9 @@ let no_repeat : 'a list -> 'a list =
     aux  [] l
 
 let comma : string -> string -> string =
-  fun x y -> if x = "" then y else (x ^ ", " ^ y)
+  fun x y -> if x = "" then y else (x ^ ",\n" ^ y)
 
-let fold_comma : string list -> string =
-  fun l -> List.fold_left comma "" l
+let fold_comma : string list -> string = fun l -> List.fold_left comma "" l
 
 let fieldinfo_to_int : Cil_types.fieldinfo -> Integer.t =
   fun fi ->

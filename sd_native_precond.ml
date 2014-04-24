@@ -111,10 +111,11 @@ class pl_printer = object(self)
 
   method pl_quantif : pl_quantif -> string =
     fun (lvars, compo_rels, (t1,r,t2)) ->
-      Printf.sprintf "uq_cond([%s],[%s],%s,%s,%s)"
+      Printf.sprintf "uq_cond(\n  [\n%s\n  ],\n  [\n%s\n  ],\n  %s,%s,%s)"
 	(Sd_utils.fold_comma
-	   (List.map(fun z -> String.uppercase z.lv_name) lvars))
-	(Sd_utils.fold_comma (List.map self#pl_rel compo_rels))
+	   (List.map (fun z -> "    " ^ (String.uppercase z.lv_name)) lvars))
+	(Sd_utils.fold_comma
+	   (List.map (fun z -> "    " ^ (self#pl_rel z)) compo_rels))
 	(self#relation r)
 	(self#pl_term t1)
 	(self#pl_term t2)
@@ -366,17 +367,17 @@ let translate () =
   let complex_d, simple_d = List.partition is_complex_domain domains in
   let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
   let same_constraint_for_precond before after =
-    output chan (Printf.sprintf "%s('%s',%s) :- %s('%s',%s).\n"
+    output chan (Printf.sprintf "%s('%s',%s) :-\n  %s('%s',%s).\n"
 		   before precond_name after before func_name after)
   in
 
-      (* DOM *)
+  (* DOM *)
   let pp_complex_d x =
     Printf.sprintf "dom('%s', %s).\n" func_name (pp_pl_domain true x) in
   List.iter (fun x -> output chan (pp_complex_d x)) complex_d;
   same_constraint_for_precond "dom" "A,B,C";
   
-      (* CREATE_INPUT_VALS *)
+  (* CREATE_INPUT_VALS *)
   output chan (Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
   let pp_simple_d x =
     Printf.sprintf "  create_input_val(%s,Ins),\n" (pp_pl_domain false x) in
@@ -384,20 +385,21 @@ let translate () =
   output chan "  true.\n";
   same_constraint_for_precond "create_input_vals" "Ins";
   
-      (* QUANTIF_PRECONDS *)
-  let qp = List.map pp_pl_quantif quantifs in
+  (* QUANTIF_PRECONDS *)
+  let qp = List.map (fun x -> "    " ^ (pp_pl_quantif x)) quantifs in
   let qp = Sd_utils.fold_comma qp in
-  output chan(Printf.sprintf "quantif_preconds('%s',[%s]).\n" func_name qp);
+  output chan
+    (Printf.sprintf "quantif_preconds('%s',\n  [\n%s\n  ]\n).\n" func_name qp);
   same_constraint_for_precond "quantif_preconds" "A";
   
-      (* UNQUANTIF_PRECONDS *)
-  let uqp = List.map pp_pl_rel unquantifs in
+  (* UNQUANTIF_PRECONDS *)
+  let uqp = List.map (fun x -> "    " ^ (pp_pl_rel x)) unquantifs in
   let uqp = Sd_utils.fold_comma uqp in
   output chan
-    (Printf.sprintf"unquantif_preconds('%s',[%s]).\n" func_name uqp);
+    (Printf.sprintf"unquantif_preconds('%s',\n  [\n%s\n  ]\n).\n"func_name uqp);
   same_constraint_for_precond "unquantif_preconds" "A";
   
-      (* STRATEGY *)
+  (* STRATEGY *)
   output chan (Printf.sprintf "strategy('%s',[]).\n" func_name);
   same_constraint_for_precond "strategy" "A";
 
