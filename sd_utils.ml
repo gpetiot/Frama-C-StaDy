@@ -12,11 +12,6 @@ let no_repeat : 'a list -> 'a list =
     in
     aux  [] l
 
-let comma : string -> string -> string =
-  fun x y -> if x = "" then y else (x ^ ",\n" ^ y)
-
-let fold_comma : string list -> string = fun l -> List.fold_left comma "" l
-
 let fieldinfo_to_int : Cil_types.fieldinfo -> Integer.t =
   fun fi ->
     let rec aux cpt = function

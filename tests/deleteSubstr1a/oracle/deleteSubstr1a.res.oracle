@@ -3,53 +3,53 @@
                  \separated(dest+(0 .. strlen-1), substr+(0 .. sublen-1)) unsupported
 [stady] warning: Native Precondition:
                  \separated(dest+(0 .. strlen-1), str+(0 .. strlen-1)) unsupported
-[stady:generated-pl] :- module(test_parameters).
-                     :- import create_input_val/3 from substitution.
-                     :- export dom/4.
-                     :- export create_input_vals/2.
-                     :- export unquantif_preconds/2.
-                     :- export quantif_preconds/2.
-                     :- export strategy/2.
-                     :- export precondition_of/2.
-                     
-                     dom(0,0,0,0).
-[stady:generated-pl] dom('delete_substr', cont('str',_), [], int([-128..127])).
-[stady:generated-pl] dom('delete_substr', cont('substr',_), [], int([-128..127])).
-[stady:generated-pl] dom('delete_substr', cont('dest',_), [], int([-128..127])).
-[stady:generated-pl] dom('pathcrawler__delete_substr_precond',A,B,C) :-
-                       dom('delete_substr',A,B,C).
-[stady:generated-pl] create_input_vals('delete_substr', Ins):-
-[stady:generated-pl] create_input_val(dim('str'), int([1..4294967295]),Ins),
-[stady:generated-pl] create_input_val(dim('substr'), int([1..4294967295]),Ins),
-[stady:generated-pl] create_input_val(dim('dest'), int([1..4294967295]),Ins),
-[stady:generated-pl] create_input_val('strlen', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] create_input_val('sublen', int([-2147483648..2147483647]),Ins),
-[stady:generated-pl] true.
-[stady:generated-pl] create_input_vals('pathcrawler__delete_substr_precond',Ins) :-
-                       create_input_vals('delete_substr',Ins).
-[stady:generated-pl] quantif_preconds('delete_substr',
-                       [
-                     
-                       ]
-                     ).
-[stady:generated-pl] quantif_preconds('pathcrawler__delete_substr_precond',A) :-
-                       quantif_preconds('delete_substr',A).
-[stady:generated-pl] unquantif_preconds('delete_substr',
-                       [
-                         cond(egal,dim('substr'),+(int(math), -(int(math), 'sublen', 1), 1),pre),
-                         cond(egal,dim('dest'),+(int(math), -(int(math), 'strlen', 1), 1),pre),
-                         cond(egal,dim('str'),+(int(math), -(int(math), 'strlen', 1), 1),pre),
-                         cond(infegal,'sublen','strlen',pre),
-                         cond(inf,0,'sublen',pre),
-                         cond(infegal,'strlen',2,pre)
-                       ]
-                     ).
-[stady:generated-pl] unquantif_preconds('pathcrawler__delete_substr_precond',A) :-
-                       unquantif_preconds('delete_substr',A).
-[stady:generated-pl] strategy('delete_substr',[]).
-[stady:generated-pl] strategy('pathcrawler__delete_substr_precond',A) :-
-                       strategy('delete_substr',A).
-[stady:generated-pl] precondition_of('delete_substr','pathcrawler__delete_substr_precond').
+[stady:generated-pl] generated Prolog precondition:
+:- module(test_parameters).
+:- import create_input_val/3 from substitution.
+:- export dom/4.
+:- export create_input_vals/2.
+:- export unquantif_preconds/2.
+:- export quantif_preconds/2.
+:- export strategy/2.
+:- export precondition_of/2.
+
+dom(0,0,0,0).
+dom('delete_substr', cont('str',_), [], int([-128..127])).
+dom('delete_substr', cont('substr',_), [], int([-128..127])).
+dom('delete_substr', cont('dest',_), [], int([-128..127])).
+dom('pathcrawler__delete_substr_precond',A,B,C) :-
+  dom('delete_substr',A,B,C).
+create_input_vals('delete_substr', Ins):-
+  create_input_val(dim('str'), int([1..4294967295]),Ins),
+  create_input_val(dim('substr'), int([1..4294967295]),Ins),
+  create_input_val(dim('dest'), int([1..4294967295]),Ins),
+  create_input_val('strlen', int([-2147483648..2147483647]),Ins),
+  create_input_val('sublen', int([-2147483648..2147483647]),Ins),
+  true.
+create_input_vals('pathcrawler__delete_substr_precond',Ins) :-
+  create_input_vals('delete_substr',Ins).
+quantif_preconds('delete_substr',
+  [
+  ]
+).
+quantif_preconds('pathcrawler__delete_substr_precond',A) :-
+  quantif_preconds('delete_substr',A).
+unquantif_preconds('delete_substr',
+  [
+    cond(egal,dim('substr'),+(int(math), -(int(math), 'sublen', 1), 1),pre),
+    cond(egal,dim('dest'),+(int(math), -(int(math), 'strlen', 1), 1),pre),
+    cond(egal,dim('str'),+(int(math), -(int(math), 'strlen', 1), 1),pre),
+    cond(infegal,'sublen','strlen',pre),
+    cond(inf,0,'sublen',pre),
+    cond(infegal,'strlen',2,pre)
+  ]
+).
+unquantif_preconds('pathcrawler__delete_substr_precond',A) :-
+  unquantif_preconds('delete_substr',A).
+strategy('delete_substr',[]).
+strategy('pathcrawler__delete_substr_precond',A) :-
+  strategy('delete_substr',A).
+precondition_of('delete_substr','pathcrawler__delete_substr_precond').
 [stady] warning: \separated(dest+(0 .. strlen-1), substr+(0 .. sublen-1)) unsupported
 [stady] warning: \separated(dest+(0 .. strlen-1), str+(0 .. strlen-1)) unsupported
 [stady:generated-c] generated C file:

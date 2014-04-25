@@ -47,7 +47,7 @@ let emitter =
 let compute_props props =
   (* Translate some parts of the pre-condition in Prolog *)
   let native_precond_generated =
-    try Sd_native_precond.translate() with _ -> false in
+    try Sd_native_precond.translate(); true with _ -> false in
   Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");

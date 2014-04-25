@@ -45,86 +45,95 @@ let is_complex_domain : pl_domain -> bool =
   function PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> is_complex_term t
 
 class pl_printer = object(self)
-  method pl_constant : pl_constant -> string =
-    function
-    | PLInt i -> Integer.to_string i
-    | PLFloat f -> "(" ^ (string_of_float f) ^ "0)"
+  method pl_constant fmt = function
+  | PLInt i -> self#pl_integer fmt i
+  | PLFloat f -> Format.fprintf fmt "(%f0)" f
       
-  method is_float : pl_term -> bool =
-    function
-    | PLConst (PLInt _) | PLDim _ -> false
-    | PLConst (PLFloat _) -> true
-    | PLContAll t' | PLBinOp (t',_,_) | PLCont (t',_) -> self#is_float t'
-    | PLLVar lv -> Cil.isLogicFloatType lv.lv_type
-    | PLCVar v -> Cil.isFloatingType v.vtype
+  method is_float = function
+  | PLConst (PLInt _) | PLDim _ -> false
+  | PLConst (PLFloat _) -> true
+  | PLContAll t' | PLBinOp (t',_,_) | PLCont (t',_) -> self#is_float t'
+  | PLLVar lv -> Cil.isLogicFloatType lv.lv_type
+  | PLCVar v -> Cil.isFloatingType v.vtype
 
-  method binop : binop -> string =
-    function
-    | PlusA | PlusPI | IndexPI -> "+"
-    | MinusA -> "-"
-    | Mult -> "*"
-    | Div -> "/"
-    | _ -> assert false
+  method binop fmt = function
+  | PlusA | PlusPI | IndexPI -> Format.fprintf fmt "+"
+  | MinusA -> Format.fprintf fmt "-"
+  | Mult -> Format.fprintf fmt "*"
+  | Div -> Format.fprintf fmt "/"
+  | _ -> assert false
 
-  method pl_term : pl_term -> string =
-    function
-    | PLBinOp (t1, b, t2) ->
-      Printf.sprintf "%s(%s(math), %s, %s)"
-	(self#binop b)
-	(if self#is_float t1 then "real" else "int")
-	(self#pl_term t1)
-	(self#pl_term t2)
-    | PLConst c -> self#pl_constant c
-    | PLDim t' -> Printf.sprintf "dim(%s)" (self#pl_term t')
-    | PLContAll t' -> Printf.sprintf "cont(%s,_)" (self#pl_term t')
-    | PLCont (t1, t2) ->
-      Printf.sprintf "cont(%s,%s)" (self#pl_term t1) (self#pl_term t2)
-    | PLLVar lv -> String.uppercase lv.lv_name
-    | PLCVar v -> Printf.sprintf "'%s'" v.vname
+  method pl_term fmt = function
+  | PLBinOp (t1, b, t2) ->
+    Format.fprintf fmt "%a(%s(math), %a, %a)"
+      self#binop b
+      (if self#is_float t1 then "real" else "int")
+      self#pl_term t1
+      self#pl_term t2
+  | PLConst c -> self#pl_constant fmt c
+  | PLDim t' -> Format.fprintf fmt "dim(%a)" self#pl_term t'
+  | PLContAll t' -> Format.fprintf fmt "cont(%a,_)" self#pl_term t'
+  | PLCont (t1, t2) ->
+    Format.fprintf fmt "cont(%a,%a)" self#pl_term t1 self#pl_term t2
+  | PLLVar lv -> Format.fprintf fmt "%s" (String.uppercase lv.lv_name)
+  | PLCVar v -> Format.fprintf fmt "'%s'" v.vname
 
-  method pl_domain : bool -> pl_domain -> string =
-    fun complex ->
-      function
-      | PLIntDom (t',a,b) -> Printf.sprintf "%s, %sint([%s..%s])"
-	(self#pl_term t')
-	(if complex then "[], " else "")
-	(Integer.to_string a)
-	(Integer.to_string b)
-      | PLFloatDom (t',a,b) -> Printf.sprintf "%s, %sfloat([(%s)..(%s)])"
-	(self#pl_term t') (if complex then "[], " else "") a b
+  method pl_integer fmt i = Integer.pretty fmt i
 
-  method relation : relation -> string =
-    function
-    | Rlt -> "inf"
-    | Rgt -> "sup"
-    | Rle -> "infegal"
-    | Rge -> "supegal"
-    | Req -> "egal"
-    | Rneq -> "diff"
+  method pl_domain fmt = function
+  | PLIntDom (t',a,b) ->
+    Format.fprintf fmt "%a, int([%a..%a])"
+      self#pl_term t'
+      self#pl_integer a
+      self#pl_integer b
+  | PLFloatDom (t',str1,str2) ->
+    Format.fprintf fmt "%a, float([(%s)..(%s)])" self#pl_term t' str1 str2
 
-  method pl_rel : pl_rel -> string =
-    fun (t1,r,t2) ->
-      Printf.sprintf "cond(%s,%s,%s,pre)"
-	(self#relation r)
-	(self#pl_term t1)
-	(self#pl_term t2)
+  method pl_complex_domain fmt = function
+  | PLIntDom (t',a,b) ->
+    Format.fprintf fmt "%a, [], int([%a..%a])"
+      self#pl_term t'
+      self#pl_integer a
+      self#pl_integer b
+  | PLFloatDom (t',str1,str2) ->
+    Format.fprintf fmt "%a, [], float([(%s)..(%s)])" self#pl_term t' str1 str2
 
-  method pl_quantif : pl_quantif -> string =
-    fun (lvars, compo_rels, (t1,r,t2)) ->
-      Printf.sprintf "uq_cond(\n  [\n%s\n  ],\n  [\n%s\n  ],\n  %s,%s,%s)"
-	(Sd_utils.fold_comma
-	   (List.map (fun z -> "    " ^ (String.uppercase z.lv_name)) lvars))
-	(Sd_utils.fold_comma
-	   (List.map (fun z -> "    " ^ (self#pl_rel z)) compo_rels))
-	(self#relation r)
-	(self#pl_term t1)
-	(self#pl_term t2)
+  method relation fmt = function
+  | Rlt -> Format.fprintf fmt "inf"
+  | Rgt -> Format.fprintf fmt "sup"
+  | Rle -> Format.fprintf fmt "infegal"
+  | Rge -> Format.fprintf fmt "supegal"
+  | Req -> Format.fprintf fmt "egal"
+  | Rneq -> Format.fprintf fmt "diff"
+
+  method pl_rel fmt (t1,r,t2) =
+    Format.fprintf fmt "cond(%a,%a,%a,pre)"
+      self#relation r
+      self#pl_term t1
+      self#pl_term t2
+
+  method pl_quantif fmt (lvars, compo_rels, (t1,r,t2)) =
+    Format.fprintf fmt "uq_cond(\n  [\n";
+    let rec aux = function
+      | [] -> ()
+      | h :: [] -> Format.fprintf fmt "    %s\n" (String.uppercase h.lv_name)
+      | h :: t -> Format.fprintf fmt "    %s,\n"(String.uppercase h.lv_name);
+	aux t
+    in
+    aux lvars;
+    Format.fprintf fmt "  ],\n  [\n";
+    let rec aux = function
+      | [] -> ()
+      | h :: [] -> Format.fprintf fmt "    %a\n" self#pl_rel h
+      | h :: t -> Format.fprintf fmt "    %a,\n" self#pl_rel h; aux t
+    in
+    aux compo_rels;
+    Format.fprintf fmt "  ],\n  %a,%a,%a)"
+      self#relation r
+      self#pl_term t1
+      self#pl_term t2
 end
 
-let pp_pl_term = (new pl_printer)#pl_term
-let pp_pl_domain = (new pl_printer)#pl_domain
-let pp_pl_rel = (new pl_printer)#pl_rel
-let pp_pl_quantif = (new pl_printer)#pl_quantif
 
 let prolog_header : string =
   ":- module(test_parameters).\n"
@@ -198,13 +207,11 @@ class to_pl = object(self)
 end
 
 let term_to_pl : term -> pl_term =
+  let dkey = Sd_options.dkey_native_precond in
   fun t ->
-    try
-      (new to_pl)#term t
-    with
-    | _ ->
-      Sd_options.Self.debug ~dkey:Sd_options.dkey_native_precond
-	"term_to_pl: %a" Printer.pp_term t;
+    try (new to_pl)#term t
+    with _ ->
+      Sd_options.Self.debug ~dkey "term_to_pl: %a" Printer.pp_term t;
       assert false
 
 let rec input_from_type :
@@ -256,8 +263,8 @@ let rec input_from_type :
 	let d = PLIntDom (PLDim t, Integer.zero, maxuint) in
 	input_from_type (d :: domains) ty' (PLContAll t)
     | _ ->
-      Sd_options.Self.feedback "input_from_type (%a) (%s)"
-	Printer.pp_typ ty (pp_pl_term t);
+      Sd_options.Self.feedback "input_from_type (%a) (%a)"
+	Printer.pp_typ ty (new pl_printer)#pl_term t;
       assert false
 
 let valid_to_prolog : term -> pl_constraint list =
@@ -301,11 +308,10 @@ let rec requires_to_prolog :
       requires_to_prolog constraints p
     | _ -> assert false
 
-let output chan str =
-  Sd_options.Self.debug ~dkey:Sd_options.dkey_generated_pl "%s" str;
-  output_string chan str
 
 let translate () =
+  let buf = Buffer.create 512 in
+  let fmt = Format.formatter_of_buffer buf in
   let kf = fst (Globals.entry_point()) in
   let func_name = Kernel_function.get_name kf in
   let bhv = Sd_utils.default_behavior kf in
@@ -362,49 +368,59 @@ let translate () =
   let add_int_dom_to_list k (v,w) doms =  PLIntDom (k,v,w) :: doms in
   let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
   let domains = List.rev domains in
-  let chan = open_out (Sd_options.Precond_File.get()) in
-  output chan prolog_header;
   let complex_d, simple_d = List.partition is_complex_domain domains in
   let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
   let same_constraint_for_precond before after =
-    output chan (Printf.sprintf "%s('%s',%s) :-\n  %s('%s',%s).\n"
-		   before precond_name after before func_name after)
+    Format.fprintf fmt "%s('%s',%s) :-\n  %s('%s',%s).\n"
+      before precond_name after before func_name after
   in
-
-  (* DOM *)
-  let pp_complex_d x =
-    Printf.sprintf "dom('%s', %s).\n" func_name (pp_pl_domain true x) in
-  List.iter (fun x -> output chan (pp_complex_d x)) complex_d;
+  let printer = new pl_printer in
+  (* PRINTING *)
+  Format.fprintf fmt "%s" prolog_header;
+  List.iter
+    (fun x ->
+      Format.fprintf fmt "dom('%s', %a).\n"
+	func_name printer#pl_complex_domain x)
+    complex_d;
   same_constraint_for_precond "dom" "A,B,C";
-  
-  (* CREATE_INPUT_VALS *)
-  output chan (Printf.sprintf "create_input_vals('%s', Ins):-\n" func_name);
-  let pp_simple_d x =
-    Printf.sprintf "  create_input_val(%s,Ins),\n" (pp_pl_domain false x) in
-  List.iter (fun x -> output chan (pp_simple_d x)) simple_d;
-  output chan "  true.\n";
+  Format.fprintf fmt "create_input_vals('%s', Ins):-\n" func_name;
+  List.iter
+    (fun x ->
+      Format.fprintf fmt "  create_input_val(%a,Ins),\n" printer#pl_domain x)
+    simple_d;
+  Format.fprintf fmt "  true.\n";
   same_constraint_for_precond "create_input_vals" "Ins";
-  
-  (* QUANTIF_PRECONDS *)
-  let qp = List.map (fun x -> "    " ^ (pp_pl_quantif x)) quantifs in
-  let qp = Sd_utils.fold_comma qp in
-  output chan
-    (Printf.sprintf "quantif_preconds('%s',\n  [\n%s\n  ]\n).\n" func_name qp);
+  Format.fprintf fmt "quantif_preconds('%s',\n  [\n" func_name;
+  let rec aux = function
+    | [] -> ()
+    | h :: [] -> Format.fprintf fmt "    %a\n" printer#pl_quantif h
+    | h :: t -> Format.fprintf fmt "    %a,\n" printer#pl_quantif h; aux t
+  in
+  aux quantifs;
+  Format.fprintf fmt "  ]\n).\n";
   same_constraint_for_precond "quantif_preconds" "A";
-  
-  (* UNQUANTIF_PRECONDS *)
-  let uqp = List.map (fun x -> "    " ^ (pp_pl_rel x)) unquantifs in
-  let uqp = Sd_utils.fold_comma uqp in
-  output chan
-    (Printf.sprintf"unquantif_preconds('%s',\n  [\n%s\n  ]\n).\n"func_name uqp);
+  Format.fprintf fmt "unquantif_preconds('%s',\n  [\n" func_name;
+  let rec aux = function
+    | [] -> ()
+    | h :: [] -> Format.fprintf fmt "    %a\n" printer#pl_rel h
+    | h :: t -> Format.fprintf fmt "    %a,\n" printer#pl_rel h; aux t
+  in
+  aux unquantifs;
+  Format.fprintf fmt "  ]\n).\n";
   same_constraint_for_precond "unquantif_preconds" "A";
-  
-  (* STRATEGY *)
-  output chan (Printf.sprintf "strategy('%s',[]).\n" func_name);
+  Format.fprintf fmt "strategy('%s',[]).\n" func_name;
   same_constraint_for_precond "strategy" "A";
-
-  output chan
-    (Printf.sprintf "precondition_of('%s','%s').\n" func_name precond_name);
-  flush chan;
-  close_out chan;
-  true
+  Format.fprintf fmt "precondition_of('%s','%s').\n" func_name precond_name;
+  (* END OF PRINTING *)
+  let dkey = Sd_options.dkey_generated_pl in
+  let out_file = open_out (Sd_options.Precond_File.get()) in
+  Sd_options.Self.debug ~dkey "generated Prolog precondition:";
+  let dkeys = Sd_options.Self.Debug_category.get() in
+  if Datatype.String.Set.mem "generated-pl" dkeys then
+    Buffer.output_buffer stdout buf;
+  Buffer.output_buffer out_file buf;
+  Format.pp_print_flush fmt();
+  flush stdout;
+  flush out_file;
+  close_out out_file;
+  Buffer.clear buf
