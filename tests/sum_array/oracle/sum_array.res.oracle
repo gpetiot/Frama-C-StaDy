@@ -4,16 +4,16 @@
 extern int pathcrawler_assert_exception(char*,int);
 extern int pathcrawler_dimension(void*);
 extern void pathcrawler_to_framac(char*);
-int sum_array_precond(int *t, int n)
+int sum_array_precond(double *t, int n)
 {
 return 1;
 }
 
-int sum_array(int *t, int n)
+double sum_array(double *t, int n)
 {
-  int *old_t = t;
-  int *old_ptr_t;
-  old_ptr_t = malloc((((n - 1) + 1))*sizeof(int));
+  double *old_t = t;
+  double *old_ptr_t;
+  old_ptr_t = malloc((((n - 1) + 1))*sizeof(double));
   int __stady_iter_0;
   for (__stady_iter_0 = 0; __stady_iter_0 < ((n - 1) + 1); __stady_iter_0++) {
   old_ptr_t[__stady_iter_0] = t[__stady_iter_0];
@@ -21,11 +21,11 @@ int sum_array(int *t, int n)
   int old_n = n;
   {
     int i;
-    int s;
-    s = 0;
+    double s;
+    s = (double)0;
     i = 0;
     {
-      if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",2);int __stady_term_0 = 0;
+      if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",2);double __stady_term_0 = 0;
       {
       int k;
       for(k=0; k <= (i - 1); k++) {
@@ -51,7 +51,7 @@ int sum_array(int *t, int n)
         __stady_pred_2 = (i <= n);
         }
         if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not preserved!", 1);
-        int __stady_term_3 = 0;
+        double __stady_term_3 = 0;
         {
         int k;
         for(k=0; k <= (i - 1); k++) {
@@ -64,7 +64,7 @@ int sum_array(int *t, int n)
          }
        
     {
-      int __stady_term_4 = 0;
+      double __stady_term_4 = 0;
       {
       int k;
       for(k=0; k <= (old_n - 1); k++) {

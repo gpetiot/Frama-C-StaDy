@@ -7,9 +7,9 @@ OPT: -main sum_array -stady -stady-msg-key generated-c -then -report
   @ typically n <= 3;
   @ ensures \result == \sum(0,n-1,\lambda integer k; t[k]);
   @*/
-int sum_array(int t[],int n) {
+double sum_array(double t[],int n) {
   int i;
-  int s = 0;
+  double s = 0;
   /*@ loop invariant 0 <= i <= n;
     @ loop invariant s == \sum(0,i-1,\lambda integer k; t[k]);
     @ loop variant n-i;

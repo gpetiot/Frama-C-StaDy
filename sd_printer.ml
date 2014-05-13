@@ -181,16 +181,64 @@ class sd_printer props () = object(self)
     let builtin_name = li.l_var_info.lv_name in
     let var = "__stady_term_" ^ (string_of_int pred_cpt) in
     let iter = q.lv_name in
-    let init = match builtin_name with
-      | s when s = "\\min" -> "-1" (* undefined here *)
-      | s when s = "\\max" -> "-1" (* undefined here *)
-      | s when s = "\\sum" -> "0"
-      | s when s = "\\product" -> "1"
-      | s when s = "\\numof" -> "0"
+    let maxuint =
+      Integer.to_string (Cil.max_unsigned_number (Sd_utils.machdep())) in
+    let maxint =
+      Integer.to_string (Cil.max_signed_number (Sd_utils.machdep())) in
+    let minint =
+      Integer.to_string (Cil.min_signed_number (Sd_utils.machdep())) in
+    let ctype_min_max_from_ltype = function
+      | Ctype (TInt (IBool, _)) | Ctype (TEnum ({ekind=IBool},_)) ->
+	"_Bool", "0", "1"
+      | Ctype(TInt((IChar|ISChar),_))|Ctype(TEnum({ekind=(IChar|ISChar)},_)) ->
+	"char", "-128", "127"
+      | Ctype (TInt (IUChar, _)) | Ctype (TEnum ({ekind=IUChar},_)) ->
+	"unsigned char", "0", "255"
+      | Ctype (TInt (IInt, _)) | Ctype (TEnum ({ekind=IInt},_)) ->
+	"int", minint, maxint
+      | Ctype (TInt (IUInt, _)) | Ctype (TEnum ({ekind=IUInt},_)) ->
+	"unsigned int", "0", maxuint
+      | Ctype (TInt (IShort, _)) | Ctype (TEnum ({ekind=IShort},_)) ->
+	"short", minint, maxint
+      | Ctype (TInt (IUShort, _)) | Ctype (TEnum ({ekind=IUShort},_)) ->
+	"unsigned short", "0", maxuint
+      | Ctype (TInt (ILong, _)) | Ctype (TEnum ({ekind=ILong},_)) ->
+	"long", minint, maxint
+      | Ctype (TInt (IULong, _)) | Ctype (TEnum ({ekind=IULong},_)) ->
+	"unsigned long", "0", maxuint
+      | Ctype (TInt (ILongLong, _)) | Ctype (TEnum ({ekind=ILongLong},_)) ->
+	"long long", minint, maxint
+      | Ctype (TInt (IULongLong, _)) | Ctype (TEnum ({ekind=IULongLong},_)) ->
+	"unsigned long long", "0", maxuint
+      | Ctype (TFloat (FFloat, _)) ->
+	"float", "-3.40282347e+38", "3.40282347e+38"
+      | Ctype (TFloat (FDouble, _)) ->
+	"double", "-1.7976931348623157e+308", "1.7976931348623157e+308"
+      | Ctype (TFloat (FLongDouble, _)) ->
+	"long double", "-1.7976931348623157e+308", "1.7976931348623157e+308"
+      | Ltype _ -> assert false
+      | Lvar _ -> assert false
+      | Linteger -> (* TODO: use GMP *)
+	"int", minint, maxint
+      | Lreal -> (* TODO: use GMP *)
+	"double", "-1.7976931348623157e+308", "1.7976931348623157e+308"
+      | Larrow _ -> assert false
+      | _ -> assert false
+    in
+    let init_type, init_val = match builtin_name with
+      | s when s = "\\min" ->
+	let t,min,_ = ctype_min_max_from_ltype t.term_type in t, min
+      | s when s = "\\max" ->
+	let t,_,max = ctype_min_max_from_ltype t.term_type in t, max
+      | s when s = "\\sum" ->
+	let t,_,_ = ctype_min_max_from_ltype t.term_type in t, "0"
+      | s when s = "\\product" ->
+	let t,_,_ = ctype_min_max_from_ltype t.term_type in t, "1"
+      | s when s = "\\numof" -> "int", "0"
       | _ -> assert false
     in
     pred_cpt <- pred_cpt + 1;
-    Format.fprintf fmt "int %s = %s;@\n" var init;
+    Format.fprintf fmt "%s %s = %s;@\n" init_type var init_val;
     Format.fprintf fmt "{@\n";
     Format.fprintf fmt "int %s;@\n" iter;
     let low = self#term_and_var fmt lower in
