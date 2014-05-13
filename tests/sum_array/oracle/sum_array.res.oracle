@@ -33,7 +33,11 @@ int sum_array(int *t, int n)
       }
       }
       if(!(s == __stady_term_0))pathcrawler_assert_exception("Loop invariant not established!", 3);
-      if(!((0 <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not established!", 1);
+      int __stady_pred_1 = (0 <= i);
+      if (__stady_pred_1) {
+      __stady_pred_1 = (i <= n);
+      }
+      if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not established!", 1);
       while (1) {
         int old_variant_2 = (n - i);
         {
@@ -42,28 +46,32 @@ int sum_array(int *t, int n)
                          
           s += *(t + i);
           i ++;
-        }if(!((0 <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not preserved!", 1);
-        int __stady_term_1 = 0;
+        }int __stady_pred_2 = (0 <= i);
+        if (__stady_pred_2) {
+        __stady_pred_2 = (i <= n);
+        }
+        if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not preserved!", 1);
+        int __stady_term_3 = 0;
         {
         int k;
         for(k=0; k <= (i - 1); k++) {
-        __stady_term_1 += *(t + k);
+        __stady_term_3 += *(t + k);
         }
         }
-        if(!(s == __stady_term_1))pathcrawler_assert_exception("Loop invariant not preserved!", 3);
+        if(!(s == __stady_term_3))pathcrawler_assert_exception("Loop invariant not preserved!", 3);
         if ((old_variant_2) < 0)pathcrawler_assert_exception("Variant non positive",2);
         if (((n - i)) >= old_variant_2)pathcrawler_assert_exception("Variant non decreasing",2);}
          }
        
     {
-      int __stady_term_2 = 0;
+      int __stady_term_4 = 0;
       {
       int k;
       for(k=0; k <= (old_n - 1); k++) {
-      __stady_term_2 += *(old_t + k);
+      __stady_term_4 += *(old_t + k);
       }
       }
-      if(!(s == __stady_term_2))pathcrawler_assert_exception("Post-condition!", 4);
+      if(!(s == __stady_term_4))pathcrawler_assert_exception("Post-condition!", 4);
       
       }
     free(old_ptr_t);
@@ -74,10 +82,10 @@ int sum_array(int *t, int n)
 
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:67:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:75:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:67:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:75:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_sum_array utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_sum_array ...
@@ -86,7 +94,7 @@ stady_temp.c:67:[kernel] warning: Calling undeclared function free. Old style K&
 [pc] Starting lanceur_pathcrawler__sum_array_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 87 test cases
+[stady] 105 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

@@ -68,8 +68,11 @@ void bubble_sort(int *A, int n)
     }
     i = 0;
     {
-      if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",10);
-      if(!((0 <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not established!", 3);
+      if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",10);int __stady_pred_0 = (0 <= i);
+      if (__stady_pred_0) {
+      __stady_pred_0 = (i <= n);
+      }
+      if(!__stady_pred_0)pathcrawler_assert_exception("Loop invariant not established!", 3);
       while (1) {
         int old_variant_10 = (n - i);
         {
@@ -78,15 +81,19 @@ void bubble_sort(int *A, int n)
                          
           j = 0;
           {
-            if (((((n - i) - 1) - j)) < 0)pathcrawler_assert_exception("Variant non positive",7);int __stady_pred_0 = 1;
+            if (((((n - i) - 1) - j)) < 0)pathcrawler_assert_exception("Variant non positive",7);int __stady_pred_1 = 1;
             {
             int __q_a;
-            for (__q_a = 0; __q_a <= j &&  __stady_pred_0; __q_a++) {
-            __stady_pred_0 = (*(A + __q_a) <= *(A + j));
+            for (__q_a = 0; __q_a <= j &&  __stady_pred_1; __q_a++) {
+            __stady_pred_1 = (*(A + __q_a) <= *(A + j));
             }
             }
-            if(!__stady_pred_0)pathcrawler_assert_exception("Loop invariant not established!", 4);
-            if(!((0 <= j) && (j <= ((n - i) - 1))))pathcrawler_assert_exception("Loop invariant not established!", 0);
+            if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not established!", 4);
+            int __stady_pred_2 = (0 <= j);
+            if (__stady_pred_2) {
+            __stady_pred_2 = (j <= ((n - i) - 1));
+            }
+            if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not established!", 0);
             while (1) {
               int old_variant_7 = (((n - i) - 1) - j);
               {
@@ -102,34 +109,42 @@ void bubble_sort(int *A, int n)
                   *(A + (j + 1)) = x;
                 }
                 j ++;
-              }if(!((0 <= j) && (j <= ((n - i) - 1))))pathcrawler_assert_exception("Loop invariant not preserved!", 0);
-              int __stady_pred_1 = 1;
+              }int __stady_pred_3 = (0 <= j);
+              if (__stady_pred_3) {
+              __stady_pred_3 = (j <= ((n - i) - 1));
+              }
+              if(!__stady_pred_3)pathcrawler_assert_exception("Loop invariant not preserved!", 0);
+              int __stady_pred_4 = 1;
               {
               int __q_a;
-              for (__q_a = 0; __q_a <= j &&  __stady_pred_1; __q_a++) {
-              __stady_pred_1 = (*(A + __q_a) <= *(A + j));
+              for (__q_a = 0; __q_a <= j &&  __stady_pred_4; __q_a++) {
+              __stady_pred_4 = (*(A + __q_a) <= *(A + j));
               }
               }
-              if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not preserved!", 4);
+              if(!__stady_pred_4)pathcrawler_assert_exception("Loop invariant not preserved!", 4);
               if ((old_variant_7) < 0)pathcrawler_assert_exception("Variant non positive",7);
               if (((((n - i) - 1) - j)) >= old_variant_7)pathcrawler_assert_exception("Variant non decreasing",7);}
                }
              
           i ++;
-        }if(!((0 <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not preserved!", 3);
+        }int __stady_pred_5 = (0 <= i);
+        if (__stady_pred_5) {
+        __stady_pred_5 = (i <= n);
+        }
+        if(!__stady_pred_5)pathcrawler_assert_exception("Loop invariant not preserved!", 3);
         if ((old_variant_10) < 0)pathcrawler_assert_exception("Variant non positive",10);
         if (((n - i)) >= old_variant_10)pathcrawler_assert_exception("Variant non decreasing",10);}
          }
        
     {
-      int __stady_pred_2 = 1;
+      int __stady_pred_6 = 1;
       {
       int __q_i;
-      for (__q_i = 0; __q_i < (old_n - 1) &&  __stady_pred_2; __q_i++) {
-      __stady_pred_2 = (*(old_A + __q_i) <= *(old_A + (__q_i + 1)));
+      for (__q_i = 0; __q_i < (old_n - 1) &&  __stady_pred_6; __q_i++) {
+      __stady_pred_6 = (*(old_A + __q_i) <= *(old_A + (__q_i + 1)));
       }
       }
-      if(!__stady_pred_2)pathcrawler_assert_exception("Post-condition!", 9);
+      if(!__stady_pred_6)pathcrawler_assert_exception("Post-condition!", 9);
       
       }
     free(old_ptr_A);
@@ -140,10 +155,10 @@ void bubble_sort(int *A, int n)
 
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:94:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:109:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:94:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:109:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_bubble_sort utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_bubble_sort ...
@@ -152,7 +167,7 @@ stady_temp.c:94:[kernel] warning: Calling undeclared function free. Old style K&
 [pc] Starting lanceur_pathcrawler__bubble_sort_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 519 test cases
+[stady] 625 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

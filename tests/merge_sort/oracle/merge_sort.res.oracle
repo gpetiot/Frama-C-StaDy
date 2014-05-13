@@ -80,9 +80,21 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
     {
       if (((iEnd - j)) < 0)pathcrawler_assert_exception("Variant non positive",23);
       if(!((((i0 - iLeft) + i1) - iRight) == (j - iLeft)))pathcrawler_assert_exception("Loop invariant not established!", 4);
-      if(!((iRight <= i1) && (i1 <= iEnd)))pathcrawler_assert_exception("Loop invariant not established!", 24);
-      if(!((iLeft <= i0) && (i0 <= iRight)))pathcrawler_assert_exception("Loop invariant not established!", 16);
-      if(!((iLeft <= j) && (j <= iEnd)))pathcrawler_assert_exception("Loop invariant not established!", 9);
+      int __stady_pred_0 = (iRight <= i1);
+      if (__stady_pred_0) {
+      __stady_pred_0 = (i1 <= iEnd);
+      }
+      if(!__stady_pred_0)pathcrawler_assert_exception("Loop invariant not established!", 24);
+      int __stady_pred_1 = (iLeft <= i0);
+      if (__stady_pred_1) {
+      __stady_pred_1 = (i0 <= iRight);
+      }
+      if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not established!", 16);
+      int __stady_pred_2 = (iLeft <= j);
+      if (__stady_pred_2) {
+      __stady_pred_2 = (j <= iEnd);
+      }
+      if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not established!", 9);
       while (1) {
         int old_variant_23 = (iEnd - j);
         {
@@ -117,9 +129,21 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
               
           }
           j ++;
-        }if(!((iLeft <= j) && (j <= iEnd)))pathcrawler_assert_exception("Loop invariant not preserved!", 9);
-        if(!((iLeft <= i0) && (i0 <= iRight)))pathcrawler_assert_exception("Loop invariant not preserved!", 16);
-        if(!((iRight <= i1) && (i1 <= iEnd)))pathcrawler_assert_exception("Loop invariant not preserved!", 24);
+        }int __stady_pred_3 = (iLeft <= j);
+        if (__stady_pred_3) {
+        __stady_pred_3 = (j <= iEnd);
+        }
+        if(!__stady_pred_3)pathcrawler_assert_exception("Loop invariant not preserved!", 9);
+        int __stady_pred_4 = (iLeft <= i0);
+        if (__stady_pred_4) {
+        __stady_pred_4 = (i0 <= iRight);
+        }
+        if(!__stady_pred_4)pathcrawler_assert_exception("Loop invariant not preserved!", 16);
+        int __stady_pred_5 = (iRight <= i1);
+        if (__stady_pred_5) {
+        __stady_pred_5 = (i1 <= iEnd);
+        }
+        if(!__stady_pred_5)pathcrawler_assert_exception("Loop invariant not preserved!", 24);
         if(!((((i0 - iLeft) + i1) - iRight) == (j - iLeft)))pathcrawler_assert_exception("Loop invariant not preserved!", 4);
         if ((old_variant_23) < 0)pathcrawler_assert_exception("Variant non positive",23);
         if (((iEnd - j)) >= old_variant_23)pathcrawler_assert_exception("Variant non decreasing",23);}
@@ -154,8 +178,11 @@ void CopyArray(int *A, int *B, int n)
     int i;
     i = 0;
     {
-      if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",3);
-      if(!((0 <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not established!", 0);
+      if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",3);int __stady_pred_6 = (0 <= i);
+      if (__stady_pred_6) {
+      __stady_pred_6 = (i <= n);
+      }
+      if(!__stady_pred_6)pathcrawler_assert_exception("Loop invariant not established!", 0);
       while (1) {
         int old_variant_3 = (n - i);
         {
@@ -164,7 +191,11 @@ void CopyArray(int *A, int *B, int n)
                          
           *(A + i) = *(B + i);
           i ++;
-        }if(!((0 <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not preserved!", 0);
+        }int __stady_pred_7 = (0 <= i);
+        if (__stady_pred_7) {
+        __stady_pred_7 = (i <= n);
+        }
+        if(!__stady_pred_7)pathcrawler_assert_exception("Loop invariant not preserved!", 0);
         if ((old_variant_3) < 0)pathcrawler_assert_exception("Variant non positive",3);
         if (((n - i)) >= old_variant_3)pathcrawler_assert_exception("Variant non decreasing",3);}
          }
@@ -214,8 +245,11 @@ void BottomUpSort(int n, int *A, int *B)
     int width;
     width = 1;
     {
-      if (((n - width)) < 0)pathcrawler_assert_exception("Variant non positive",11);
-      if(!((1 <= width) && (width <= ((2 * n) - 1))))pathcrawler_assert_exception("Loop invariant not established!", 22);
+      if (((n - width)) < 0)pathcrawler_assert_exception("Variant non positive",11);int __stady_pred_8 = (1 <= width);
+      if (__stady_pred_8) {
+      __stady_pred_8 = (width <= ((2 * n) - 1));
+      }
+      if(!__stady_pred_8)pathcrawler_assert_exception("Loop invariant not established!", 22);
       while (1) {
         int old_variant_11 = (n - width);
         {
@@ -226,8 +260,11 @@ void BottomUpSort(int n, int *A, int *B)
             int i;
             i = 0;
             {
-              if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",8);
-              if(!((0 <= i) && (i <= ((n + (2 * width)) - 1))))pathcrawler_assert_exception("Loop invariant not established!", 12);
+              if (((n - i)) < 0)pathcrawler_assert_exception("Variant non positive",8);int __stady_pred_9 = (0 <= i);
+              if (__stady_pred_9) {
+              __stady_pred_9 = (i <= ((n + (2 * width)) - 1));
+              }
+              if(!__stady_pred_9)pathcrawler_assert_exception("Loop invariant not established!", 12);
               while (1) {
                 int old_variant_8 = (n - i);
                 {
@@ -248,7 +285,11 @@ void BottomUpSort(int n, int *A, int *B)
                     BottomUpMerge(A,i,tmp_0,tmp,B);
                   }
                   i += 2 * width;
-                }if(!((0 <= i) && (i <= ((n + (2 * width)) - 1))))pathcrawler_assert_exception("Loop invariant not preserved!", 12);
+                }int __stady_pred_10 = (0 <= i);
+                if (__stady_pred_10) {
+                __stady_pred_10 = (i <= ((n + (2 * width)) - 1));
+                }
+                if(!__stady_pred_10)pathcrawler_assert_exception("Loop invariant not preserved!", 12);
                 if ((old_variant_8) < 0)pathcrawler_assert_exception("Variant non positive",8);
                 if (((n - i)) >= old_variant_8)pathcrawler_assert_exception("Variant non decreasing",8);}
                  }
@@ -256,7 +297,11 @@ void BottomUpSort(int n, int *A, int *B)
             CopyArray(A,B,n);
           }
           width = 2 * width;
-        }if(!((1 <= width) && (width <= ((2 * n) - 1))))pathcrawler_assert_exception("Loop invariant not preserved!", 22);
+        }int __stady_pred_11 = (1 <= width);
+        if (__stady_pred_11) {
+        __stady_pred_11 = (width <= ((2 * n) - 1));
+        }
+        if(!__stady_pred_11)pathcrawler_assert_exception("Loop invariant not preserved!", 22);
         if ((old_variant_11) < 0)pathcrawler_assert_exception("Variant non positive",11);
         if (((n - width)) >= old_variant_11)pathcrawler_assert_exception("Variant non decreasing",11);}
          }
@@ -292,14 +337,14 @@ void merge_sort(int *table, int l, int *ret)
   {
     BottomUpSort(l,table,ret);
     {
-      int __stady_pred_0 = 1;
+      int __stady_pred_12 = 1;
       {
       int __q_i;
-      for (__q_i = 0; __q_i < (old_l - 1) &&  __stady_pred_0; __q_i++) {
-      __stady_pred_0 = (*(old_ret + __q_i) <= *(old_ret + (__q_i + 1)));
+      for (__q_i = 0; __q_i < (old_l - 1) &&  __stady_pred_12; __q_i++) {
+      __stady_pred_12 = (*(old_ret + __q_i) <= *(old_ret + (__q_i + 1)));
       }
       }
-      if(!__stady_pred_0)pathcrawler_assert_exception("Post-condition!", 10);
+      if(!__stady_pred_12)pathcrawler_assert_exception("Post-condition!", 10);
       
       }
     free(old_ptr_table);
@@ -311,10 +356,10 @@ void merge_sort(int *table, int l, int *ret)
 
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:11:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:81:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:105:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:11:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:81:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:105:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_merge_sort ...
@@ -323,7 +368,7 @@ stady_temp.c:81:[kernel] warning: Calling undeclared function free. Old style K&
 [pc] Starting lanceur_pathcrawler__merge_sort_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 970 test cases
+[stady] 1296 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

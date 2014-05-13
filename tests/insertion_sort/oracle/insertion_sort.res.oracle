@@ -72,7 +72,11 @@ void insertion_sort(int *t, int n)
       }
       }
       if(!__stady_pred_0)pathcrawler_assert_exception("Loop invariant not established!", 9);
-      if(!((1 <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not established!", 5);
+      int __stady_pred_1 = (1 <= i);
+      if (__stady_pred_1) {
+      __stady_pred_1 = (i <= n);
+      }
+      if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not established!", 5);
       while (1) {
         int old_variant_1 = (n - i);
         {
@@ -82,15 +86,19 @@ void insertion_sort(int *t, int n)
           mv = *(t + i);
           j = i;
           {
-            if ((j) < 0)pathcrawler_assert_exception("Variant non positive",4);int __stady_pred_1 = 1;
+            if ((j) < 0)pathcrawler_assert_exception("Variant non positive",4);int __stady_pred_2 = 1;
             {
             int __q_k;
-            for (__q_k = j; __q_k < i &&  __stady_pred_1; __q_k++) {
-            __stady_pred_1 = (*(t + __q_k) > mv);
+            for (__q_k = j; __q_k < i &&  __stady_pred_2; __q_k++) {
+            __stady_pred_2 = (*(t + __q_k) > mv);
             }
             }
-            if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not established!", 11);
-            if(!((0 <= j) && (j <= i)))pathcrawler_assert_exception("Loop invariant not established!", 6);
+            if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not established!", 11);
+            int __stady_pred_3 = (0 <= j);
+            if (__stady_pred_3) {
+            __stady_pred_3 = (j <= i);
+            }
+            if(!__stady_pred_3)pathcrawler_assert_exception("Loop invariant not established!", 6);
             while (1) {
               int old_variant_4 = j;
               {
@@ -102,43 +110,51 @@ void insertion_sort(int *t, int n)
                                           
                 *(t + j) = *(t + (j - 1));
                 j --;
-              }if(!((0 <= j) && (j <= i)))pathcrawler_assert_exception("Loop invariant not preserved!", 6);
-              int __stady_pred_2 = 1;
+              }int __stady_pred_4 = (0 <= j);
+              if (__stady_pred_4) {
+              __stady_pred_4 = (j <= i);
+              }
+              if(!__stady_pred_4)pathcrawler_assert_exception("Loop invariant not preserved!", 6);
+              int __stady_pred_5 = 1;
               {
               int __q_k;
-              for (__q_k = j; __q_k < i &&  __stady_pred_2; __q_k++) {
-              __stady_pred_2 = (*(t + __q_k) > mv);
+              for (__q_k = j; __q_k < i &&  __stady_pred_5; __q_k++) {
+              __stady_pred_5 = (*(t + __q_k) > mv);
               }
               }
-              if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not preserved!", 11);
+              if(!__stady_pred_5)pathcrawler_assert_exception("Loop invariant not preserved!", 11);
               if ((old_variant_4) < 0)pathcrawler_assert_exception("Variant non positive",4);
               if ((j) >= old_variant_4)pathcrawler_assert_exception("Variant non decreasing",4);}
                }
              
           *(t + j) = mv;
           i ++;
-        }if(!((1 <= i) && (i <= n)))pathcrawler_assert_exception("Loop invariant not preserved!", 5);
-        int __stady_pred_3 = 1;
+        }int __stady_pred_6 = (1 <= i);
+        if (__stady_pred_6) {
+        __stady_pred_6 = (i <= n);
+        }
+        if(!__stady_pred_6)pathcrawler_assert_exception("Loop invariant not preserved!", 5);
+        int __stady_pred_7 = 1;
         {
         int __q_x;
-        for (__q_x = 0; __q_x < (i - 1) &&  __stady_pred_3; __q_x++) {
-        __stady_pred_3 = (*(t + __q_x) <= *(t + (__q_x + 1)));
+        for (__q_x = 0; __q_x < (i - 1) &&  __stady_pred_7; __q_x++) {
+        __stady_pred_7 = (*(t + __q_x) <= *(t + (__q_x + 1)));
         }
         }
-        if(!__stady_pred_3)pathcrawler_assert_exception("Loop invariant not preserved!", 9);
+        if(!__stady_pred_7)pathcrawler_assert_exception("Loop invariant not preserved!", 9);
         if ((old_variant_1) < 0)pathcrawler_assert_exception("Variant non positive",1);
         if (((n - i)) >= old_variant_1)pathcrawler_assert_exception("Variant non decreasing",1);}
          }
        
     {
-      int __stady_pred_4 = 1;
+      int __stady_pred_8 = 1;
       {
       int __q_x;
-      for (__q_x = 0; __q_x < (old_n - 1) &&  __stady_pred_4; __q_x++) {
-      __stady_pred_4 = (*(old_t + __q_x) <= *(old_t + (__q_x + 1)));
+      for (__q_x = 0; __q_x < (old_n - 1) &&  __stady_pred_8; __q_x++) {
+      __stady_pred_8 = (*(old_t + __q_x) <= *(old_t + (__q_x + 1)));
       }
       }
-      if(!__stady_pred_4)pathcrawler_assert_exception("Post-condition!", 10);
+      if(!__stady_pred_8)pathcrawler_assert_exception("Post-condition!", 10);
       
       }
     free(old_ptr_t);
@@ -149,10 +165,10 @@ void insertion_sort(int *t, int n)
 
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:103:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:119:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:103:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:119:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_insertion_sort utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_insertion_sort ...
@@ -161,7 +177,7 @@ stady_temp.c:103:[kernel] warning: Calling undeclared function free. Old style K
 [pc] Starting lanceur_pathcrawler__insertion_sort_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 297 test cases
+[stady] 343 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

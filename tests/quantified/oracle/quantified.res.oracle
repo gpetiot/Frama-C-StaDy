@@ -73,18 +73,22 @@ int __stady_pred_2 = 0;
 {
 int __q_j;
 for (__q_j = 0; __q_j < n && ! __stady_pred_2; __q_j++) {
-int __stady_pred_3 = 1;
+int __stady_pred_3 = (*(*(t + __q_i) + __q_j) == 1);
+if (__stady_pred_3) {
+int __stady_pred_4 = 1;
 {
 int __q_k;
-for (__q_k = 0; __q_k < n &&  __stady_pred_3; __q_k++) {
-int __stady_pred_4 = 1;
+for (__q_k = 0; __q_k < n &&  __stady_pred_4; __q_k++) {
+int __stady_pred_5 = 1;
 if ((__q_k != __q_j)) {
-__stady_pred_4 = (*(*(t + __q_i) + __q_k) == 0);
+__stady_pred_5 = (*(*(t + __q_i) + __q_k) == 0);
+}
+__stady_pred_4 = __stady_pred_5;
+}
 }
 __stady_pred_3 = __stady_pred_4;
 }
-}
-__stady_pred_2 = ((*(*(t + __q_i) + __q_j) == 1) && __stady_pred_3);
+__stady_pred_2 = __stady_pred_3;
 }
 }
 __stady_pred_1 = __stady_pred_2;
@@ -120,11 +124,11 @@ void f(int **t, int n)
 
 
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:48:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:61:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:52:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:65:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
-stady_temp.c:48:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:61:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:52:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
+stady_temp.c:65:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_f utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_f ...

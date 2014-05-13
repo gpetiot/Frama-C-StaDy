@@ -78,9 +78,16 @@ int binary_search(int *arr, int length, int query)
     low = 0;
     high = length - 1;
     {
-      if (((high - low)) < 0)pathcrawler_assert_exception("Variant non positive",7);
-      if(!(((low - 1) <= high) && (high <= (length - 1))))pathcrawler_assert_exception("Loop invariant not established!", 10);
-      if(!((0 <= low) && (low <= (high + 1))))pathcrawler_assert_exception("Loop invariant not established!", 4);
+      if (((high - low)) < 0)pathcrawler_assert_exception("Variant non positive",7);int __stady_pred_1 = ((low - 1) <= high);
+      if (__stady_pred_1) {
+      __stady_pred_1 = (high <= (length - 1));
+      }
+      if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not established!", 10);
+      int __stady_pred_2 = (0 <= low);
+      if (__stady_pred_2) {
+      __stady_pred_2 = (low <= (high + 1));
+      }
+      if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not established!", 4);
       while (1) {
         int old_variant_7 = (high - low);
         {
@@ -91,37 +98,41 @@ int binary_search(int *arr, int length, int query)
             int mean;
             mean = low + (high - low) / 2;
             {
-              if(!((low <= mean) && (mean <= high)))pathcrawler_assert_exception("Assert!", 5);
+              int __stady_pred_3 = (low <= mean);
+              if (__stady_pred_3) {
+              __stady_pred_3 = (mean <= high);
+              }
+              if(!__stady_pred_3)pathcrawler_assert_exception("Assert!", 5);
               ;}
                
             {
-              int __stady_pred_1 = 1;
-              if ((low < mean)) {
-              int __stady_pred_2 = 1;
-              {
-              int __q_x;
-              for (__q_x = 0; __q_x < low &&  __stady_pred_2; __q_x++) {
-              __stady_pred_2 = (*(arr + __q_x) != query);
-              }
-              }
-              __stady_pred_1 = __stady_pred_2;
-              }
-              if(!__stady_pred_1)pathcrawler_assert_exception("Assert!", 12);
-              ;}
-               
-            {
-              int __stady_pred_3 = 1;
-              if (((mean + 1) < high)) {
               int __stady_pred_4 = 1;
+              if ((low < mean)) {
+              int __stady_pred_5 = 1;
               {
               int __q_x;
-              for (__q_x = high+1; __q_x < length &&  __stady_pred_4; __q_x++) {
-              __stady_pred_4 = (*(arr + __q_x) != query);
+              for (__q_x = 0; __q_x < low &&  __stady_pred_5; __q_x++) {
+              __stady_pred_5 = (*(arr + __q_x) != query);
               }
               }
-              __stady_pred_3 = __stady_pred_4;
+              __stady_pred_4 = __stady_pred_5;
               }
-              if(!__stady_pred_3)pathcrawler_assert_exception("Assert!", 0);
+              if(!__stady_pred_4)pathcrawler_assert_exception("Assert!", 12);
+              ;}
+               
+            {
+              int __stady_pred_6 = 1;
+              if (((mean + 1) < high)) {
+              int __stady_pred_7 = 1;
+              {
+              int __q_x;
+              for (__q_x = high+1; __q_x < length &&  __stady_pred_7; __q_x++) {
+              __stady_pred_7 = (*(arr + __q_x) != query);
+              }
+              }
+              __stady_pred_6 = __stady_pred_7;
+              }
+              if(!__stady_pred_6)pathcrawler_assert_exception("Assert!", 0);
               ;}
                
             if (*(arr + mean) == query) {
@@ -137,8 +148,16 @@ int binary_search(int *arr, int length, int query)
                  high = mean - 1; }
                  
           }
-        }if(!((0 <= low) && (low <= (high + 1))))pathcrawler_assert_exception("Loop invariant not preserved!", 4);
-        if(!(((low - 1) <= high) && (high <= (length - 1))))pathcrawler_assert_exception("Loop invariant not preserved!", 10);
+        }int __stady_pred_8 = (0 <= low);
+        if (__stady_pred_8) {
+        __stady_pred_8 = (low <= (high + 1));
+        }
+        if(!__stady_pred_8)pathcrawler_assert_exception("Loop invariant not preserved!", 4);
+        int __stady_pred_9 = ((low - 1) <= high);
+        if (__stady_pred_9) {
+        __stady_pred_9 = (high <= (length - 1));
+        }
+        if(!__stady_pred_9)pathcrawler_assert_exception("Loop invariant not preserved!", 10);
         if ((old_variant_7) < 0)pathcrawler_assert_exception("Variant non positive",7);
         if (((high - low)) >= old_variant_7)pathcrawler_assert_exception("Variant non decreasing",7);}
          }
@@ -146,24 +165,28 @@ int binary_search(int *arr, int length, int query)
     __retres = -1;
     return_label:
       {
-        if(!(((- 1) <= __retres) && (__retres < old_length)))pathcrawler_assert_exception("Post-condition!", 11);
-        int __stady_pred_5 = 1;
+        int __stady_pred_10 = ((- 1) <= __retres);
+        if (__stady_pred_10) {
+        __stady_pred_10 = (__retres < old_length);
+        }
+        if(!__stady_pred_10)pathcrawler_assert_exception("Post-condition!", 11);
+        int __stady_pred_11 = 1;
         if ((__retres == (- 1))) {
-        int __stady_pred_6 = 1;
+        int __stady_pred_12 = 1;
         {
         int __q_i;
-        for (__q_i = 0; __q_i < old_length &&  __stady_pred_6; __q_i++) {
-        __stady_pred_6 = (*(old_arr + __q_i) != old_query);
+        for (__q_i = 0; __q_i < old_length &&  __stady_pred_12; __q_i++) {
+        __stady_pred_12 = (*(old_arr + __q_i) != old_query);
         }
         }
-        __stady_pred_5 = __stady_pred_6;
+        __stady_pred_11 = __stady_pred_12;
         }
-        if(!__stady_pred_5)pathcrawler_assert_exception("Post-condition!", 14);
-        int __stady_pred_7 = 1;
+        if(!__stady_pred_11)pathcrawler_assert_exception("Post-condition!", 14);
+        int __stady_pred_13 = 1;
         if ((__retres >= 0)) {
-        __stady_pred_7 = (*(old_arr + __retres) == old_query);
+        __stady_pred_13 = (*(old_arr + __retres) == old_query);
         }
-        if(!__stady_pred_7)pathcrawler_assert_exception("Post-condition!", 2);
+        if(!__stady_pred_13)pathcrawler_assert_exception("Post-condition!", 2);
         
         }
       free(old_ptr_arr);
@@ -174,10 +197,10 @@ int binary_search(int *arr, int length, int query)
 
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:22:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:124:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:147:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:22:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:124:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:147:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_binary_search utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_binary_search ...
@@ -186,7 +209,7 @@ stady_temp.c:124:[kernel] warning: Calling undeclared function free. Old style K
 [pc] Starting lanceur_pathcrawler__binary_search_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 321 test cases
+[stady] 423 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

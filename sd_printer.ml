@@ -913,15 +913,25 @@ class sd_printer props () = object(self)
       Format.fprintf Format.str_formatter "(! %s)" pred1_var;
       Format.flush_str_formatter()
     | Pand(pred1,pred2) ->
+      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+      pred_cpt <- pred_cpt + 1;
       let pred1_var = self#predicate_named_and_var fmt pred1 in
+      Format.fprintf fmt "int %s = %s;@\n" var pred1_var;
+      Format.fprintf fmt "if (%s) {@\n" var;
       let pred2_var = self#predicate_named_and_var fmt pred2 in
-      Format.fprintf Format.str_formatter "(%s && %s)" pred1_var pred2_var;
-      Format.flush_str_formatter()
+      Format.fprintf fmt "%s = %s;@\n" var pred2_var;
+      Format.fprintf fmt "}@\n";
+      var
     | Por(pred1,pred2) ->
+      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+      pred_cpt <- pred_cpt + 1;
       let pred1_var = self#predicate_named_and_var fmt pred1 in
+      Format.fprintf fmt "int %s = %s;@\n" var pred1_var;
+      Format.fprintf fmt "if (!%s) {@\n" var;
       let pred2_var = self#predicate_named_and_var fmt pred2 in
-      Format.fprintf Format.str_formatter "(%s || %s)" pred1_var pred2_var;
-      Format.flush_str_formatter()
+      Format.fprintf fmt "%s = %s;@\n" var pred2_var;
+      Format.fprintf fmt "}@\n";
+      var
     | Pimplies(pred1,pred2) ->
       let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
       pred_cpt <- pred_cpt + 1;

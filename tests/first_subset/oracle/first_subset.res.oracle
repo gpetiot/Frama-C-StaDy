@@ -66,11 +66,19 @@ void firstSubset(int *s, int n)
       {
       int __q_i;
       for (__q_i = 0; __q_i < k &&  __stady_pred_0; __q_i++) {
-      __stady_pred_0 = ((*(s + __q_i) == 0) || (*(s + __q_i) == 1));
+      int __stady_pred_1 = (*(s + __q_i) == 0);
+      if (!__stady_pred_1) {
+      __stady_pred_1 = (*(s + __q_i) == 1);
+      }
+      __stady_pred_0 = __stady_pred_1;
       }
       }
       if(!__stady_pred_0)pathcrawler_assert_exception("Loop invariant not established!", 5);
-      if(!((0 <= k) && (k <= n)))pathcrawler_assert_exception("Loop invariant not established!", 3);
+      int __stady_pred_2 = (0 <= k);
+      if (__stady_pred_2) {
+      __stady_pred_2 = (k <= n);
+      }
+      if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not established!", 3);
       while (1) {
         int old_variant_0 = (n - k);
         {
@@ -79,28 +87,40 @@ void firstSubset(int *s, int n)
                          
           *(s + k) = 0;
           k ++;
-        }if(!((0 <= k) && (k <= n)))pathcrawler_assert_exception("Loop invariant not preserved!", 3);
-        int __stady_pred_1 = 1;
+        }int __stady_pred_3 = (0 <= k);
+        if (__stady_pred_3) {
+        __stady_pred_3 = (k <= n);
+        }
+        if(!__stady_pred_3)pathcrawler_assert_exception("Loop invariant not preserved!", 3);
+        int __stady_pred_4 = 1;
         {
         int __q_i;
-        for (__q_i = 0; __q_i < k &&  __stady_pred_1; __q_i++) {
-        __stady_pred_1 = ((*(s + __q_i) == 0) || (*(s + __q_i) == 1));
+        for (__q_i = 0; __q_i < k &&  __stady_pred_4; __q_i++) {
+        int __stady_pred_5 = (*(s + __q_i) == 0);
+        if (!__stady_pred_5) {
+        __stady_pred_5 = (*(s + __q_i) == 1);
+        }
+        __stady_pred_4 = __stady_pred_5;
         }
         }
-        if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not preserved!", 5);
+        if(!__stady_pred_4)pathcrawler_assert_exception("Loop invariant not preserved!", 5);
         if ((old_variant_0) < 0)pathcrawler_assert_exception("Variant non positive",0);
         if (((n - k)) >= old_variant_0)pathcrawler_assert_exception("Variant non decreasing",0);}
          }
        
     {
-      int __stady_pred_2 = 1;
+      int __stady_pred_6 = 1;
       {
       int __q_i;
-      for (__q_i = 0; __q_i < old_n &&  __stady_pred_2; __q_i++) {
-      __stady_pred_2 = ((*(old_s + __q_i) == 0) || (*(old_s + __q_i) == 1));
+      for (__q_i = 0; __q_i < old_n &&  __stady_pred_6; __q_i++) {
+      int __stady_pred_7 = (*(old_s + __q_i) == 0);
+      if (!__stady_pred_7) {
+      __stady_pred_7 = (*(old_s + __q_i) == 1);
+      }
+      __stady_pred_6 = __stady_pred_7;
       }
       }
-      if(!__stady_pred_2)pathcrawler_assert_exception("Post-condition!", 6);
+      if(!__stady_pred_6)pathcrawler_assert_exception("Post-condition!", 6);
       
       }
     free(old_ptr_s);
@@ -111,10 +131,10 @@ void firstSubset(int *s, int n)
 
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:65:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:85:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
 stady_temp.c:14:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:65:[kernel] warning: Calling undeclared function free. Old style K&R code?
+stady_temp.c:85:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_firstSubset utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_firstSubset ...
@@ -123,7 +143,7 @@ stady_temp.c:65:[kernel] warning: Calling undeclared function free. Old style K&
 [pc] Starting lanceur_pathcrawler__firstSubset_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 119 test cases
+[stady] 153 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
