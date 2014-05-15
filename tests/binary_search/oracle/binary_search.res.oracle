@@ -18,7 +18,7 @@ dom('pathcrawler__binary_search_precond',A,B,C) :-
   dom('binary_search',A,B,C).
 create_input_vals('binary_search', Ins):-
   create_input_val(dim('arr'), int([1..4294967295]),Ins),
-  create_input_val('length', int([-2147483648..2147483647]),Ins),
+  create_input_val('length', int([1..3]),Ins),
   create_input_val('query', int([-2147483648..2147483647]),Ins),
   true.
 create_input_vals('pathcrawler__binary_search_precond',Ins) :-
@@ -31,9 +31,7 @@ quantif_preconds('pathcrawler__binary_search_precond',A) :-
   quantif_preconds('binary_search',A).
 unquantif_preconds('binary_search',
   [
-    cond(egal,dim('arr'),+(int(math), -(int(math), 'length', 1), 1),pre),
-    cond(infegal,'length',3,pre),
-    cond(inf,0,'length',pre)
+    cond(egal,dim('arr'),+(int(math), -(int(math), 'length', 1), 1),pre)
   ]
 ).
 unquantif_preconds('pathcrawler__binary_search_precond',A) :-

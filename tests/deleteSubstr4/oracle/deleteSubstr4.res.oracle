@@ -23,8 +23,8 @@ create_input_vals('delete_substr', Ins):-
   create_input_val(dim('str'), int([1..4294967295]),Ins),
   create_input_val(dim('substr'), int([1..4294967295]),Ins),
   create_input_val(dim('dest'), int([1..4294967295]),Ins),
-  create_input_val('strlen', int([-2147483648..2147483647]),Ins),
-  create_input_val('sublen', int([-2147483648..2147483647]),Ins),
+  create_input_val('strlen', int([-2147483648..2]),Ins),
+  create_input_val('sublen', int([1..2147483647]),Ins),
   true.
 create_input_vals('pathcrawler__delete_substr_precond',Ins) :-
   create_input_vals('delete_substr',Ins).
@@ -39,9 +39,7 @@ unquantif_preconds('delete_substr',
     cond(egal,dim('substr'),+(int(math), -(int(math), 'sublen', 1), 1),pre),
     cond(egal,dim('dest'),+(int(math), -(int(math), 'strlen', 1), 1),pre),
     cond(egal,dim('str'),+(int(math), -(int(math), 'strlen', 1), 1),pre),
-    cond(infegal,'sublen','strlen',pre),
-    cond(inf,0,'sublen',pre),
-    cond(infegal,'strlen',2,pre)
+    cond(infegal,'sublen','strlen',pre)
   ]
 ).
 unquantif_preconds('pathcrawler__delete_substr_precond',A) :-

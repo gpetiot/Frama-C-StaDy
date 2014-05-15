@@ -19,7 +19,7 @@ dom('pathcrawler__merge_sort_precond',A,B,C) :-
 create_input_vals('merge_sort', Ins):-
   create_input_val(dim('table'), int([1..4294967295]),Ins),
   create_input_val(dim('ret'), int([1..4294967295]),Ins),
-  create_input_val('l', int([-2147483648..2147483647]),Ins),
+  create_input_val('l', int([1..3]),Ins),
   true.
 create_input_vals('pathcrawler__merge_sort_precond',Ins) :-
   create_input_vals('merge_sort',Ins).
@@ -32,9 +32,7 @@ quantif_preconds('pathcrawler__merge_sort_precond',A) :-
 unquantif_preconds('merge_sort',
   [
     cond(egal,dim('ret'),+(int(math), -(int(math), 'l', 1), 1),pre),
-    cond(egal,dim('table'),+(int(math), -(int(math), 'l', 1), 1),pre),
-    cond(infegal,'l',3,pre),
-    cond(infegal,1,'l',pre)
+    cond(egal,dim('table'),+(int(math), -(int(math), 'l', 1), 1),pre)
   ]
 ).
 unquantif_preconds('pathcrawler__merge_sort_precond',A) :-

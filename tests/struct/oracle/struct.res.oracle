@@ -23,7 +23,8 @@ create_input_vals('f', Ins):-
   create_input_val(dim('s2'), int([1..4294967295]),Ins),
   create_input_val(dim(cont(cont('s',0),1)), int([1..4294967295]),Ins),
   create_input_val(dim(cont(cont('s2',0),1)), int([10..4294967295]),Ins),
-  create_input_val('n', int([-2147483648..2147483647]),Ins),
+  create_input_val('n', int([0..5]),Ins),
+  create_input_val(cont(cont('s',0),0), int([0..10]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
@@ -35,10 +36,6 @@ quantif_preconds('pathcrawler__f_precond',A) :-
   quantif_preconds('f',A).
 unquantif_preconds('f',
   [
-    cond(infegal,cont(cont('s',0),0),10,pre),
-    cond(infegal,0,cont(cont('s',0),0),pre),
-    cond(infegal,'n',5,pre),
-    cond(infegal,0,'n',pre)
   ]
 ).
 unquantif_preconds('pathcrawler__f_precond',A) :-
