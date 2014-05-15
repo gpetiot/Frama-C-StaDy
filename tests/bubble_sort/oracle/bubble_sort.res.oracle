@@ -15,7 +15,7 @@ dom('pathcrawler__bubble_sort_precond',A,B,C) :-
   dom('bubble_sort',A,B,C).
 create_input_vals('bubble_sort', Ins):-
   create_input_val(dim('A'), int([1..4294967295]),Ins),
-  create_input_val('n', int([-2147483648..2147483647]),Ins),
+  create_input_val('n', int([1..3]),Ins),
   true.
 create_input_vals('pathcrawler__bubble_sort_precond',Ins) :-
   create_input_vals('bubble_sort',Ins).
@@ -27,9 +27,7 @@ quantif_preconds('pathcrawler__bubble_sort_precond',A) :-
   quantif_preconds('bubble_sort',A).
 unquantif_preconds('bubble_sort',
   [
-    cond(egal,dim('A'),+(int(math), -(int(math), 'n', 1), 1),pre),
-    cond(infegal,'n',3,pre),
-    cond(inf,0,'n',pre)
+    cond(egal,dim('A'),+(int(math), -(int(math), 'n', 1), 1),pre)
   ]
 ).
 unquantif_preconds('pathcrawler__bubble_sort_precond',A) :-

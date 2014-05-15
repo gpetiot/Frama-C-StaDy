@@ -27,7 +27,7 @@ dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
   create_input_val(dim('t'), int([1..4294967295]),Ins),
-  create_input_val('n', int([-2147483648..2147483647]),Ins),
+  create_input_val('n', int([0..3]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
@@ -39,9 +39,7 @@ quantif_preconds('pathcrawler__f_precond',A) :-
   quantif_preconds('f',A).
 unquantif_preconds('f',
   [
-    cond(egal,dim('t'),+(int(math), -(int(math), 'n', 1), 1),pre),
-    cond(infegal,'n',3,pre),
-    cond(infegal,0,'n',pre)
+    cond(egal,dim('t'),+(int(math), -(int(math), 'n', 1), 1),pre)
   ]
 ).
 unquantif_preconds('pathcrawler__f_precond',A) :-

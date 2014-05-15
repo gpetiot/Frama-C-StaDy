@@ -16,8 +16,8 @@ type pl_term =
 | PLCVar of varinfo
 
 type pl_domain =
-| PLIntDom of pl_term * Integer.t * Integer.t
-| PLFloatDom of pl_term * string * string
+| PLIntDom of pl_term * Integer.t option * Integer.t option
+| PLFloatDom of pl_term * string option * string option
 
 type pl_rel = pl_term * relation * pl_term
 
@@ -39,17 +39,19 @@ let rec is_complex_term : pl_term -> bool =
   | PLDim t -> is_complex_term t
   | PLContAll _ -> true
   | PLCont (t1,t2) -> is_complex_term t1 || is_complex_term t2
-  | PLConst _ | PLLVar _ | PLCVar _ -> false
+  | PLConst _ | PLLVar _ -> false
+  | PLCVar v -> v.vglob (* domains of global variables must use dom(),
+			   not create_input_val() *)
 
 let is_complex_domain : pl_domain -> bool =
   function PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> is_complex_term t
 
 class pl_printer = object(self)
-  method pl_constant fmt = function
-  | PLInt i -> self#pl_integer fmt i
+  method constant fmt = function
+  | PLInt i -> self#integer fmt i
   | PLFloat f -> Format.fprintf fmt "(%f0)" f
       
-  method is_float = function
+  method private is_float = function
   | PLConst (PLInt _) | PLDim _ -> false
   | PLConst (PLFloat _) -> true
   | PLContAll t' | PLBinOp (t',_,_) | PLCont (t',_) -> self#is_float t'
@@ -63,40 +65,49 @@ class pl_printer = object(self)
   | Div -> Format.fprintf fmt "/"
   | _ -> assert false
 
-  method pl_term fmt = function
+  method term fmt = function
   | PLBinOp (t1, b, t2) ->
     Format.fprintf fmt "%a(%s(math), %a, %a)"
       self#binop b
       (if self#is_float t1 then "real" else "int")
-      self#pl_term t1
-      self#pl_term t2
-  | PLConst c -> self#pl_constant fmt c
-  | PLDim t' -> Format.fprintf fmt "dim(%a)" self#pl_term t'
-  | PLContAll t' -> Format.fprintf fmt "cont(%a,_)" self#pl_term t'
-  | PLCont (t1, t2) ->
-    Format.fprintf fmt "cont(%a,%a)" self#pl_term t1 self#pl_term t2
+      self#term t1
+      self#term t2
+  | PLConst c -> self#constant fmt c
+  | PLDim t' -> Format.fprintf fmt "dim(%a)" self#term t'
+  | PLContAll t' -> Format.fprintf fmt "cont(%a,_)" self#term t'
+  | PLCont (t1,t2) -> Format.fprintf fmt "cont(%a,%a)" self#term t1 self#term t2
   | PLLVar lv -> Format.fprintf fmt "%s" (String.uppercase lv.lv_name)
   | PLCVar v -> Format.fprintf fmt "'%s'" v.vname
 
-  method pl_integer fmt i = Integer.pretty fmt i
+  method integer fmt i = Integer.pretty fmt i
 
-  method pl_domain fmt = function
+  method integer_opt fmt = function
+  | Some i -> Format.fprintf fmt "%a" self#integer i
+  | None -> Format.fprintf fmt "?"
+
+  method domain fmt = function
   | PLIntDom (t',a,b) ->
     Format.fprintf fmt "%a, int([%a..%a])"
-      self#pl_term t'
-      self#pl_integer a
-      self#pl_integer b
+      self#term t'
+      self#integer_opt a
+      self#integer_opt b
   | PLFloatDom (t',str1,str2) ->
-    Format.fprintf fmt "%a, float([(%s)..(%s)])" self#pl_term t' str1 str2
+    Format.fprintf fmt "%a, float([(%s)..(%s)])"
+      self#term t'
+      (try Extlib.the str1 with _ -> "?")
+      (try Extlib.the str2 with _ -> "?")
 
-  method pl_complex_domain fmt = function
+  method complex_domain fmt = function
   | PLIntDom (t',a,b) ->
     Format.fprintf fmt "%a, [], int([%a..%a])"
-      self#pl_term t'
-      self#pl_integer a
-      self#pl_integer b
+      self#term t'
+      self#integer_opt a
+      self#integer_opt b
   | PLFloatDom (t',str1,str2) ->
-    Format.fprintf fmt "%a, [], float([(%s)..(%s)])" self#pl_term t' str1 str2
+    Format.fprintf fmt "%a, [], float([(%s)..(%s)])"
+      self#term t'
+      (try Extlib.the str1 with _ -> "?")
+      (try Extlib.the str2 with _ -> "?")
 
   method relation fmt = function
   | Rlt -> Format.fprintf fmt "inf"
@@ -106,13 +117,13 @@ class pl_printer = object(self)
   | Req -> Format.fprintf fmt "egal"
   | Rneq -> Format.fprintf fmt "diff"
 
-  method pl_rel fmt (t1,r,t2) =
+  method rel fmt (t1,r,t2) =
     Format.fprintf fmt "cond(%a,%a,%a,pre)"
       self#relation r
-      self#pl_term t1
-      self#pl_term t2
+      self#term t1
+      self#term t2
 
-  method pl_quantif fmt (lvars, compo_rels, (t1,r,t2)) =
+  method quantif fmt (lvars, compo_rels, (t1,r,t2)) =
     Format.fprintf fmt "uq_cond(\n  [\n";
     let rec aux = function
       | [] -> ()
@@ -124,14 +135,14 @@ class pl_printer = object(self)
     Format.fprintf fmt "  ],\n  [\n";
     let rec aux = function
       | [] -> ()
-      | h :: [] -> Format.fprintf fmt "    %a\n" self#pl_rel h
-      | h :: t -> Format.fprintf fmt "    %a,\n" self#pl_rel h; aux t
+      | h :: [] -> Format.fprintf fmt "    %a\n" self#rel h
+      | h :: t -> Format.fprintf fmt "    %a,\n" self#rel h; aux t
     in
     aux compo_rels;
     Format.fprintf fmt "  ],\n  %a,%a,%a)"
       self#relation r
-      self#pl_term t1
-      self#pl_term t2
+      self#term t1
+      self#term t2
 end
 
 
@@ -235,10 +246,10 @@ let rec input_from_type :
     match (Cil.unrollType ty) with
     | TEnum ({ekind=ik},_) | TInt (ik,_) ->
       let b_min, b_max = ibounds ik in
-      PLIntDom (t, b_min, b_max) :: domains
+      PLIntDom (t, Some b_min, Some b_max) :: domains
     | TFloat (fk,_) ->
       let b_min, b_max = fbounds fk in
-      PLFloatDom (t, b_min, b_max) :: domains
+      PLFloatDom (t, Some b_min, Some b_max) :: domains
     | TComp (ci,_,_) ->
       let rec aux doms i = function
 	| [] -> doms
@@ -254,17 +265,17 @@ let rec input_from_type :
 	if List.exists is_array_len att then
 	  match List.find is_array_len att with
 	  | AInt ii ->
-	    let d = PLIntDom (PLDim t, ii, ii) in
+	    let d = PLIntDom (PLDim t, Some ii, Some ii) in
 	    input_from_type (d :: domains) ty' (PLContAll t)
 	  | _ -> assert false
 	else
 	  assert false
       else
-	let d = PLIntDom (PLDim t, Integer.zero, maxuint) in
+	let d = PLIntDom (PLDim t, Some Integer.zero, Some maxuint) in
 	input_from_type (d :: domains) ty' (PLContAll t)
     | _ ->
       Sd_options.Self.feedback "input_from_type (%a) (%a)"
-	Printer.pp_typ ty (new pl_printer)#pl_term t;
+	Printer.pp_typ ty (new pl_printer)#term t;
       assert false
 
 let valid_to_prolog : term -> pl_constraint list =
@@ -273,7 +284,7 @@ let valid_to_prolog : term -> pl_constraint list =
     match term.term_node with
     | TLval _ ->
       let t = term_to_pl term in
-      [ PLDomain (PLIntDom (PLDim t, Integer.one, maxuint)) ]
+      [ PLDomain (PLIntDom (PLDim t, Some (Integer.one), Some maxuint)) ]
     | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
       let t' = term_to_pl t in
       let x' = term_to_pl x in
@@ -282,9 +293,9 @@ let valid_to_prolog : term -> pl_constraint list =
 	match x' with
 	| PLConst (PLInt i) ->
 	  let i' = Integer.add i Integer.one in
-	  [ PLDomain (PLIntDom (PLDim t', i', maxuint)) ]
+	  [ PLDomain (PLIntDom (PLDim t', Some i', Some maxuint)) ]
 	| _ ->
-	  [ PLDomain (PLIntDom (PLDim t', Integer.one, maxuint));
+	  [ PLDomain (PLIntDom (PLDim t', Some (Integer.one), Some maxuint));
 	    PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
       end
     | _ -> Sd_utils.error_term term
@@ -293,7 +304,39 @@ let rel_to_prolog : relation -> term -> term -> pl_constraint =
   fun rel term1 term2 ->
     let var1 = term_to_pl term1 in
     let var2 = term_to_pl term2 in
-    PLUnquantif (var1, rel, var2)
+    match var1 with
+    | PLConst (PLInt x) ->
+      begin
+	match var2 with
+	| PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
+	  begin
+	    match rel with
+	    | Rlt -> PLDomain (PLIntDom (var2, (Some (Integer.succ x)), None))
+	    | Rgt -> PLDomain (PLIntDom (var2, None, (Some (Integer.pred x))))
+	    | Rle -> PLDomain (PLIntDom (var2, (Some x), None))
+	    | Rge -> PLDomain (PLIntDom (var2, None, (Some x)))
+	    | Req -> PLDomain (PLIntDom (var2, (Some x), (Some x)))
+	    | Rneq -> PLUnquantif (var1, rel, var2)
+	  end
+	| _ -> PLUnquantif (var1, rel, var2)
+      end
+    | PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
+      begin
+	match var2 with
+	| PLConst (PLInt y) ->
+	  begin
+	    match rel with
+	    | Rlt -> PLDomain (PLIntDom (var1, None, (Some (Integer.pred y))))
+	    | Rgt -> PLDomain (PLIntDom (var1, (Some (Integer.succ y)), None))
+	    | Rle -> PLDomain (PLIntDom (var1, None, (Some y)))
+	    | Rge -> PLDomain (PLIntDom (var1, (Some y), None))
+	    | Req -> PLDomain (PLIntDom (var1, (Some y), (Some y)))
+	    | Rneq -> PLUnquantif (var1, rel, var2)
+	  end
+	| _ -> PLUnquantif (var1, rel, var2)
+      end
+    | _ -> PLUnquantif (var1, rel, var2)
+
 
 let rec requires_to_prolog :
     pl_constraint list -> predicate named -> pl_constraint list =
@@ -352,13 +395,19 @@ let translate () =
   let domains_tbl = Hashtbl.create 32 in
   let is_int_domain = function PLIntDom _ -> true | _ -> false in
   let int_doms, float_doms = List.partition is_int_domain domains in
+  let merge_int f a b =
+    match (a,b) with
+    | None, x -> x
+    | x, None -> x
+    | Some x, Some y -> Some (f x y)
+  in
   let merge_int_doms = function
     | PLIntDom (t, i1, i2) ->
       begin
 	try
 	  let lower, upper = Hashtbl.find domains_tbl t in
-	  let lower' = Integer.max lower i1 in
-	  let upper' = Integer.max upper i2 in
+	  let lower' = merge_int Integer.max lower i1 in
+	  let upper' = merge_int Integer.min upper i2 in
 	  Hashtbl.replace domains_tbl t (lower', upper')
 	with Not_found -> Hashtbl.add domains_tbl t (i1, i2)
       end
@@ -380,21 +429,21 @@ let translate () =
   List.iter
     (fun x ->
       Format.fprintf fmt "dom('%s', %a).\n"
-	func_name printer#pl_complex_domain x)
+	func_name printer#complex_domain x)
     complex_d;
   same_constraint_for_precond "dom" "A,B,C";
   Format.fprintf fmt "create_input_vals('%s', Ins):-\n" func_name;
   List.iter
     (fun x ->
-      Format.fprintf fmt "  create_input_val(%a,Ins),\n" printer#pl_domain x)
+      Format.fprintf fmt "  create_input_val(%a,Ins),\n" printer#domain x)
     simple_d;
   Format.fprintf fmt "  true.\n";
   same_constraint_for_precond "create_input_vals" "Ins";
   Format.fprintf fmt "quantif_preconds('%s',\n  [\n" func_name;
   let rec aux = function
     | [] -> ()
-    | h :: [] -> Format.fprintf fmt "    %a\n" printer#pl_quantif h
-    | h :: t -> Format.fprintf fmt "    %a,\n" printer#pl_quantif h; aux t
+    | h :: [] -> Format.fprintf fmt "    %a\n" printer#quantif h
+    | h :: t -> Format.fprintf fmt "    %a,\n" printer#quantif h; aux t
   in
   aux quantifs;
   Format.fprintf fmt "  ]\n).\n";
@@ -402,8 +451,8 @@ let translate () =
   Format.fprintf fmt "unquantif_preconds('%s',\n  [\n" func_name;
   let rec aux = function
     | [] -> ()
-    | h :: [] -> Format.fprintf fmt "    %a\n" printer#pl_rel h
-    | h :: t -> Format.fprintf fmt "    %a,\n" printer#pl_rel h; aux t
+    | h :: [] -> Format.fprintf fmt "    %a\n" printer#rel h
+    | h :: t -> Format.fprintf fmt "    %a,\n" printer#rel h; aux t
   in
   aux unquantifs;
   Format.fprintf fmt "  ]\n).\n";

@@ -19,7 +19,7 @@ create_input_vals('quick_sort', Ins):-
   create_input_val(dim('arr'), int([1..4294967295]),Ins),
   create_input_val(dim('beg'), int([100..4294967295]),Ins),
   create_input_val(dim('end'), int([100..4294967295]),Ins),
-  create_input_val('elements', int([-2147483648..2147483647]),Ins),
+  create_input_val('elements', int([0..3]),Ins),
   true.
 create_input_vals('pathcrawler__quick_sort_precond',Ins) :-
   create_input_vals('quick_sort',Ins).
@@ -31,9 +31,7 @@ quantif_preconds('pathcrawler__quick_sort_precond',A) :-
   quantif_preconds('quick_sort',A).
 unquantif_preconds('quick_sort',
   [
-    cond(egal,dim('arr'),+(int(math), -(int(math), 'elements', 1), 1),pre),
-    cond(infegal,0,'elements',pre),
-    cond(infegal,'elements',3,pre)
+    cond(egal,dim('arr'),+(int(math), -(int(math), 'elements', 1), 1),pre)
   ]
 ).
 unquantif_preconds('pathcrawler__quick_sort_precond',A) :-

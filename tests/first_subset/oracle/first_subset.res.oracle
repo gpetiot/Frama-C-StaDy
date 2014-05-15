@@ -15,7 +15,7 @@ dom('pathcrawler__firstSubset_precond',A,B,C) :-
   dom('firstSubset',A,B,C).
 create_input_vals('firstSubset', Ins):-
   create_input_val(dim('s'), int([1..4294967295]),Ins),
-  create_input_val('n', int([-2147483648..2147483647]),Ins),
+  create_input_val('n', int([0..3]),Ins),
   true.
 create_input_vals('pathcrawler__firstSubset_precond',Ins) :-
   create_input_vals('firstSubset',Ins).
@@ -27,9 +27,7 @@ quantif_preconds('pathcrawler__firstSubset_precond',A) :-
   quantif_preconds('firstSubset',A).
 unquantif_preconds('firstSubset',
   [
-    cond(egal,dim('s'),+(int(math), -(int(math), 'n', 1), 1),pre),
-    cond(infegal,'n',3,pre),
-    cond(supegal,'n',0,pre)
+    cond(egal,dim('s'),+(int(math), -(int(math), 'n', 1), 1),pre)
   ]
 ).
 unquantif_preconds('pathcrawler__firstSubset_precond',A) :-
