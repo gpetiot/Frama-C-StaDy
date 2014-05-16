@@ -128,7 +128,7 @@ class pl_printer = object(self)
     let rec aux = function
       | [] -> ()
       | h :: [] -> Format.fprintf fmt "    %s\n" (String.uppercase h.lv_name)
-      | h :: t -> Format.fprintf fmt "    %s,\n"(String.uppercase h.lv_name);
+      | h :: t -> Format.fprintf fmt "    %s,\n" (String.uppercase h.lv_name);
 	aux t
     in
     aux lvars;
@@ -385,10 +385,6 @@ let translate () =
   let domains = List.map unfold domains in
   let is_quantif = function PLQuantif _ -> true |  _ -> false in
   let quantifs, unquantifs = List.partition is_quantif constraints in
-  let unfold = function PLQuantif q -> q | _ -> assert false in
-  let quantifs = List.map unfold quantifs in
-  let unfold = function PLUnquantif q -> q | _ -> assert false in
-  let unquantifs = List.map unfold unquantifs in
   let formals = Kernel_function.get_formals kf in
   let create_input d v = input_from_type d v.vtype (PLCVar v) in
   let domains = List.fold_left create_input domains formals in
@@ -414,6 +410,41 @@ let translate () =
     | PLFloatDom _ -> assert false
   in
   List.iter merge_int_doms int_doms;
+  let extract_ops t =
+    let rec aux f = function
+      | PLCVar _ as t -> t, f
+      | PLBinOp (t',PlusA,PLConst (PLInt t'')) ->
+	aux (fun x -> Integer.add x t'') t'
+      | PLBinOp (t',MinusA,PLConst (PLInt t'')) ->
+	aux (fun x -> Integer.sub x t'') t'
+      | PLBinOp (t',Mult,PLConst (PLInt t'')) ->
+	aux (fun x -> Integer.mul x t'') t'
+      | _ -> assert false
+    in
+    aux (fun x -> x) t
+  in
+  let fixed_dims, unquantifs =
+    let rec aux ret1 ret2 = function
+      | (PLUnquantif (PLDim t1, Req, t2) as unquantif) :: t ->
+	begin
+	  try
+	    let t', to_apply = extract_ops t2 in
+	    let x, y = Hashtbl.find domains_tbl t' in
+	    let x = to_apply (Extlib.the x) in
+	    let y = to_apply (Extlib.the y) in
+	    if not (Integer.equal x y) then assert false;
+	    let x = Integer.succ x and y = Integer.succ y in
+	    let dom = PLIntDom (PLDim t1, Some x, Some y) in
+	    aux (dom::ret1) ret2 t
+	  with _ -> aux ret1 (unquantif::ret2) t
+	end
+      | unquantif :: t -> aux ret1 (unquantif::ret2) t
+      | [] -> ret1, ret2
+    in
+    aux [] [] unquantifs
+  in
+  let unquantifs = List.rev unquantifs in
+  List.iter merge_int_doms fixed_dims;
   let add_int_dom_to_list k (v,w) doms =  PLIntDom (k,v,w) :: doms in
   let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
   let domains = List.rev domains in
@@ -441,18 +472,18 @@ let translate () =
   same_constraint_for_precond "create_input_vals" "Ins";
   Format.fprintf fmt "quantif_preconds('%s',\n  [\n" func_name;
   let rec aux = function
-    | [] -> ()
-    | h :: [] -> Format.fprintf fmt "    %a\n" printer#quantif h
-    | h :: t -> Format.fprintf fmt "    %a,\n" printer#quantif h; aux t
+    | PLQuantif h::[] -> Format.fprintf fmt "    %a\n" printer#quantif h
+    | PLQuantif h::t -> Format.fprintf fmt "    %a,\n" printer#quantif h; aux t
+    | _ -> ()
   in
   aux quantifs;
   Format.fprintf fmt "  ]\n).\n";
   same_constraint_for_precond "quantif_preconds" "A";
   Format.fprintf fmt "unquantif_preconds('%s',\n  [\n" func_name;
   let rec aux = function
-    | [] -> ()
-    | h :: [] -> Format.fprintf fmt "    %a\n" printer#rel h
-    | h :: t -> Format.fprintf fmt "    %a,\n" printer#rel h; aux t
+    | PLUnquantif h :: [] -> Format.fprintf fmt "    %a\n" printer#rel h
+    | PLUnquantif h :: t -> Format.fprintf fmt "    %a,\n" printer#rel h; aux t
+    | _ -> ()
   in
   aux unquantifs;
   Format.fprintf fmt "  ]\n).\n";
