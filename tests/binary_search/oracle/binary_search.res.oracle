@@ -62,9 +62,9 @@ int binary_search(int *arr, int length, int query)
 {
   int *old_arr = arr;
   int *old_ptr_arr;
-  old_ptr_arr = malloc((((length - 1) + 1))*sizeof(int));
+  old_ptr_arr = malloc((length)*sizeof(int));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((length - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < length; __stady_iter_0++) {
   old_ptr_arr[__stady_iter_0] = arr[__stady_iter_0];
   }
   int old_length = length;
