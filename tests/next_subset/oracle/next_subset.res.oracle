@@ -76,9 +76,9 @@ int nextSubset(int *s, int n)
 {
   int *old_s = s;
   int *old_ptr_s;
-  old_ptr_s = malloc((((n - 1) + 1))*sizeof(int));
+  old_ptr_s = malloc((n)*sizeof(int));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((n - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < n; __stady_iter_0++) {
   old_ptr_s[__stady_iter_0] = s[__stady_iter_0];
   }
   int old_n = n;

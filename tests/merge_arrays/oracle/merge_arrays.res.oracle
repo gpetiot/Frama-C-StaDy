@@ -79,23 +79,23 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
 {
   int *old_t1 = t1;
   int *old_ptr_t1;
-  old_ptr_t1 = malloc((((l1 - 1) + 1))*sizeof(int));
+  old_ptr_t1 = malloc((l1)*sizeof(int));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((l1 - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < l1; __stady_iter_0++) {
   old_ptr_t1[__stady_iter_0] = t1[__stady_iter_0];
   }
   int *old_t2 = t2;
   int *old_ptr_t2;
-  old_ptr_t2 = malloc((((l2 - 1) + 1))*sizeof(int));
+  old_ptr_t2 = malloc((l2)*sizeof(int));
   int __stady_iter_1;
-  for (__stady_iter_1 = 0; __stady_iter_1 < ((l2 - 1) + 1); __stady_iter_1++) {
+  for (__stady_iter_1 = 0; __stady_iter_1 < l2; __stady_iter_1++) {
   old_ptr_t2[__stady_iter_1] = t2[__stady_iter_1];
   }
   int *old_t3 = t3;
   int *old_ptr_t3;
-  old_ptr_t3 = malloc(((((l1 + l2) - 1) + 1))*sizeof(int));
+  old_ptr_t3 = malloc(((l1 + l2))*sizeof(int));
   int __stady_iter_2;
-  for (__stady_iter_2 = 0; __stady_iter_2 < (((l1 + l2) - 1) + 1); __stady_iter_2++) {
+  for (__stady_iter_2 = 0; __stady_iter_2 < (l1 + l2); __stady_iter_2++) {
   old_ptr_t3[__stady_iter_2] = t3[__stady_iter_2];
   }
   int old_l1 = l1;

@@ -66,17 +66,17 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
   if(!((sublen - 1) >= 0 && pathcrawler_dimension(substr) > (sublen - 1)))pathcrawler_assert_exception("Pre-condition!", 5);
   char *old_str = str;
   char *old_ptr_str;
-  old_ptr_str = malloc((((strlen - 1) + 1))*sizeof(char));
+  old_ptr_str = malloc((strlen)*sizeof(char));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((strlen - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < strlen; __stady_iter_0++) {
   old_ptr_str[__stady_iter_0] = str[__stady_iter_0];
   }
   int old_strlen = strlen;
   char *old_substr = substr;
   char *old_ptr_substr;
-  old_ptr_substr = malloc((((sublen - 1) + 1))*sizeof(char));
+  old_ptr_substr = malloc((sublen)*sizeof(char));
   int __stady_iter_1;
-  for (__stady_iter_1 = 0; __stady_iter_1 < ((sublen - 1) + 1); __stady_iter_1++) {
+  for (__stady_iter_1 = 0; __stady_iter_1 < sublen; __stady_iter_1++) {
   old_ptr_substr[__stady_iter_1] = substr[__stady_iter_1];
   }
   int old_sublen = sublen;
@@ -256,25 +256,25 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 {
   char *old_str = str;
   char *old_ptr_str;
-  old_ptr_str = malloc((((strlen - 1) + 1))*sizeof(char));
+  old_ptr_str = malloc((strlen)*sizeof(char));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((strlen - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < strlen; __stady_iter_0++) {
   old_ptr_str[__stady_iter_0] = str[__stady_iter_0];
   }
   int old_strlen = strlen;
   char *old_substr = substr;
   char *old_ptr_substr;
-  old_ptr_substr = malloc((((sublen - 1) + 1))*sizeof(char));
+  old_ptr_substr = malloc((sublen)*sizeof(char));
   int __stady_iter_1;
-  for (__stady_iter_1 = 0; __stady_iter_1 < ((sublen - 1) + 1); __stady_iter_1++) {
+  for (__stady_iter_1 = 0; __stady_iter_1 < sublen; __stady_iter_1++) {
   old_ptr_substr[__stady_iter_1] = substr[__stady_iter_1];
   }
   int old_sublen = sublen;
   char *old_dest = dest;
   char *old_ptr_dest;
-  old_ptr_dest = malloc((((strlen - 1) + 1))*sizeof(char));
+  old_ptr_dest = malloc((strlen)*sizeof(char));
   int __stady_iter_2;
-  for (__stady_iter_2 = 0; __stady_iter_2 < ((strlen - 1) + 1); __stady_iter_2++) {
+  for (__stady_iter_2 = 0; __stady_iter_2 < strlen; __stady_iter_2++) {
   old_ptr_dest[__stady_iter_2] = dest[__stady_iter_2];
   }
   {

@@ -14,6 +14,16 @@ let rec extract_from_valid : term -> varinfo * term =
   fun t -> match t.term_node with
   | TBinOp((PlusPI|IndexPI),
 	   ({term_node=TLval(TVar v, _)}),
+	   ({term_node=
+	       Trange(_,
+		      Some {term_node=
+			  TBinOp (MinusA, x,
+				  {term_node=TConst (Integer (i, _))})})}))
+      when Integer.equal i Integer.one ->
+    let varinfo = Extlib.the v.lv_origin in
+    varinfo, x
+  | TBinOp((PlusPI|IndexPI),
+	   ({term_node=TLval(TVar v, _)}),
 	   ({term_node=Trange(_,Some bound)})) ->
     let varinfo = Extlib.the v.lv_origin in
     let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
@@ -28,6 +38,16 @@ let rec extract_from_valid : term -> varinfo * term =
     let einfo = {exp_type=t2.term_type; exp_name=[]} in
     let term = Cil.term_of_exp_info t.term_loc tnode einfo in
     varinfo, term
+  | TBinOp((PlusPI|IndexPI),
+	   ({term_node=TLval tlval}),
+	   ({term_node=
+	       Trange(_,
+		      Some {term_node=
+			  TBinOp (MinusA, x,
+				  {term_node=TConst (Integer (i, _))})})}))
+      when Integer.equal i Integer.one ->
+    let varinfo, _ = extract_from_valid {t with term_node=TLval tlval} in
+    varinfo, x
   | TBinOp((PlusPI|IndexPI),
 	   ({term_node=TLval tlval}),
 	   ({term_node=Trange(_,Some bound)})) ->

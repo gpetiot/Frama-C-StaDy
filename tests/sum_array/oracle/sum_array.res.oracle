@@ -13,9 +13,9 @@ double sum_array(double *t, int n)
 {
   double *old_t = t;
   double *old_ptr_t;
-  old_ptr_t = malloc((((n - 1) + 1))*sizeof(double));
+  old_ptr_t = malloc((n)*sizeof(double));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((n - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < n; __stady_iter_0++) {
   old_ptr_t[__stady_iter_0] = t[__stady_iter_0];
   }
   int old_n = n;

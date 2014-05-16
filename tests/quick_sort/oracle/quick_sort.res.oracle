@@ -54,9 +54,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
 {
   int *old_arr = arr;
   int *old_ptr_arr;
-  old_ptr_arr = malloc((((elements - 1) + 1))*sizeof(int));
+  old_ptr_arr = malloc((elements)*sizeof(int));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((elements - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < elements; __stady_iter_0++) {
   old_ptr_arr[__stady_iter_0] = arr[__stady_iter_0];
   }
   int old_elements = elements;

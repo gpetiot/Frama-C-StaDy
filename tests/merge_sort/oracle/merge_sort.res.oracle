@@ -53,9 +53,9 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   if(!((iEnd - 1) >= 0 && pathcrawler_dimension(B) > (iEnd - 1)))pathcrawler_assert_exception("Pre-condition!", 26);
   int *old_A = A;
   int *old_ptr_A;
-  old_ptr_A = malloc((((iRight - 1) + 1))*sizeof(int));
+  old_ptr_A = malloc((iRight)*sizeof(int));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((iRight - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < iRight; __stady_iter_0++) {
   old_ptr_A[__stady_iter_0] = A[__stady_iter_0];
   }
   int old_iLeft = iLeft;
@@ -63,9 +63,9 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   int old_iEnd = iEnd;
   int *old_B = B;
   int *old_ptr_B;
-  old_ptr_B = malloc((((iEnd - 1) + 1))*sizeof(int));
+  old_ptr_B = malloc((iEnd)*sizeof(int));
   int __stady_iter_1;
-  for (__stady_iter_1 = 0; __stady_iter_1 < ((iEnd - 1) + 1); __stady_iter_1++) {
+  for (__stady_iter_1 = 0; __stady_iter_1 < iEnd; __stady_iter_1++) {
   old_ptr_B[__stady_iter_1] = B[__stady_iter_1];
   }
   {
@@ -159,16 +159,16 @@ void CopyArray(int *A, int *B, int n)
   if(!((n - 1) >= 0 && pathcrawler_dimension(B) > (n - 1)))pathcrawler_assert_exception("Pre-condition!", 15);
   int *old_A = A;
   int *old_ptr_A;
-  old_ptr_A = malloc((((n - 1) + 1))*sizeof(int));
+  old_ptr_A = malloc((n)*sizeof(int));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((n - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < n; __stady_iter_0++) {
   old_ptr_A[__stady_iter_0] = A[__stady_iter_0];
   }
   int *old_B = B;
   int *old_ptr_B;
-  old_ptr_B = malloc((((n - 1) + 1))*sizeof(int));
+  old_ptr_B = malloc((n)*sizeof(int));
   int __stady_iter_1;
-  for (__stady_iter_1 = 0; __stady_iter_1 < ((n - 1) + 1); __stady_iter_1++) {
+  for (__stady_iter_1 = 0; __stady_iter_1 < n; __stady_iter_1++) {
   old_ptr_B[__stady_iter_1] = B[__stady_iter_1];
   }
   int old_n = n;
@@ -227,16 +227,16 @@ void BottomUpSort(int n, int *A, int *B)
   int old_n = n;
   int *old_A = A;
   int *old_ptr_A;
-  old_ptr_A = malloc((((n - 1) + 1))*sizeof(int));
+  old_ptr_A = malloc((n)*sizeof(int));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((n - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < n; __stady_iter_0++) {
   old_ptr_A[__stady_iter_0] = A[__stady_iter_0];
   }
   int *old_B = B;
   int *old_ptr_B;
-  old_ptr_B = malloc((((n - 1) + 1))*sizeof(int));
+  old_ptr_B = malloc((n)*sizeof(int));
   int __stady_iter_1;
-  for (__stady_iter_1 = 0; __stady_iter_1 < ((n - 1) + 1); __stady_iter_1++) {
+  for (__stady_iter_1 = 0; __stady_iter_1 < n; __stady_iter_1++) {
   old_ptr_B[__stady_iter_1] = B[__stady_iter_1];
   }
   {
@@ -319,17 +319,17 @@ void merge_sort(int *table, int l, int *ret)
 {
   int *old_table = table;
   int *old_ptr_table;
-  old_ptr_table = malloc((((l - 1) + 1))*sizeof(int));
+  old_ptr_table = malloc((l)*sizeof(int));
   int __stady_iter_0;
-  for (__stady_iter_0 = 0; __stady_iter_0 < ((l - 1) + 1); __stady_iter_0++) {
+  for (__stady_iter_0 = 0; __stady_iter_0 < l; __stady_iter_0++) {
   old_ptr_table[__stady_iter_0] = table[__stady_iter_0];
   }
   int old_l = l;
   int *old_ret = ret;
   int *old_ptr_ret;
-  old_ptr_ret = malloc((((l - 1) + 1))*sizeof(int));
+  old_ptr_ret = malloc((l)*sizeof(int));
   int __stady_iter_1;
-  for (__stady_iter_1 = 0; __stady_iter_1 < ((l - 1) + 1); __stady_iter_1++) {
+  for (__stady_iter_1 = 0; __stady_iter_1 < l; __stady_iter_1++) {
   old_ptr_ret[__stady_iter_1] = ret[__stady_iter_1];
   }
   {
