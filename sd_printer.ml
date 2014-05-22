@@ -127,6 +127,7 @@ class sd_printer props () = object(self)
   inherit Printer.extensible_printer () as super
 
   val mutable pred_cpt = 0
+  val mutable term_cpt = 0
   val mutable postcond : Format.formatter -> unit = ignore
   val mutable dealloc : Format.formatter -> unit = ignore
   val mutable result_varinfo = None
@@ -143,6 +144,16 @@ class sd_printer props () = object(self)
   (* we can only modify the property_status of the properties that have really
      been translated into pathcrawler_assert_exception *)
   val mutable translated_properties = []
+
+  method private fresh_pred_var() =
+    let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+    pred_cpt <- pred_cpt + 1;
+    var
+
+  method private fresh_term_var() =
+    let var = "__stady_term_" ^ (string_of_int term_cpt) in
+    term_cpt <- term_cpt + 1;
+    var
 
   (* getter *)
   method translated_properties() = Sd_utils.no_repeat translated_properties
@@ -199,7 +210,7 @@ class sd_printer props () = object(self)
   (* \min, \max, \sum, \product and \numof *)
   method private lambda_and_var fmt li lower upper q t =
     let builtin_name = li.l_var_info.lv_name in
-    let var = "__stady_term_" ^ (string_of_int pred_cpt) in
+    let var = self#fresh_term_var() in
     let iter = q.lv_name in
     let maxuint =
       Integer.to_string (Cil.max_unsigned_number (Sd_utils.machdep())) in
@@ -257,7 +268,6 @@ class sd_printer props () = object(self)
       | s when s = "\\numof" -> "int", "0"
       | _ -> assert false
     in
-    pred_cpt <- pred_cpt + 1;
     Format.fprintf fmt "%s %s = %s;@\n" init_type var init_val;
     Format.fprintf fmt "{@\n";
     Format.fprintf fmt "int %s;@\n" iter;
@@ -346,8 +356,7 @@ class sd_printer props () = object(self)
     | TCoerce (t, _) -> self#term_and_var fmt t
     | TLval tlval -> self#tlval_and_var fmt tlval
     | Tif (cond, then_b, else_b) ->
-      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-      pred_cpt <- pred_cpt + 1;
+      let var = self#fresh_term_var() in
       Format.fprintf fmt "int %s;@\n" var;
       let cond' = self#term_and_var fmt cond in
       Format.fprintf fmt "if (%s) {@\n" cond';
@@ -929,13 +938,12 @@ class sd_printer props () = object(self)
   method private quantif_predicate_and_var ~forall fmt logic_vars hyps goal =
     if (List.length logic_vars) > 1 then
       failwith "quantification on many variables unsupported!";
-    let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+    let var = self#fresh_pred_var() in
     let guards, vars = Sd_utils.compute_guards [] logic_vars hyps in
     if vars <> [] then
       failwith "Unguarded variables in quantification!";
     let t1,r1,lv,r2,t2 = List.hd guards in
     let iter = lv.lv_name in
-    pred_cpt <- pred_cpt + 1;
     Format.fprintf fmt "int %s = %i;@\n" var (if forall then 1 else 0);
     Format.fprintf fmt "{@\n";
     Format.fprintf fmt "int %s;@\n" iter;
@@ -981,8 +989,7 @@ class sd_printer props () = object(self)
       Format.fprintf Format.str_formatter "(! %s)" pred1_var;
       Format.flush_str_formatter()
     | Pand(pred1,pred2) ->
-      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-      pred_cpt <- pred_cpt + 1;
+      let var = self#fresh_pred_var() in
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       Format.fprintf fmt "int %s = %s;@\n" var pred1_var;
       Format.fprintf fmt "if (%s) {@\n" var;
@@ -991,8 +998,7 @@ class sd_printer props () = object(self)
       Format.fprintf fmt "}@\n";
       var
     | Por(pred1,pred2) ->
-      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-      pred_cpt <- pred_cpt + 1;
+      let var = self#fresh_pred_var() in
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       Format.fprintf fmt "int %s = %s;@\n" var pred1_var;
       Format.fprintf fmt "if (!%s) {@\n" var;
@@ -1001,8 +1007,7 @@ class sd_printer props () = object(self)
       Format.fprintf fmt "}@\n";
       var
     | Pimplies(pred1,pred2) ->
-      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-      pred_cpt <- pred_cpt + 1;
+      let var = self#fresh_pred_var() in
       Format.fprintf fmt "int %s = 1;@\n" var;
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       Format.fprintf fmt "if (%s) {@\n" pred1_var;

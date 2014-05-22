@@ -33,11 +33,11 @@ double sum_array(double *t, int n)
       }
       }
       if(!(s == __stady_term_0))pathcrawler_assert_exception("Loop invariant not established!", 3);
-      int __stady_pred_1 = (0 <= i);
-      if (__stady_pred_1) {
-      __stady_pred_1 = (i <= n);
+      int __stady_pred_0 = (0 <= i);
+      if (__stady_pred_0) {
+      __stady_pred_0 = (i <= n);
       }
-      if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not established!", 1);
+      if(!__stady_pred_0)pathcrawler_assert_exception("Loop invariant not established!", 1);
       while (1) {
         int old_variant_2 = (n - i);
         {
@@ -46,32 +46,32 @@ double sum_array(double *t, int n)
                          
           s += *(t + i);
           i ++;
-        }int __stady_pred_2 = (0 <= i);
-        if (__stady_pred_2) {
-        __stady_pred_2 = (i <= n);
+        }int __stady_pred_1 = (0 <= i);
+        if (__stady_pred_1) {
+        __stady_pred_1 = (i <= n);
         }
-        if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not preserved!", 1);
-        double __stady_term_3 = 0;
+        if(!__stady_pred_1)pathcrawler_assert_exception("Loop invariant not preserved!", 1);
+        double __stady_term_1 = 0;
         {
         int k;
         for(k=0; k <= (i - 1); k++) {
-        __stady_term_3 += *(t + k);
+        __stady_term_1 += *(t + k);
         }
         }
-        if(!(s == __stady_term_3))pathcrawler_assert_exception("Loop invariant not preserved!", 3);
+        if(!(s == __stady_term_1))pathcrawler_assert_exception("Loop invariant not preserved!", 3);
         if ((old_variant_2) < 0)pathcrawler_assert_exception("Variant non positive",2);
         if (((n - i)) >= old_variant_2)pathcrawler_assert_exception("Variant non decreasing",2);}
          }
        
     {
-      double __stady_term_4 = 0;
+      double __stady_term_2 = 0;
       {
       int k;
       for(k=0; k <= (old_n - 1); k++) {
-      __stady_term_4 += *(old_t + k);
+      __stady_term_2 += *(old_t + k);
       }
       }
-      if(!(s == __stady_term_4))pathcrawler_assert_exception("Post-condition!", 4);
+      if(!(s == __stady_term_2))pathcrawler_assert_exception("Post-condition!", 4);
       
       }
     free(old_ptr_t);
