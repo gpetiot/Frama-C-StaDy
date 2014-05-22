@@ -16,6 +16,9 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
+dom('merge_arrays', dim('t1'), [], int([1..4294967295])).
+dom('merge_arrays', dim('t2'), [], int([1..4294967295])).
+dom('merge_arrays', dim('t3'), [], int([1..4294967295])).
 dom('merge_arrays', cont('t1',_), [], int([-2147483648..2147483647])).
 dom('merge_arrays', cont('t2',_), [], int([-2147483648..2147483647])).
 dom('merge_arrays', cont('t3',_), [], int([-2147483648..2147483647])).

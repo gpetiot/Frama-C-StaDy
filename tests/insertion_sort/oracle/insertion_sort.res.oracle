@@ -10,6 +10,7 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
+dom('insertion_sort', dim('t'), [], int([1..4294967295])).
 dom('insertion_sort', cont('t',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__insertion_sort_precond',A,B,C) :-
   dom('insertion_sort',A,B,C).

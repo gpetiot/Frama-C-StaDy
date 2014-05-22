@@ -117,7 +117,7 @@ let error_term : term -> 'a =
     match term.term_node with
     | TLogic_coerce _ -> failwith "TLogic_coerce"
     | TBinOp _ -> failwith "TBinOp"
-    | Trange _ -> failwith "Rrange"
+    | Trange _ -> failwith "Trange"
     | TConst _ -> failwith "TConst"
     | TLval _ -> failwith "TLval"
     | TSizeOf _ -> failwith "TSizeOf"

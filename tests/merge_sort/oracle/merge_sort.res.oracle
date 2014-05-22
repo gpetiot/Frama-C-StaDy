@@ -12,6 +12,8 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
+dom('merge_sort', dim('table'), [], int([1..4294967295])).
+dom('merge_sort', dim('ret'), [], int([1..4294967295])).
 dom('merge_sort', cont('table',_), [], int([-2147483648..2147483647])).
 dom('merge_sort', cont('ret',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__merge_sort_precond',A,B,C) :-

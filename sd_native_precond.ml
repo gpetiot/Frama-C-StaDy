@@ -33,18 +33,25 @@ type pl_constraint =
 
 
 
-let rec is_complex_term : pl_term -> bool =
-  function
-  | PLBinOp (t1,_,t2) -> is_complex_term t1 || is_complex_term t2
-  | PLDim t -> is_complex_term t
-  | PLContAll _ -> true
-  | PLCont (t1,t2) -> is_complex_term t1 || is_complex_term t2
-  | PLConst _ | PLLVar _ -> false
-  | PLCVar v -> v.vglob (* domains of global variables must use dom(),
-			   not create_input_val() *)
+let in_dom : pl_domain -> bool =
+  let rec aux = function
+    | PLBinOp _ -> true
+    | PLDim _ -> true
+    | PLContAll _ -> true
+    | PLCont _ -> true
+    | PLConst _ | PLLVar _ | PLCVar _ -> false
+  in
+  function | PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> aux t
 
-let is_complex_domain : pl_domain -> bool =
-  function PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> is_complex_term t
+let in_create_input_val : pl_domain -> bool =
+  let rec aux = function
+    | PLBinOp (t1,_,t2) -> aux t1 && aux t2
+    | PLDim t -> aux t
+    | PLContAll _ -> false
+    | PLCont (t1,t2) -> aux t1 && aux t2
+    | PLConst _ | PLLVar _ | PLCVar _ -> true
+  in
+  function | PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> aux t
 
 class pl_printer = object(self)
   method constant fmt = function
@@ -183,6 +190,8 @@ class to_pl = object(self)
     function
     | TVar v -> self#logic_var v
     | TResult _ -> assert false
+    | TMem {term_node=TBinOp((PlusPI|IndexPI),x,y)} ->
+      PLCont (self#term x, self#term y)
     | TMem m -> PLCont (self#term m, PLConst (PLInt Integer.zero))
 
   method term_lval : term_lval -> pl_term =
@@ -388,6 +397,7 @@ let translate () =
   let formals = Kernel_function.get_formals kf in
   let create_input d v = input_from_type d v.vtype (PLCVar v) in
   let domains = List.fold_left create_input domains formals in
+  let domains = Globals.Vars.fold (fun v _ d -> create_input d v) domains in
   let domains_tbl = Hashtbl.create 32 in
   let is_int_domain = function PLIntDom _ -> true | _ -> false in
   let int_doms, float_doms = List.partition is_int_domain domains in
@@ -448,7 +458,6 @@ let translate () =
   let add_int_dom_to_list k (v,w) doms =  PLIntDom (k,v,w) :: doms in
   let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
   let domains = List.rev domains in
-  let complex_d, simple_d = List.partition is_complex_domain domains in
   let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
   let same_constraint_for_precond before after =
     Format.fprintf fmt "%s('%s',%s) :-\n  %s('%s',%s).\n"
@@ -459,15 +468,17 @@ let translate () =
   Format.fprintf fmt "%s" prolog_header;
   List.iter
     (fun x ->
-      Format.fprintf fmt "dom('%s', %a).\n"
-	func_name printer#complex_domain x)
-    complex_d;
+      if in_dom x then
+	Format.fprintf fmt "dom('%s', %a).\n"
+	  func_name printer#complex_domain x)
+    domains;
   same_constraint_for_precond "dom" "A,B,C";
   Format.fprintf fmt "create_input_vals('%s', Ins):-\n" func_name;
   List.iter
     (fun x ->
-      Format.fprintf fmt "  create_input_val(%a,Ins),\n" printer#domain x)
-    simple_d;
+      if in_create_input_val x then
+	Format.fprintf fmt "  create_input_val(%a,Ins),\n" printer#domain x)
+    domains;
   Format.fprintf fmt "  true.\n";
   same_constraint_for_precond "create_input_vals" "Ins";
   Format.fprintf fmt "quantif_preconds('%s',\n  [\n" func_name;
