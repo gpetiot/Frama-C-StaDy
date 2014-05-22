@@ -10,6 +10,9 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
+dom('quick_sort', dim('arr'), [], int([1..4294967295])).
+dom('quick_sort', dim('beg'), [], int([100..4294967295])).
+dom('quick_sort', dim('end'), [], int([100..4294967295])).
 dom('quick_sort', cont('arr',_), [], int([-2147483648..2147483647])).
 dom('quick_sort', cont('beg',_), [], int([-2147483648..2147483647])).
 dom('quick_sort', cont('end',_), [], int([-2147483648..2147483647])).

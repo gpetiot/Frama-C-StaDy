@@ -13,6 +13,7 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
+dom('nextSubset', dim('s'), [], int([1..4294967295])).
 dom('nextSubset', cont('s',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__nextSubset_precond',A,B,C) :-
   dom('nextSubset',A,B,C).

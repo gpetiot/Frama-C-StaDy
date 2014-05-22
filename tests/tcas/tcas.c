@@ -1,22 +1,22 @@
 
 /* run.config
-OPT: -main entry_point -stady -stady-msg-key generated-c,generated-pl -then -report
+OPT: -main alt_sep_test -stady -stady-pc-options="-lib-entry" -stady-msg-key generated-c,generated-pl -then -report
 */
 
 
-int Cur_Vertical_Sep = 16684;
-int High_Confidence = 32767;
+int Cur_Vertical_Sep;// = 16684;
+int High_Confidence;// = 32767;
 int Two_of_Three_Reports_Valid;
 int Own_Tracked_Alt;
-int Own_Tracked_Alt_Rate = 450;
+int Own_Tracked_Alt_Rate;// = 450;
 int Other_Tracked_Alt;
 int Alt_Layer_Value;		
-int Positive_RA_Alt_Thresh[4] = {16434,0,0,0};
+int* Positive_RA_Alt_Thresh;//[4];// = {16434,0,0,0};
 int Up_Separation;
 int Down_Separation;
 int Other_RAC;
-int Other_Capability = 0;
-int Climb_Inhibit = 1;
+int Other_Capability;// = 0;
+int Climb_Inhibit;// = 1;
 
 
 int Own_Below_Threat() {
@@ -71,6 +71,63 @@ int Non_Crossing_Biased_Descend() {
 
 
 
+/*@ requires 300 <= Other_Tracked_Alt <= 1000;
+  @ requires 300 <= Own_Tracked_Alt <= 1000;
+  @ requires 0 <= Alt_Layer_Value < 4;
+  @ requires 0 <= Other_RAC <= 2;
+  @ requires 0 <= Two_of_Three_Reports_Valid <= 1;
+  @ requires Other_Capability == 0;
+  @ requires Climb_Inhibit == 1;
+  @ requires Cur_Vertical_Sep == 16684;
+  @ requires High_Confidence == 32464;
+  @ requires Own_Tracked_Alt_Rate == 450;
+  @ requires \valid(Positive_RA_Alt_Thresh+(0..3));
+  @ requires Positive_RA_Alt_Thresh[0] == 16434;
+  @ requires Positive_RA_Alt_Thresh[1] == 0;
+  @ requires Positive_RA_Alt_Thresh[2] == 0;
+  @ requires Positive_RA_Alt_Thresh[3] == 0;
+  @
+  @ behavior P1a :
+  @   assumes Up_Separation >= Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Down_Separation < Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   ensures \result != 2;
+  @ behavior P1b :
+  @   assumes Up_Separation < Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Down_Separation >= Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   ensures \result != 1;
+  @ behavior P2a :
+  @   assumes Up_Separation < Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Down_Separation < Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Up_Separation > Down_Separation;
+  @   ensures \result != 2;
+  @ behavior P2b :
+  @   assumes Up_Separation < Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Down_Separation < Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Up_Separation < Down_Separation;
+  @   ensures \result != 1;
+  @ behavior P3a :
+  @   assumes Up_Separation >= Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Down_Separation >= Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Own_Tracked_Alt > Other_Tracked_Alt;
+  @   ensures \result != 2;
+  @ behavior P3b :
+  @   assumes Up_Separation >= Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Down_Separation >= Positive_RA_Alt_Thresh[Alt_Layer_Value];
+  @   assumes Own_Tracked_Alt < Other_Tracked_Alt;
+  @   ensures \result != 1;
+  @ behavior P4a :
+  @   assumes Own_Tracked_Alt > Other_Tracked_Alt;
+  @   ensures \result != 2;
+  @ behavior P4b :
+  @   assumes Own_Tracked_Alt < Other_Tracked_Alt;
+  @   ensures \result != 1;
+  @ behavior P5a :
+  @   assumes Up_Separation > Down_Separation;
+  @   ensures \result != 2;
+  @ behavior P5b :
+  @   assumes Up_Separation < Down_Separation;
+  @   ensures \result != 1;
+  @*/
 int alt_sep_test() {
   int enabled, tcas_equipped, intent_not_known;
   int need_upward_RA = 0;
@@ -99,73 +156,4 @@ int alt_sep_test() {
   }
   
   return alt_sep;
-}
-
-
-
-
-/*@ requires 300 <= other_tracked_alt <= 1000;
-  @ requires 300 <= own_tracked_alt <= 1000;
-  @ requires 0 <= alt_layer_value < 4;
-  @ requires 0 <= other_rac <= 2;
-  @ requires 0 <= two_of_three_reports_valid <= 1;
-  @
-  @ behavior P1a :
-  @   assumes up_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes down_separation < Positive_RA_Alt_Thresh[alt_layer_value];
-  @   ensures \result != 2;
-  @ behavior P1b :
-  @   assumes up_separation < Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes down_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
-  @   ensures \result != 1;
-  @ behavior P2a :
-  @   assumes up_separation < Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes down_separation < Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes up_separation > down_separation;
-  @   ensures \result != 2;
-  @ behavior P2b :
-  @   assumes up_separation < Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes down_separation < Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes up_separation < down_separation;
-  @   ensures \result != 1;
-  @ behavior P3a :
-  @   assumes up_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes down_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes own_tracked_alt > other_tracked_alt;
-  @   ensures \result != 2;
-  @ behavior P3b :
-  @   assumes up_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes down_separation >= Positive_RA_Alt_Thresh[alt_layer_value];
-  @   assumes own_tracked_alt < other_tracked_alt;
-  @   ensures \result != 1;
-  @ behavior P4a :
-  @   assumes own_tracked_alt > other_tracked_alt;
-  @   ensures \result != 2;
-  @ behavior P4b :
-  @   assumes own_tracked_alt < other_tracked_alt;
-  @   ensures \result != 1;
-  @ behavior P5a :
-  @   assumes up_separation > down_separation;
-  @   ensures \result != 2;
-  @ behavior P5b :
-  @   assumes up_separation < down_separation;
-  @   ensures \result != 1;
-  @*/
-int entry_point(int two_of_three_reports_valid,
-		int own_tracked_alt,
-		int other_tracked_alt,
-		int alt_layer_value,
-		int up_separation,
-		int down_separation,
-		int other_rac)
-{
-  Two_of_Three_Reports_Valid = two_of_three_reports_valid;
-  Own_Tracked_Alt = own_tracked_alt;
-  Other_Tracked_Alt = other_tracked_alt;
-  Alt_Layer_Value = alt_layer_value;
-  Up_Separation = up_separation;
-  Down_Separation = down_separation;
-  Other_RAC = other_rac;
-
-  return alt_sep_test();
 }

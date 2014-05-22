@@ -10,6 +10,7 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
+dom('num_of', dim('t'), [], int([1..4294967295])).
 dom('num_of', cont('t',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__num_of_precond',A,B,C) :-
   dom('num_of',A,B,C).
