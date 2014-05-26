@@ -1,0 +1,79 @@
+[kernel] preprocessing with "gcc -C -E -I.  tests/num_of/num_of.c"
+[stady:generated-pl] generated Prolog precondition:
+:- module(test_parameters).
+:- import create_input_val/3 from substitution.
+:- export dom/4.
+:- export create_input_vals/2.
+:- export unquantif_preconds/2.
+:- export quantif_preconds/2.
+:- export strategy/2.
+:- export precondition_of/2.
+
+dom(0,0,0,0).
+dom('num_of', cont('t',_), [], int([-2147483648..2147483647])).
+dom('pathcrawler__num_of_precond',A,B,C) :-
+  dom('num_of',A,B,C).
+create_input_vals('num_of', Ins):-
+  create_input_val(dim('t'), int([1..4294967295]),Ins),
+  create_input_val('n', int([-2147483648..2147483647]),Ins),
+  true.
+create_input_vals('pathcrawler__num_of_precond',Ins) :-
+  create_input_vals('num_of',Ins).
+quantif_preconds('num_of',
+  [
+  ]
+).
+quantif_preconds('pathcrawler__num_of_precond',A) :-
+  quantif_preconds('num_of',A).
+unquantif_preconds('num_of',
+  [
+    cond(egal,dim('t'),+(int(math), -(int(math), 'n', 1), 1),pre),
+    cond(sup,'n',0,pre),
+    cond(infegal,'n',3,pre)
+  ]
+).
+unquantif_preconds('pathcrawler__num_of_precond',A) :-
+  unquantif_preconds('num_of',A).
+strategy('num_of',[]).
+strategy('pathcrawler__num_of_precond',A) :-
+  strategy('num_of',A).
+precondition_of('num_of','pathcrawler__num_of_precond').
+[kernel] Current source was: tests/num_of/num_of.c:20
+         The full backtrace is:
+         Called from file "sd_printer.ml", line 1394, characters 13-37
+         Called from file "sd_printer.ml", line 928, characters 14-63
+         Called from file "sd_printer.ml", line 1041, characters 5-67
+         Called from file "sd_printer.ml", line 1044, characters 3-42
+         Called from file "list.ml", line 69, characters 12-15
+         Called from file "hashtbl.ml", line 145, characters 8-13
+         Called from file "hashtbl.ml", line 148, characters 4-19
+         Called from file "src/logic/annotations.ml", line 377, characters 4-116
+         Called from file "sd_printer.ml", line 964, characters 4-1023
+         Called from file "src/printer/cil_printer.ml", line 805, characters 18-50
+         Called from file "format.ml", line 1157, characters 10-25
+         Called from file "format.ml", line 1157, characters 10-25
+         Called from file "format.ml", line 1157, characters 10-25
+         Called from file "format.ml", line 1157, characters 10-25
+         Called from file "src/printer/cil_printer.ml", line 917, characters 9-48
+         Called from file "src/printer/cil_printer.ml", line 930, characters 4-49
+         Called from file "sd_printer.ml", line 902, characters 4-39
+         Called from file "sd_printer.ml", line 1221, characters 3-26
+         Called from file "list.ml", line 69, characters 12-15
+         Called from file "cil/src/cil.ml", line 5444, characters 3-30
+         Called from file "src/printer/cil_printer.ml", line 2571, characters 4-53
+         Called from file "sd_register.ml", line 26, characters 2-30
+         Called from file "sd_register.ml", line 56, characters 4-50
+         Called from file "sd_register.ml", line 276, characters 6-25
+         Called from file "src/project/state_builder.ml", line 841, characters 9-13
+         Re-raised at file "src/project/state_builder.ml", line 849, characters 15-18
+         Called from file "queue.ml", line 134, characters 6-20
+         Called from file "src/kernel/boot.ml", line 37, characters 4-20
+         Called from file "src/kernel/cmdline.ml", line 735, characters 2-9
+         Called from file "src/kernel/cmdline.ml", line 214, characters 4-8
+         
+         Unexpected error (File "sd_printer.ml", line 475, characters 7-13: Assertion failed).
+         Please report as 'crash' at http://bts.frama-c.com/.
+         Your Frama-C version is Neon-20140301+dev.
+         Note that a version and a backtrace alone often do not contain enough
+         information to understand the bug. Guidelines for reporting bugs are at:
+         http://bts.frama-c.com/dokuwiki/doku.php?id=mantis:frama-c:bug_reporting_guidelines

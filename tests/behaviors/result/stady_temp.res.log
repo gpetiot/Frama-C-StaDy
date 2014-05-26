@@ -1,0 +1,4 @@
+[kernel] preprocessing with "gcc -C -E -I.  tests/behaviors/stady_temp.c"
+tests/behaviors/stady_temp.c:7:[kernel] failure: Unexpected type of the called function x: int
+[kernel] user error: skipping file "tests/behaviors/stady_temp.c" that has errors.
+[kernel] Frama-C aborted: invalid user input.

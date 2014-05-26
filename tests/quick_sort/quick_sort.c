@@ -68,7 +68,7 @@ void main(int argc, char** argv) {
   for(i = 1; i < argc; i++)
     tab[i-1] = atoi(argv[i]);
   int beg[MAX_LEVELS], end[MAX_LEVELS];
-  quicksort(tab, argc-1, beg, end);
+  quick_sort(tab, argc-1, beg, end);
   for(i = 0; i < argc-1; i++)
     printf("%i ", tab[i]);
   printf("\n");
