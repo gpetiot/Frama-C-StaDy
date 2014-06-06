@@ -15,14 +15,9 @@ PLUGIN_TESTS_DIRS := \
 	tcas \
 	first_subset \
 	next_subset \
-	deleteSubstr0 \
 	deleteSubstr1a \
-	deleteSubstr1b \
 	deleteSubstr1c \
-	deleteSubstr1d \
-	deleteSubstr2a \
 	deleteSubstr2b \
-	deleteSubstr2c \
 	deleteSubstr3 \
 	deleteSubstr4 \
 	sum_array \
@@ -30,6 +25,9 @@ PLUGIN_TESTS_DIRS := \
 	struct \
 	overflow_should_crash \
 	overflow_shouldnt_crash
+
+#unused tests: deleteSubstr0 deleteSubstr1b deleteSubstr1d deleteSubstr2a deleteSubstr2c
+
 PLUGIN_PTESTS_OPTS := -j 1
 
 PLUGIN_CMO	:= \
