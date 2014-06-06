@@ -27,7 +27,9 @@ PLUGIN_TESTS_DIRS := \
 	deleteSubstr4 \
 	sum_array \
 	num_of \
-	struct
+	struct \
+	overflow_should_crash \
+	overflow_shouldnt_crash
 PLUGIN_PTESTS_OPTS := -j 1
 
 PLUGIN_CMO	:= \

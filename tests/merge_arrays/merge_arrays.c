@@ -8,11 +8,11 @@ OPT: -main merge_arrays -stady -stady-msg-key generated-c,generated-pl -then -re
   @ requires \valid_read(t1+(0..l1-1));
   @ requires \valid_read(t2+(0..l2-1));
   @ requires \valid(t3+(0..(l1+l2-1)));
-  @ requires \forall int i; 0 <= i < l1-1 ==> t1[i] <= t1[i+1];
-  @ requires \forall int i; 0 <= i < l2-1 ==> t2[i] <= t2[i+1];
+  @ requires \forall integer i; 0 <= i < l1-1 ==> t1[i] <= t1[i+1];
+  @ requires \forall integer i; 0 <= i < l2-1 ==> t2[i] <= t2[i+1];
   @ typically l1 <= 3;
   @ typically l2 <= 3;
-  @ ensures \forall int i; 0 <= i < l1+l2-1 ==> t3[i] <= t3[i+1];
+  @ ensures \forall integer i; 0 <= i < l1+l2-1 ==> t3[i] <= t3[i+1];
   @*/
 void merge_arrays (int t1[], int t2[], int t3[], int l1, int l2) {
   int i = 0, j = 0, k = 0;

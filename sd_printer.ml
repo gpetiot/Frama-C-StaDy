@@ -127,6 +127,8 @@ class sd_printer props () = object(self)
   inherit Printer.extensible_printer () as super
 
   val mutable pred_cpt = 0
+  val mutable term_cpt = 0
+  val mutable gmp_cpt = 0
   val mutable postcond : Format.formatter -> unit = ignore
   val mutable dealloc : Format.formatter -> unit = ignore
   val mutable result_varinfo = None
@@ -143,6 +145,21 @@ class sd_printer props () = object(self)
   (* we can only modify the property_status of the properties that have really
      been translated into pathcrawler_assert_exception *)
   val mutable translated_properties = []
+
+  method private fresh_pred_var() =
+    let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+    pred_cpt <- pred_cpt + 1;
+    var
+
+  method private fresh_term_var() =
+    let var = "__stady_term_" ^ (string_of_int term_cpt) in
+    term_cpt <- term_cpt + 1;
+    var
+
+  method private fresh_gmp_var() =
+    let var = "__stady_gmp_" ^ (string_of_int gmp_cpt) in
+    gmp_cpt <- gmp_cpt + 1;
+    var
 
   (* getter *)
   method translated_properties() = Sd_utils.no_repeat translated_properties
@@ -199,122 +216,328 @@ class sd_printer props () = object(self)
   (* \min, \max, \sum, \product and \numof *)
   method private lambda_and_var fmt li lower upper q t =
     let builtin_name = li.l_var_info.lv_name in
-    let var = "__stady_term_" ^ (string_of_int pred_cpt) in
+    let var = self#fresh_gmp_var() in
     let iter = q.lv_name in
-    let maxuint =
-      Integer.to_string (Cil.max_unsigned_number (Sd_utils.machdep())) in
-    let maxint =
-      Integer.to_string (Cil.max_signed_number (Sd_utils.machdep())) in
-    let minint =
-      Integer.to_string (Cil.min_signed_number (Sd_utils.machdep())) in
-    let ctype_min_max_from_ltype = function
-      | Ctype (TInt (IBool, _)) | Ctype (TEnum ({ekind=IBool},_)) ->
-	"_Bool", "0", "1"
-      | Ctype(TInt((IChar|ISChar),_))|Ctype(TEnum({ekind=(IChar|ISChar)},_)) ->
-	"char", "-128", "127"
-      | Ctype (TInt (IUChar, _)) | Ctype (TEnum ({ekind=IUChar},_)) ->
-	"unsigned char", "0", "255"
-      | Ctype (TInt (IInt, _)) | Ctype (TEnum ({ekind=IInt},_)) ->
-	"int", minint, maxint
-      | Ctype (TInt (IUInt, _)) | Ctype (TEnum ({ekind=IUInt},_)) ->
-	"unsigned int", "0", maxuint
-      | Ctype (TInt (IShort, _)) | Ctype (TEnum ({ekind=IShort},_)) ->
-	"short", minint, maxint
-      | Ctype (TInt (IUShort, _)) | Ctype (TEnum ({ekind=IUShort},_)) ->
-	"unsigned short", "0", maxuint
-      | Ctype (TInt (ILong, _)) | Ctype (TEnum ({ekind=ILong},_)) ->
-	"long", minint, maxint
-      | Ctype (TInt (IULong, _)) | Ctype (TEnum ({ekind=IULong},_)) ->
-	"unsigned long", "0", maxuint
-      | Ctype (TInt (ILongLong, _)) | Ctype (TEnum ({ekind=ILongLong},_)) ->
-	"long long", minint, maxint
-      | Ctype (TInt (IULongLong, _)) | Ctype (TEnum ({ekind=IULongLong},_)) ->
-	"unsigned long long", "0", maxuint
-      | Ctype (TFloat (FFloat, _)) ->
-	"float", "-3.40282347e+38", "3.40282347e+38"
-      | Ctype (TFloat (FDouble, _)) ->
-	"double", "-1.7976931348623157e+308", "1.7976931348623157e+308"
-      | Ctype (TFloat (FLongDouble, _)) ->
-	"long double", "-1.7976931348623157e+308", "1.7976931348623157e+308"
-      | Ltype _ -> assert false
-      | Lvar _ -> assert false
-      | Linteger -> (* TODO: use GMP *)
-	"int", minint, maxint
-      | Lreal -> (* TODO: use GMP *)
-	"double", "-1.7976931348623157e+308", "1.7976931348623157e+308"
-      | Larrow _ -> assert false
-      | _ -> assert false
+    let init_val = match builtin_name with
+      | s when s = "\\sum" -> "0"
+      | s when s = "\\product" -> "1"
+      | s when s = "\\numof" -> "0"
+      | _ -> assert false (* unreachable *)
     in
-    let init_type, init_val = match builtin_name with
-      | s when s = "\\min" ->
-	let t,min,_ = ctype_min_max_from_ltype t.term_type in t, min
-      | s when s = "\\max" ->
-	let t,_,max = ctype_min_max_from_ltype t.term_type in t, max
-      | s when s = "\\sum" ->
-	let t,_,_ = ctype_min_max_from_ltype t.term_type in t, "0"
-      | s when s = "\\product" ->
-	let t,_,_ = ctype_min_max_from_ltype t.term_type in t, "1"
-      | s when s = "\\numof" -> "int", "0"
-      | _ -> assert false
-    in
-    pred_cpt <- pred_cpt + 1;
-    Format.fprintf fmt "%s %s = %s;@\n" init_type var init_val;
+    Format.fprintf fmt "mpz_t %s;@\n" var;
+    Format.fprintf fmt "__gmpz_init_set_si(%s, %s);@\n" var init_val;
     Format.fprintf fmt "{@\n";
-    Format.fprintf fmt "int %s;@\n" iter;
     let low = self#term_and_var fmt lower in
     let up = self#term_and_var fmt upper in
-    Format.fprintf fmt "for(%s=%s; %s <= %s; %s++) {@\n" iter low iter up iter;
-    let lambda_term = self#term_and_var fmt t in
-    let f = match builtin_name with
-      | s when s = "\\min" ->
-	fun fmt -> Format.fprintf fmt "if(%s < %s) { %s = %s; }@\n"
-	  lambda_term var var lambda_term
-      | s when s = "\\max" ->
-	fun fmt -> Format.fprintf fmt "if(%s > %s) { %s = %s; }@\n"
-	  lambda_term var var lambda_term
-      | s when s = "\\sum" ->
-	fun fmt -> Format.fprintf fmt "%s += %s;@\n" var lambda_term
-      | s when s = "\\product" ->
-	fun fmt -> Format.fprintf fmt "%s *= %s;@\n" var lambda_term
-      | s when s = "\\numof" ->
-	fun fmt -> Format.fprintf fmt "if(%s) { %s ++; }@\n" lambda_term var
-      | _ -> assert false
-    in
-    f fmt;
-    Format.fprintf fmt "}@\n}@\n";
-    var
+    begin
+      match lower.term_type with
+      | Linteger ->
+	begin
+	  match upper.term_type with
+	  | Linteger ->
+	    Format.fprintf fmt "mpz_t %s;@\n" iter;
+	    Format.fprintf fmt "__gmpz_init_set(%s, %s);@\n" iter low;
+	    Format.fprintf fmt "for(; __gmpz_cmp(%s, %s) <= 0;) {@\n" iter up;
+	    let lambda_term = self#term_and_var fmt t in
+	    let f = match builtin_name with
+	      | s when s = "\\sum" ->
+		fun fmt -> Format.fprintf fmt "__gmpz_add(%s, %s, %s);@\n"
+		  var var lambda_term
+	      | s when s = "\\product" ->
+		fun fmt -> Format.fprintf fmt "__gmpz_mult(%s, %s, %s);@\n"
+		  var var lambda_term
+	      | s when s = "\\numof" ->
+		(* lambda_term is of type:
+		   Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
+		fun fmt -> Format.fprintf fmt
+		  "if(%s) __gmpz_add_ui(%s, %s, 1);@\n" lambda_term var var
+	      | _ -> assert false
+	    in
+	    f fmt;
+	    Format.fprintf fmt "__gmpz_add_ui(%s, %s, 1);@\n" iter iter;
+	    if builtin_name <> "\\numof" then
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" lambda_term;
+	    Format.fprintf fmt "}@\n";
+	    Format.fprintf fmt "__gmpz_clear(%s);@\n" iter;
+	    Format.fprintf fmt "__gmpz_clear(%s);@\n" low;
+	    Format.fprintf fmt "__gmpz_clear(%s);@\n" up;
+	    Format.fprintf fmt "}@\n";
+	    var
+	  | Lreal -> assert false (* unreachable *)
+	  | _ -> assert false (* unreachable ? *)
+	end
+      | Lreal -> assert false (* unreachable *)
+      | _ -> assert false (* unreachable ? *)
+    end
 
-  (* special treatment for \old terms *)
   method private term_node_and_var fmt t =
+    let ty = t.term_type in
     match t.term_node with
-    | Tnull -> "0"
-    | TCastE (_, t') -> self#term_and_var fmt t'
-    | TConst(Integer(i,_)) ->
-      if (Integer.to_string i) = "-2147483648" then
-	"(-2147483647-1)"
-      else
-	(Format.fprintf Format.str_formatter "%a" super#term_node t;
-	 Format.flush_str_formatter())
-    | Tapp (li,_,[lower;upper;{term_node=Tlambda([q],t)}]) ->
-      self#lambda_and_var fmt li lower upper q t
-    | Tapp (li,_,[param]) ->
-      let var = self#term_and_var fmt param in
-      let builtin_name = li.l_var_info.lv_name in
-      let func_name =
-	if builtin_name = "\\cos" then "cos"
-	else if builtin_name = "\\abs" then "abs"
-	else if builtin_name = "\\sqrt" then "sqrt"
-	else assert false
-      in
-      Format.fprintf Format.str_formatter "%s(%s)" func_name var;
+
+    | TConst _ ->
+      begin
+	match ty with
+	| Linteger ->
+	  let var = self#fresh_gmp_var() in
+	  Format.fprintf fmt "mpz_t %s;@\n" var;
+	  Format.fprintf fmt "__gmpz_init_set_si(%s, %a);@\n" var self#term t;
+	  var
+	| Lreal -> assert false (* TODO: reals *)
+	| _ ->
+	  (Format.fprintf Format.str_formatter "%a" super#term_node t;
+	   Format.flush_str_formatter())
+      end
+
+    | TLval tlval ->
+      begin
+	match ty with
+	| Linteger ->
+	  let var = self#fresh_gmp_var() in
+	  let t' = self#tlval_and_var fmt tlval in
+	  Format.fprintf fmt "mpz_t %s;@\n" var;
+	  Format.fprintf fmt "__gmpz_init_set(%s, %s);@\n" var t';
+	  var
+	| Lreal -> assert false (* TODO: reals *)
+	| _ -> self#tlval_and_var fmt tlval
+      end
+
+    | TSizeOf _
+    | TSizeOfE _
+    | TSizeOfStr _
+    | TAlignOf _
+    | TAlignOfE _ ->
+      Format.fprintf Format.str_formatter "%a" super#term_node t;
       Format.flush_str_formatter()
-    | Tapp (li,_,[param1;param2]) ->
-      let var1 = self#term_and_var fmt param1 in
-      let var2 = self#term_and_var fmt param2 in
-      let builtin_name = li.l_var_info.lv_name in
-      let func_name = if builtin_name = "\\pow" then "pow" else assert false in
-      Format.fprintf Format.str_formatter "%s(%s,%s)" func_name var1 var2;
+
+    | TUnOp(op, t') ->
+      begin
+	match ty with
+	| Linteger ->
+	  assert(op = Neg);
+	  let x = self#term_and_var fmt t' in
+	  let var = self#fresh_gmp_var() in
+	  (* pb neg *) let zero = self#fresh_gmp_var() in
+	  Format.fprintf fmt "mpz_t %s;@\n" var;
+	  (* pb neg *) Format.fprintf fmt "mpz_t %s;@\n" zero;
+	  Format.fprintf fmt "__gmpz_init(%s);@\n" var;
+	  (* pb neg *)
+	  Format.fprintf fmt "__gmpz_init_set_si(%s, 0);@\n" zero;
+	  (* pb neg *) (*Format.fprintf fmt "__gmpz_neg(%s, %s);@\n" var x;*)
+	  (* pb neg *)
+	  Format.fprintf fmt "__gmpz_sub(%s, %s, %s);@\n"
+	    var zero x;
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" x;
+	  (* pb neg *) Format.fprintf fmt "__gmpz_clear(%s);@\n" zero;
+	  var
+	| Lreal -> assert false (* TODO: reals *)
+	| _ ->
+	  let x = self#term_and_var fmt t' in
+	  Format.fprintf Format.str_formatter "(%a %s)" self#unop op x;
+	  Format.flush_str_formatter()
+      end
+
+    | TBinOp((IndexPI|PlusPI), t1, t2) ->
+      begin
+	match t2.term_type with
+	| Linteger ->
+	  let x = self#term_and_var fmt t1 and y = self#term_and_var fmt t2 in
+	  Format.fprintf Format.str_formatter "(%s + __gmpz_get_si(%s))" x y;
+	  Format.flush_str_formatter()
+	| Lreal -> assert false (* unreachable *)
+	| _ ->
+	  let x = self#term_and_var fmt t1 and y = self#term_and_var fmt t2 in
+	  Format.fprintf Format.str_formatter "(%s + %s)" x y;
+	  Format.flush_str_formatter()
+      end
+
+    | TBinOp(op, t1, t2) ->
+      begin
+	match ty with
+	| Linteger ->
+	  let x = self#term_and_var fmt t1 and y = self#term_and_var fmt t2 in
+	  let var = self#fresh_gmp_var() in
+	  Format.fprintf fmt "mpz_t %s;@\n" var;
+	  Format.fprintf fmt "__gmpz_init(%s);@\n" var;
+	  let op' = match op with
+	    | PlusA -> "__gmpz_add"
+	    | MinusA -> "__gmpz_sub"
+	    | Mult -> "__gmpz_mul"
+	    | Div -> "__gmpz_tdiv_q"
+	    | Mod -> "__gmpz_tdiv_r"
+	    | _ -> assert false
+	  in
+	  begin
+	    match t1.term_type, t2.term_type with
+	    | Linteger, Linteger ->
+	      Format.fprintf fmt "%s(%s, %s, %s);@\n" op' var x y;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" x;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" y;
+	      var
+	    | Linteger,Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_))->
+	      Format.fprintf fmt "%s_ui(%s, %s, %s);@\n" op' var x y;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" x;
+	      var
+	    | Linteger, Ctype (TInt _) ->
+	      Format.fprintf fmt "%s_si(%s, %s, %s);@\n" op' var x y;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" x;
+	      var
+	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)),Linteger->
+	      if op = PlusA || op = Mult then
+		begin
+		  Format.fprintf fmt "%s_ui(%s, %s, %s);@\n" op' var y x;
+		  Format.fprintf fmt "__gmpz_clear(%s);@\n" y;
+		  var
+		end
+	      else
+		assert false (* TODO *)
+	    | Ctype (TInt _), Linteger ->
+	      if op = PlusA || op = Mult then
+		begin
+		  Format.fprintf fmt "%s_si(%s, %s, %s);@\n" op' var y x;
+		  Format.fprintf fmt "__gmpz_clear(%s);@\n" y;
+		  var
+		end
+	      else
+		assert false (* TODO *)
+	    | Ctype(TInt _), Ctype(TInt _) ->
+	      let var1 = self#fresh_gmp_var() in
+	      let var2 = self#fresh_gmp_var() in
+	      Format.fprintf fmt "mpz_t %s, %s;@\n" var1 var2;
+	      Format.fprintf fmt "__gmpz_init_set_si(%s, %s);@\n" var1 x;
+	      Format.fprintf fmt "__gmpz_init_set_si(%s, %s);@\n" var2 y;
+	      Format.fprintf fmt "%s(%s, %s, %s);@\n" op' var var1 var2;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" var1;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" var2;
+	      var
+	    | _ -> assert false
+	  end
+	| Lreal -> assert false (* TODO: reals *)
+	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
+	  begin
+	    match t1.term_type, t2.term_type with
+	    | Linteger, Linteger ->
+	      let var = self#fresh_term_var() in
+	      let x = self#term_and_var fmt t1 in
+	      let y = self#term_and_var fmt t2 in
+	      Format.fprintf fmt "int %s = __gmpz_cmp(%s, %s) %a 0;@\n"
+		var x y self#binop op;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" x;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" y;
+	      var
+	    | _ ->
+	      let x = self#term_and_var fmt t1 in
+	      let y = self#term_and_var fmt t2 in
+	      Format.fprintf Format.str_formatter "(%s %a %s)"
+		x self#binop op y;
+	      Format.flush_str_formatter()
+	  end
+	| _ -> assert false (* unreachable ? *)
+      end
+
+    (* C type -> C type only ? *)
+    | TCastE (ty', t') ->
+      begin
+	match ty with
+	(* | Linteger -> *)
+	(*   let v = self#term_and_var fmt t' in *)
+	(*   let var = self#fresh_term_var() in *)
+	(*   Format.fprintf fmt "%a %s;@\n" (self#typ None) ty' var; *)
+	(*   begin *)
+	(*     match ty' with *)
+	(*     | TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_) -> *)
+	(*       Format.fprintf fmt "%s = __gmpz_get_ui(%s);@\n" var v *)
+	(*     | TInt _ -> *)
+	(*       Format.fprintf fmt "%s = __gmpz_get_si(%s);@\n" var v *)
+	(*     | _ -> assert false *)
+	(*   end; *)
+	(*   Format.fprintf fmt "__gmpz_clear(%s);@\n" v; *)
+	(*   var *)
+	(* | Lreal -> assert false (\* TODO: reals *\) *)
+	| Ctype _ ->
+	  let v = self#term_and_var fmt t' in
+	  Format.fprintf Format.str_formatter "(%a)%s" (self#typ None) ty' v;
+	  Format.flush_str_formatter()
+	| _ -> assert false (* unreachable ? *)
+      end
+
+    | TAddrOf _
+    | TStartOf _ ->
+      Format.fprintf Format.str_formatter "%a" super#term_node t;
       Format.flush_str_formatter()
+
+    | Tapp (li, _ (* already substituted *), params) ->
+      let builtin_name = li.l_var_info.lv_name in
+      begin
+	match ty with
+	  | Linteger ->
+	    if builtin_name = "\\abs" then
+	      begin
+		let param = List.hd params in
+		assert (List.tl params = []);
+		let x = self#term_and_var fmt param in
+		let var = self#fresh_gmp_var() in
+		Format.fprintf fmt "mpz_t %s;@\n" var;
+		Format.fprintf fmt "__gmpz_init(%s);@\n" var;
+		Format.fprintf fmt "__gmpz_abs(%s, %s);@\n" var x;
+		Format.fprintf fmt "__gmpz_clear(%s);@\n" x;
+		var
+	      end
+	    else
+	      if builtin_name = "\\min" || builtin_name = "\\max" ||
+		builtin_name = "\\sum" || builtin_name = "\\product" ||
+		builtin_name = "\\numof" then
+		begin
+		  match params with
+		  | [lower;upper;{term_node=Tlambda([q],t)}] ->
+		    self#lambda_and_var fmt li lower upper q t
+		  | _ -> assert false
+		end
+	      else
+		assert false
+	  | Lreal -> assert false (* TODO: reals *)
+	  | _ -> assert false (* unreachable *)
+      end
+
+    | Tlambda _ -> assert false (* unreachable *)
+    | TDataCons _ -> Sd_options.Self.not_yet_implemented "TDataCons"
+    
+    | Tif (cond, then_b, else_b) ->
+      begin
+	match ty with
+	| Linteger ->
+	  let var = self#fresh_gmp_var() in
+	  Format.fprintf fmt "mpz_t %s;@\n" var;
+	  let cond' = self#term_and_var fmt cond in
+	  Format.fprintf fmt "if (__gmpz_cmp(%s,0) != 0) {@\n" cond';
+	  let then_b' = self#term_and_var fmt then_b in
+	  Format.fprintf fmt "__gmpz_init_set(%s, %s);@\n" var then_b';
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" then_b';
+	  Format.fprintf fmt "}@\n";
+	  Format.fprintf fmt "else {@\n";
+	  let else_b' = self#term_and_var fmt else_b in
+	  Format.fprintf fmt "__gmpz_init_set(%s, %s);@\n" var else_b';
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" else_b';
+	  Format.fprintf fmt "}@\n";
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" cond';
+	  var
+	| Lreal -> assert false (* TODO: reals *)
+	(* | Ctype ty' -> *)
+	(*   let var = self#fresh_term_var() in *)
+	(*   Format.fprintf fmt "%a %s;@\n" (self#typ None) ty' var; *)
+	(*   let cond' = self#term_and_var fmt cond in *)
+	(*   Format.fprintf fmt "if (%s) {@\n" cond'; *)
+	(*   let then_b' = self#term_and_var fmt then_b in *)
+	(*   Format.fprintf fmt "%s = %s;@\n" var then_b'; *)
+	(*   Format.fprintf fmt "}@\n"; *)
+	(*   Format.fprintf fmt "else {@\n"; *)
+	(*   let else_b' = self#term_and_var fmt else_b in *)
+	(*   Format.fprintf fmt "%s = %s;@\n" var else_b'; *)
+	(*   Format.fprintf fmt "}@\n"; *)
+	(*   var *)
+	| _ -> assert false (* unreachable *)
+      end
+
+    
     | Tat(_, StmtLabel _) ->
       if current_function <> None then
 	Sd_options.Self.warning "%a unsupported" Printer.pp_term t;
@@ -342,35 +565,71 @@ class sd_printer props () = object(self)
 	    Format.fprintf Format.str_formatter "%a" super#term_node t;
 	    Format.flush_str_formatter()
 	  end
-    | TLogic_coerce (_, t) -> self#term_and_var fmt t
-    | TCoerce (t, _) -> self#term_and_var fmt t
-    | TLval tlval -> self#tlval_and_var fmt tlval
-    | Tif (cond, then_b, else_b) ->
-      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-      pred_cpt <- pred_cpt + 1;
-      Format.fprintf fmt "int %s;@\n" var;
-      let cond' = self#term_and_var fmt cond in
-      Format.fprintf fmt "if (%s) {@\n" cond';
-      let then_b' = self#term_and_var fmt then_b in
-      Format.fprintf fmt "%s = %s;@\n" var then_b';
-      Format.fprintf fmt "}@\n";
-      Format.fprintf fmt "else {@\n";
-      let else_b' = self#term_and_var fmt else_b in
-      Format.fprintf fmt "%s = %s;@\n" var else_b';
-      Format.fprintf fmt "}@\n";
-      var
-    | TConst _ ->
-      Format.fprintf Format.str_formatter "%a" super#term_node t;
-      Format.flush_str_formatter()
-    | TBinOp(op, t1, t2) ->
-      let x = self#term_and_var fmt t1 and y = self#term_and_var fmt t2 in
-      Format.fprintf Format.str_formatter "(%s %a %s)" x self#binop op y;
-      Format.flush_str_formatter()
-    | TUnOp(op, t') ->
-      let x = self#term_and_var fmt t' in
-      Format.fprintf Format.str_formatter "(%a %s)" self#unop op x;
-      Format.flush_str_formatter()
-    | _ -> Sd_utils.error_term t
+
+    | Tbase_addr _ -> Sd_options.Self.not_yet_implemented "Tbase_addr"
+    | Toffset _ -> Sd_options.Self.not_yet_implemented "Toffset"
+    | Tblock_length _ -> Sd_options.Self.not_yet_implemented "Tblock_length"
+    | Tnull -> "0"
+
+    (* C type -> logic type *)
+    | TLogic_coerce (_, t')
+    | TCoerceE (t', {term_type=(Linteger|Lreal)}) ->
+      begin
+	match ty with
+	| Linteger ->
+	  begin
+	    match t'.term_type with
+	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
+	      let v = self#term_and_var fmt t' in
+	      let var = self#fresh_gmp_var() in
+	      Format.fprintf fmt "mpz_t %s;@\n" var;
+	      Format.fprintf fmt "__gmpz_init_set_ui(%s, %s);@\n" var v;
+	      var
+	    | Ctype(TInt _) ->
+	      let v = self#term_and_var fmt t' in
+	      let var = self#fresh_gmp_var() in
+	      Format.fprintf fmt "mpz_t %s;@\n" var;
+	      Format.fprintf fmt "__gmpz_init_set_si(%s, %s);@\n" var v;
+	      var
+	    | _ -> assert false
+	  end
+	| Lreal -> assert false (* TODO: reals *)
+	| _ -> assert false (* unreachable *)
+      end
+
+    (* logic type -> C type *)
+    | TCoerce (t', ty')
+    | TCoerceE (t', {term_type=Ctype ty'}) ->
+      begin
+	match t'.term_type with
+	| Linteger ->
+	  let v = self#term_and_var fmt t' in
+	  let var = self#fresh_term_var() in
+	  Format.fprintf fmt "%a %s;@\n" (self#typ None) ty' var;
+	  begin
+	    match ty' with
+	    | TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_) ->
+	      Format.fprintf fmt "%s = __gmpz_get_ui(%s);@\n" var v
+	    | TInt _ ->
+	      Format.fprintf fmt "%s = __gmpz_get_si(%s);@\n" var v
+	    | _ -> assert false
+	  end;
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" v;
+	  var
+	| Lreal -> assert false (* TODO: reals *)
+	| _ -> assert false (* unreachable *)
+      end
+
+    | TCoerceE _ -> Sd_options.Self.not_yet_implemented "TCoerceE"
+    | TUpdate _ -> Sd_options.Self.not_yet_implemented "TUpdate"
+    | Ttypeof _ -> Sd_options.Self.not_yet_implemented "Ttypeof"
+    | Ttype _ -> Sd_options.Self.not_yet_implemented "Ttype"
+    | Tempty_set -> Sd_options.Self.not_yet_implemented "Tempty_set"
+    | Tunion _ -> Sd_options.Self.not_yet_implemented "Tunion"
+    | Tinter _ -> Sd_options.Self.not_yet_implemented "Tinter"
+    | Tcomprehension _ -> Sd_options.Self.not_yet_implemented "Tcomprehension"
+    | Trange _ -> assert false (* unreachable *)
+    | Tlet _ -> assert false (* unreachable *)
       
   method private tlval_and_var fmt (tlhost, toffset) =
     match tlhost with
@@ -396,9 +655,12 @@ class sd_printer props () = object(self)
     | TField (fi, tof) -> "." ^ fi.fname ^ (self#term_offset_and_var fmt tof)
     | TModel (mi, tof) -> "." ^ mi.mi_name ^ (self#term_offset_and_var fmt tof)
     | TIndex (t, tof) ->
-      let t = self#term_and_var fmt t in
+      let t' = self#term_and_var fmt t in
       let v = self#term_offset_and_var fmt tof in
-      "[" ^ t ^ "]" ^ v
+      match t.term_type with
+      | Linteger -> "[__gmpz_get_si(" ^ t' ^ ")]" ^ v
+      | Lreal -> assert false (* TODO: reals *)
+      | _ -> "[" ^ t' ^ "]" ^ v
 
   (* modify result_varinfo when the function returns something *)
   method private compute_result_varinfo f =
@@ -568,16 +830,31 @@ class sd_printer props () = object(self)
 	    let all_indices = List.fold_left concat_indice "" indices in
 	    let ty = dig_type ty in
 	    let h' = self#term_and_var fmt h in
-	    Format.fprintf fmt "old_ptr_%s%s = malloc((%s)*sizeof(%a));@\n"
-	      v.vname all_indices h' (self#typ None) ty;
 	    let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
 	    Format.fprintf fmt "int %s;@\n" iterator;
-	    let h' = self#term_and_var fmt h in
-	    Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
-	      iterator iterator h' iterator;
-	    iter_counter := !iter_counter + 1;
-	    alloc_aux (Sd_utils.append_end indices iterator) ty t;
-	    Format.fprintf fmt "}@\n"
+	    begin
+	      match h.term_type with
+	      | Linteger ->
+		Format.fprintf fmt
+		  "old_ptr_%s%s = malloc(__gmpz_get_si(%s)*sizeof(%a));@\n"
+		  v.vname all_indices h' (self#typ None) ty;
+		Format.fprintf fmt
+		  "for (%s = 0; %s < __gmpz_get_si(%s); %s++) {@\n"
+		  iterator iterator h' iterator;
+		iter_counter := !iter_counter + 1;
+		alloc_aux (Sd_utils.append_end indices iterator) ty t;
+		Format.fprintf fmt "}@\n"
+	      | Lreal -> assert false (* TODO: reals *)
+	      | _ ->
+		Format.fprintf fmt "old_ptr_%s%s = malloc((%s)*sizeof(%a));@\n"
+		  v.vname all_indices h' (self#typ None) ty;
+		Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
+		  iterator iterator h' iterator;
+		iter_counter := !iter_counter + 1;
+		alloc_aux (Sd_utils.append_end indices iterator) ty t;
+		Format.fprintf fmt "}@\n";
+		Format.fprintf fmt "__gmpz_clear(%s);@\n" h'
+	    end
 	  | [] ->
 	    let all_indices = List.fold_left concat_indice "" indices in
 	    Format.fprintf fmt "old_ptr_%s%s = %s%s;@\n"
@@ -616,13 +893,25 @@ class sd_printer props () = object(self)
 		 let iterator = "__stady_iter_"^(string_of_int !iter_counter) in
 		 Format.fprintf fmt "int %s;@\n" iterator;
 		 let h' = self#term_and_var fmt h in
-		 Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
-		   iterator iterator h' iterator;
 		 let all_indices = List.fold_left concat_indice "" indices in
 		 iter_counter := !iter_counter + 1;
 		 let indices = Sd_utils.append_end indices iterator in
-		 dealloc_aux indices t;
-		 Format.fprintf fmt "}@\n";
+		 begin
+		   match h.term_type with
+		   | Linteger ->
+		     Format.fprintf fmt
+		       "for (%s = 0; %s < __gmpz_get_si(%s); %s++) {@\n"
+		       iterator iterator h' iterator;
+		     dealloc_aux indices t;
+		     Format.fprintf fmt "}@\n";
+		     Format.fprintf fmt "__gmpz_clear(%s);@\n" h'
+		   | Lreal -> assert false (* TODO: reals *)
+		   | _ ->
+		     Format.fprintf fmt "for (%s = 0; %s < %s; %s++) {@\n"
+		       iterator iterator h' iterator;
+		     dealloc_aux indices t;
+		     Format.fprintf fmt "}@\n"
+		 end;
 		 Format.fprintf fmt "free(old_ptr_%s%s);@\n" v.vname all_indices
 	     in
 	     dealloc_aux [] terms
@@ -781,8 +1070,19 @@ class sd_printer props () = object(self)
 	if List.mem prop props then
 	  let id = Sd_utils.to_id prop in
 	  let term' = self#term_and_var fmt term in
-	  Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) < 0)"
-	    (fun fmt -> self#line_directive ~forcefile:false fmt) loc term';
+	  begin
+	    match term.term_type with
+	    | Linteger ->
+	      end_contract := (fun fmt ->
+		Format.fprintf fmt "__gmpz_clear(%s);@\n" term'
+	      ) :: !end_contract;
+	      Format.fprintf fmt "@[<hv>%a@[<v 2>if (__gmpz_cmp_ui(%s, 0) < 0)"
+		(fun fmt -> self#line_directive ~forcefile:false fmt) loc term'
+	    | Lreal -> assert false (* TODO: reals *)
+	    | _ ->
+	      Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) < 0)"
+		(fun fmt -> self#line_directive ~forcefile:false fmt) loc term'
+	  end;
 	  Format.fprintf fmt
 	    "pathcrawler_assert_exception(\"Variant non positive\",%i);" id;
 	  Format.fprintf fmt "@]@]";
@@ -790,24 +1090,61 @@ class sd_printer props () = object(self)
 	  begin_loop :=
 	    (fun fmt ->
 	      let term' = self#term_and_var fmt term in
-	      Format.fprintf fmt "int old_variant_%i = %s;@\n" id term')
+	      match
+		term.term_type with
+		| Linteger ->
+		  Format.fprintf fmt "mpz_t old_variant_%i;@\n" id;
+		  Format.fprintf fmt "__gmpz_init_set(old_variant_%i, %s);@\n"
+		    id term'
+		| Lreal -> assert false (* TODO: reals *)
+		| _ ->
+		  Format.fprintf fmt "int old_variant_%i = %s;@\n" id term'
+	    )
 	  :: !begin_loop;
 	  end_loop :=
 	    (fun fmt ->
-	      Format.fprintf fmt "@[<hv>%a@[<v 2>if ((old_variant_%i) < 0)"
-		(fun fmt -> self#line_directive ~forcefile:false fmt) loc id;
+	      let term' = self#term_and_var fmt term in
+	      begin
+		match term.term_type with
+		| Linteger ->
+		  Format.fprintf fmt
+		    "@[<hv>%a@[<v 2>if (__gmpz_cmp_ui(old_variant_%i,0) < 0)"
+		    (fun fmt -> self#line_directive ~forcefile:false fmt) loc id
+		| Lreal -> assert false (* TODO: reals *)
+		| _ ->
+		  Format.fprintf fmt "@[<hv>%a@[<v 2>if ((old_variant_%i) < 0)"
+		    (fun fmt -> self#line_directive ~forcefile:false fmt) loc id
+	      end;
 	      Format.fprintf fmt
 		"pathcrawler_assert_exception(\"Variant non positive\",%i);"
 		id;
 	      Format.fprintf fmt "@]@]";
-	      let term' = self#term_and_var fmt term in
-	      Format.fprintf fmt "@[<hv>%a@[<v 2>if ((%s) >= old_variant_%i)"
-		(fun fmt -> self#line_directive ~forcefile:false fmt) loc
-		term' id;
+	      
+	      begin
+		match term.term_type with
+		| Linteger ->
+		  Format.fprintf fmt
+		    "@[<hv>%a@[<v 2>if (__gmpz_cmp(%s, old_variant_%i) >= 0)"
+		    (fun fmt -> self#line_directive ~forcefile:false fmt) loc
+		    term' id
+		| Lreal -> assert false (* TODO: reals *)
+		| _ ->
+		  Format.fprintf fmt
+		    "@[<hv>%a@[<v 2>if ((%s) >= old_variant_%i)"
+		    (fun fmt -> self#line_directive ~forcefile:false fmt) loc
+		    term' id
+	      end;
 	      Format.fprintf fmt
 		"pathcrawler_assert_exception(\"Variant non decreasing\",%i);"
 		id;
 	      Format.fprintf fmt "@]@]";
+	      begin
+		match term.term_type with
+		| Linteger ->
+		  Format.fprintf fmt "__gmpz_clear(old_variant_%i);@\n" id
+		| Lreal -> assert false (* TODO: reals *)
+		| _ -> ()
+	      end;
 	      translated_properties <- prop :: translated_properties)
 	  :: !end_loop
       | _ -> ()
@@ -876,10 +1213,13 @@ class sd_printer props () = object(self)
   method! global fmt g =
     if first_global then
       begin
+	Format.fprintf fmt "#include <gmp.h>@\n";
 	Format.fprintf fmt
 	  "extern int pathcrawler_assert_exception(char*,int);@\n";
 	Format.fprintf fmt "extern int pathcrawler_dimension(void*);@\n";
 	Format.fprintf fmt "extern void pathcrawler_to_framac(char*);@\n";
+	Format.fprintf fmt "extern void* malloc(unsigned);@\n";
+	Format.fprintf fmt "extern void free(void*);@\n";
 	first_global <- false
       end;
     match g with
@@ -929,31 +1269,73 @@ class sd_printer props () = object(self)
   method private quantif_predicate_and_var ~forall fmt logic_vars hyps goal =
     if (List.length logic_vars) > 1 then
       failwith "quantification on many variables unsupported!";
-    let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+    let var = self#fresh_pred_var() in
     let guards, vars = Sd_utils.compute_guards [] logic_vars hyps in
     if vars <> [] then
       failwith "Unguarded variables in quantification!";
     let t1,r1,lv,r2,t2 = List.hd guards in
     let iter = lv.lv_name in
-    pred_cpt <- pred_cpt + 1;
     Format.fprintf fmt "int %s = %i;@\n" var (if forall then 1 else 0);
     Format.fprintf fmt "{@\n";
-    Format.fprintf fmt "int %s;@\n" iter;
-    let t1' = self#term_and_var fmt t1 in
-    let t2' = self#term_and_var fmt t2 in
-    Format.fprintf fmt "for (%s = %s%s; %s %a %s && %s %s; %s++) {@\n"
-      iter
-      t1'
-      (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
-      iter
-      self#relation r2
-      t2'
-      (if forall then "" else "!")
-      var
-      iter;
-    let goal_var = self#predicate_named_and_var fmt goal in 
-    Format.fprintf fmt "%s = %s;@\n" var goal_var;
-    Format.fprintf fmt "}@\n}@\n";
+    begin
+      match t1.term_type with
+      | Linteger ->
+	begin
+	  match t2.term_type with
+	  | Linteger ->
+	    Format.fprintf fmt "mpz_t %s;@\n" iter;
+	    let t1' = self#term_and_var fmt t1 in
+	    let t2' = self#term_and_var fmt t2 in
+	    Format.fprintf fmt "__gmpz_init_set(%s, %s);@\n" iter t1';
+	    if r1 = Rlt then
+	      Format.fprintf fmt "__gmpz_add_ui(%s, %s, 1);@\n" iter iter;
+	    Format.fprintf fmt "for (; __gmpz_cmp(%s, %s) %a 0 && %s %s;) {@\n"
+	      iter t2' self#relation r2 (if forall then "" else "!") var;
+	    let goal_var = self#predicate_named_and_var fmt goal in 
+	    Format.fprintf fmt "%s = %s;@\n" var goal_var;
+	    Format.fprintf fmt "__gmpz_add_ui(%s, %s, 1);@\n" iter iter;
+	    Format.fprintf fmt "}@\n";
+	    Format.fprintf fmt "__gmpz_clear(%s);@\n" iter;
+	    Format.fprintf fmt "__gmpz_clear(%s);@\n" t1';
+	    Format.fprintf fmt "__gmpz_clear(%s);@\n" t2'
+	  | Lreal -> assert false (* TODO: reals *)
+	  | _ ->
+	    Format.fprintf fmt "mpz_t %s;@\n" iter;
+	    let t1' = self#term_and_var fmt t1 in
+	    let t2' = self#term_and_var fmt t2 in
+	    Format.fprintf fmt "__gmpz_init_set(%s, %s);@\n" iter t1';
+	    if r1 = Rlt then
+	      Format.fprintf fmt "__gmpz_add_ui(%s, %s, 1);@\n" iter iter;
+	    Format.fprintf fmt
+	      "for (; __gmpz_cmp_si(%s, %s) %a 0 && %s %s;) {@\n"
+	      iter t2' self#relation r2 (if forall then "" else "!") var;
+	    let goal_var = self#predicate_named_and_var fmt goal in 
+	    Format.fprintf fmt "%s = %s;@\n" var goal_var;
+	    Format.fprintf fmt "__gmpz_add_ui(%s, %s, 1);@\n" iter iter;
+	    Format.fprintf fmt "}@\n";
+	    Format.fprintf fmt "__gmpz_clear(%s);@\n" iter;
+	    Format.fprintf fmt "__gmpz_clear(%s);@\n" t1'
+	end
+      | Lreal -> assert false (* TODO: reals *)
+      | _ ->
+	Format.fprintf fmt "int %s;@\n" iter;
+	let t1' = self#term_and_var fmt t1 in
+	let t2' = self#term_and_var fmt t2 in
+	Format.fprintf fmt "for (%s = %s%s; %s %a %s && %s %s; %s++) {@\n"
+	  iter
+	  t1'
+	  (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false)
+	  iter
+	  self#relation r2
+	  t2'
+	  (if forall then "" else "!")
+	  var
+	  iter;
+	let goal_var = self#predicate_named_and_var fmt goal in 
+	Format.fprintf fmt "%s = %s;@\n" var goal_var;
+	Format.fprintf fmt "}@\n"
+    end;
+    Format.fprintf fmt "}@\n";
     var
   (* end of quantif_predicate_and_var *)
 
@@ -966,10 +1348,20 @@ class sd_printer props () = object(self)
     | Pvalid(_,term) | Pvalid_read(_,term) ->
       let x, y = Sd_utils.extract_terms term in
       let x',y' = self#term_and_var fmt x, self#term_and_var fmt y in
-      Format.fprintf Format.str_formatter
-	"(%s >= 0 && pathcrawler_dimension(%s) > %s)"
-	y' x' y';
-      Format.flush_str_formatter()
+      begin
+	match y.term_type with
+	| Linteger ->
+	  let var = self#fresh_pred_var() in
+	  Format.fprintf fmt "int %s = __gmpz_cmp_ui(%s, 0) >= 0 && \
+ __gmpz_cmp_ui(%s, pathcrawler_dimension(%s)) < 0;@\n" var y' y' x';
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" y';
+	  var
+	| Lreal -> assert false (* unreachable *)
+	| _ -> Format.fprintf Format.str_formatter
+	  "(%s >= 0 && pathcrawler_dimension(%s) > %s)"
+	  y' x' y';
+	  Format.flush_str_formatter()
+      end
     | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
       self#quantif_predicate_and_var ~forall:true fmt logic_vars hyps goal
     | Pexists(logic_vars,{content=Pand(hyps,goal)}) ->
@@ -981,8 +1373,7 @@ class sd_printer props () = object(self)
       Format.fprintf Format.str_formatter "(! %s)" pred1_var;
       Format.flush_str_formatter()
     | Pand(pred1,pred2) ->
-      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-      pred_cpt <- pred_cpt + 1;
+      let var = self#fresh_pred_var() in
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       Format.fprintf fmt "int %s = %s;@\n" var pred1_var;
       Format.fprintf fmt "if (%s) {@\n" var;
@@ -991,8 +1382,7 @@ class sd_printer props () = object(self)
       Format.fprintf fmt "}@\n";
       var
     | Por(pred1,pred2) ->
-      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-      pred_cpt <- pred_cpt + 1;
+      let var = self#fresh_pred_var() in
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       Format.fprintf fmt "int %s = %s;@\n" var pred1_var;
       Format.fprintf fmt "if (!%s) {@\n" var;
@@ -1001,8 +1391,7 @@ class sd_printer props () = object(self)
       Format.fprintf fmt "}@\n";
       var
     | Pimplies(pred1,pred2) ->
-      let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
-      pred_cpt <- pred_cpt + 1;
+      let var = self#fresh_pred_var() in
       Format.fprintf fmt "int %s = 1;@\n" var;
       let pred1_var = self#predicate_named_and_var fmt pred1 in
       Format.fprintf fmt "if (%s) {@\n" pred1_var;
@@ -1018,10 +1407,44 @@ class sd_printer props () = object(self)
 	pred1_var pred2_var pred2_var pred1_var;
       Format.flush_str_formatter()
     | Prel(rel,t1,t2) ->
-      let t1', t2' = self#term_and_var fmt t1, self#term_and_var fmt t2 in
-      Format.fprintf Format.str_formatter "(%s %a %s)"
-	t1' self#relation rel t2';
-      Format.flush_str_formatter()
+      begin
+	match t1.term_type, t2.term_type with
+	| Linteger, Linteger ->
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term_and_var fmt t1 in
+	  let t2' = self#term_and_var fmt t2 in
+	  Format.fprintf fmt "int %s = __gmpz_cmp(%s, %s) %a 0;@\n" var t1' t2'
+	    self#relation rel;
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" t1';
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" t2';
+	  var
+	| Linteger, Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term_and_var fmt t1 in
+	  let t2' = self#term_and_var fmt t2 in
+	  Format.fprintf fmt
+	    "int %s = __gmpz_cmp_ui(%s, %s) %a 0;@\n" var t1' t2'
+	    self#relation rel;
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" t1';
+	  var
+	| Linteger, Ctype (TInt _) ->
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term_and_var fmt t1 in
+	  let t2' = self#term_and_var fmt t2 in
+	  Format.fprintf fmt
+	    "int %s = __gmpz_cmp_si(%s, %s) %a 0;@\n" var t1' t2'
+	    self#relation rel;
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" t1';
+	  var
+	| Lreal, Lreal -> assert false (* TODO: reals *)
+	| _ ->
+          let t1' = self#term_and_var fmt t1 in
+          let t2' = self#term_and_var fmt t2 in
+	  Format.fprintf Format.str_formatter "(%s %a %s)"
+	    t1' self#relation rel t2';
+	  Format.flush_str_formatter()
+      end
+      
     | Pat(p, LogicLabel(_,stringlabel)) when stringlabel = "Here" ->
       self#predicate_named_and_var fmt p
     | Pat (p,_) ->
