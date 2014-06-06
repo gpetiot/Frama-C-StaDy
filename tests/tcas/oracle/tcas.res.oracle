@@ -703,11 +703,7 @@ int alt_sep_test(void)
 
 
 [kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-stady_temp.c:343:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:535:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
-stady_temp.c:343:[kernel] warning: Calling undeclared function malloc. Old style K&R code?
-stady_temp.c:535:[kernel] warning: Calling undeclared function free. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler_stady_temp/lanceur_alt_sep_test utilities ...
 [pc] Compiling pathcrawler_stady_temp/lanceur_alt_sep_test ...
