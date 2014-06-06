@@ -271,7 +271,10 @@ class sd_printer props () = object(self)
     end
 
   method private term_node_and_var fmt t =
-    let ty = t.term_type in
+    let ty = match t.term_type with
+      | Ctype c -> Ctype (Cil.unrollType c)
+      | x -> x
+    in
     match t.term_node with
 
     | TConst _ ->
@@ -316,18 +319,28 @@ class sd_printer props () = object(self)
 	  assert(op = Neg);
 	  let x = self#term_and_var fmt t' in
 	  let var = self#fresh_gmp_var() in
-	  (* pb neg *) let zero = self#fresh_gmp_var() in
 	  Format.fprintf fmt "mpz_t %s;@\n" var;
-	  (* pb neg *) Format.fprintf fmt "mpz_t %s;@\n" zero;
 	  Format.fprintf fmt "__gmpz_init(%s);@\n" var;
-	  (* pb neg *)
-	  Format.fprintf fmt "__gmpz_init_set_si(%s, 0);@\n" zero;
-	  (* pb neg *) (*Format.fprintf fmt "__gmpz_neg(%s, %s);@\n" var x;*)
-	  (* pb neg *)
-	  Format.fprintf fmt "__gmpz_sub(%s, %s, %s);@\n"
-	    var zero x;
-	  Format.fprintf fmt "__gmpz_clear(%s);@\n" x;
-	  (* pb neg *) Format.fprintf fmt "__gmpz_clear(%s);@\n" zero;
+	  begin
+	    match t'.term_type with
+	    | Linteger ->
+	      Format.fprintf fmt "__gmpz_ui_sub(%s, 0, %s);@\n" var x;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" x
+	    | Lreal -> assert false (* unreachable *)
+	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
+	      let var' = self#fresh_gmp_var() in
+	      Format.fprintf fmt "mpz_t %s;@\n" var';
+	      Format.fprintf fmt "__gmpz_init_set_ui(%s, %s);@\n" var' x;
+	      Format.fprintf fmt "__gmpz_ui_sub(%s, 0, %s);@\n" var var';
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" var'
+	    | Ctype(TInt _) ->
+	      let var' = self#fresh_gmp_var() in
+	      Format.fprintf fmt "mpz_t %s;@\n" var';
+	      Format.fprintf fmt "__gmpz_init_set_si(%s, %s);@\n" var' x;
+	      Format.fprintf fmt "__gmpz_ui_sub(%s, 0, %s);@\n" var var';
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" var'
+	    | _ -> assert false (* unreachable *)
+	  end;
 	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ ->

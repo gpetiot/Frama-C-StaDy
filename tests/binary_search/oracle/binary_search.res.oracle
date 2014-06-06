@@ -351,71 +351,65 @@ int binary_search(int *arr, int length, int query)
         mpz_t __stady_gmp_53;
         __gmpz_init_set_si(__stady_gmp_53, 1);
         mpz_t __stady_gmp_54;
-        mpz_t __stady_gmp_55;
         __gmpz_init(__stady_gmp_54);
-        __gmpz_init_set_si(__stady_gmp_55, 0);
-        __gmpz_sub(__stady_gmp_54, __stady_gmp_55, __stady_gmp_53);
+        __gmpz_ui_sub(__stady_gmp_54, 0, __stady_gmp_53);
         __gmpz_clear(__stady_gmp_53);
-        __gmpz_clear(__stady_gmp_55);
-        mpz_t __stady_gmp_56;
-        __gmpz_init_set_si(__stady_gmp_56, __retres);
-        int __stady_pred_20 = __gmpz_cmp(__stady_gmp_54, __stady_gmp_56) <= 0;
+        mpz_t __stady_gmp_55;
+        __gmpz_init_set_si(__stady_gmp_55, __retres);
+        int __stady_pred_20 = __gmpz_cmp(__stady_gmp_54, __stady_gmp_55) <= 0;
         __gmpz_clear(__stady_gmp_54);
-        __gmpz_clear(__stady_gmp_56);
+        __gmpz_clear(__stady_gmp_55);
         int __stady_pred_19 = __stady_pred_20;
         if (__stady_pred_19) {
         __stady_pred_19 = (__retres < old_length);
         }
         if(!__stady_pred_19)pathcrawler_assert_exception("Post-condition!", 11);
         int __stady_pred_21 = 1;
+        mpz_t __stady_gmp_56;
+        __gmpz_init_set_si(__stady_gmp_56, __retres);
         mpz_t __stady_gmp_57;
-        __gmpz_init_set_si(__stady_gmp_57, __retres);
+        __gmpz_init_set_si(__stady_gmp_57, 1);
         mpz_t __stady_gmp_58;
-        __gmpz_init_set_si(__stady_gmp_58, 1);
-        mpz_t __stady_gmp_59;
-        mpz_t __stady_gmp_60;
-        __gmpz_init(__stady_gmp_59);
-        __gmpz_init_set_si(__stady_gmp_60, 0);
-        __gmpz_sub(__stady_gmp_59, __stady_gmp_60, __stady_gmp_58);
-        __gmpz_clear(__stady_gmp_58);
-        __gmpz_clear(__stady_gmp_60);
-        int __stady_pred_22 = __gmpz_cmp(__stady_gmp_57, __stady_gmp_59) == 0;
+        __gmpz_init(__stady_gmp_58);
+        __gmpz_ui_sub(__stady_gmp_58, 0, __stady_gmp_57);
         __gmpz_clear(__stady_gmp_57);
-        __gmpz_clear(__stady_gmp_59);
+        int __stady_pred_22 = __gmpz_cmp(__stady_gmp_56, __stady_gmp_58) == 0;
+        __gmpz_clear(__stady_gmp_56);
+        __gmpz_clear(__stady_gmp_58);
         if (__stady_pred_22) {
         int __stady_pred_23 = 1;
         {
         mpz_t __q_i;
+        mpz_t __stady_gmp_59;
+        __gmpz_init_set_si(__stady_gmp_59, 0);
+        mpz_t __stady_gmp_60;
+        __gmpz_init_set_si(__stady_gmp_60, old_length);
+        __gmpz_init_set(__q_i, __stady_gmp_59);
+        for (; __gmpz_cmp(__q_i, __stady_gmp_60) < 0 &&  __stady_pred_23;) {
         mpz_t __stady_gmp_61;
-        __gmpz_init_set_si(__stady_gmp_61, 0);
-        mpz_t __stady_gmp_62;
-        __gmpz_init_set_si(__stady_gmp_62, old_length);
-        __gmpz_init_set(__q_i, __stady_gmp_61);
-        for (; __gmpz_cmp(__q_i, __stady_gmp_62) < 0 &&  __stady_pred_23;) {
-        mpz_t __stady_gmp_63;
-        __gmpz_init_set(__stady_gmp_63, __q_i);
-        __stady_pred_23 = (*(old_arr + __gmpz_get_si(__stady_gmp_63)) != old_query);
+        __gmpz_init_set(__stady_gmp_61, __q_i);
+        __stady_pred_23 = (*(old_arr + __gmpz_get_si(__stady_gmp_61)) != old_query);
         __gmpz_add_ui(__q_i, __q_i, 1);
         }
         __gmpz_clear(__q_i);
-        __gmpz_clear(__stady_gmp_61);
-        __gmpz_clear(__stady_gmp_62);
+        __gmpz_clear(__stady_gmp_59);
+        __gmpz_clear(__stady_gmp_60);
         }
         __stady_pred_21 = __stady_pred_23;
         }
         if(!__stady_pred_21)pathcrawler_assert_exception("Post-condition!", 14);
         int __stady_pred_24 = 1;
+        mpz_t __stady_gmp_62;
+        __gmpz_init_set_si(__stady_gmp_62, __retres);
+        mpz_t __stady_gmp_63;
+        __gmpz_init_set_si(__stady_gmp_63, 0);
+        int __stady_pred_25 = __gmpz_cmp(__stady_gmp_62, __stady_gmp_63) >= 0;
+        __gmpz_clear(__stady_gmp_62);
+        __gmpz_clear(__stady_gmp_63);
+        if (__stady_pred_25) {
         mpz_t __stady_gmp_64;
         __gmpz_init_set_si(__stady_gmp_64, __retres);
-        mpz_t __stady_gmp_65;
-        __gmpz_init_set_si(__stady_gmp_65, 0);
-        int __stady_pred_25 = __gmpz_cmp(__stady_gmp_64, __stady_gmp_65) >= 0;
-        __gmpz_clear(__stady_gmp_64);
-        __gmpz_clear(__stady_gmp_65);
-        if (__stady_pred_25) {
-        mpz_t __stady_gmp_66;
-        __gmpz_init_set_si(__stady_gmp_66, __retres);
-        __stady_pred_24 = (*(old_arr + __gmpz_get_si(__stady_gmp_66)) == old_query);
+        __stady_pred_24 = (*(old_arr + __gmpz_get_si(__stady_gmp_64)) == old_query);
         }
         if(!__stady_pred_24)pathcrawler_assert_exception("Post-condition!", 2);
         
