@@ -6,14 +6,14 @@ OPT: -main insertion_sort -stady -stady-msg-key generated-c,generated-pl -then -
 /*@ requires 1 <= n <= 3;
   @ requires \valid(t+(0..n-1));
   @ assigns t[0..n-1];
-  @ ensures \forall int x; 0 <= x < n-1 ==> t[x] <= t[x+1];
+  @ ensures \forall integer x; 0 <= x < n-1 ==> t[x] <= t[x+1];
   @*/
 void insertion_sort(int t[], int n) {
   int i = 1,j;
   int mv;
 
   /*@ loop invariant 1 <= i <= n;
-    @ loop invariant \forall int x; 0 <= x < i-1 ==> t[x] <= t[x+1];
+    @ loop invariant \forall integer x; 0 <= x < i-1 ==> t[x] <= t[x+1];
     @ loop assigns i, j, mv, t[0..n-1];
     @ loop variant n-i;
     @*/

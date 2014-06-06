@@ -5,6 +5,8 @@
 extern int pathcrawler_assert_exception(char*,int);
 extern int pathcrawler_dimension(void*);
 extern void pathcrawler_to_framac(char*);
+extern void* malloc(unsigned);
+extern void free(void*);
 int f_precond(int x)
 {
 return 1;
