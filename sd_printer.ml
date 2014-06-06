@@ -451,21 +451,6 @@ class sd_printer props () = object(self)
     | TCastE (ty', t') ->
       begin
 	match ty with
-	(* | Linteger -> *)
-	(*   let v = self#term_and_var fmt t' in *)
-	(*   let var = self#fresh_term_var() in *)
-	(*   Format.fprintf fmt "%a %s;@\n" (self#typ None) ty' var; *)
-	(*   begin *)
-	(*     match ty' with *)
-	(*     | TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_) -> *)
-	(*       Format.fprintf fmt "%s = __gmpz_get_ui(%s);@\n" var v *)
-	(*     | TInt _ -> *)
-	(*       Format.fprintf fmt "%s = __gmpz_get_si(%s);@\n" var v *)
-	(*     | _ -> assert false *)
-	(*   end; *)
-	(*   Format.fprintf fmt "__gmpz_clear(%s);@\n" v; *)
-	(*   var *)
-	(* | Lreal -> assert false (\* TODO: reals *\) *)
 	| Ctype _ ->
 	  let v = self#term_and_var fmt t' in
 	  Format.fprintf Format.str_formatter "(%a)%s" (self#typ None) ty' v;
@@ -534,19 +519,6 @@ class sd_printer props () = object(self)
 	  Format.fprintf fmt "__gmpz_clear(%s);@\n" cond';
 	  var
 	| Lreal -> assert false (* TODO: reals *)
-	(* | Ctype ty' -> *)
-	(*   let var = self#fresh_term_var() in *)
-	(*   Format.fprintf fmt "%a %s;@\n" (self#typ None) ty' var; *)
-	(*   let cond' = self#term_and_var fmt cond in *)
-	(*   Format.fprintf fmt "if (%s) {@\n" cond'; *)
-	(*   let then_b' = self#term_and_var fmt then_b in *)
-	(*   Format.fprintf fmt "%s = %s;@\n" var then_b'; *)
-	(*   Format.fprintf fmt "}@\n"; *)
-	(*   Format.fprintf fmt "else {@\n"; *)
-	(*   let else_b' = self#term_and_var fmt else_b in *)
-	(*   Format.fprintf fmt "%s = %s;@\n" var else_b'; *)
-	(*   Format.fprintf fmt "}@\n"; *)
-	(*   var *)
 	| _ -> assert false (* unreachable *)
       end
 
