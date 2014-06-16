@@ -563,8 +563,13 @@ class sd_printer props () = object(self)
 	match ty with
 	| Linteger ->
 	  begin
-	    match t'.term_type with
-	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
+	    let ty' =
+	      match t'.term_type with
+	      | Ctype x -> Ctype (Cil.unrollType x)
+	      | x -> x
+	    in
+	    match ty' with
+	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
 	      let v = self#term_and_var fmt t' in
 	      let var = self#fresh_gmp_var() in
 	      Format.fprintf fmt "mpz_t %s;@\n" var;
