@@ -447,15 +447,34 @@ class sd_printer props () = object(self)
 	| _ -> assert false (* unreachable ? *)
       end
 
-    (* C type -> C type only ? *)
     | TCastE (ty', t') ->
       begin
-	match ty with
+	match t'.term_type with (* source type *)
+	| Linteger ->
+	  begin
+	    match ty with (* dest type *)
+	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
+	      let v = self#term_and_var fmt t' in
+	      let var = self#fresh_term_var() in
+	      Format.fprintf fmt "%a %s = __gmpz_get_ui(%s);@\n"
+		(self#typ None) ty' var v;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" v;
+	      var
+	    | Ctype (TInt _) ->
+	      let v = self#term_and_var fmt t' in
+	      let var = self#fresh_term_var() in
+	      Format.fprintf fmt "%a %s = __gmpz_get_si(%s);@\n"
+		(self#typ None) ty' var v;
+	      Format.fprintf fmt "__gmpz_clear(%s);@\n" v;
+	      var
+	    | _ -> assert false (* unreachable *)
+	  end
+	| Lreal -> assert false (* reals *)
 	| Ctype _ ->
 	  let v = self#term_and_var fmt t' in
 	  Format.fprintf Format.str_formatter "(%a)%s" (self#typ None) ty' v;
 	  Format.flush_str_formatter()
-	| _ -> assert false (* unreachable ? *)
+	| _ -> assert false (* unreachable *)
       end
 
     | TAddrOf _
@@ -1336,10 +1355,21 @@ class sd_printer props () = object(self)
     | Ptrue -> "1"
     | Pfalse -> "0"
     | Pvalid(_,term) | Pvalid_read(_,term) ->
-      let x, y = Sd_utils.extract_terms term in
-      let x',y' = self#term_and_var fmt x, self#term_and_var fmt y in
+      let loc = term.term_loc in
+      let pointer, offset =
+	match term.term_node with
+	| TLval _ -> term, Cil.lzero ~loc ()
+	| TBinOp ((PlusPI|IndexPI),x,{term_node = Trange(_,Some y)}) -> x,y
+	| TBinOp ((PlusPI|IndexPI),x,y) -> x,y
+	| TBinOp (MinusPI,x,y) ->
+	  let einfo = {exp_type=y.term_type; exp_name=[]} in
+	  x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
+	| _ -> Sd_utils.error_term term
+      in
+      let x' = self#term_and_var fmt pointer in
+      let y' = self#term_and_var fmt offset in
       begin
-	match y.term_type with
+	match offset.term_type with
 	| Linteger ->
 	  let var = self#fresh_pred_var() in
 	  Format.fprintf fmt "int %s = __gmpz_cmp_ui(%s, 0) >= 0 && \
@@ -1347,10 +1377,11 @@ class sd_printer props () = object(self)
 	  Format.fprintf fmt "__gmpz_clear(%s);@\n" y';
 	  var
 	| Lreal -> assert false (* unreachable *)
-	| _ -> Format.fprintf Format.str_formatter
+	| Ctype (TInt _) -> Format.fprintf Format.str_formatter
 	  "(%s >= 0 && pathcrawler_dimension(%s) > %s)"
 	  y' x' y';
 	  Format.flush_str_formatter()
+	| _ -> assert false (* unreachable *)
       end
     | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
       self#quantif_predicate_and_var ~forall:true fmt logic_vars hyps goal
