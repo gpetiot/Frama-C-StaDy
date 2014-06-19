@@ -349,17 +349,18 @@ class sd_printer props () = object(self)
 	  Format.flush_str_formatter()
       end
 
-    | TBinOp((IndexPI|PlusPI), t1, t2) ->
+    | TBinOp((IndexPI|PlusPI|MinusPI) as op, t1, t2) ->
       begin
 	match t2.term_type with
 	| Linteger ->
 	  let x = self#term_and_var fmt t1 and y = self#term_and_var fmt t2 in
-	  Format.fprintf Format.str_formatter "(%s + __gmpz_get_si(%s))" x y;
+	  Format.fprintf Format.str_formatter "(%s %a __gmpz_get_si(%s))"
+	    x self#binop op y;
 	  Format.flush_str_formatter()
 	| Lreal -> assert false (* unreachable *)
 	| _ ->
 	  let x = self#term_and_var fmt t1 and y = self#term_and_var fmt t2 in
-	  Format.fprintf Format.str_formatter "(%s + %s)" x y;
+	  Format.fprintf Format.str_formatter "(%s %a %s)" x self#binop op y;
 	  Format.flush_str_formatter()
       end
 
