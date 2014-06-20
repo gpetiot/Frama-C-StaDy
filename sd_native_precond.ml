@@ -313,6 +313,15 @@ let rel_to_prolog : relation -> term -> term -> pl_constraint =
   fun rel term1 term2 ->
     let var1 = term_to_pl term1 in
     let var2 = term_to_pl term2 in
+    let rec no_var = function
+      | PLBinOp (x,_,y) -> no_var x && no_var y
+      | PLConst _ -> true
+      | PLDim x -> no_var x
+      | PLContAll x -> no_var x
+      | PLCont (x,y) -> no_var x && no_var y
+      | PLLVar _ -> false
+      | PLCVar _ -> false
+    in
     match var1 with
     | PLConst (PLInt x) ->
       begin
@@ -329,6 +338,7 @@ let rel_to_prolog : relation -> term -> term -> pl_constraint =
 	  end
 	| _ -> PLUnquantif (var1, rel, var2)
       end
+    | PLCont (_, off) when not (no_var off) -> PLUnquantif (var1, rel, var2)
     | PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
       begin
 	match var2 with
