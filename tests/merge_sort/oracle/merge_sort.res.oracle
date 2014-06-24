@@ -769,6 +769,8 @@ void merge_sort(int *table, int l, int *ret)
       for (; __gmpz_cmp(__q_i, __stady_gmp_125) < 0 &&  __stady_pred_30;) {
       mpz_t __stady_gmp_126;
       __gmpz_init_set(__stady_gmp_126, __q_i);
+      int __stady_term_0 = __gmpz_get_si(__stady_gmp_126);
+      __gmpz_clear(__stady_gmp_126);
       mpz_t __stady_gmp_127;
       __gmpz_init_set(__stady_gmp_127, __q_i);
       mpz_t __stady_gmp_128;
@@ -778,7 +780,9 @@ void merge_sort(int *table, int l, int *ret)
       __gmpz_add(__stady_gmp_129, __stady_gmp_127, __stady_gmp_128);
       __gmpz_clear(__stady_gmp_127);
       __gmpz_clear(__stady_gmp_128);
-      __stady_pred_30 = (*(old_ret + __gmpz_get_si(__stady_gmp_126)) <= *(old_ret + __gmpz_get_si(__stady_gmp_129)));
+      int __stady_term_1 = __gmpz_get_si(__stady_gmp_129);
+      __gmpz_clear(__stady_gmp_129);
+      __stady_pred_30 = (*(old_ret + __stady_term_0) <= *(old_ret + __stady_term_1));
       __gmpz_add_ui(__q_i, __q_i, 1);
       }
       __gmpz_clear(__q_i);

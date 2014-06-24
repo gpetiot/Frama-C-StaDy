@@ -354,8 +354,10 @@ class sd_printer props () = object(self)
 	match t2.term_type with
 	| Linteger ->
 	  let x = self#term_and_var fmt t1 and y = self#term_and_var fmt t2 in
-	  Format.fprintf Format.str_formatter "(%s %a __gmpz_get_si(%s))"
-	    x self#binop op y;
+	  let var = self#fresh_term_var() in
+	  Format.fprintf fmt "int %s = __gmpz_get_si(%s);@\n" var y;
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" y;
+	  Format.fprintf Format.str_formatter "(%s %a %s)" x self#binop op var;
 	  Format.flush_str_formatter()
 	| Lreal -> assert false (* unreachable *)
 	| _ ->

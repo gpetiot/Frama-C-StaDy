@@ -80,6 +80,8 @@ __gmpz_init_set(__q_i, __stady_gmp_0);
 for (; __gmpz_cmp(__q_i, __stady_gmp_3) < 0 &&  __stady_pred_0;) {
 mpz_t __stady_gmp_4;
 __gmpz_init_set(__stady_gmp_4, __q_i);
+int __stady_term_0 = __gmpz_get_si(__stady_gmp_4);
+__gmpz_clear(__stady_gmp_4);
 mpz_t __stady_gmp_5;
 __gmpz_init_set(__stady_gmp_5, __q_i);
 mpz_t __stady_gmp_6;
@@ -89,7 +91,9 @@ __gmpz_init(__stady_gmp_7);
 __gmpz_add(__stady_gmp_7, __stady_gmp_5, __stady_gmp_6);
 __gmpz_clear(__stady_gmp_5);
 __gmpz_clear(__stady_gmp_6);
-__stady_pred_0 = (*(t1 + __gmpz_get_si(__stady_gmp_4)) <= *(t1 + __gmpz_get_si(__stady_gmp_7)));
+int __stady_term_1 = __gmpz_get_si(__stady_gmp_7);
+__gmpz_clear(__stady_gmp_7);
+__stady_pred_0 = (*(t1 + __stady_term_0) <= *(t1 + __stady_term_1));
 __gmpz_add_ui(__q_i, __q_i, 1);
 }
 __gmpz_clear(__q_i);
@@ -115,6 +119,8 @@ __gmpz_init_set(__q_i, __stady_gmp_8);
 for (; __gmpz_cmp(__q_i, __stady_gmp_11) < 0 &&  __stady_pred_1;) {
 mpz_t __stady_gmp_12;
 __gmpz_init_set(__stady_gmp_12, __q_i);
+int __stady_term_2 = __gmpz_get_si(__stady_gmp_12);
+__gmpz_clear(__stady_gmp_12);
 mpz_t __stady_gmp_13;
 __gmpz_init_set(__stady_gmp_13, __q_i);
 mpz_t __stady_gmp_14;
@@ -124,7 +130,9 @@ __gmpz_init(__stady_gmp_15);
 __gmpz_add(__stady_gmp_15, __stady_gmp_13, __stady_gmp_14);
 __gmpz_clear(__stady_gmp_13);
 __gmpz_clear(__stady_gmp_14);
-__stady_pred_1 = (*(t2 + __gmpz_get_si(__stady_gmp_12)) <= *(t2 + __gmpz_get_si(__stady_gmp_15)));
+int __stady_term_3 = __gmpz_get_si(__stady_gmp_15);
+__gmpz_clear(__stady_gmp_15);
+__stady_pred_1 = (*(t2 + __stady_term_2) <= *(t2 + __stady_term_3));
 __gmpz_add_ui(__q_i, __q_i, 1);
 }
 __gmpz_clear(__q_i);
@@ -718,6 +726,8 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       for (; __gmpz_cmp(__q_i, __stady_gmp_135) < 0 &&  __stady_pred_42;) {
       mpz_t __stady_gmp_136;
       __gmpz_init_set(__stady_gmp_136, __q_i);
+      int __stady_term_4 = __gmpz_get_si(__stady_gmp_136);
+      __gmpz_clear(__stady_gmp_136);
       mpz_t __stady_gmp_137;
       __gmpz_init_set(__stady_gmp_137, __q_i);
       mpz_t __stady_gmp_138;
@@ -727,7 +737,9 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       __gmpz_add(__stady_gmp_139, __stady_gmp_137, __stady_gmp_138);
       __gmpz_clear(__stady_gmp_137);
       __gmpz_clear(__stady_gmp_138);
-      __stady_pred_42 = (*(old_t3 + __gmpz_get_si(__stady_gmp_136)) <= *(old_t3 + __gmpz_get_si(__stady_gmp_139)));
+      int __stady_term_5 = __gmpz_get_si(__stady_gmp_139);
+      __gmpz_clear(__stady_gmp_139);
+      __stady_pred_42 = (*(old_t3 + __stady_term_4) <= *(old_t3 + __stady_term_5));
       __gmpz_add_ui(__q_i, __q_i, 1);
       }
       __gmpz_clear(__q_i);

@@ -333,6 +333,8 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
         for (; __gmpz_cmp(__q_i, __stady_gmp_37) < 0 &&  __stady_pred_0;) {
         mpz_t __stady_gmp_38;
         __gmpz_init_set(__stady_gmp_38, __q_i);
+        int __stady_term_0 = __gmpz_get_si(__stady_gmp_38);
+        __gmpz_clear(__stady_gmp_38);
         mpz_t __stady_gmp_39;
         __gmpz_init_set(__stady_gmp_39, __q_i);
         mpz_t __stady_gmp_40;
@@ -342,7 +344,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
         __gmpz_add(__stady_gmp_41, __stady_gmp_39, __stady_gmp_40);
         __gmpz_clear(__stady_gmp_39);
         __gmpz_clear(__stady_gmp_40);
-        __stady_pred_0 = (*(old_arr + __gmpz_get_si(__stady_gmp_38)) <= *(old_arr + __gmpz_get_si(__stady_gmp_41)));
+        int __stady_term_1 = __gmpz_get_si(__stady_gmp_41);
+        __gmpz_clear(__stady_gmp_41);
+        __stady_pred_0 = (*(old_arr + __stady_term_0) <= *(old_arr + __stady_term_1));
         __gmpz_add_ui(__q_i, __q_i, 1);
         }
         __gmpz_clear(__q_i);

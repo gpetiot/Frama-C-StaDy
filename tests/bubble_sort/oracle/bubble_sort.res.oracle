@@ -145,9 +145,13 @@ void bubble_sort(int *A, int n)
             for (; __gmpz_cmp(__q_a, __stady_gmp_17) <= 0 &&  __stady_pred_2;) {
             mpz_t __stady_gmp_18;
             __gmpz_init_set(__stady_gmp_18, __q_a);
+            int __stady_term_0 = __gmpz_get_si(__stady_gmp_18);
+            __gmpz_clear(__stady_gmp_18);
             mpz_t __stady_gmp_19;
             __gmpz_init_set_si(__stady_gmp_19, j);
-            __stady_pred_2 = (*(A + __gmpz_get_si(__stady_gmp_18)) <= *(A + __gmpz_get_si(__stady_gmp_19)));
+            int __stady_term_1 = __gmpz_get_si(__stady_gmp_19);
+            __gmpz_clear(__stady_gmp_19);
+            __stady_pred_2 = (*(A + __stady_term_0) <= *(A + __stady_term_1));
             __gmpz_add_ui(__q_a, __q_a, 1);
             }
             __gmpz_clear(__q_a);
@@ -271,9 +275,13 @@ void bubble_sort(int *A, int n)
               for (; __gmpz_cmp(__q_a, __stady_gmp_44) <= 0 &&  __stady_pred_9;) {
               mpz_t __stady_gmp_45;
               __gmpz_init_set(__stady_gmp_45, __q_a);
+              int __stady_term_2 = __gmpz_get_si(__stady_gmp_45);
+              __gmpz_clear(__stady_gmp_45);
               mpz_t __stady_gmp_46;
               __gmpz_init_set_si(__stady_gmp_46, j);
-              __stady_pred_9 = (*(A + __gmpz_get_si(__stady_gmp_45)) <= *(A + __gmpz_get_si(__stady_gmp_46)));
+              int __stady_term_3 = __gmpz_get_si(__stady_gmp_46);
+              __gmpz_clear(__stady_gmp_46);
+              __stady_pred_9 = (*(A + __stady_term_2) <= *(A + __stady_term_3));
               __gmpz_add_ui(__q_a, __q_a, 1);
               }
               __gmpz_clear(__q_a);
@@ -357,6 +365,8 @@ void bubble_sort(int *A, int n)
       for (; __gmpz_cmp(__q_i, __stady_gmp_62) < 0 &&  __stady_pred_12;) {
       mpz_t __stady_gmp_63;
       __gmpz_init_set(__stady_gmp_63, __q_i);
+      int __stady_term_4 = __gmpz_get_si(__stady_gmp_63);
+      __gmpz_clear(__stady_gmp_63);
       mpz_t __stady_gmp_64;
       __gmpz_init_set(__stady_gmp_64, __q_i);
       mpz_t __stady_gmp_65;
@@ -366,7 +376,9 @@ void bubble_sort(int *A, int n)
       __gmpz_add(__stady_gmp_66, __stady_gmp_64, __stady_gmp_65);
       __gmpz_clear(__stady_gmp_64);
       __gmpz_clear(__stady_gmp_65);
-      __stady_pred_12 = (*(old_A + __gmpz_get_si(__stady_gmp_63)) <= *(old_A + __gmpz_get_si(__stady_gmp_66)));
+      int __stady_term_5 = __gmpz_get_si(__stady_gmp_66);
+      __gmpz_clear(__stady_gmp_66);
+      __stady_pred_12 = (*(old_A + __stady_term_4) <= *(old_A + __stady_term_5));
       __gmpz_add_ui(__q_i, __q_i, 1);
       }
       __gmpz_clear(__q_i);
