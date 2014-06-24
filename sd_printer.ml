@@ -521,7 +521,7 @@ class sd_printer props () = object(self)
     | Tlambda _ -> assert false (* unreachable *)
     | TDataCons _ -> Sd_options.Self.not_yet_implemented "TDataCons"
     
-    | Tif (cond, then_b, else_b) ->
+    | Tif (cond, then_b, else_b) -> (* untested *)
       begin
 	match ty with
 	| Linteger ->
@@ -1430,6 +1430,38 @@ class sd_printer props () = object(self)
 	"( ( (!%s) || %s ) && ( (!%s) || %s ) )"
 	pred1_var pred2_var pred2_var pred1_var;
       Format.flush_str_formatter()
+    | Pif (t,pred1,pred2) -> (* untested *)
+      begin
+	let term_var = self#term_and_var fmt t in
+	let res_var = self#fresh_pred_var() in
+	Format.fprintf fmt "int %s;@\n" res_var;
+	let f fmt =
+	  Format.fprintf fmt "if(%s) {@\n" term_var;
+	  let pred1_var = self#predicate_named_and_var fmt pred1 in
+	  Format.fprintf fmt "%s = %s;@\n" res_var pred1_var;
+	  Format.fprintf fmt "} else {@\n";
+	  let pred2_var = self#predicate_named_and_var fmt pred2 in
+	  Format.fprintf fmt "%s = %s;@\n" res_var pred2_var;
+	  Format.fprintf fmt "}@\n";
+	  res_var
+	in
+	match t.term_type with
+	| Linteger ->
+	  Format.fprintf fmt "if(__gmpz_get_si(%s)) {@\n" term_var;
+	  let pred1_var = self#predicate_named_and_var fmt pred1 in
+	  Format.fprintf fmt "%s = %s;@\n" res_var pred1_var;
+	  Format.fprintf fmt "} else {@\n";
+	  let pred2_var = self#predicate_named_and_var fmt pred2 in
+	  Format.fprintf fmt "%s = %s;@\n" res_var pred2_var;
+	  Format.fprintf fmt "}@\n";
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" term_var;
+	  res_var
+	| Lreal -> assert false (* unreachable *)
+	| Ctype (TInt _) -> f fmt
+	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean -> f fmt
+	| _ -> assert false (* unreachable *)
+      end
+
     | Prel(rel,t1,t2) ->
       begin
 	match t1.term_type, t2.term_type with
