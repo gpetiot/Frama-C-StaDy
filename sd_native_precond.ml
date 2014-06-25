@@ -253,6 +253,7 @@ let rec input_from_type :
       | FLongDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
     in
     match (Cil.unrollType ty) with
+    | TVoid _ -> PLIntDom (t, Some minint, Some maxint) :: domains
     | TEnum ({ekind=ik},_) | TInt (ik,_) ->
       let b_min, b_max = ibounds ik in
       PLIntDom (t, Some b_min, Some b_max) :: domains
@@ -267,7 +268,7 @@ let rec input_from_type :
 	  aux d (Integer.succ i) fields
       in
       aux domains Integer.zero ci.cfields
-    | TPtr (ty',attr) ->
+    | TPtr (ty',attr) | TArray (ty',_,_,attr) ->
       let att = Cil.findAttribute "arraylen" attr in
       if att <> [] then
 	let is_array_len = function AInt _ -> true | _ -> false in
@@ -287,13 +288,18 @@ let rec input_from_type :
 	Printer.pp_typ ty (new pl_printer)#term t;
       assert false
 
-let valid_to_prolog : term -> pl_constraint list =
+let rec valid_to_prolog : term -> pl_constraint list =
   fun term ->
     let maxuint = Cil.max_unsigned_number (Sd_utils.machdep()) in
     match term.term_node with
     | TLval _ ->
       let t = term_to_pl term in
       [ PLDomain (PLIntDom (PLDim t, Some (Integer.one), Some maxuint)) ]
+    | TBinOp (((PlusPI|IndexPI|MinusPI) as op),
+    	      ({term_node=TCastE((TPtr _) as ty,t)} as _operand1),
+    	      ({term_node=(Trange (_, Some _))} as operand2)) ->
+      valid_to_prolog
+    	{term with term_node=TBinOp(op, {t with term_type=Ctype ty}, operand2)}
     | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
       let t' = term_to_pl t in
       let x' = term_to_pl x in

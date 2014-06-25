@@ -12,6 +12,11 @@ let print_var v =
    from a term t as \valid(t). *)
 let rec extract_from_valid : term -> varinfo * term =
   fun t -> match t.term_node with
+  | TBinOp (((PlusPI|IndexPI|MinusPI) as op),
+    	    ({term_node=TCastE((TPtr _) as ty,t)} as _operand1),
+    	    ({term_node=(Trange (_, Some _))} as operand2)) ->
+      extract_from_valid
+    	{t with term_node=TBinOp(op, {t with term_type=Ctype ty}, operand2)}
   | TBinOp((PlusPI|IndexPI),
 	   ({term_node=TLval(TVar v, _)}),
 	   ({term_node=
@@ -597,7 +602,7 @@ class sd_printer props () = object(self)
 	      Format.fprintf fmt "mpz_t %s;@\n" var;
 	      Format.fprintf fmt "__gmpz_init_set_ui(%s, %s);@\n" var v;
 	      var
-	    | Ctype(TInt _) ->
+	    | Ctype(TInt _) | Ctype(TEnum _) ->
 	      let v = self#term_and_var fmt t' in
 	      let var = self#fresh_gmp_var() in
 	      Format.fprintf fmt "mpz_t %s;@\n" var;
@@ -1447,7 +1452,7 @@ class sd_printer props () = object(self)
 	in
 	match t.term_type with
 	| Linteger ->
-	  Format.fprintf fmt "if(__gmpz_get_si(%s)) {@\n" term_var;
+	  Format.fprintf fmt "if(__gmpz_cmp_si(%s,0) != 0) {@\n" term_var;
 	  let pred1_var = self#predicate_named_and_var fmt pred1 in
 	  Format.fprintf fmt "%s = %s;@\n" res_var pred1_var;
 	  Format.fprintf fmt "} else {@\n";
