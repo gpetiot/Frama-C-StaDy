@@ -71,9 +71,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   int *old_beg = beg;
   int *old_ptr_beg;
   mpz_t __stady_gmp_1;
-  __gmpz_init_set_si(__stady_gmp_1, 99);
+  __gmpz_init_set_str(__stady_gmp_1, "99", 10);
   mpz_t __stady_gmp_2;
-  __gmpz_init_set_si(__stady_gmp_2, 1);
+  __gmpz_init_set_str(__stady_gmp_2, "1", 10);
   mpz_t __stady_gmp_3;
   __gmpz_init(__stady_gmp_3);
   __gmpz_add(__stady_gmp_3, __stady_gmp_1, __stady_gmp_2);
@@ -87,9 +87,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   int *old_end = end;
   int *old_ptr_end;
   mpz_t __stady_gmp_4;
-  __gmpz_init_set_si(__stady_gmp_4, 99);
+  __gmpz_init_set_str(__stady_gmp_4, "99", 10);
   mpz_t __stady_gmp_5;
-  __gmpz_init_set_si(__stady_gmp_5, 1);
+  __gmpz_init_set_str(__stady_gmp_5, "1", 10);
   mpz_t __stady_gmp_6;
   __gmpz_init(__stady_gmp_6);
   __gmpz_add(__stady_gmp_6, __stady_gmp_4, __stady_gmp_5);
@@ -319,11 +319,11 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
         {
         mpz_t __q_i;
         mpz_t __stady_gmp_34;
-        __gmpz_init_set_si(__stady_gmp_34, 0);
+        __gmpz_init_set_str(__stady_gmp_34, "0", 10);
         mpz_t __stady_gmp_35;
         __gmpz_init_set_si(__stady_gmp_35, old_elements);
         mpz_t __stady_gmp_36;
-        __gmpz_init_set_si(__stady_gmp_36, 1);
+        __gmpz_init_set_str(__stady_gmp_36, "1", 10);
         mpz_t __stady_gmp_37;
         __gmpz_init(__stady_gmp_37);
         __gmpz_sub(__stady_gmp_37, __stady_gmp_35, __stady_gmp_36);
@@ -338,7 +338,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
         mpz_t __stady_gmp_39;
         __gmpz_init_set(__stady_gmp_39, __q_i);
         mpz_t __stady_gmp_40;
-        __gmpz_init_set_si(__stady_gmp_40, 1);
+        __gmpz_init_set_str(__stady_gmp_40, "1", 10);
         mpz_t __stady_gmp_41;
         __gmpz_init(__stady_gmp_41);
         __gmpz_add(__stady_gmp_41, __stady_gmp_39, __stady_gmp_40);
@@ -357,7 +357,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
         mpz_t __stady_gmp_42;
         __gmpz_init_set_si(__stady_gmp_42, __retres);
         mpz_t __stady_gmp_43;
-        __gmpz_init_set_si(__stady_gmp_43, 0);
+        __gmpz_init_set_str(__stady_gmp_43, "0", 10);
         int __stady_pred_1 = __gmpz_cmp(__stady_gmp_42, __stady_gmp_43) == 0;
         __gmpz_clear(__stady_gmp_42);
         __gmpz_clear(__stady_gmp_43);

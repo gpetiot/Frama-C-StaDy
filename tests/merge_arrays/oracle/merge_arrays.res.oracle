@@ -66,11 +66,11 @@ int __stady_pred_0 = 1;
 {
 mpz_t __q_i;
 mpz_t __stady_gmp_0;
-__gmpz_init_set_si(__stady_gmp_0, 0);
+__gmpz_init_set_str(__stady_gmp_0, "0", 10);
 mpz_t __stady_gmp_1;
 __gmpz_init_set_si(__stady_gmp_1, l1);
 mpz_t __stady_gmp_2;
-__gmpz_init_set_si(__stady_gmp_2, 1);
+__gmpz_init_set_str(__stady_gmp_2, "1", 10);
 mpz_t __stady_gmp_3;
 __gmpz_init(__stady_gmp_3);
 __gmpz_sub(__stady_gmp_3, __stady_gmp_1, __stady_gmp_2);
@@ -85,7 +85,7 @@ __gmpz_clear(__stady_gmp_4);
 mpz_t __stady_gmp_5;
 __gmpz_init_set(__stady_gmp_5, __q_i);
 mpz_t __stady_gmp_6;
-__gmpz_init_set_si(__stady_gmp_6, 1);
+__gmpz_init_set_str(__stady_gmp_6, "1", 10);
 mpz_t __stady_gmp_7;
 __gmpz_init(__stady_gmp_7);
 __gmpz_add(__stady_gmp_7, __stady_gmp_5, __stady_gmp_6);
@@ -105,11 +105,11 @@ int __stady_pred_1 = 1;
 {
 mpz_t __q_i;
 mpz_t __stady_gmp_8;
-__gmpz_init_set_si(__stady_gmp_8, 0);
+__gmpz_init_set_str(__stady_gmp_8, "0", 10);
 mpz_t __stady_gmp_9;
 __gmpz_init_set_si(__stady_gmp_9, l2);
 mpz_t __stady_gmp_10;
-__gmpz_init_set_si(__stady_gmp_10, 1);
+__gmpz_init_set_str(__stady_gmp_10, "1", 10);
 mpz_t __stady_gmp_11;
 __gmpz_init(__stady_gmp_11);
 __gmpz_sub(__stady_gmp_11, __stady_gmp_9, __stady_gmp_10);
@@ -124,7 +124,7 @@ __gmpz_clear(__stady_gmp_12);
 mpz_t __stady_gmp_13;
 __gmpz_init_set(__stady_gmp_13, __q_i);
 mpz_t __stady_gmp_14;
-__gmpz_init_set_si(__stady_gmp_14, 1);
+__gmpz_init_set_str(__stady_gmp_14, "1", 10);
 mpz_t __stady_gmp_15;
 __gmpz_init(__stady_gmp_15);
 __gmpz_add(__stady_gmp_15, __stady_gmp_13, __stady_gmp_14);
@@ -221,7 +221,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       __gmpz_clear(__stady_gmp_29);
       if(!__stady_pred_2)pathcrawler_assert_exception("Loop invariant not established!", 4);
       mpz_t __stady_gmp_30;
-      __gmpz_init_set_si(__stady_gmp_30, 0);
+      __gmpz_init_set_str(__stady_gmp_30, "0", 10);
       mpz_t __stady_gmp_31;
       __gmpz_init_set_si(__stady_gmp_31, k);
       int __stady_pred_4 = __gmpz_cmp(__stady_gmp_30, __stady_gmp_31) <= 0;
@@ -247,7 +247,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       }
       if(!__stady_pred_3)pathcrawler_assert_exception("Loop invariant not established!", 20);
       mpz_t __stady_gmp_36;
-      __gmpz_init_set_si(__stady_gmp_36, 0);
+      __gmpz_init_set_str(__stady_gmp_36, "0", 10);
       mpz_t __stady_gmp_37;
       __gmpz_init_set_si(__stady_gmp_37, j);
       int __stady_pred_7 = __gmpz_cmp(__stady_gmp_36, __stady_gmp_37) <= 0;
@@ -259,7 +259,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       }
       if(!__stady_pred_6)pathcrawler_assert_exception("Loop invariant not established!", 13);
       mpz_t __stady_gmp_38;
-      __gmpz_init_set_si(__stady_gmp_38, 0);
+      __gmpz_init_set_str(__stady_gmp_38, "0", 10);
       mpz_t __stady_gmp_39;
       __gmpz_init_set_si(__stady_gmp_39, i);
       int __stady_pred_9 = __gmpz_cmp(__stady_gmp_38, __stady_gmp_39) <= 0;
@@ -314,7 +314,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
           }
           k ++;
         }mpz_t __stady_gmp_45;
-        __gmpz_init_set_si(__stady_gmp_45, 0);
+        __gmpz_init_set_str(__stady_gmp_45, "0", 10);
         mpz_t __stady_gmp_46;
         __gmpz_init_set_si(__stady_gmp_46, i);
         int __stady_pred_11 = __gmpz_cmp(__stady_gmp_45, __stady_gmp_46) <= 0;
@@ -326,7 +326,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         }
         if(!__stady_pred_10)pathcrawler_assert_exception("Loop invariant not preserved!", 8);
         mpz_t __stady_gmp_47;
-        __gmpz_init_set_si(__stady_gmp_47, 0);
+        __gmpz_init_set_str(__stady_gmp_47, "0", 10);
         mpz_t __stady_gmp_48;
         __gmpz_init_set_si(__stady_gmp_48, j);
         int __stady_pred_13 = __gmpz_cmp(__stady_gmp_47, __stady_gmp_48) <= 0;
@@ -338,7 +338,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         }
         if(!__stady_pred_12)pathcrawler_assert_exception("Loop invariant not preserved!", 13);
         mpz_t __stady_gmp_49;
-        __gmpz_init_set_si(__stady_gmp_49, 0);
+        __gmpz_init_set_str(__stady_gmp_49, "0", 10);
         mpz_t __stady_gmp_50;
         __gmpz_init_set_si(__stady_gmp_50, k);
         int __stady_pred_15 = __gmpz_cmp(__stady_gmp_49, __stady_gmp_50) <= 0;
@@ -426,7 +426,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       __gmpz_clear(__stady_gmp_70);
       if(!__stady_pred_18)pathcrawler_assert_exception("Loop invariant not established!", 7);
       mpz_t __stady_gmp_71;
-      __gmpz_init_set_si(__stady_gmp_71, 0);
+      __gmpz_init_set_str(__stady_gmp_71, "0", 10);
       mpz_t __stady_gmp_72;
       __gmpz_init_set_si(__stady_gmp_72, k);
       int __stady_pred_20 = __gmpz_cmp(__stady_gmp_71, __stady_gmp_72) <= 0;
@@ -452,7 +452,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       }
       if(!__stady_pred_19)pathcrawler_assert_exception("Loop invariant not established!", 0);
       mpz_t __stady_gmp_77;
-      __gmpz_init_set_si(__stady_gmp_77, 0);
+      __gmpz_init_set_str(__stady_gmp_77, "0", 10);
       mpz_t __stady_gmp_78;
       __gmpz_init_set_si(__stady_gmp_78, i);
       int __stady_pred_23 = __gmpz_cmp(__stady_gmp_77, __stady_gmp_78) <= 0;
@@ -483,7 +483,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
           i ++;
           k ++;
         }mpz_t __stady_gmp_82;
-        __gmpz_init_set_si(__stady_gmp_82, 0);
+        __gmpz_init_set_str(__stady_gmp_82, "0", 10);
         mpz_t __stady_gmp_83;
         __gmpz_init_set_si(__stady_gmp_83, i);
         int __stady_pred_25 = __gmpz_cmp(__stady_gmp_82, __stady_gmp_83) <= 0;
@@ -495,7 +495,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         }
         if(!__stady_pred_24)pathcrawler_assert_exception("Loop invariant not preserved!", 16);
         mpz_t __stady_gmp_84;
-        __gmpz_init_set_si(__stady_gmp_84, 0);
+        __gmpz_init_set_str(__stady_gmp_84, "0", 10);
         mpz_t __stady_gmp_85;
         __gmpz_init_set_si(__stady_gmp_85, k);
         int __stady_pred_27 = __gmpz_cmp(__stady_gmp_84, __stady_gmp_85) <= 0;
@@ -576,7 +576,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       __gmpz_clear(__stady_gmp_103);
       if(!__stady_pred_30)pathcrawler_assert_exception("Loop invariant not established!", 10);
       mpz_t __stady_gmp_104;
-      __gmpz_init_set_si(__stady_gmp_104, 0);
+      __gmpz_init_set_str(__stady_gmp_104, "0", 10);
       mpz_t __stady_gmp_105;
       __gmpz_init_set_si(__stady_gmp_105, k);
       int __stady_pred_32 = __gmpz_cmp(__stady_gmp_104, __stady_gmp_105) <= 0;
@@ -602,7 +602,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       }
       if(!__stady_pred_31)pathcrawler_assert_exception("Loop invariant not established!", 3);
       mpz_t __stady_gmp_110;
-      __gmpz_init_set_si(__stady_gmp_110, 0);
+      __gmpz_init_set_str(__stady_gmp_110, "0", 10);
       mpz_t __stady_gmp_111;
       __gmpz_init_set_si(__stady_gmp_111, j);
       int __stady_pred_35 = __gmpz_cmp(__stady_gmp_110, __stady_gmp_111) <= 0;
@@ -633,7 +633,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
           j ++;
           k ++;
         }mpz_t __stady_gmp_115;
-        __gmpz_init_set_si(__stady_gmp_115, 0);
+        __gmpz_init_set_str(__stady_gmp_115, "0", 10);
         mpz_t __stady_gmp_116;
         __gmpz_init_set_si(__stady_gmp_116, j);
         int __stady_pred_37 = __gmpz_cmp(__stady_gmp_115, __stady_gmp_116) <= 0;
@@ -645,7 +645,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         }
         if(!__stady_pred_36)pathcrawler_assert_exception("Loop invariant not preserved!", 18);
         mpz_t __stady_gmp_117;
-        __gmpz_init_set_si(__stady_gmp_117, 0);
+        __gmpz_init_set_str(__stady_gmp_117, "0", 10);
         mpz_t __stady_gmp_118;
         __gmpz_init_set_si(__stady_gmp_118, k);
         int __stady_pred_39 = __gmpz_cmp(__stady_gmp_117, __stady_gmp_118) <= 0;
@@ -705,7 +705,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       {
       mpz_t __q_i;
       mpz_t __stady_gmp_130;
-      __gmpz_init_set_si(__stady_gmp_130, 0);
+      __gmpz_init_set_str(__stady_gmp_130, "0", 10);
       mpz_t __stady_gmp_131;
       __gmpz_init_set_si(__stady_gmp_131, old_l1);
       mpz_t __stady_gmp_132;
@@ -716,7 +716,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       __gmpz_clear(__stady_gmp_131);
       __gmpz_clear(__stady_gmp_132);
       mpz_t __stady_gmp_134;
-      __gmpz_init_set_si(__stady_gmp_134, 1);
+      __gmpz_init_set_str(__stady_gmp_134, "1", 10);
       mpz_t __stady_gmp_135;
       __gmpz_init(__stady_gmp_135);
       __gmpz_sub(__stady_gmp_135, __stady_gmp_133, __stady_gmp_134);
@@ -731,7 +731,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       mpz_t __stady_gmp_137;
       __gmpz_init_set(__stady_gmp_137, __q_i);
       mpz_t __stady_gmp_138;
-      __gmpz_init_set_si(__stady_gmp_138, 1);
+      __gmpz_init_set_str(__stady_gmp_138, "1", 10);
       mpz_t __stady_gmp_139;
       __gmpz_init(__stady_gmp_139);
       __gmpz_add(__stady_gmp_139, __stady_gmp_137, __stady_gmp_138);

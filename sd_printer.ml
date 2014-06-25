@@ -288,7 +288,8 @@ class sd_printer props () = object(self)
 	| Linteger ->
 	  let var = self#fresh_gmp_var() in
 	  Format.fprintf fmt "mpz_t %s;@\n" var;
-	  Format.fprintf fmt "__gmpz_init_set_si(%s, %a);@\n" var self#term t;
+	  Format.fprintf fmt "__gmpz_init_set_str(%s, \"%a\", 10);@\n"
+	    var self#term t;
 	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ ->
