@@ -1498,6 +1498,30 @@ class sd_printer props () = object(self)
 	  Format.fprintf fmt "__gmpz_clear(%s);@\n" t1';
 	  var
 	| Lreal, Lreal -> assert false (* TODO: reals *)
+	| Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)), Linteger ->
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term_and_var fmt t1 in
+	  let t2' = self#term_and_var fmt t2 in
+	  let var' = self#fresh_gmp_var() in
+	  Format.fprintf fmt "mpz_t %s;@\n" var';
+	  Format.fprintf fmt "__gmpz_init_set_ui(%s, %s);@\n" var' t1';
+	  Format.fprintf fmt "int %s = __gmpz_cmp(%s, %s) %a 0;@\n"
+	    var var' t2' self#relation rel;
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" t2';
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" var';
+	  var
+	| Ctype (TInt _), Linteger ->
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term_and_var fmt t1 in
+	  let t2' = self#term_and_var fmt t2 in
+	  let var' = self#fresh_gmp_var() in
+	  Format.fprintf fmt "mpz_t %s;@\n" var';
+	  Format.fprintf fmt "__gmpz_init_set_si(%s, %s);@\n" var' t1';
+	  Format.fprintf fmt "int %s = __gmpz_cmp(%s, %s) %a 0;@\n"
+	    var var' t2' self#relation rel;
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" t2';
+	  Format.fprintf fmt "__gmpz_clear(%s);@\n" var';
+	  var
 	| _ ->
           let t1' = self#term_and_var fmt t1 in
           let t2' = self#term_and_var fmt t2 in
