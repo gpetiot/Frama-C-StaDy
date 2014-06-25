@@ -1479,7 +1479,6 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 --- Properties of Function 'delete_substr'
 --------------------------------------------------------------------------------
 
-[    -    ] Pre-condition (file tests/deleteSubstr3/deleteSubstr3.c, line 53)
 [ Partial ] Post-condition for 'not_present' (file tests/deleteSubstr3/deleteSubstr3.c, line 58)
             By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr3/deleteSubstr3.c, line 53)
@@ -1530,6 +1529,5 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 --- Status Report Summary
 --------------------------------------------------------------------------------
     29 Locally validated
-     1 To be validated
-    30 Total
+    29 Total
 --------------------------------------------------------------------------------

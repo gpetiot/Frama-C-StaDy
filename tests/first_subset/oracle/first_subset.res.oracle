@@ -289,7 +289,6 @@ void firstSubset(int *s, int n)
 
 [  Valid  ] Post-condition (file tests/first_subset/first_subset.c, line 11)
             by StaDy.
-[    -    ] Assigns (file tests/first_subset/first_subset.c, line 10)
 [  Valid  ] Loop variant at loop (file tests/first_subset/first_subset.c, line 18)
             by StaDy.
 [  Valid  ] Invariant (file tests/first_subset/first_subset.c, line 14)
@@ -303,6 +302,6 @@ void firstSubset(int *s, int n)
 --- Status Report Summary
 --------------------------------------------------------------------------------
      4 Completely validated
-     2 To be validated
-     6 Total
+     1 To be validated
+     5 Total
 --------------------------------------------------------------------------------

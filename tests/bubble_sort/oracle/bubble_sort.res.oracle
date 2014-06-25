@@ -413,7 +413,6 @@ void bubble_sort(int *A, int n)
 
 [  Valid  ] Post-condition (file tests/bubble_sort/bubble_sort.c, line 9)
             by StaDy.
-[    -    ] Assigns (file tests/bubble_sort/bubble_sort.c, line 8)
 [  Valid  ] Loop variant at loop (file tests/bubble_sort/bubble_sort.c, line 18)
             by StaDy.
 [  Valid  ] Loop variant at loop (file tests/bubble_sort/bubble_sort.c, line 24)
@@ -431,6 +430,6 @@ void bubble_sort(int *A, int n)
 --- Status Report Summary
 --------------------------------------------------------------------------------
      6 Completely validated
-     2 To be validated
-     8 Total
+     1 To be validated
+     7 Total
 --------------------------------------------------------------------------------

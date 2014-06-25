@@ -778,8 +778,6 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
             By StaDy, with pending:
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
-[    -    ] Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
-[    -    ] Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
 [ Partial ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 26)
             By StaDy, with pending:
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
@@ -841,6 +839,5 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
 --- Status Report Summary
 --------------------------------------------------------------------------------
     15 Locally validated
-     2 To be validated
-    17 Total
+    15 Total
 --------------------------------------------------------------------------------

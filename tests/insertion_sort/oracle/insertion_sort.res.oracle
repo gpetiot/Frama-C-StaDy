@@ -363,7 +363,6 @@ void insertion_sort(int *t, int n)
 
 [  Valid  ] Post-condition (file tests/insertion_sort/insertion_sort.c, line 9)
             by StaDy.
-[    -    ] Assigns (file tests/insertion_sort/insertion_sort.c, line 8)
 [  Valid  ] Loop variant at loop (file tests/insertion_sort/insertion_sort.c, line 20)
             by StaDy.
 [  Valid  ] Loop variant at loop (file tests/insertion_sort/insertion_sort.c, line 30)
@@ -383,6 +382,6 @@ void insertion_sort(int *t, int n)
 --- Status Report Summary
 --------------------------------------------------------------------------------
      7 Completely validated
-     2 To be validated
-     9 Total
+     1 To be validated
+     8 Total
 --------------------------------------------------------------------------------

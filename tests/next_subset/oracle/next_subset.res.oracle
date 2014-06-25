@@ -575,7 +575,6 @@ int nextSubset(int *s, int n)
             by StaDy.
 [  Valid  ] Post-condition (file tests/next_subset/next_subset.c, line 20)
             by StaDy.
-[    -    ] Assigns (file tests/next_subset/next_subset.c, line 15)
 [  Valid  ] Loop variant at loop (file tests/next_subset/next_subset.c, line 27)
             by StaDy.
 [  Valid  ] Loop variant at loop (file tests/next_subset/next_subset.c, line 34)
@@ -593,6 +592,6 @@ int nextSubset(int *s, int n)
 --- Status Report Summary
 --------------------------------------------------------------------------------
     10 Completely validated
-     2 To be validated
-    12 Total
+     1 To be validated
+    11 Total
 --------------------------------------------------------------------------------

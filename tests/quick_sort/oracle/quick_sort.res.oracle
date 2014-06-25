@@ -395,7 +395,6 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
 [ Partial ] Post-condition (file tests/quick_sort/quick_sort.c, line 14)
             By StaDy, with pending:
              - Pre-condition (file tests/quick_sort/quick_sort.c, line 12)
-[    -    ] Pre-condition (file tests/quick_sort/quick_sort.c, line 12)
 [ Partial ] Loop variant at loop (file tests/quick_sort/quick_sort.c, line 33)
             By StaDy, with pending:
              - Pre-condition (file tests/quick_sort/quick_sort.c, line 12)
@@ -422,6 +421,5 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
 --- Status Report Summary
 --------------------------------------------------------------------------------
      9 Locally validated
-     1 To be validated
-    10 Total
+     9 Total
 --------------------------------------------------------------------------------

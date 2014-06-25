@@ -455,7 +455,6 @@ int binary_search(int *arr, int length, int query)
             by StaDy.
 [  Valid  ] Post-condition (file tests/binary_search/binary_search.c, line 14)
             by StaDy.
-[    -    ] Assigns nothing
 [  Valid  ] Loop variant at loop (file tests/binary_search/binary_search.c, line 24)
             by StaDy.
 [  Valid  ] Invariant (file tests/binary_search/binary_search.c, line 19)
@@ -475,6 +474,6 @@ int binary_search(int *arr, int length, int query)
 --- Status Report Summary
 --------------------------------------------------------------------------------
      9 Completely validated
-     2 To be validated
-    11 Total
+     1 To be validated
+    10 Total
 --------------------------------------------------------------------------------

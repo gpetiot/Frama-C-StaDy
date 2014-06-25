@@ -296,8 +296,6 @@ int num_of(int n, int *t)
 [ Partial ] Post-condition (file tests/num_of/num_of.c, line 10)
             By StaDy, with pending:
              - Pre-condition (file tests/num_of/num_of.c, line 8)
-[    -    ] Pre-condition (file tests/num_of/num_of.c, line 8)
-[    -    ] Assigns nothing
 [ Partial ] Loop variant at loop (file tests/num_of/num_of.c, line 20)
             By StaDy, with pending:
              - Pre-condition (file tests/num_of/num_of.c, line 8)
@@ -314,6 +312,6 @@ int num_of(int n, int *t)
 --- Status Report Summary
 --------------------------------------------------------------------------------
      4 Locally validated
-     3 To be validated
-     7 Total
+     1 To be validated
+     5 Total
 --------------------------------------------------------------------------------
