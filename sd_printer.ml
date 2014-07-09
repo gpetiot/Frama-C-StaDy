@@ -8,126 +8,6 @@ let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
 
 
-(* Extracts the varinfo of the variable and its inferred size as a term
-   from a term t as \valid(t). *)
-let rec extract_from_valid : term -> varinfo * term =
-  fun t -> match t.term_node with
-  | TBinOp (((PlusPI|IndexPI|MinusPI) as op),
-    	    ({term_node=TCastE((TPtr _) as ty,t)} as _operand1),
-    	    ({term_node=(Trange (_, Some _))} as operand2)) ->
-      extract_from_valid
-    	{t with term_node=TBinOp(op, {t with term_type=Ctype ty}, operand2)}
-  | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)}),
-	   ({term_node=
-	       Trange(_,
-		      Some {term_node=
-			  TBinOp (MinusA, x,
-				  {term_node=TConst (Integer (i, _))})})}))
-      when Integer.equal i Integer.one ->
-    let varinfo = Extlib.the v.lv_origin in
-    varinfo, x
-  | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)}),
-	   ({term_node=Trange(_,Some bound)})) ->
-    let varinfo = Extlib.the v.lv_origin in
-    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
-    let einfo = {exp_type=bound.term_type; exp_name=[]} in
-    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
-    varinfo, term
-  | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)}),
-	   (t2 (* anything but a Trange *))) ->
-    let varinfo = Extlib.the v.lv_origin in
-    let tnode = TBinOp (PlusA, t2, Cil.lone ~loc:t.term_loc()) in
-    let einfo = {exp_type=t2.term_type; exp_name=[]} in
-    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
-    varinfo, term
-  | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval tlval}),
-	   ({term_node=
-	       Trange(_,
-		      Some {term_node=
-			  TBinOp (MinusA, x,
-				  {term_node=TConst (Integer (i, _))})})}))
-      when Integer.equal i Integer.one ->
-    let varinfo, _ = extract_from_valid {t with term_node=TLval tlval} in
-    varinfo, x
-  | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval tlval}),
-	   ({term_node=Trange(_,Some bound)})) ->
-    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
-    let einfo = {exp_type=bound.term_type; exp_name=[]} in
-    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
-    let varinfo, _ = extract_from_valid {t with term_node=TLval tlval} in
-    varinfo, term
-  | TLval (TVar v, TNoOffset) ->
-    let varinfo = Extlib.the v.lv_origin in
-    let term = Cil.lone ~loc:t.term_loc () in
-    varinfo, term
-  | TLval (TVar _, TField _) -> assert false
-  | TLval (TVar _, TModel _) -> assert false
-  | TLval (TVar _, TIndex _) -> assert false
-  | TLval (TMem m, TNoOffset) ->
-    let varinfo, _ = extract_from_valid m in
-    let term = Cil.lone ~loc:t.term_loc () in
-    varinfo, term
-  | TLval (TMem _, TField _) -> assert false
-  | TLval (TMem _, TModel _) -> assert false
-  | TLval (TMem _, TIndex _) -> assert false
-  | TStartOf _ -> Sd_options.Self.abort "TStartOf \\valid(%a)" Printer.pp_term t
-  | TAddrOf _ -> Sd_options.Self.abort "TAddrOf \\valid(%a)" Printer.pp_term t
-  | TCoerce _ -> Sd_options.Self.abort "TCoerce \\valid(%a)" Printer.pp_term t
-  | TCoerceE _ -> Sd_options.Self.abort "TCoerceE \\valid(%a)" Printer.pp_term t
-  | TLogic_coerce _ ->
-    Sd_options.Self.abort "TLogic_coerce \\valid(%a)" Printer.pp_term t
-  | TBinOp _ -> Sd_options.Self.abort "TBinOp \\valid(%a)" Printer.pp_term t
-  | _ -> Sd_options.Self.abort "\\valid(%a)" Printer.pp_term t
-
-
-(* Computes and returns a hashtable such that :
-   -  var1 => inferred size for var1
-   -  var2 => inferred size for var2
-   -  ...
-   - var n => inferred size for varn *)
-let lengths_from_requires :
-    kernel_function -> term list Cil_datatype.Varinfo.Hashtbl.t =
-  fun kf ->
-    let vi = Kernel_function.get_vi kf in
-    let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
-    let o = object
-      inherit Visitor.frama_c_inplace
-      method! vpredicate p =
-	match p with
-	| Pvalid(_, t) | Pvalid_read(_, t) ->
-	  begin
-	    try
-	      let v, term = extract_from_valid t in
-	      let terms =
-		try Cil_datatype.Varinfo.Hashtbl.find kf_tbl v
-		with Not_found -> []
-	      in
-	      let terms = Sd_utils.append_end terms term in
-	      Cil_datatype.Varinfo.Hashtbl.replace kf_tbl v terms;
-	      Cil.DoChildren
-	    with
-	    | _ -> Cil.DoChildren
-	  end
-	| _ -> Cil.DoChildren
-    end
-    in
-    let on_requires p =
-      let p' = (new Sd_subst.subst)#subst_pred p.ip_content [][][][] in
-      ignore (Visitor.visitFramacPredicate o p')
-    in
-    let on_bhv _ bhv = List.iter on_requires bhv.b_requires in
-    if not (Cil.is_unused_builtin vi) then
-      (* TODO: handle arrays with constant size *)
-      (*Globals.Vars.iter (fun vi _ -> () );*)
-      Annotations.iter_behaviors on_bhv kf;
-    kf_tbl
-
-
 class sd_printer props () = object(self)
   inherit Printer.extensible_printer () as super
 
@@ -832,7 +712,7 @@ class sd_printer props () = object(self)
     let dig_type x = dig_type (Cil.unrollTypeDeep x) in
     begin
       let iter_counter = ref 0 in
-      let lengths = lengths_from_requires kf in
+      let lengths = Sd_utils.lengths_from_requires kf in
 
       let do_varinfo v =
 	let terms =
@@ -895,7 +775,7 @@ class sd_printer props () = object(self)
       (try
 	 fun fmt ->
 	   let iter_counter = ref 0 in
-	   let lengths = lengths_from_requires kf in
+	   let lengths = Sd_utils.lengths_from_requires kf in
 
 	   let do_varinfo v =
 	     let terms =

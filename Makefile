@@ -33,8 +33,8 @@ PLUGIN_PTESTS_OPTS := -j 1
 PLUGIN_CMO	:= \
 	sd_options \
 	sd_states \
-	sd_utils \
 	sd_subst \
+	sd_utils \
 	sd_socket \
 	sd_native_precond \
 	sd_printer \
