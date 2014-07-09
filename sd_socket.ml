@@ -34,9 +34,13 @@ let process_test_case : string -> unit =
       if s = "" then [] else aux [] s
     in
     let prop = Sd_utils.to_prop id_prop in
-    let file = Sd_options.Temp_File.get() in
+    let instru_file_name =
+      Printf.sprintf "__sd_instru_%s_%s.c"
+      (Filename.chop_extension(Filename.basename(List.hd (Kernel.Files.get()))))
+      (Kernel_function.get_name (fst(Globals.entry_point())))
+    in
     let func = Kernel_function.get_name (fst (Globals.entry_point ())) in
-    let f = "testcases_" ^ (Filename.chop_extension file) in
+    let f = "testcases_" ^ (Filename.chop_extension instru_file_name) in
     let f = Filename.concat f func in
     let f = Filename.concat f "testdrivers" in
     let f = Filename.concat f ("TC_" ^ str_tc ^ ".c") in

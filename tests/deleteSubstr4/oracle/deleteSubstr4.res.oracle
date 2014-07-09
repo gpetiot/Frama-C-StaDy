@@ -1404,19 +1404,19 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 }
 
 
-[kernel] preprocessing with "gcc -C -E -I.  stady_temp.c"
-[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h stady_temp.c"
+[kernel] preprocessing with "gcc -C -E -I.  __sd_instru_deleteSubstr4_delete_substr.c"
+[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_deleteSubstr4_delete_substr.c"
 [pc] analyzing...
-[pc] Compiling pathcrawler_stady_temp/lanceur_delete_substr utilities ...
-[pc] Compiling pathcrawler_stady_temp/lanceur_delete_substr ...
+[pc] Compiling pathcrawler___sd_instru_deleteSubstr4_delete_substr/lanceur_delete_substr utilities ...
+[pc] Compiling pathcrawler___sd_instru_deleteSubstr4_delete_substr/lanceur_delete_substr ...
 [pc] generating tests...
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] Starting lanceur_pathcrawler__delete_substr_precond (isc version)
 [pc] TEST GENERATION WARNING!!!
-[pc] Bad projection on input values of expression j__delete_substr in the assignment  at line number 764 of file stady_temp.c.
+[pc] Bad projection on input values of expression j__delete_substr in the assignment  at line number 764 of file __sd_instru_deleteSubstr4_delete_substr.c.
 [pc] Please check your test context and source code for uninitialised variables.
 [pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(3) in the assignment  at line number 764 of file stady_temp.c.
+[pc] Unexpected failure of goal write_status_prefix_and_path(3) in the assignment  at line number 764 of file __sd_instru_deleteSubstr4_delete_substr.c.
 [pc] Please report this bug.
 [pc] generation finished
 [stady] all-paths: true

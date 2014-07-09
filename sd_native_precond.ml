@@ -377,7 +377,7 @@ let rec requires_to_prolog :
     | _ -> assert false
 
 
-let translate () =
+let translate precond_file_name =
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   let kf = fst (Globals.entry_point()) in
@@ -520,7 +520,7 @@ let translate () =
   Format.fprintf fmt "precondition_of('%s','%s').\n" func_name precond_name;
   (* END OF PRINTING *)
   let dkey = Sd_options.dkey_generated_pl in
-  let out_file = open_out (Sd_options.Precond_File.get()) in
+  let out_file = open_out precond_file_name in
   Sd_options.Self.debug ~dkey "generated Prolog precondition:";
   let dkeys = Sd_options.Self.Debug_category.get() in
   if Datatype.String.Set.mem "generated-pl" dkeys then

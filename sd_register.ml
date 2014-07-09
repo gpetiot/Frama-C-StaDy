@@ -45,25 +45,36 @@ let emitter =
 
 
 let compute_props props =
+  let precond_file_name =
+    Printf.sprintf "__sd_%s_%s.pl"
+      (Filename.chop_extension(Filename.basename(List.hd (Kernel.Files.get()))))
+      (Kernel_function.get_name (fst(Globals.entry_point())))
+  in
+  let instru_file_name =
+    Printf.sprintf "__sd_instru_%s_%s.c"
+      (Filename.chop_extension(Filename.basename(List.hd (Kernel.Files.get()))))
+      (Kernel_function.get_name (fst(Globals.entry_point())))
+  in
+
   (* Translate some parts of the pre-condition in Prolog *)
   let native_precond_generated =
-    try Sd_native_precond.translate(); true with _ -> false in
+    try Sd_native_precond.translate precond_file_name; true with _ -> false in
   Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
   let kf = fst (Globals.entry_point()) in
   let translated_props =
-    second_pass (Sd_options.Temp_File.get()) props in
+    second_pass instru_file_name props in
   let test_params =
     if native_precond_generated then
-      Printf.sprintf "-pc-test-params %s" (Sd_options.Precond_File.get())
+      Printf.sprintf "-pc-test-params %s" precond_file_name
     else
       ""
   in
   let cmd =
     Printf.sprintf
       "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -pc -pc-validate-asserts %s -pc-com %s -pc-no-xml %s"
-      (Sd_options.Temp_File.get())
+      instru_file_name
       (Kernel_function.get_name (fst(Globals.entry_point())))
       test_params
       (Sd_options.Socket_Type.get())

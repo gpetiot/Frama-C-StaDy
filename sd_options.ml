@@ -1,5 +1,4 @@
 
-
 module Self = Plugin.Register (struct
   let name = "StaDy"
   let shortname = "stady"
@@ -9,20 +8,6 @@ end)
 module Enabled = Self.False (struct
   let option_name = "-stady"
   let help = ""
-end)
-
-module Temp_File = Self.String (struct
-  let option_name = "-stady-temp-file"
-  let help = ""
-  let arg_name = "file_name"
-  let default = "stady_temp.c"
-end)
-
-module Precond_File = Self.String (struct
-  let option_name = "-stady-precond-file"
-  let help = ""
-  let arg_name = "file_name"
-  let default = "stady_precond.pl"
 end)
 
 module PathCrawler_Options = Self.String (struct
