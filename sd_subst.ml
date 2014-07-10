@@ -17,12 +17,18 @@ class subst = object(self)
       if List.mem_assoc li.l_var_info preds then
 	List.assoc li.l_var_info preds
       else
-	let new_labels =
-	  List.map (fun (x,y) -> x, self#subst_label y labels) lassoc in
-	let new_args = List.map2 (fun x y -> x,y) li.l_profile params in
-	let new_args =
-	  List.map (fun (x,y) ->
-	    x, self#subst_term y labels args quantifs) new_args in
+	let rec aux ret = function
+	  | [] -> ret
+	  | (x,y)::t -> aux ((x, self#subst_label y labels)::ret) t
+	in
+	let new_labels = aux [] lassoc in
+	let rec aux ret = function
+	  | [], [] -> ret
+	  | x::t1, y::t2 ->
+	    aux ((x, self#subst_term y labels args quantifs)::ret) (t1,t2)
+	  | _ -> assert false
+	in
+	let new_args = aux [] (li.l_profile, params) in
 	begin
 	  match li.l_body with
 	  | LBnone ->
@@ -68,15 +74,23 @@ class subst = object(self)
 	| LBinductive _ -> Sd_options.Self.not_yet_implemented "LBinductive"
       end
     | Pforall (q,p) ->
-      let q' = List.map (fun v -> {v with lv_name = "__q_" ^ v.lv_name}) q in
-      let q'' = List.combine q q' in
-      let new_quantifs = List.rev_append q'' quantifs in
-      Pforall(q',self#subst_pnamed p labels args preds new_quantifs)
+      let prefix v = {v with lv_name = "__q_" ^ v.lv_name} in
+      let rec aux ret1 ret2 = function
+	| [] -> ret1,ret2
+	| h::t -> aux ((prefix h)::ret1) ((h, prefix h)::ret2) t
+      in
+      let new_q, new_quantifs = aux [] [] q in
+      let new_quantifs = List.rev_append new_quantifs quantifs in
+      Pforall (new_q, self#subst_pnamed p labels args preds new_quantifs)
     | Pexists (q,p) ->
-      let q' = List.map (fun v -> {v with lv_name = "__q_" ^ v.lv_name}) q in
-      let q'' = List.combine q q' in
-      let new_quantifs = List.rev_append q'' quantifs in
-      Pexists (q,self#subst_pnamed p labels args preds new_quantifs)
+      let prefix v = {v with lv_name = "__q_" ^ v.lv_name} in
+      let rec aux ret1 ret2 = function
+	| [] -> ret1,ret2
+	| h::t -> aux ((prefix h)::ret1) ((h, prefix h)::ret2) t
+      in
+      let new_q, new_quantifs = aux [] [] q in
+      let new_quantifs = List.rev_append new_quantifs quantifs in
+      Pexists (new_q, self#subst_pnamed p labels args preds new_quantifs)
     | Pat (p,l) -> Pat (self#subst_pnamed p labels args preds quantifs,
 			self#subst_label l labels)
     | Pvalid_read (l,t) -> Pvalid_read (self#subst_label l labels,
@@ -140,18 +154,27 @@ class subst = object(self)
 		     self#subst_term lambda labels args quantifs])
       else assert false (* unreachable *)
     | Tapp (li,lassoc,params) ->
-      let new_labels =
-	List.map (fun (x,y) -> x, self#subst_label y labels) lassoc in
-      let new_params =
+      let rec aux ret = function
+	| [] -> ret
+	| (x,y)::t -> aux ((x, self#subst_label y labels)::ret) t
+      in
+      let new_labels = aux [] lassoc in
+      let rec aux ret = function
+	| [], [] -> ret
+	| x::t1, y::t2 ->
+	  aux ((x, self#subst_term y labels args quantifs)::ret) (t1,t2)
+	| _ -> assert false
+      in
+      let new_args = aux [] (li.l_profile, params) in
+      let new_terms =
 	List.map (fun x -> self#subst_term x labels args quantifs) params in
-      let new_args = List.map2 (fun x y -> x,y) li.l_profile new_params in
       begin
 	match li.l_body with
 	| LBnone ->
 	  let builtin_name = li.l_var_info.lv_name in
 	  if builtin_name = "\\cos" || builtin_name = "\\abs" ||
 	    builtin_name = "\\sqrt" || builtin_name = "\\pow" then
-	    Tapp(li,new_labels,new_params)
+	    Tapp(li,new_labels,new_terms)
 	  else
 	    Sd_options.Self.not_yet_implemented "LBnone in term application"
 	| LBreads _ -> Sd_options.Self.not_yet_implemented "LBreads"

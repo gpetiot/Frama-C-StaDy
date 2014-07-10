@@ -4,7 +4,7 @@
 [stady] warning: Native Precondition:
                  ∀ ℤ __q_i;
                    0 ≤ __q_i ∧ __q_i < n ⇒
-                   (∃ ℤ j;
+                   (∃ ℤ __q_j;
                       (0 ≤ __q_j ∧ __q_j < n) ∧
                       (*(*(t+__q_i)+__q_j) ≡ 1 ∧
                        (∀ ℤ __q_k;
