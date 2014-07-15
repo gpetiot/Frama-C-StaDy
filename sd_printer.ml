@@ -74,6 +74,16 @@ class gather_insertions props = object(self)
     gmp_cpt <- gmp_cpt + 1;
     var
 
+  (* unmodified *)
+  method private in_current_function vi =
+    assert (current_function = None);
+    current_function <- Some vi
+
+  (* unmodified *)
+  method private out_current_function =
+    assert (current_function <> None);
+    current_function <- None
+
   (* getter *)
   method translated_properties() = Sd_utils.no_repeat translated_properties
 
@@ -1023,7 +1033,7 @@ class gather_insertions props = object(self)
 	  (Format.sprintf
 	     "{ pathcrawler_to_framac(\"@@FC:REACHABLE_STMT:%i\");@\n"
 	     stmt.sid);
-	current_label <- Some (BegStmt stmt.sid);
+	current_label <- Some (EndStmt stmt.sid);
 	self#insert (Format.sprintf " }@\n");
 	current_label <- None
       end;
@@ -1056,10 +1066,13 @@ class gather_insertions props = object(self)
   method! vglob_aux g =
     begin
       match g with
-      | GVar(vi,_,_) -> visited_globals <- vi::visited_globals
-      | _ -> ()
-    end;
-    Cil.DoChildren
+      | GFun (fundec, _l) ->
+	self#in_current_function fundec.svar;
+	let after globs = self#out_current_function; globs in
+	Cil.ChangeDoChildrenPost ([g], after)
+      | GVar(vi,_,_) -> visited_globals <- vi::visited_globals; Cil.DoChildren
+      | _ -> Cil.DoChildren
+    end
 
   method private predicate_named pnamed =
     self#predicate pnamed.content
@@ -1326,6 +1339,8 @@ end
 class print_insertions insertions ~print_label () = object(self)
   inherit Printer.extensible_printer () as super
 
+  val mutable current_function = None
+
   method private fundecl fmt f =
     let was_ghost = is_ghost in
     let entry_point_name=Kernel_function.get_name(fst(Globals.entry_point())) in
@@ -1473,8 +1488,6 @@ class print_insertions insertions ~print_label () = object(self)
        else ignore)
       self#vdecl v
       (if display_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
-
-  val mutable current_function = None
   
   (* unmodified *)
   method private in_current_function vi =
