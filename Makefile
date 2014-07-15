@@ -37,7 +37,7 @@ PLUGIN_CMO	:= \
 	sd_utils \
 	sd_socket \
 	sd_native_precond \
-	sd_printer \
+	sd_insertions \
 	sd_register
 PLUGIN_GUI_CMO 	:= sd_register_gui 
 include $(FRAMAC_SHARE)/Makefile.dynamic
