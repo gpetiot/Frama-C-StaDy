@@ -24,11 +24,15 @@ let pp_label fmt = function
   | BegIter s -> Format.fprintf fmt "BegIter %i" s
   | EndIter s -> Format.fprintf fmt "EndIter %i" s
 
+type insertion =
+| Code of string
+| Line_break
+
 
 class gather_insertions props = object(self)
   inherit Visitor.frama_c_inplace as super
 
-  val insertions : (label, string Queue.t) Hashtbl.t = Hashtbl.create 64
+  val insertions : (label, insertion Queue.t) Hashtbl.t = Hashtbl.create 64
   val mutable current_label : label option = None
   val mutable pred_cpt = 0
   val mutable term_cpt = 0
@@ -117,9 +121,12 @@ class gather_insertions props = object(self)
       | s when s = "\\numof" -> "0"
       | _ -> assert false (* unreachable *)
     in
-    self#insert (Format.sprintf "mpz_t %s;@\n" var);
-    self#insert (Format.sprintf "__gmpz_init_set_si(%s, %s);@\n" var init_val);
-    self#insert (Format.sprintf "{@\n");
+    self#insert (Code(Format.sprintf "mpz_t %s;" var));
+    self#insert Line_break;
+    self#insert(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);"var init_val));
+    self#insert Line_break;
+    self#insert (Code(Format.sprintf "{"));
+    self#insert Line_break;
     let low = self#term lower in
     let up = self#term upper in
     begin
@@ -128,36 +135,49 @@ class gather_insertions props = object(self)
 	begin
 	  match upper.term_type with
 	  | Linteger ->
-	    self#insert (Format.sprintf "mpz_t %s;@\n" iter);
-	    self#insert (Format.sprintf "__gmpz_init_set(%s, %s);@\n" iter low);
+	    self#insert (Code(Format.sprintf "mpz_t %s;" iter));
+	    self#insert Line_break;
+	    self#insert(Code(Format.sprintf"__gmpz_init_set(%s, %s);"iter low));
+	    self#insert Line_break;
 	    self#insert
-	      (Format.sprintf "for(; __gmpz_cmp(%s, %s) <= 0;) {@\n" iter up);
+	      (Code(Format.sprintf"for(; __gmpz_cmp(%s, %s) <= 0;) {" iter up));
+	    self#insert Line_break;
 	    let lambda_term = self#term t in
 	    begin
 	      match builtin_name with
 	      | s when s = "\\sum" ->
-		self#insert (Format.sprintf "__gmpz_add(%s, %s, %s);@\n"
-			       var var lambda_term)
+		self#insert (Code(Format.sprintf "__gmpz_add(%s, %s, %s);"
+				    var var lambda_term))
 	      | s when s = "\\product" ->
-		self#insert (Format.sprintf "__gmpz_mult(%s, %s, %s);@\n"
-			       var var lambda_term)
+		self#insert (Code(Format.sprintf "__gmpz_mult(%s, %s, %s);"
+				    var var lambda_term))
 	      | s when s = "\\numof" ->
 	      (* lambda_term is of type:
 		 Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
-		self#insert (Format.sprintf
-			       "if(%s) __gmpz_add_ui(%s, %s, 1);@\n"
-			       lambda_term var var)
+		self#insert (Code(Format.sprintf
+				    "if(%s) __gmpz_add_ui(%s, %s, 1);"
+				    lambda_term var var))
 	      | _ -> assert false
 	    end;
+	    self#insert Line_break;
 	    self#insert
-	      (Format.sprintf "__gmpz_add_ui(%s, %s, 1);@\n" iter iter);
+	      (Code(Format.sprintf "__gmpz_add_ui(%s, %s, 1);" iter iter));
+	    self#insert Line_break;
 	    if builtin_name <> "\\numof" then
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" lambda_term);
-	    self#insert (Format.sprintf "}@\n");
-	    self#insert (Format.sprintf "__gmpz_clear(%s);@\n" iter);
-	    self#insert (Format.sprintf "__gmpz_clear(%s);@\n" low);
-	    self#insert (Format.sprintf "__gmpz_clear(%s);@\n" up);
-	    self#insert (Format.sprintf "}@\n");
+	      begin
+		self#insert(Code(Format.sprintf"__gmpz_clear(%s);"lambda_term));
+		self#insert Line_break
+	      end;
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" low));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" up));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
 	    var
 	  | Lreal -> assert false (* unreachable *)
 	  | _ -> assert false (* unreachable ? *)
@@ -178,10 +198,12 @@ class gather_insertions props = object(self)
 	match ty with
 	| Linteger ->
 	  let var = self#fresh_gmp_var() in
-	  self#insert (Format.sprintf "mpz_t %s;@\n" var);
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
 	  self#insert
-	    (Pretty_utils.sfprintf "__gmpz_init_set_str(%s, \"%a\", 10);@\n"
-	       var Printer.pp_term t);
+	    (Code(Pretty_utils.sfprintf "__gmpz_init_set_str(%s, \"%a\", 10);"
+		    var Printer.pp_term t));
+	  self#insert Line_break;
 	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> Pretty_utils.sfprintf "%a" Printer.pp_term t
@@ -193,8 +215,10 @@ class gather_insertions props = object(self)
 	| Linteger ->
 	  let var = self#fresh_gmp_var() in
 	  let t' = self#tlval tlval in
-	  self#insert (Format.sprintf "mpz_t %s;@\n" var);
-	  self#insert (Format.sprintf "__gmpz_init_set(%s, %s);@\n" var t');
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_init_set(%s, %s);" var t'));
+	  self#insert Line_break;
 	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> self#tlval tlval
@@ -214,30 +238,42 @@ class gather_insertions props = object(self)
 	  assert(op = Neg);
 	  let x = self#term t' in
 	  let var = self#fresh_gmp_var() in
-	  self#insert (Format.sprintf "mpz_t %s;@\n" var);
-	  self#insert (Format.sprintf "__gmpz_init(%s);@\n" var);
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_init(%s);" var));
+	  self#insert Line_break;
 	  begin
 	    match t'.term_type with
 	    | Linteger ->
-	      self#insert (Format.sprintf "__gmpz_ui_sub(%s, 0, %s);@\n" var x);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" x)
+	      self#insert(Code(Format.sprintf"__gmpz_ui_sub(%s, 0, %s);"var x));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
 	    | Lreal -> assert false (* unreachable *)
 	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
 	      let var' = self#fresh_gmp_var() in
-	      self#insert (Format.sprintf "mpz_t %s;@\n" var');
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var'));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "__gmpz_init_set_ui(%s, %s);@\n" var' x);
+		(Code(Format.sprintf "__gmpz_init_set_ui(%s, %s);" var' x));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "__gmpz_ui_sub(%s, 0, %s);@\n" var var');
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" var')
+		(Code(Format.sprintf "__gmpz_ui_sub(%s, 0, %s);" var var'));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var'));
+	      self#insert Line_break;
 	    | Ctype(TInt _) ->
 	      let var' = self#fresh_gmp_var() in
-	      self#insert (Format.sprintf "mpz_t %s;@\n" var');
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var'));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "__gmpz_init_set_si(%s, %s);@\n" var' x);
+		(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var' x));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "__gmpz_ui_sub(%s, 0, %s);@\n" var var');
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" var')
+		(Code(Format.sprintf "__gmpz_ui_sub(%s, 0, %s);" var var'));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var'));
+	      self#insert Line_break
 	    | _ -> assert false (* unreachable *)
 	  end;
 	  var
@@ -253,8 +289,10 @@ class gather_insertions props = object(self)
 	| Linteger ->
 	  let x = self#term t1 and y = self#term t2 in
 	  let var = self#fresh_term_var() in
-	  self#insert (Format.sprintf "int %s = __gmpz_get_si(%s);@\n" var y);
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" y);
+	  self#insert(Code(Format.sprintf "int %s = __gmpz_get_si(%s);" var y));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+	  self#insert Line_break;
 	  Pretty_utils.sfprintf "(%s %a %s)" x Printer.pp_binop op var
 	| Lreal -> assert false (* unreachable *)
 	| _ ->
@@ -268,8 +306,10 @@ class gather_insertions props = object(self)
 	| Linteger ->
 	  let x = self#term t1 and y = self#term t2 in
 	  let var = self#fresh_gmp_var() in
-	  self#insert (Format.sprintf "mpz_t %s;@\n" var);
-	  self#insert (Format.sprintf "__gmpz_init(%s);@\n" var);
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_init(%s);" var));
+	  self#insert Line_break;
 	  let op' = match op with
 	    | PlusA -> "__gmpz_add"
 	    | MinusA -> "__gmpz_sub"
@@ -281,24 +321,33 @@ class gather_insertions props = object(self)
 	  begin
 	    match t1.term_type, t2.term_type with
 	    | Linteger, Linteger ->
-	      self#insert (Format.sprintf "%s(%s, %s, %s);@\n" op' var x y);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" x);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" y);
+	      self#insert (Code(Format.sprintf "%s(%s, %s, %s);" op' var x y));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+	      self#insert Line_break;
 	      var
 	    | Linteger,Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_))->
-	      self#insert (Format.sprintf "%s_ui(%s, %s, %s);@\n" op' var x y);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" x);
+	      self#insert(Code(Format.sprintf"%s_ui(%s, %s, %s);" op' var x y));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
 	      var
 	    | Linteger, Ctype (TInt _) ->
-	      self#insert (Format.sprintf "%s_si(%s, %s, %s);@\n" op' var x y);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" x);
+	      self#insert(Code(Format.sprintf"%s_si(%s, %s, %s);" op' var x y));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
 	      var
 	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)),Linteger->
 	      if op = PlusA || op = Mult then
 		begin
 		  self#insert
-		    (Format.sprintf "%s_ui(%s, %s, %s);@\n" op' var y x);
-		  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" y);
+		    (Code(Format.sprintf "%s_ui(%s, %s, %s);" op' var y x));
+		  self#insert Line_break;
+		  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+		  self#insert Line_break;
 		  var
 		end
 	      else
@@ -307,8 +356,10 @@ class gather_insertions props = object(self)
 	      if op = PlusA || op = Mult then
 		begin
 		  self#insert
-		    (Format.sprintf "%s_si(%s, %s, %s);@\n" op' var y x);
-		  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" y);
+		    (Code(Format.sprintf "%s_si(%s, %s, %s);" op' var y x));
+		  self#insert Line_break;
+		  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+		  self#insert Line_break;
 		  var
 		end
 	      else
@@ -316,15 +367,21 @@ class gather_insertions props = object(self)
 	    | Ctype(TInt _), Ctype(TInt _) ->
 	      let var1 = self#fresh_gmp_var() in
 	      let var2 = self#fresh_gmp_var() in
-	      self#insert (Format.sprintf "mpz_t %s, %s;@\n" var1 var2);
+	      self#insert (Code(Format.sprintf "mpz_t %s, %s;" var1 var2));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "__gmpz_init_set_si(%s, %s);@\n" var1 x);
+		(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var1 x));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "__gmpz_init_set_si(%s, %s);@\n" var2 y);
+		(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var2 y));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "%s(%s, %s, %s);@\n" op' var var1 var2);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" var1);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" var2);
+		(Code(Format.sprintf "%s(%s, %s, %s);" op' var var1 var2));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var1));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var2));
+	      self#insert Line_break;
 	      var
 	    | _ -> assert false
 	  end
@@ -337,10 +394,13 @@ class gather_insertions props = object(self)
 	      let x = self#term t1 in
 	      let y = self#term t2 in
 	      self#insert
-		(Pretty_utils.sfprintf "int %s = __gmpz_cmp(%s, %s) %a 0;@\n"
-		   var x y Printer.pp_binop op);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" x);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" y);
+		(Code(Pretty_utils.sfprintf "int %s = __gmpz_cmp(%s, %s) %a 0;"
+			var x y Printer.pp_binop op));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+	      self#insert Line_break;
 	      var
 	    | _ ->
 	      let x = self#term t1 in
@@ -359,16 +419,22 @@ class gather_insertions props = object(self)
 	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
 	      let v = self#term t' in
 	      let var = self#fresh_term_var() in
-	      self#insert (Pretty_utils.sfprintf "%a %s = __gmpz_get_ui(%s);@\n"
-			     Printer.pp_typ ty' var v);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" v);
+	      self#insert
+		(Code(Pretty_utils.sfprintf "%a %s = __gmpz_get_ui(%s);"
+			Printer.pp_typ ty' var v));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" v));
+	      self#insert Line_break;
 	      var
 	    | Ctype (TInt _) ->
 	      let v = self#term t' in
 	      let var = self#fresh_term_var() in
-	      self#insert (Pretty_utils.sfprintf "%a %s = __gmpz_get_si(%s);@\n"
-			     Printer.pp_typ ty' var v);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" v);
+	      self#insert
+		(Code(Pretty_utils.sfprintf "%a %s = __gmpz_get_si(%s);"
+			Printer.pp_typ ty' var v));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" v));
+	      self#insert Line_break;
 	      var
 	    | _ -> assert false (* unreachable *)
 	  end
@@ -394,10 +460,14 @@ class gather_insertions props = object(self)
 		assert (List.tl params = []);
 		let x = self#term param in
 		let var = self#fresh_gmp_var() in
-		self#insert (Format.sprintf "mpz_t %s;@\n" var);
-		self#insert (Format.sprintf "__gmpz_init(%s);@\n" var);
-		self#insert (Format.sprintf "__gmpz_abs(%s, %s);@\n" var x);
-		self#insert (Format.sprintf "__gmpz_clear(%s);@\n" x);
+		self#insert (Code(Format.sprintf "mpz_t %s;" var));
+		self#insert Line_break;
+		self#insert (Code(Format.sprintf "__gmpz_init(%s);" var));
+		self#insert Line_break;
+		self#insert (Code(Format.sprintf "__gmpz_abs(%s, %s);" var x));
+		self#insert Line_break;
+		self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+		self#insert Line_break;
 		var
 	      end
 	    else
@@ -424,21 +494,31 @@ class gather_insertions props = object(self)
 	match ty with
 	| Linteger ->
 	  let var = self#fresh_gmp_var() in
-	  self#insert (Format.sprintf "mpz_t %s;@\n" var);
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
 	  let cond' = self#term cond in
-	  self#insert (Format.sprintf "if (__gmpz_cmp(%s,0) != 0) {@\n" cond');
+	  self#insert(Code(Format.sprintf"if (__gmpz_cmp(%s,0) != 0) {" cond'));
+	  self#insert Line_break;
 	  let then_b' = self#term then_b in
 	  self#insert
-	    (Format.sprintf "__gmpz_init_set(%s, %s);@\n" var then_b');
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" then_b');
-	  self#insert (Format.sprintf "}@\n");
-	  self#insert (Format.sprintf "else {@\n");
+	    (Code(Format.sprintf "__gmpz_init_set(%s, %s);" var then_b'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" then_b'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "}"));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "else {"));
+	  self#insert Line_break;
 	  let else_b' = self#term else_b in
 	  self#insert
-	    (Format.sprintf "__gmpz_init_set(%s, %s);@\n" var else_b');
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" else_b');
-	  self#insert (Format.sprintf "}@\n");
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" cond');
+	    (Code(Format.sprintf "__gmpz_init_set(%s, %s);" var else_b'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" else_b'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "}"));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" cond'));
+	  self#insert Line_break;
 	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
@@ -491,16 +571,20 @@ class gather_insertions props = object(self)
 	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
 	      let v = self#term t' in
 	      let var = self#fresh_gmp_var() in
-	      self#insert (Format.sprintf "mpz_t %s;@\n" var);
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "__gmpz_init_set_ui(%s, %s);@\n" var v);
+		(Code(Format.sprintf "__gmpz_init_set_ui(%s, %s);" var v));
+	      self#insert Line_break;
 	      var
 	    | Ctype(TInt _) | Ctype(TEnum _) ->
 	      let v = self#term t' in
 	      let var = self#fresh_gmp_var() in
-	      self#insert (Format.sprintf "mpz_t %s;@\n" var);
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "__gmpz_init_set_si(%s, %s);@\n" var v);
+		(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var v));
+	      self#insert Line_break;
 	      var
 	    | _ -> assert false
 	  end
@@ -517,16 +601,19 @@ class gather_insertions props = object(self)
 	  let v = self#term t' in
 	  let var = self#fresh_term_var() in
 	  self#insert
-	    (Pretty_utils.sfprintf "%a %s;@\n" Printer.pp_typ ty' var);
+	    (Code(Pretty_utils.sfprintf "%a %s;" Printer.pp_typ ty' var));
+	  self#insert Line_break;
 	  begin
 	    match ty' with
 	    | TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_) ->
-	      self#insert (Format.sprintf "%s = __gmpz_get_ui(%s);@\n" var v)
+	      self#insert (Code(Format.sprintf "%s = __gmpz_get_ui(%s);" var v))
 	    | TInt _ ->
-	      self#insert (Format.sprintf "%s = __gmpz_get_si(%s);@\n" var v)
+	      self#insert (Code(Format.sprintf "%s = __gmpz_get_si(%s);" var v))
 	    | _ -> assert false
 	  end;
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" v);
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" v));
+	  self#insert Line_break;
 	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
@@ -611,7 +698,10 @@ class gather_insertions props = object(self)
 	  let do_precond p =
 	    let v = self#predicate (self#subst_pred p.ip_content) in
 	    if v <> "1" then (* '1' is for untreated predicates *)
-	      self#insert (Format.sprintf "if (!%s) return 0;@\n" v)
+	      begin
+		self#insert (Code(Format.sprintf "if (!%s) return 0;" v));
+		self#insert Line_break
+	      end
 	  in
 	  if preconds <> [] then
 	    begin
@@ -652,7 +742,8 @@ class gather_insertions props = object(self)
     if (self#at_least_one_prop kf behaviors)
       || (Sd_options.Behavior_Reachability.get()) then
       begin
-	self#insert (Format.sprintf "{@\n");
+	self#insert (Code(Format.sprintf "{"));
+	self#insert Line_break;
 	List.iter (fun b ->
 	  let post = b.b_post_cond in
 	  let to_prop = Property.ip_of_ensures kf Kglobal b in
@@ -670,9 +761,10 @@ class gather_insertions props = object(self)
 		&& (Sd_options.Behavior_Reachability.get()) then
 		begin
 		  self#insert
-		    (Format.sprintf
-		       "pathcrawler_to_framac(\"@@FC:REACHABLE_BHV:%i\");@\n"
-		       bhv_to_reach_cpt);
+		    (Code(Format.sprintf
+		       "pathcrawler_to_framac(\"@@FC:REACHABLE_BHV:%i\");"
+		       bhv_to_reach_cpt));
+		  self#insert Line_break;
 		  Sd_states.Behavior_Reachability.replace
 		    bhv_to_reach_cpt
 		    (kf, b, false);
@@ -682,7 +774,9 @@ class gather_insertions props = object(self)
 	      self#bhv_assumes_end b
 	    end
 	) behaviors;
-	self#insert (Format.sprintf "@\n}@\n")
+	self#insert Line_break;
+	self#insert (Code(Format.sprintf "}"));
+	self#insert Line_break
       end;
     (* END postcond *)
 
@@ -707,49 +801,63 @@ class gather_insertions props = object(self)
 	try Cil_datatype.Varinfo.Hashtbl.find lengths v
 	with Not_found -> []
       in
-      self#insert (Pretty_utils.sfprintf "%a old_%s = %s;@\n"
-		     Printer.pp_typ (array_to_ptr v.vtype) v.vname v.vname);
+      self#insert
+	(Code(Pretty_utils.sfprintf "%a old_%s = %s;"
+		Printer.pp_typ (array_to_ptr v.vtype) v.vname v.vname));
+      self#insert Line_break;
       let rec alloc_aux indices ty = function
 	| h :: t ->
 	  let all_indices = List.fold_left concat_indice "" indices in
 	  let ty = dig_type ty in
 	  let h' = self#term h in
 	  let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
-	  self#insert (Format.sprintf "int %s;@\n" iterator);
+	  self#insert (Code(Format.sprintf "int %s;" iterator));
+	  self#insert Line_break;
 	  begin
 	    match h.term_type with
 	    | Linteger ->
-	      self#insert (Pretty_utils.sfprintf
-		"old_ptr_%s%s = malloc(__gmpz_get_si(%s)*sizeof(%a));@\n"
-		v.vname all_indices h' Printer.pp_typ ty);
-	      self#insert (Format.sprintf
-			     "for (%s = 0; %s < __gmpz_get_si(%s); %s++) {@\n"
-			     iterator iterator h' iterator);
+	      self#insert
+		(Code(Pretty_utils.sfprintf
+			"old_ptr_%s%s = malloc(__gmpz_get_si(%s)*sizeof(%a));"
+			v.vname all_indices h' Printer.pp_typ ty));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf
+			"for (%s = 0; %s < __gmpz_get_si(%s); %s++) {"
+			iterator iterator h' iterator));
+	      self#insert Line_break;
 	      iter_counter := !iter_counter + 1;
 	      alloc_aux (Sd_utils.append_end indices iterator) ty t;
-	      self#insert (Format.sprintf "}@\n")
+	      self#insert (Code(Format.sprintf "}"));
+	      self#insert Line_break
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      self#insert
-		(Pretty_utils.sfprintf
-		   "old_ptr_%s%s = malloc((%s)*sizeof(%a));@\n"
-		   v.vname all_indices h' Printer.pp_typ ty);
-	      self#insert (Format.sprintf "for (%s = 0; %s < %s; %s++) {@\n"
-			     iterator iterator h' iterator);
+		(Code(Pretty_utils.sfprintf
+			"old_ptr_%s%s = malloc((%s)*sizeof(%a));"
+			v.vname all_indices h' Printer.pp_typ ty));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "for (%s = 0; %s < %s; %s++) {"
+				  iterator iterator h' iterator));
+	      self#insert Line_break;
 	      iter_counter := !iter_counter + 1;
 	      alloc_aux (Sd_utils.append_end indices iterator) ty t;
-	      self#insert (Format.sprintf "}@\n");
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" h')
+	      self#insert (Code(Format.sprintf "}"));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" h'));
+	      self#insert Line_break;
 	  end
 	| [] ->
 	  let all_indices = List.fold_left concat_indice "" indices in
-	  self#insert (Format.sprintf "old_ptr_%s%s = %s%s;@\n"
-			 v.vname all_indices v.vname all_indices)
+	  self#insert (Code(Format.sprintf "old_ptr_%s%s = %s%s;"
+			      v.vname all_indices v.vname all_indices));
+	  self#insert Line_break
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
 	begin
-	  self#insert (Pretty_utils.sfprintf "%a old_ptr_%s;@\n"
-			 Printer.pp_typ (array_to_ptr v.vtype) v.vname);
+	  self#insert (Code(Pretty_utils.sfprintf "%a old_ptr_%s;"
+			      Printer.pp_typ (array_to_ptr v.vtype) v.vname));
+	  self#insert Line_break;
 	  alloc_aux [] v.vtype terms
 	end
     in
@@ -773,10 +881,12 @@ class gather_insertions props = object(self)
 	    | _ :: [] ->
 	      let all_indices = List.fold_left concat_indice "" indices in
 	      self#insert
-		(Format.sprintf "free(old_ptr_%s%s);@\n" v.vname all_indices)
+		(Code(Format.sprintf"free(old_ptr_%s%s);" v.vname all_indices));
+	      self#insert Line_break
 	    | h :: t ->
 	      let iterator = "__stady_iter_"^(string_of_int !iter_counter) in
-	      self#insert (Format.sprintf "int %s;@\n" iterator);
+	      self#insert (Code(Format.sprintf "int %s;" iterator));
+	      self#insert Line_break;
 	      let h' = self#term h in
 	      let all_indices = List.fold_left concat_indice "" indices in
 	      iter_counter := !iter_counter + 1;
@@ -785,21 +895,28 @@ class gather_insertions props = object(self)
 		match h.term_type with
 		| Linteger ->
 		  self#insert
-		    (Format.sprintf
-		       "for (%s = 0; %s < __gmpz_get_si(%s); %s++) {@\n"
-		       iterator iterator h' iterator);
+		    (Code(Format.sprintf
+			    "for (%s = 0; %s < __gmpz_get_si(%s); %s++) {"
+			    iterator iterator h' iterator));
+		  self#insert Line_break;
 		  dealloc_aux indices t;
-		  self#insert (Format.sprintf "}@\n");
-		  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" h')
+		  self#insert (Code(Format.sprintf "}"));
+		  self#insert Line_break;
+		  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" h'));
+		  self#insert Line_break
 		| Lreal -> assert false (* TODO: reals *)
 		| _ ->
-		  self#insert (Format.sprintf "for (%s = 0; %s < %s; %s++) {@\n"
-				 iterator iterator h' iterator);
+		  self#insert
+		    (Code(Format.sprintf "for (%s = 0; %s < %s; %s++) {"
+			    iterator iterator h' iterator));
+		  self#insert Line_break;
 		  dealloc_aux indices t;
-		  self#insert (Format.sprintf "}@\n")
+		  self#insert (Code(Format.sprintf "}"));
+		  self#insert Line_break
 	      end;
 	      self#insert
-		(Format.sprintf "free(old_ptr_%s%s);@\n" v.vname all_indices)
+		(Code(Format.sprintf"free(old_ptr_%s%s);" v.vname all_indices));
+	      self#insert Line_break
 	  in
 	  dealloc_aux [] terms
 	in
@@ -819,18 +936,24 @@ class gather_insertions props = object(self)
     if bhv.b_assumes <> [] then
       let f a = self#predicate (self#subst_pred a.ip_content) in
       let vars = List.map f bhv.b_assumes in
-      self#insert (Format.sprintf "if (");
-      List.iter (fun v -> self#insert (Format.sprintf "%s && " v)) vars;
-      self#insert (Format.sprintf "1) {@\n")
+      self#insert (Code(Format.sprintf "if ("));
+      List.iter (fun v -> self#insert (Code(Format.sprintf "%s && " v))) vars;
+      self#insert (Code(Format.sprintf "1) {"));
+      self#insert Line_break
 	
   method private bhv_assumes_end bhv =
-    if bhv.b_assumes <> [] then self#insert (Format.sprintf "}@\n")
+    if bhv.b_assumes <> [] then
+      begin
+	self#insert (Code(Format.sprintf "}"));
+	self#insert Line_break
+      end
 
   method private pc_assert_exception pred msg id prop =
     let var = self#predicate (self#subst_pred pred) in
-    self#insert (Format.sprintf "if(!%s)" var);
+    self#insert (Code(Format.sprintf "if(!%s)" var));
     self#insert
-      (Format.sprintf "pathcrawler_assert_exception(\"%s\", %i);@\n" msg id);
+      (Code(Format.sprintf "pathcrawler_assert_exception(\"%s\", %i);" msg id));
+    self#insert Line_break;
     translated_properties <- prop :: translated_properties
 
   method private bhv_guard_begin behaviors =
@@ -838,16 +961,21 @@ class gather_insertions props = object(self)
       let f a = self#predicate (self#subst_pred a.ip_content) in
       let g assumes_list = List.map f assumes_list in
       let vars = List.map g behaviors in
-      self#insert (Format.sprintf "if (");
+      self#insert (Code(Format.sprintf "if ("));
       List.iter (fun assumes ->
-	self#insert (Format.sprintf "(");
-	List.iter (fun a -> self#insert (Format.sprintf "%s && " a)) assumes;
-	self#insert (Format.sprintf "1 ) || ")
+	self#insert (Code(Format.sprintf "("));
+	List.iter(fun a-> self#insert(Code(Format.sprintf "%s && " a))) assumes;
+	self#insert (Code(Format.sprintf "1 ) || "))
       ) vars;
-      self#insert (Format.sprintf "0) {@\n")
+      self#insert (Code(Format.sprintf "0) {"));
+      self#insert Line_break
 
   method private bhv_guard_end behaviors =
-    if behaviors <> [] then self#insert (Format.sprintf "}@\n")
+    if behaviors <> [] then
+      begin
+	self#insert (Code(Format.sprintf "}"));
+	self#insert Line_break
+      end
 
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
@@ -895,7 +1023,8 @@ class gather_insertions props = object(self)
 	if self#at_least_one_prop kf bhvs.spec_behavior then
 	  begin
 	    self#bhv_guard_begin behaviors;
-	    self#insert (Format.sprintf "{@\n");
+	    self#insert (Code(Format.sprintf "{"));
+	    self#insert Line_break;
 	    List.iter (fun b ->
 	      let post = b.b_post_cond in
 	      let to_prop = Property.ip_of_ensures kf (Kstmt stmt) b in
@@ -914,7 +1043,8 @@ class gather_insertions props = object(self)
 		  self#bhv_assumes_end b
 		end
 	    ) bhvs.spec_behavior;
-	    self#insert (Format.sprintf "}@\n");
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
 	    self#bhv_guard_end behaviors
 	  end;
 
@@ -963,60 +1093,80 @@ class gather_insertions props = object(self)
 	      current_label <- Some (BegStmt stmt.sid);
 	      let term' = self#term term in
 	      self#insert
-		(Format.sprintf "if (__gmpz_cmp_ui(%s, 0) < 0)" term');
+		(Code(Format.sprintf "if (__gmpz_cmp_ui(%s, 0) < 0)" term'));
 	      self#insert
-		(Format.sprintf
-		   "pathcrawler_assert_exception(\"Variant non positive\",%i);@\n" id);
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non positive\",%i);" id));
+	      self#insert Line_break;
 	      current_label <- Some (EndStmt stmt.sid);
-	      self#insert (Format.sprintf "__gmpz_clear(%s);@\n" term');
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" term'));
+	      self#insert Line_break;
 	      current_label <- Some (BegIter stmt.sid);
 	      let term' = self#term term in
-	      self#insert (Format.sprintf "mpz_t old_variant_%i;@\n" id);
+	      self#insert (Code(Format.sprintf "mpz_t old_variant_%i;" id));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf "__gmpz_init_set(old_variant_%i, %s);@\n"
-		   id term');
+		(Code(Format.sprintf "__gmpz_init_set(old_variant_%i, %s);"
+			id term'));
+	      self#insert Line_break;
 	      current_label <- Some (EndIter stmt.sid);
 	      let term' = self#term term in
-	      self#insert (Format.sprintf
-			     "if (__gmpz_cmp_ui(old_variant_%i,0) < 0)" id);
 	      self#insert
-		(Format.sprintf
-		   "pathcrawler_assert_exception(\"Variant non positive\",%i);@\n"
-		   id);
+		(Code(Format.sprintf
+			"if (__gmpz_cmp_ui(old_variant_%i,0) < 0)" id));
 	      self#insert
-		(Format.sprintf "if (__gmpz_cmp(%s, old_variant_%i) >= 0)"
-		   term' id);
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non positive\",%i);"
+		      id));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf
-		   "pathcrawler_assert_exception(\"Variant non decreasing\",%i);@\n"
-		   id);
-	      self#insert(Format.sprintf "__gmpz_clear(old_variant_%i);@\n" id);
+		(Code(Format.sprintf "if (__gmpz_cmp(%s, old_variant_%i) >= 0)"
+			term' id));
+	      self#insert
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non decreasing\",%i);"
+		      id));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "__gmpz_clear(old_variant_%i);" id));
+	      self#insert Line_break;
 	      current_label <- None
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      current_label <- Some (BegStmt stmt.sid);
 	      let term' = self#term term in
-	      self#insert (Format.sprintf "if ((%s) < 0)" term');
+	      self#insert (Code(Format.sprintf "if ((%s) < 0)" term'));
 	      self#insert
-		(Format.sprintf
-		   "pathcrawler_assert_exception(\"Variant non positive\",%i);@\n" id);
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non positive\",%i);" id));
+	      self#insert Line_break;
 	      current_label <- Some (EndStmt stmt.sid);
 	      current_label <- Some (BegIter stmt.sid);
 	      let term' = self#term term in
 	      self#insert
-		(Format.sprintf "int old_variant_%i = %s;@\n" id term');
+		(Code(Format.sprintf "int old_variant_%i = %s;" id term'));
+	      self#insert Line_break;
 	      current_label <- Some (EndIter stmt.sid);
 	      let term' = self#term term in
-	      self#insert (Format.sprintf "if ((old_variant_%i) < 0)" id);
+	      self#insert (Code(Format.sprintf "if ((old_variant_%i) < 0)" id));
 	      self#insert
-		(Format.sprintf
-		   "pathcrawler_assert_exception(\"Variant non positive\",%i);@\n"
-		   id);
-	      self#insert(Format.sprintf "if ((%s) >= old_variant_%i)"term' id);
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non positive\",%i);"
+		      id));
+	      self#insert Line_break;
 	      self#insert
-		(Format.sprintf
-		   "pathcrawler_assert_exception(\"Variant non decreasing\",%i);@\n"
-		   id);
+		(Code(Format.sprintf "if ((%s) >= old_variant_%i)" term' id));
+	      self#insert
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non decreasing\",%i);"
+		      id));
+	      self#insert Line_break;
 	      current_label <- None
 	  end;
 	  translated_properties <- prop :: translated_properties
@@ -1029,12 +1179,16 @@ class gather_insertions props = object(self)
     if List.mem stmt.sid stmts_to_reach then
       begin
 	current_label <- Some (BegStmt stmt.sid);
+	self#insert (Code(Format.sprintf "{"));
+	self#insert Line_break;
 	self#insert
-	  (Format.sprintf
-	     "{ pathcrawler_to_framac(\"@@FC:REACHABLE_STMT:%i\");@\n"
-	     stmt.sid);
+	  (Code
+	     (Format.sprintf"pathcrawler_to_framac(\"@@FC:REACHABLE_STMT:%i\");"
+		stmt.sid));
+	self#insert Line_break;
 	current_label <- Some (EndStmt stmt.sid);
-	self#insert (Format.sprintf " }@\n");
+	self#insert (Code(Format.sprintf " }"));
+	self#insert Line_break;
 	current_label <- None
       end;
     let kf = Kernel_function.find_englobing_kf stmt in
@@ -1086,69 +1240,104 @@ class gather_insertions props = object(self)
       failwith "Unguarded variables in quantification!";
     let t1,r1,lv,r2,t2 = List.hd guards in
     let iter = lv.lv_name in
-    self#insert(Format.sprintf "int %s = %i;@\n" var (if forall then 1 else 0));
-    self#insert (Format.sprintf "{@\n");
+    self#insert
+      (Code(Format.sprintf "int %s = %i;" var (if forall then 1 else 0)));
+    self#insert Line_break;
+    self#insert (Code(Format.sprintf "{"));
+    self#insert Line_break;
     begin
       match t1.term_type with
       | Linteger ->
 	begin
 	  match t2.term_type with
 	  | Linteger ->
-	    self#insert (Format.sprintf "mpz_t %s;@\n" iter);
+	    self#insert (Code(Format.sprintf "mpz_t %s;" iter));
+	    self#insert Line_break;
 	    let t1' = self#term t1 in
 	    let t2' = self#term t2 in
-	    self#insert (Format.sprintf "__gmpz_init_set(%s, %s);@\n" iter t1');
+	    self#insert
+	      (Code(Format.sprintf "__gmpz_init_set(%s, %s);" iter t1'));
+	    self#insert Line_break;
 	    if r1 = Rlt then
 	      self#insert
-		(Format.sprintf "__gmpz_add_ui(%s, %s, 1);@\n" iter iter);
+		(Code(Format.sprintf "__gmpz_add_ui(%s, %s, 1);" iter iter));
+	    self#insert Line_break;
 	    self#insert
-	      (Pretty_utils.sfprintf
-		 "for (; __gmpz_cmp(%s, %s) %a 0 && %s %s;) {@\n"
-		 iter t2' Printer.pp_relation r2
-		 (if forall then "" else "!") var);
+	      (Code(Pretty_utils.sfprintf
+		      "for (; __gmpz_cmp(%s, %s) %a 0 && %s %s;) {"
+		      iter t2' Printer.pp_relation r2
+		      (if forall then "" else "!") var));
+	    self#insert Line_break;
 	    let goal_var = self#predicate_named goal in 
-	    self#insert (Format.sprintf "%s = %s;@\n" var goal_var);
-	    self#insert(Format.sprintf"__gmpz_add_ui(%s, %s, 1);@\n" iter iter);
-	    self#insert (Format.sprintf "}@\n");
-	    self#insert (Format.sprintf "__gmpz_clear(%s);@\n" iter);
-	    self#insert (Format.sprintf "__gmpz_clear(%s);@\n" t1');
-	    self#insert (Format.sprintf "__gmpz_clear(%s);@\n" t2')
+	    self#insert (Code(Format.sprintf "%s = %s;" var goal_var));
+	    self#insert Line_break;
+	    self#insert
+	      (Code(Format.sprintf"__gmpz_add_ui(%s, %s, 1);" iter iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t2'));
+	    self#insert Line_break;
 	  | Lreal -> assert false (* TODO: reals *)
 	  | _ ->
-	    self#insert (Format.sprintf "mpz_t %s;@\n" iter);
+	    self#insert (Code(Format.sprintf "mpz_t %s;" iter));
+	    self#insert Line_break;
 	    let t1' = self#term t1 in
 	    let t2' = self#term t2 in
-	    self#insert (Format.sprintf "__gmpz_init_set(%s, %s);@\n" iter t1');
-	    if r1 = Rlt then
-	      self#insert
-		(Format.sprintf "__gmpz_add_ui(%s, %s, 1);@\n" iter iter);
 	    self#insert
-	      (Pretty_utils.sfprintf
-		 "for (; __gmpz_cmp_si(%s, %s) %a 0 && %s %s;) {@\n"
-		 iter t2' Printer.pp_relation r2
-		 (if forall then "" else "!") var);
+	      (Code(Format.sprintf "__gmpz_init_set(%s, %s);" iter t1'));
+	    self#insert Line_break;
+	    if r1 = Rlt then
+	      begin
+		self#insert
+		  (Code(Format.sprintf "__gmpz_add_ui(%s, %s, 1);" iter iter));
+		self#insert Line_break
+	      end;
+	    self#insert
+	      (Code(Pretty_utils.sfprintf
+		      "for (; __gmpz_cmp_si(%s, %s) %a 0 && %s %s;) {"
+		      iter t2' Printer.pp_relation r2
+		      (if forall then "" else "!") var));
+	    self#insert Line_break;
 	    let goal_var = self#predicate_named goal in 
-	    self#insert (Format.sprintf "%s = %s;@\n" var goal_var);
-	    self#insert(Format.sprintf"__gmpz_add_ui(%s, %s, 1);@\n" iter iter);
-	    self#insert (Format.sprintf "}@\n");
-	    self#insert (Format.sprintf "__gmpz_clear(%s);@\n" iter);
-	    self#insert (Format.sprintf "__gmpz_clear(%s);@\n" t1')
+	    self#insert (Code(Format.sprintf "%s = %s;" var goal_var));
+	    self#insert Line_break;
+	    self#insert
+	      (Code(Format.sprintf"__gmpz_add_ui(%s, %s, 1);" iter iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	    self#insert Line_break
 	end
       | Lreal -> assert false (* TODO: reals *)
       | _ ->
-	self#insert (Format.sprintf "int %s;@\n" iter);
+	self#insert (Code(Format.sprintf "int %s;" iter));
+	self#insert Line_break;
 	let t1' = self#term t1 in
 	let t2' = self#term t2 in
 	self#insert
-	  (Pretty_utils.sfprintf "for (%s = %s%s; %s %a %s && %s %s; %s++) {@\n"
-	     iter t1'
-	     (match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false) iter
-	     Printer.pp_relation r2 t2' (if forall then "" else "!")  var iter);
+	  (Code
+	     (Pretty_utils.sfprintf "for (%s = %s%s; %s %a %s && %s %s; %s++) {"
+		iter t1'
+		(match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false) iter
+		Printer.pp_relation r2 t2' (if forall then "" else "!")
+		var iter));
+	self#insert Line_break;
 	let goal_var = self#predicate_named goal in 
-	self#insert (Format.sprintf "%s = %s;@\n" var goal_var);
-	self#insert (Format.sprintf "}@\n")
+	self#insert (Code(Format.sprintf "%s = %s;" var goal_var));
+	self#insert Line_break;
+	self#insert (Code(Format.sprintf "}"));
+	self#insert Line_break
     end;
-    self#insert (Format.sprintf "}@\n");
+    self#insert (Code(Format.sprintf "}"));
+    self#insert Line_break;
     var
   (* end of quantif_predicate *)
 
@@ -1174,9 +1363,12 @@ class gather_insertions props = object(self)
 	match offset.term_type with
 	| Linteger ->
 	  let var = self#fresh_pred_var() in
-	  self#insert (Format.sprintf "int %s = __gmpz_cmp_ui(%s, 0) >= 0 && \
- __gmpz_cmp_ui(%s, pathcrawler_dimension(%s)) < 0;@\n" var y' y' x');
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" y');
+	  self#insert
+	    (Code(Format.sprintf "int %s = __gmpz_cmp_ui(%s, 0) >= 0 && \
+ __gmpz_cmp_ui(%s, pathcrawler_dimension(%s)) < 0;" var y' y' x'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y'));
+	  self#insert Line_break;
 	  var
 	| Lreal -> assert false (* unreachable *)
 	| Ctype (TInt _) ->
@@ -1196,29 +1388,41 @@ class gather_insertions props = object(self)
     | Pand(pred1,pred2) ->
       let var = self#fresh_pred_var() in
       let pred1_var = self#predicate_named pred1 in
-      self#insert (Format.sprintf "int %s = %s;@\n" var pred1_var);
-      self#insert (Format.sprintf "if (%s) {@\n" var);
+      self#insert (Code(Format.sprintf "int %s = %s;" var pred1_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "if (%s) {" var));
+      self#insert Line_break;
       let pred2_var = self#predicate_named pred2 in
-      self#insert (Format.sprintf "%s = %s;@\n" var pred2_var);
-      self#insert (Format.sprintf "}@\n");
+      self#insert (Code(Format.sprintf "%s = %s;" var pred2_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "}"));
+      self#insert Line_break;
       var
     | Por(pred1,pred2) ->
       let var = self#fresh_pred_var() in
       let pred1_var = self#predicate_named pred1 in
-      self#insert (Format.sprintf "int %s = %s;@\n" var pred1_var);
-      self#insert (Format.sprintf "if (!%s) {@\n" var);
+      self#insert (Code(Format.sprintf "int %s = %s;" var pred1_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "if (!%s) {" var));
+      self#insert Line_break;
       let pred2_var = self#predicate_named pred2 in
-      self#insert (Format.sprintf "%s = %s;@\n" var pred2_var);
-      self#insert (Format.sprintf "}@\n");
+      self#insert (Code(Format.sprintf "%s = %s;" var pred2_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "}"));
+      self#insert Line_break;
       var
     | Pimplies(pred1,pred2) ->
       let var = self#fresh_pred_var() in
-      self#insert (Format.sprintf "int %s = 1;@\n" var);
+      self#insert (Code(Format.sprintf "int %s = 1;" var));
+      self#insert Line_break;
       let pred1_var = self#predicate_named pred1 in
-      self#insert (Format.sprintf "if (%s) {@\n" pred1_var);
+      self#insert (Code(Format.sprintf "if (%s) {" pred1_var));
+      self#insert Line_break;
       let pred2_var = self#predicate_named pred2 in
-      self#insert (Format.sprintf "%s = %s;@\n" var pred2_var);
-      self#insert (Format.sprintf "}@\n");
+      self#insert (Code(Format.sprintf "%s = %s;" var pred2_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "}"));
+      self#insert Line_break;
       var
     | Piff(pred1,pred2) ->
       let pred1_var = self#predicate_named pred1 in
@@ -1229,28 +1433,40 @@ class gather_insertions props = object(self)
       begin
 	let term_var = self#term t in
 	let res_var = self#fresh_pred_var() in
-	self#insert (Format.sprintf "int %s;@\n" res_var);
+	self#insert (Code(Format.sprintf "int %s;" res_var));
+	self#insert Line_break;
 	let f () =
-	  self#insert (Format.sprintf "if(%s) {@\n" term_var);
+	  self#insert (Code(Format.sprintf "if(%s) {" term_var));
+	  self#insert Line_break;
 	  let pred1_var = self#predicate_named pred1 in
-	  self#insert (Format.sprintf "%s = %s;@\n" res_var pred1_var);
-	  self#insert (Format.sprintf "} else {@\n");
+	  self#insert (Code(Format.sprintf "%s = %s;" res_var pred1_var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "} else {"));
+	  self#insert Line_break;
 	  let pred2_var = self#predicate_named pred2 in
-	  self#insert (Format.sprintf "%s = %s;@\n" res_var pred2_var);
-	  self#insert (Format.sprintf "}@\n");
+	  self#insert (Code(Format.sprintf "%s = %s;" res_var pred2_var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "}"));
+	  self#insert Line_break;
 	  res_var
 	in
 	match t.term_type with
 	| Linteger ->
 	  self#insert
-	    (Format.sprintf "if(__gmpz_cmp_si(%s,0) != 0) {@\n" term_var);
+	    (Code(Format.sprintf "if(__gmpz_cmp_si(%s,0) != 0) {" term_var));
+	  self#insert Line_break;
 	  let pred1_var = self#predicate_named pred1 in
-	  self#insert (Format.sprintf "%s = %s;@\n" res_var pred1_var);
-	  self#insert (Format.sprintf "} else {@\n");
+	  self#insert (Code(Format.sprintf "%s = %s;" res_var pred1_var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "} else {"));
+	  self#insert Line_break;
 	  let pred2_var = self#predicate_named pred2 in
-	  self#insert (Format.sprintf "%s = %s;@\n" res_var pred2_var);
-	  self#insert (Format.sprintf "}@\n");
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" term_var);
+	  self#insert (Code(Format.sprintf "%s = %s;" res_var pred2_var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "}"));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" term_var));
+	  self#insert Line_break;
 	  res_var
 	| Lreal -> assert false (* unreachable *)
 	| Ctype (TInt _) -> f ()
@@ -1266,31 +1482,38 @@ class gather_insertions props = object(self)
 	  let t1' = self#term t1 in
 	  let t2' = self#term t2 in
 	  self#insert
-	    (Pretty_utils.sfprintf
-	       "int %s = __gmpz_cmp(%s, %s) %a 0;@\n" var t1' t2'
-	       Printer.pp_relation rel);
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" t1');
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" t2');
+	    (Code(Pretty_utils.sfprintf
+		    "int %s = __gmpz_cmp(%s, %s) %a 0;" var t1' t2'
+		    Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t2'));
+	  self#insert Line_break;
 	  var
 	| Linteger, Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
 	  let var = self#fresh_pred_var() in
 	  let t1' = self#term t1 in
 	  let t2' = self#term t2 in
 	  self#insert
-	    (Pretty_utils.sfprintf
-	       "int %s = __gmpz_cmp_ui(%s, %s) %a 0;@\n" var t1' t2'
-	       Printer.pp_relation rel);
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" t1');
+	    (Code(Pretty_utils.sfprintf
+		    "int %s = __gmpz_cmp_ui(%s, %s) %a 0;" var t1' t2'
+		    Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	  self#insert Line_break;
 	  var
 	| Linteger, Ctype (TInt _) ->
 	  let var = self#fresh_pred_var() in
 	  let t1' = self#term t1 in
 	  let t2' = self#term t2 in
 	  self#insert
-	    (Pretty_utils.sfprintf
-	       "int %s = __gmpz_cmp_si(%s, %s) %a 0;@\n" var t1' t2'
-	       Printer.pp_relation rel);
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" t1');
+	    (Code(Pretty_utils.sfprintf
+		    "int %s = __gmpz_cmp_si(%s, %s) %a 0;" var t1' t2'
+		    Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	  self#insert Line_break;
 	  var
 	| Lreal, Lreal -> assert false (* TODO: reals *)
 	| Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)), Linteger ->
@@ -1298,26 +1521,38 @@ class gather_insertions props = object(self)
 	  let t1' = self#term t1 in
 	  let t2' = self#term t2 in
 	  let var' = self#fresh_gmp_var() in
-	  self#insert (Format.sprintf "mpz_t %s;@\n" var');
-	  self#insert(Format.sprintf "__gmpz_init_set_ui(%s, %s);@\n" var' t1');
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var'));
+	  self#insert Line_break;
 	  self#insert
-	    (Pretty_utils.sfprintf "int %s = __gmpz_cmp(%s, %s) %a 0;@\n"
-	       var var' t2' Printer.pp_relation rel);
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" t2');
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" var');
+	    (Code(Format.sprintf "__gmpz_init_set_ui(%s, %s);" var' t1'));
+	  self#insert Line_break;
+	  self#insert
+	    (Code(Pretty_utils.sfprintf "int %s = __gmpz_cmp(%s, %s) %a 0;"
+		    var var' t2' Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t2'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var'));
+	  self#insert Line_break;
 	  var
 	| Ctype (TInt _), Linteger ->
 	  let var = self#fresh_pred_var() in
 	  let t1' = self#term t1 in
 	  let t2' = self#term t2 in
 	  let var' = self#fresh_gmp_var() in
-	  self#insert (Format.sprintf "mpz_t %s;@\n" var');
-	  self#insert(Format.sprintf "__gmpz_init_set_si(%s, %s);@\n" var' t1');
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var'));
+	  self#insert Line_break;
 	  self#insert
-	    (Pretty_utils.sfprintf "int %s = __gmpz_cmp(%s, %s) %a 0;@\n"
-	       var var' t2' Printer.pp_relation rel);
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" t2');
-	  self#insert (Format.sprintf "__gmpz_clear(%s);@\n" var');
+	    (Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var' t1'));
+	  self#insert Line_break;
+	  self#insert
+	    (Code(Pretty_utils.sfprintf "int %s = __gmpz_cmp(%s, %s) %a 0;"
+		    var var' t2' Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t2'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var'));
+	  self#insert Line_break;
 	  var
 	| _ ->
           let t1' = self#term t1 in
@@ -1341,6 +1576,10 @@ class print_insertions insertions ~print_label () = object(self)
 
   val mutable current_function = None
 
+  method private pp_insertion fmt = function
+  | Line_break -> Format.fprintf fmt "@\n"
+  | Code s -> Format.fprintf fmt "%s" s
+
   method private fundecl fmt f =
     let was_ghost = is_ghost in
     let entry_point_name=Kernel_function.get_name(fst(Globals.entry_point())) in
@@ -1362,7 +1601,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* BegFunc %s */ " precond;
-		Format.fprintf fmt "%s" s) q
+		Format.fprintf fmt "%a" self#pp_insertion s) q
 	  with _ -> ()
 	end;
 	Format.fprintf fmt "return 1;@]@]@\n}@\n@\n"
@@ -1382,7 +1621,7 @@ class print_insertions insertions ~print_label () = object(self)
 	  (fun s ->
 	    if print_label then
 	      Format.fprintf fmt "/* BegFunc %s */ " f.svar.vname;
-	    Format.fprintf fmt "%s" s) q
+	    Format.fprintf fmt "%a" self#pp_insertion s) q
       with _ -> ()
     end;
     self#block ~braces:true fmt f.sbody;
@@ -1409,7 +1648,7 @@ class print_insertions insertions ~print_label () = object(self)
 	  (fun s ->
 	    if print_label then
 	      Format.fprintf fmt "/* BegStmt %i */ " stmt.sid;
-	    Format.fprintf fmt "%s" s) q
+	    Format.fprintf fmt "%a" self#pp_insertion s) q
       with _ -> ()
     end;
     begin
@@ -1424,7 +1663,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* BegIter %i */ " stmt.sid;
-		Format.fprintf fmt "%s" s) q
+		Format.fprintf fmt "%a" self#pp_insertion s) q
 	  with _ -> ()
 	end;
 	Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
@@ -1435,7 +1674,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* EndIter %i */ " stmt.sid;
-		Format.fprintf fmt "%s" s) q
+		Format.fprintf fmt "%a" self#pp_insertion s) q
 	  with _ -> ()
 	end;
 	Format.fprintf fmt "}@\n @]"
@@ -1448,7 +1687,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* EndFunc %s */ " f;
-		Format.fprintf fmt "%s" s) q
+		Format.fprintf fmt "%a" self#pp_insertion s) q
 	  with _ -> ()
 	end;
 	self#stmtkind next fmt stmt.skind
@@ -1461,7 +1700,7 @@ class print_insertions insertions ~print_label () = object(self)
 	  (fun s ->
 	    if print_label then
 	      Format.fprintf fmt "/* EndStmt %i */ " stmt.sid;
-	    Format.fprintf fmt "%s" s) q
+	    Format.fprintf fmt "%a" self#pp_insertion s) q
       with _ -> ()
     end;
     if has_code_annots then Format.fprintf fmt "}@\n @]";
