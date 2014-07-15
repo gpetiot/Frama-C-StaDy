@@ -11,16 +11,16 @@ let print_var v =
 type label =
 | BegStmt of int
 | EndStmt of int
-| BegFunction of string
-| EndFunction of string
+| BegFunc of string
+| EndFunc of string
 | BegIter of int
 | EndIter of int
 
-let print_label fmt = function
+let pp_label fmt = function
   | BegStmt s -> Format.fprintf fmt "BegStmt %i" s
   | EndStmt s -> Format.fprintf fmt "EndStmt %i" s
-  | BegFunction s -> Format.fprintf fmt "BegFunction %s" s
-  | EndFunction s -> Format.fprintf fmt "EndFunction %s" s
+  | BegFunc s -> Format.fprintf fmt "BegFunc %s" s
+  | EndFunc s -> Format.fprintf fmt "EndFunc %s" s
   | BegIter s -> Format.fprintf fmt "BegIter %i" s
   | EndIter s -> Format.fprintf fmt "EndIter %i" s
 
@@ -73,6 +73,9 @@ class gather_insertions props = object(self)
     let var = "__stady_gmp_" ^ (string_of_int gmp_cpt) in
     gmp_cpt <- gmp_cpt + 1;
     var
+
+  (* getter *)
+  method translated_properties() = Sd_utils.no_repeat translated_properties
 
   method private logic_var v =
     match current_function with
@@ -584,7 +587,7 @@ class gather_insertions props = object(self)
     (* BEGIN precond (entry-point) *)
     if f.svar.vname = entry_point_name then
       begin
-	current_label <- Some (BegFunction (f.svar.vname ^ "_precond"));
+	current_label <- Some (BegFunc (f.svar.vname ^ "_precond"));
 	List.iter (fun b ->
 	  let preconds =
 	    List.rev_append (List.rev (Sd_utils.typically_preds b)) b.b_requires
@@ -612,7 +615,7 @@ class gather_insertions props = object(self)
     (* BEGIN precond (not entry-point) *)
     else
       begin
-	current_label <- Some (BegFunction f.svar.vname);
+	current_label <- Some (BegFunc f.svar.vname);
 	List.iter (fun b ->
 	  let pre = b.b_requires in
 	  let to_prop = Property.ip_of_requires kf Kglobal b in
@@ -633,7 +636,7 @@ class gather_insertions props = object(self)
       end;
     (* END precond (not entry-point) *)
 
-    current_label <- Some (EndFunction f.svar.vname);
+    current_label <- Some (EndFunc f.svar.vname);
 
     (* BEGIN postcond *)
     if (self#at_least_one_prop kf behaviors)
@@ -673,7 +676,7 @@ class gather_insertions props = object(self)
       end;
     (* END postcond *)
 
-    current_label <- Some (BegFunction f.svar.vname);
+    current_label <- Some (BegFunc f.svar.vname);
 
     (* alloc variables for \at terms *)
     let concat_indice str ind = str ^ "[" ^ ind ^ "]" in
@@ -743,7 +746,7 @@ class gather_insertions props = object(self)
     List.iter do_varinfo visited_globals;
     List.iter do_varinfo (Kernel_function.get_formals kf);
 
-    current_label <- Some (EndFunction f.svar.vname);
+    current_label <- Some (EndFunc f.svar.vname);
 
     (* dealloc variables for \at terms *)
     begin
@@ -1320,7 +1323,196 @@ class gather_insertions props = object(self)
 (* end predicate *)
 end
 
+class print_insertions insertions ~print_label () = object(self)
+  inherit Printer.extensible_printer () as super
 
+  method private fundecl fmt f =
+    let was_ghost = is_ghost in
+    let entry_point_name=Kernel_function.get_name(fst(Globals.entry_point())) in
+    let entering_ghost = f.svar.vghost && not was_ghost in
+    (* BEGIN precond (entry-point) *)
+    if f.svar.vname = entry_point_name then
+      begin
+	let precond = f.svar.vname ^ "_precond" in
+	let x,y,z =
+	  match f.svar.vtype with TFun(_,x,y,z) -> x,y,z | _ -> assert false
+	in
+	Format.fprintf fmt "%a@ {@\n@[<v 2>@["
+	  (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" precond)))
+	  (TFun(Cil.intType,x,y,z));
+	begin
+	  try
+	    let q = Hashtbl.find insertions (BegFunc precond) in
+	    Queue.iter
+	      (fun s ->
+		if print_label then
+		  Format.fprintf fmt "/* BegFunc %s */ " precond;
+		Format.fprintf fmt "%s" s) q
+	  with _ -> ()
+	end;
+	Format.fprintf fmt "return 1;@]@]@\n}@\n@\n"
+      end;
+    (* END precond (entry-point) *)
+    Format.fprintf fmt "@[%t%a@\n@[<v 2>"
+      (if entering_ghost then fun fmt -> Format.fprintf fmt "/*@@ ghost@ " 
+       else ignore)
+      self#vdecl f.svar;
+    (* body. *)
+    if entering_ghost then is_ghost <- true;
+    Format.fprintf fmt "@[<h 2>{@\n";
+    begin
+      try
+	let q = Hashtbl.find insertions (BegFunc f.svar.vname) in
+	Queue.iter
+	  (fun s ->
+	    if print_label then
+	      Format.fprintf fmt "/* BegFunc %s */ " f.svar.vname;
+	    Format.fprintf fmt "%s" s) q
+      with _ -> ()
+    end;
+    self#block ~braces:true fmt f.sbody;
+    (* EndFunc not necessary here ? *)
+    Format.fprintf fmt "@.}";
+    if entering_ghost then is_ghost <- false;
+    Format.fprintf fmt "@]%t@]@."
+      (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
+  (* end of fundecl *)
+
+  method! private annotated_stmt next fmt stmt =
+    Format.pp_open_hvbox fmt 2;
+    self#stmt_labels fmt stmt;
+    Format.pp_open_hvbox fmt 0;
+    let has_code_annots = List.length (Annotations.code_annot stmt) > 0 in
+    let kf = Kernel_function.find_englobing_kf stmt in
+    let loc = Cil_datatype.Stmt.loc stmt in
+    if has_code_annots then Format.fprintf fmt "%a@[<v 2>{@\n"
+      (fun fmt -> self#line_directive ~forcefile:false fmt) loc;
+    begin
+      try
+	let q = Hashtbl.find insertions (BegStmt stmt.sid) in
+	Queue.iter
+	  (fun s ->
+	    if print_label then
+	      Format.fprintf fmt "/* BegStmt %i */ " stmt.sid;
+	    Format.fprintf fmt "%s" s) q
+      with _ -> ()
+    end;
+    begin
+      match stmt.skind with
+      | Loop(_,b,l,_,_) ->
+	Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
+	  (fun fmt -> self#line_directive fmt) l;
+	begin
+	  try
+	    let q = Hashtbl.find insertions (BegIter stmt.sid) in
+	    Queue.iter
+	      (fun s ->
+		if print_label then
+		  Format.fprintf fmt "/* BegIter %i */ " stmt.sid;
+		Format.fprintf fmt "%s" s) q
+	  with _ -> ()
+	end;
+	Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
+	begin
+	  try
+	    let q = Hashtbl.find insertions (EndIter stmt.sid) in
+	    Queue.iter
+	      (fun s ->
+		if print_label then
+		  Format.fprintf fmt "/* EndIter %i */ " stmt.sid;
+		Format.fprintf fmt "%s" s) q
+	  with _ -> ()
+	end;
+	Format.fprintf fmt "}@\n @]"
+      | Return _ ->
+	let f = Kernel_function.get_name kf in
+	begin
+	  try
+	    let q = Hashtbl.find insertions (EndFunc f) in
+	    Queue.iter
+	      (fun s ->
+		if print_label then
+		  Format.fprintf fmt "/* EndFunc %s */ " f;
+		Format.fprintf fmt "%s" s) q
+	  with _ -> ()
+	end;
+	self#stmtkind next fmt stmt.skind
+      | _ -> self#stmtkind next fmt stmt.skind
+    end;
+    begin
+      try
+	let q = Hashtbl.find insertions (EndStmt stmt.sid) in
+	Queue.iter
+	  (fun s ->
+	    if print_label then
+	      Format.fprintf fmt "/* EndStmt %i */ " stmt.sid;
+	    Format.fprintf fmt "%s" s) q
+      with _ -> ()
+    end;
+    if has_code_annots then Format.fprintf fmt "}@\n @]";
+    Format.pp_close_box fmt ();
+    Format.pp_close_box fmt ()
+  (* end of annotated_stmt *)
+
+  method! file fmt f =
+    Format.fprintf fmt "@[/* Generated by Frama-C */@\n" ;
+    Format.fprintf fmt "#include <gmp.h>@\n";
+    Format.fprintf fmt "extern int pathcrawler_assert_exception(char*,int);@\n";
+    Format.fprintf fmt "extern int pathcrawler_dimension(void*);@\n";
+    Format.fprintf fmt "extern void pathcrawler_to_framac(char*);@\n";
+    Format.fprintf fmt "extern void* malloc(unsigned);@\n";
+    Format.fprintf fmt "extern void free(void*);@\n";
+    Cil.iterGlobals f (fun g -> self#global fmt g);
+    Format.fprintf fmt "@]@."
+
+  (* unmodified *)
+  method private vdecl_complete fmt v =
+    let display_ghost = v.vghost && not is_ghost in
+    Format.fprintf fmt "@[<hov 0>%t%a;%t@]"
+      (if display_ghost then fun fmt -> Format.fprintf fmt "/*@@ ghost@ "
+       else ignore)
+      self#vdecl v
+      (if display_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
+
+  val mutable current_function = None
+  
+  (* unmodified *)
+  method private in_current_function vi =
+    assert (current_function = None);
+    current_function <- Some vi
+
+  (* unmodified *)
+  method private out_current_function =
+    assert (current_function <> None);
+    current_function <- None
+
+  method! global fmt g =
+    match g with
+    | GFun (fundec, l) ->
+      if print_var fundec.svar then
+  	begin
+  	  self#in_current_function fundec.svar;
+  	  (* If the function has attributes then print a prototype because
+  	   * GCC cannot accept function attributes in a definition *)
+  	  let oldattr = fundec.svar.vattr in
+  	  (* Always pring the file name before function declarations *)
+  	  (* Prototype first *)
+  	  if oldattr <> [] then
+  	    (self#line_directive fmt l;
+  	     Format.fprintf fmt "%a;@\n" self#vdecl_complete fundec.svar);
+  	  (* Temporarily remove the function attributes *)
+  	  fundec.svar.vattr <- [];
+  	  (* Body now *)
+  	  self#line_directive ~forcefile:true fmt l;
+  	  self#fundecl fmt fundec;
+  	  fundec.svar.vattr <- oldattr;
+  	  Format.fprintf fmt "@\n";
+  	  self#out_current_function
+  	end
+    | GVarDecl (_, vi, _) -> if print_var vi then self#global fmt g
+    | _ -> self#global fmt g
+  (* end of global *)
+end
 
 class sd_printer props () = object(self)
   inherit Printer.extensible_printer () as super
