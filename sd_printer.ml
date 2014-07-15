@@ -1522,8 +1522,8 @@ class print_insertions insertions ~print_label () = object(self)
   	  Format.fprintf fmt "@\n";
   	  self#out_current_function
   	end
-    | GVarDecl (_, vi, _) -> if print_var vi then self#global fmt g
-    | _ -> self#global fmt g
+    | GVarDecl (_, vi, _) -> if print_var vi then super#global fmt g
+    | _ -> super#global fmt g
   (* end of global *)
 end
 
