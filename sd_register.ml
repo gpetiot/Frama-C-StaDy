@@ -26,14 +26,17 @@ let second_pass filename props =
   let insertions = gatherer#get_insertions() in
 
   Hashtbl.iter (fun k v ->
-    Sd_options.Self.feedback "%a" Sd_printer.pp_label k;
-    let print s = Sd_options.Self.feedback "%s" s in
+    let dkey = Sd_options.dkey_insertions in
+    Sd_options.Self.feedback ~dkey
+      "%a" Sd_printer.pp_label k;
+    let print s = Sd_options.Self.feedback ~dkey "%s" s in
     Queue.iter print v;
-    Sd_options.Self.feedback "----------"
+    Sd_options.Self.feedback ~dkey "----------"
   ) insertions;
 
   (* let printer = new Sd_printer.sd_printer props () in *)
-  let printer = new Sd_printer.print_insertions insertions ~print_label:false () in
+  let printer =
+    new Sd_printer.print_insertions insertions ~print_label:false () in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
