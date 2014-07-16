@@ -152,8 +152,8 @@ class gather_insertions props = object(self)
 		self#insert (Code(Format.sprintf "__gmpz_mult(%s, %s, %s);"
 				    var var lambda_term))
 	      | s when s = "\\numof" ->
-	      (* lambda_term is of type:
-		 Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
+		(* lambda_term is of type:
+		   Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
 		self#insert (Code(Format.sprintf
 				    "if(%s) __gmpz_add_ui(%s, %s, 1);"
 				    lambda_term var var))
@@ -453,37 +453,37 @@ class gather_insertions props = object(self)
       let builtin_name = li.l_var_info.lv_name in
       begin
 	match ty with
-	  | Linteger ->
-	    if builtin_name = "\\abs" then
+	| Linteger ->
+	  if builtin_name = "\\abs" then
+	    begin
+	      let param = List.hd params in
+	      assert (List.tl params = []);
+	      let x = self#term param in
+	      let var = self#fresh_gmp_var() in
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_init(%s);" var));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_abs(%s, %s);" var x));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
+	      var
+	    end
+	  else
+	    if builtin_name = "\\min" || builtin_name = "\\max" ||
+	      builtin_name = "\\sum" || builtin_name = "\\product" ||
+	      builtin_name = "\\numof" then
 	      begin
-		let param = List.hd params in
-		assert (List.tl params = []);
-		let x = self#term param in
-		let var = self#fresh_gmp_var() in
-		self#insert (Code(Format.sprintf "mpz_t %s;" var));
-		self#insert Line_break;
-		self#insert (Code(Format.sprintf "__gmpz_init(%s);" var));
-		self#insert Line_break;
-		self#insert (Code(Format.sprintf "__gmpz_abs(%s, %s);" var x));
-		self#insert Line_break;
-		self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
-		self#insert Line_break;
-		var
+		match params with
+		| [lower;upper;{term_node=Tlambda([q],t)}] ->
+		  self#lambda li lower upper q t
+		| _ -> assert false
 	      end
 	    else
-	      if builtin_name = "\\min" || builtin_name = "\\max" ||
-		builtin_name = "\\sum" || builtin_name = "\\product" ||
-		builtin_name = "\\numof" then
-		begin
-		  match params with
-		  | [lower;upper;{term_node=Tlambda([q],t)}] ->
-		    self#lambda li lower upper q t
-		  | _ -> assert false
-		end
-	      else
-		assert false
-	  | Lreal -> assert false (* TODO: reals *)
-	  | _ -> assert false (* unreachable *)
+	      assert false
+	| Lreal -> assert false (* TODO: reals *)
+	| _ -> assert false (* unreachable *)
       end
 
     | Tlambda _ -> assert false (* unreachable *)
@@ -762,8 +762,8 @@ class gather_insertions props = object(self)
 		begin
 		  self#insert
 		    (Code(Format.sprintf
-		       "pathcrawler_to_framac(\"@@FC:REACHABLE_BHV:%i\");"
-		       bhv_to_reach_cpt));
+			    "pathcrawler_to_framac(\"@@FC:REACHABLE_BHV:%i\");"
+			    bhv_to_reach_cpt));
 		  self#insert Line_break;
 		  Sd_states.Behavior_Reachability.replace
 		    bhv_to_reach_cpt
@@ -1259,9 +1259,11 @@ class gather_insertions props = object(self)
 	      (Code(Format.sprintf "__gmpz_init_set(%s, %s);" iter t1'));
 	    self#insert Line_break;
 	    if r1 = Rlt then
-	      self#insert
-		(Code(Format.sprintf "__gmpz_add_ui(%s, %s, 1);" iter iter));
-	    self#insert Line_break;
+	      begin
+		self#insert
+		  (Code(Format.sprintf "__gmpz_add_ui(%s, %s, 1);" iter iter));
+		self#insert Line_break
+	      end;
 	    self#insert
 	      (Code(Pretty_utils.sfprintf
 		      "for (; __gmpz_cmp(%s, %s) %a 0 && %s %s;) {"
