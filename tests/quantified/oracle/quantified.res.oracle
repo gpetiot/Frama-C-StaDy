@@ -190,8 +190,8 @@ return 1;
 
 void f(int **t, int n)
 {
-  int ** old_t = t;
-  int ** old_ptr_t;
+  int **old_t = t;
+  int **old_ptr_t;
   mpz_t __stady_gmp_22;
   __gmpz_init_set_si(__stady_gmp_22, n);
   int __stady_iter_0;

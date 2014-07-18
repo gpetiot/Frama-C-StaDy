@@ -24,73 +24,9 @@ let pp_label fmt = function
   | BegIter s -> Format.fprintf fmt "BegIter %i" s
   | EndIter s -> Format.fprintf fmt "EndIter %i" s
 
-type fresh_gmp_var =
-| Fresh_gmp_var
-| My_gmp_var of string
-
-type declared_gmp_var =
-| Declared_gmp_var of fresh_gmp_var
-
-type initialized_gmp_var =
-| Initialized_gmp_var of declared_gmp_var
-
-and gmp_expr = initialized_gmp_var
-
-and ctype_expr = (* distinguer type pointeur/int *)
-| Fresh_ctype_var of typ
-| My_ctype_var of typ * string (* when its name is predefined *)
-| Zero | One
-| Cst of string
-| Cmp of relation * ctype_expr * ctype_expr
-| Gmp_cmp of binop * gmp_expr * gmp_expr
-| Gmp_cmp_ui of binop * gmp_expr * ctype_expr
-| Gmp_cmp_si of binop * gmp_expr * ctype_expr
-| Gmp_cmpr of relation * gmp_expr * gmp_expr
-| Gmp_cmpr_ui of relation * gmp_expr * ctype_expr
-| Gmp_cmpr_si of relation * gmp_expr * ctype_expr
-| Gmp_get_ui of gmp_expr
-| Gmp_get_si of gmp_expr
-| Unop of unop * ctype_expr
-| Binop of binop * ctype_expr * ctype_expr
-| Pc_dim of ctype_expr
-| Malloc of ctype_expr
-| Cast of typ * ctype_expr
-| Sizeof of typ
-| Deref of ctype_expr
-| Index of ctype_expr * ctype_expr
-| Field of ctype_expr * string
-
-and fragment =
-| Gmp_fragment of gmp_expr
-| Ctype_fragment of ctype_expr
-
-and instruction =
-| Affect of ctype_expr * ctype_expr
-| Free of ctype_expr
-| Pc_to_framac of string
-| Pc_assert_exn of string * int
-| Ret of ctype_expr
-| Gmp_clear of gmp_expr
-| Gmp_init of declared_gmp_var
-| Gmp_init_set of declared_gmp_var * gmp_expr
-| Gmp_init_set_ui of declared_gmp_var * ctype_expr
-| Gmp_init_set_si of declared_gmp_var * ctype_expr
-| Gmp_init_set_str of declared_gmp_var * string
-| Gmp_abs of gmp_expr * gmp_expr
-| Gmp_ui_sub of gmp_expr * ctype_expr * gmp_expr
-| Gmp_binop of binop * gmp_expr * gmp_expr * gmp_expr
-| Gmp_binop_ui of binop * gmp_expr * gmp_expr * ctype_expr
-| Gmp_binop_si of binop * gmp_expr * gmp_expr * ctype_expr
-
 type insertion =
-| Instru of instruction
-| Decl_gmp_var of fresh_gmp_var
-| Decl_ctype_var of ctype_expr
-| If_cond of ctype_expr
-| Else_cond
-| For of instruction option * ctype_expr option * instruction option
-| Block_open
-| Block_close
+| Code of string
+| Line_break
 
 
 class gather_insertions props = object(self)
@@ -98,6 +34,9 @@ class gather_insertions props = object(self)
 
   val insertions : (label, insertion Queue.t) Hashtbl.t = Hashtbl.create 64
   val mutable current_label : label option = None
+  val mutable pred_cpt = 0
+  val mutable term_cpt = 0
+  val mutable gmp_cpt = 0
   val mutable result_varinfo = None
   val mutable current_function = None
   val mutable in_old_term = false
@@ -124,6 +63,21 @@ class gather_insertions props = object(self)
       Queue.add str q;
       Hashtbl.add insertions label q
 
+  method private fresh_pred_var() =
+    let var = "__stady_pred_" ^ (string_of_int pred_cpt) in
+    pred_cpt <- pred_cpt + 1;
+    var
+
+  method private fresh_term_var() =
+    let var = "__stady_term_" ^ (string_of_int term_cpt) in
+    term_cpt <- term_cpt + 1;
+    var
+
+  method private fresh_gmp_var() =
+    let var = "__stady_gmp_" ^ (string_of_int gmp_cpt) in
+    gmp_cpt <- gmp_cpt + 1;
+    var
+
   (* unmodified *)
   method private in_current_function vi =
     assert (current_function = None);
@@ -138,55 +92,41 @@ class gather_insertions props = object(self)
   method translated_properties() = Sd_utils.no_repeat translated_properties
 
   method private logic_var v =
-    let ret =
-      match current_function with
-      | Some _ when in_old_term ->
-	begin
-	  let prefix =
-	    match v.lv_type with
-	    | Ctype ty
-		when (Cil.isPointerType ty || Cil.isArrayType ty) && in_old_ptr ->
-	      "old_ptr"
-	    | _ -> "old"
-	  in
-	  match v.lv_origin with
-	  | Some _ -> prefix ^ "_" ^ v.lv_name
-	  | None -> v.lv_name
-	end
-      | _ -> v.lv_name
-    in
-    match v.lv_type with
-    | Linteger ->
-      Gmp_fragment (Initialized_gmp_var(Declared_gmp_var(My_gmp_var ret)))
-    | Lreal -> assert false (* TODO: reals *)
-    | Ctype ty -> Ctype_fragment (My_ctype_var (ty, ret))
-    | _ -> assert false
+    match current_function with
+    | Some _ when in_old_term ->
+      begin
+	let prefix =
+	  match v.lv_type with
+	  | Ctype ty
+	      when (Cil.isPointerType ty || Cil.isArrayType ty) && in_old_ptr ->
+	    "old_ptr"
+	  | _ -> "old"
+	in
+	match v.lv_origin with
+	| Some _ -> prefix ^ "_" ^ v.lv_name
+	| None -> v.lv_name
+      end
+    | _ -> v.lv_name
 
-  method private term t : fragment =
+  method private term t =
     self#term_node t
 
-  method private gmp_fragment = function
-  | Gmp_fragment x -> x
-  | Ctype_fragment _ -> assert false
-
-  method private ctype_fragment = function
-  | Ctype_fragment x -> x
-  | Gmp_fragment _ -> assert false
-
-  method private lambda li lower upper _q t =
+  method private lambda li lower upper q t =
     let builtin_name = li.l_var_info.lv_name in
+    let var = self#fresh_gmp_var() in
+    let iter = q.lv_name in
     let init_val = match builtin_name with
-      | s when s = "\\sum" -> Zero
-      | s when s = "\\product" -> One
-      | s when s = "\\numof" -> Zero
+      | s when s = "\\sum" -> "0"
+      | s when s = "\\product" -> "1"
+      | s when s = "\\numof" -> "0"
       | _ -> assert false (* unreachable *)
     in
-    let fresh_var = Fresh_gmp_var in
-    self#insert (Decl_gmp_var fresh_var);
-    let decl_var = Declared_gmp_var fresh_var in
-    self#insert (Instru(Gmp_init_set_si(decl_var, init_val)));
-    let init_var = Initialized_gmp_var decl_var in
-    self#insert Block_open;
+    self#insert (Code(Format.sprintf "mpz_t %s;" var));
+    self#insert Line_break;
+    self#insert(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);"var init_val));
+    self#insert Line_break;
+    self#insert (Code(Format.sprintf "{"));
+    self#insert Line_break;
     let low = self#term lower in
     let up = self#term upper in
     begin
@@ -195,42 +135,50 @@ class gather_insertions props = object(self)
 	begin
 	  match upper.term_type with
 	  | Linteger ->
-	    let fresh_iter = Fresh_gmp_var in
-	    let decl_iter = Declared_gmp_var fresh_iter in
-	    self#insert (Decl_gmp_var fresh_iter);
-	    self#insert (Instru(Gmp_init_set(decl_iter,self#gmp_fragment low)));
-	    let init_iter = Initialized_gmp_var decl_iter in
-	    self#insert(For(None, Some(Gmp_cmp(Le, init_iter,
-					      self#gmp_fragment up)), None));
-	    self#insert Block_open;
+	    self#insert (Code(Format.sprintf "mpz_t %s;" iter));
+	    self#insert Line_break;
+	    self#insert(Code(Format.sprintf"__gmpz_init_set(%s, %s);"iter low));
+	    self#insert Line_break;
+	    self#insert
+	      (Code(Format.sprintf"for(; __gmpz_cmp(%s, %s) <= 0;) {" iter up));
+	    self#insert Line_break;
 	    let lambda_term = self#term t in
 	    begin
 	      match builtin_name with
 	      | s when s = "\\sum" ->
-		self#insert (Instru(Gmp_binop(PlusA, init_var,
-					      init_var,
-					      self#gmp_fragment lambda_term)));
+		self#insert (Code(Format.sprintf "__gmpz_add(%s, %s, %s);"
+				    var var lambda_term))
 	      | s when s = "\\product" ->
-		self#insert (Instru(Gmp_binop(Mult, init_var,
-					      init_var,
-					      self#gmp_fragment lambda_term)));
+		self#insert (Code(Format.sprintf "__gmpz_mult(%s, %s, %s);"
+				    var var lambda_term))
 	      | s when s = "\\numof" ->
 		(* lambda_term is of type:
 		   Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
-		self#insert (If_cond(self#ctype_fragment lambda_term));
-		self#insert (Instru(Gmp_binop_ui(PlusA, init_var,
-						 init_var, One)));
+		self#insert (Code(Format.sprintf
+				    "if(%s) __gmpz_add_ui(%s, %s, 1);"
+				    lambda_term var var))
 	      | _ -> assert false
 	    end;
-	    self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter, One)));
+	    self#insert Line_break;
+	    self#insert
+	      (Code(Format.sprintf "__gmpz_add_ui(%s, %s, 1);" iter iter));
+	    self#insert Line_break;
 	    if builtin_name <> "\\numof" then
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment lambda_term)));
-	    self#insert Block_close;
-	    self#insert (Instru(Gmp_clear init_iter));
-	    self#insert (Instru(Gmp_clear(self#gmp_fragment low)));
-	    self#insert (Instru(Gmp_clear(self#gmp_fragment up)));
-	    self#insert Block_close;
-	    Gmp_fragment init_var
+	      begin
+		self#insert(Code(Format.sprintf"__gmpz_clear(%s);"lambda_term));
+		self#insert Line_break
+	      end;
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" low));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" up));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
+	    var
 	  | Lreal -> assert false (* unreachable *)
 	  | _ -> assert false (* unreachable ? *)
 	end
@@ -249,28 +197,29 @@ class gather_insertions props = object(self)
       begin
 	match ty with
 	| Linteger ->
-	  let fresh_var = Fresh_gmp_var in
-	  self#insert (Decl_gmp_var fresh_var);
-	  let decl_var = Declared_gmp_var fresh_var in
-	  let str = Pretty_utils.sfprintf "%a" Printer.pp_term t in
-	  self#insert (Instru(Gmp_init_set_str(decl_var, str)));
-	  let init_var = Initialized_gmp_var decl_var in
-	  Gmp_fragment init_var
+	  let var = self#fresh_gmp_var() in
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
+	  self#insert
+	    (Code(Pretty_utils.sfprintf "__gmpz_init_set_str(%s, \"%a\", 10);"
+		    var Printer.pp_term t));
+	  self#insert Line_break;
+	  var
 	| Lreal -> assert false (* TODO: reals *)
-	| _ -> Ctype_fragment(Cst(Pretty_utils.sfprintf "%a" Printer.pp_term t))
+	| _ -> Pretty_utils.sfprintf "%a" Printer.pp_term t
       end
 
     | TLval tlval ->
       begin
 	match ty with
 	| Linteger ->
-	  let fresh_var = Fresh_gmp_var in
-	  let t' = self#gmp_fragment (self#tlval tlval) in
-	  self#insert (Decl_gmp_var fresh_var);
-	  let decl_var = Declared_gmp_var fresh_var in
-	  self#insert (Instru(Gmp_init_set(decl_var, t')));
-	  let init_var = Initialized_gmp_var decl_var in
-	  Gmp_fragment init_var
+	  let var = self#fresh_gmp_var() in
+	  let t' = self#tlval tlval in
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_init_set(%s, %s);" var t'));
+	  self#insert Line_break;
+	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> self#tlval tlval
       end
@@ -280,8 +229,7 @@ class gather_insertions props = object(self)
     | TSizeOfStr _
     | TAlignOf _
     | TAlignOfE _ ->
-      (*Pretty_utils.sfprintf "%a" Printer.pp_term t*)
-      assert false (* TODO ? *)
+      Pretty_utils.sfprintf "%a" Printer.pp_term t
 
     | TUnOp(op, t') ->
       begin
@@ -289,61 +237,67 @@ class gather_insertions props = object(self)
 	| Linteger ->
 	  assert(op = Neg);
 	  let x = self#term t' in
-	  let fresh_var = Fresh_gmp_var in
-	  self#insert (Decl_gmp_var fresh_var);
-	  let decl_var = Declared_gmp_var fresh_var in
-	  self#insert (Instru(Gmp_init decl_var));
-	  let init_var = Initialized_gmp_var decl_var in
+	  let var = self#fresh_gmp_var() in
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_init(%s);" var));
+	  self#insert Line_break;
 	  begin
 	    match t'.term_type with
 	    | Linteger ->
-	      self#insert
-		(Instru(Gmp_ui_sub(init_var,Zero,self#gmp_fragment x)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)))
+	      self#insert(Code(Format.sprintf"__gmpz_ui_sub(%s, 0, %s);"var x));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
 	    | Lreal -> assert false (* unreachable *)
 	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	      let fresh_var' = Fresh_gmp_var in
-	      self#insert (Decl_gmp_var fresh_var');
-	      let decl_var' = Declared_gmp_var fresh_var' in
+	      let var' = self#fresh_gmp_var() in
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var'));
+	      self#insert Line_break;
 	      self#insert
-		(Instru(Gmp_init_set_ui(decl_var', self#ctype_fragment x)));
-	      let init_var' = Initialized_gmp_var decl_var' in
-	      self#insert (Instru(Gmp_ui_sub(init_var', Zero,init_var')));
-	      self#insert (Instru(Gmp_clear init_var'))
+		(Code(Format.sprintf "__gmpz_init_set_ui(%s, %s);" var' x));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "__gmpz_ui_sub(%s, 0, %s);" var var'));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var'));
+	      self#insert Line_break;
 	    | Ctype(TInt _) ->
-	      let fresh_var' = Fresh_gmp_var in
-	      self#insert (Decl_gmp_var fresh_var');
-	      let decl_var' = Declared_gmp_var fresh_var' in
+	      let var' = self#fresh_gmp_var() in
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var'));
+	      self#insert Line_break;
 	      self#insert
-		(Instru(Gmp_init_set_si(decl_var', self#ctype_fragment x)));
-	      let init_var' = Initialized_gmp_var decl_var' in
-	      self#insert (Instru(Gmp_ui_sub(init_var', Zero, init_var')));
-	      self#insert (Instru(Gmp_clear init_var'));
+		(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var' x));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "__gmpz_ui_sub(%s, 0, %s);" var var'));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var'));
+	      self#insert Line_break
 	    | _ -> assert false (* unreachable *)
 	  end;
-	  Gmp_fragment init_var
+	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ ->
-	  let x = self#ctype_fragment (self#term t') in
-	  Ctype_fragment (Unop(op, x))
+	  let x = self#term t' in
+	  Pretty_utils.sfprintf "(%a %s)" Printer.pp_unop op x
       end
 
     | TBinOp((IndexPI|PlusPI|MinusPI) as op, t1, t2) ->
       begin
 	match t2.term_type with
 	| Linteger ->
-	  let x = self#ctype_fragment (self#term t1)
-	  and y = self#gmp_fragment (self#term t2) in
-	  let var = Fresh_ctype_var Cil.intType in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_get_si y)));
-	  self#insert (Instru(Gmp_clear y));
-	  Ctype_fragment (Binop(op, x, var))
+	  let x = self#term t1 and y = self#term t2 in
+	  let var = self#fresh_term_var() in
+	  self#insert(Code(Format.sprintf "int %s = __gmpz_get_si(%s);" var y));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+	  self#insert Line_break;
+	  Pretty_utils.sfprintf "(%s %a %s)" x Printer.pp_binop op var
 	| Lreal -> assert false (* unreachable *)
 	| _ ->
-	  let x = self#ctype_fragment (self#term t1)
-	  and y = self#ctype_fragment (self#term t2) in
-	  Ctype_fragment (Binop(op, x, y))
+	  let x = self#term t1 and y = self#term t2 in
+	  Pretty_utils.sfprintf "(%s %a %s)" x Printer.pp_binop op y
       end
 
     | TBinOp(op, t1, t2) ->
@@ -351,68 +305,84 @@ class gather_insertions props = object(self)
 	match ty with
 	| Linteger ->
 	  let x = self#term t1 and y = self#term t2 in
-	  let fresh_var = Fresh_gmp_var in
-	  self#insert (Decl_gmp_var fresh_var);
-	  let decl_var = Declared_gmp_var fresh_var in
-	  self#insert (Instru(Gmp_init decl_var));
-	  let init_var = Initialized_gmp_var decl_var in
+	  let var = self#fresh_gmp_var() in
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_init(%s);" var));
+	  self#insert Line_break;
+	  let op' = match op with
+	    | PlusA -> "__gmpz_add"
+	    | MinusA -> "__gmpz_sub"
+	    | Mult -> "__gmpz_mul"
+	    | Div -> "__gmpz_tdiv_q"
+	    | Mod -> "__gmpz_tdiv_r"
+	    | _ -> assert false
+	  in
 	  begin
 	    match t1.term_type, t2.term_type with
 	    | Linteger, Linteger ->
-	      self#insert (Instru(Gmp_binop(op, init_var, self#gmp_fragment x,
-					    self#gmp_fragment y)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment y)));
-	      Gmp_fragment init_var
+	      self#insert (Code(Format.sprintf "%s(%s, %s, %s);" op' var x y));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+	      self#insert Line_break;
+	      var
 	    | Linteger,Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_))->
-	      self#insert (Instru(Gmp_binop_ui(op, init_var,self#gmp_fragment x,
-					       self#ctype_fragment y)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)));
-	      Gmp_fragment init_var
+	      self#insert(Code(Format.sprintf"%s_ui(%s, %s, %s);" op' var x y));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
+	      var
 	    | Linteger, Ctype (TInt _) ->
-	      self#insert (Instru(Gmp_binop_si(op, init_var,self#gmp_fragment x,
-					       self#ctype_fragment y)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)));
-	      Gmp_fragment init_var
+	      self#insert(Code(Format.sprintf"%s_si(%s, %s, %s);" op' var x y));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
+	      var
 	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)),Linteger->
 	      if op = PlusA || op = Mult then
 		begin
-		  self#insert (Instru(Gmp_binop_ui(op, init_var,
-						   self#gmp_fragment y,
-						   self#ctype_fragment x)));
-		  self#insert (Instru(Gmp_clear(self#gmp_fragment y)));
-		  Gmp_fragment init_var
+		  self#insert
+		    (Code(Format.sprintf "%s_ui(%s, %s, %s);" op' var y x));
+		  self#insert Line_break;
+		  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+		  self#insert Line_break;
+		  var
 		end
 	      else
 		assert false (* TODO *)
 	    | Ctype (TInt _), Linteger ->
 	      if op = PlusA || op = Mult then
 		begin
-		  self#insert (Instru(Gmp_binop_si(op, init_var,
-						   self#gmp_fragment y,
-						   self#ctype_fragment x)));
-		  self#insert (Instru(Gmp_clear(self#gmp_fragment y)));
-		  Gmp_fragment init_var
+		  self#insert
+		    (Code(Format.sprintf "%s_si(%s, %s, %s);" op' var y x));
+		  self#insert Line_break;
+		  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+		  self#insert Line_break;
+		  var
 		end
 	      else
 		assert false (* TODO *)
 	    | Ctype(TInt _), Ctype(TInt _) ->
-	      let fresh_var1 = Fresh_gmp_var in
-	      self#insert (Decl_gmp_var fresh_var1);
-	      let decl_var1 = Declared_gmp_var fresh_var1 in
-	      let fresh_var2 = Fresh_gmp_var in
-	      self#insert (Decl_gmp_var fresh_var2);
-	      let decl_var2 = Declared_gmp_var fresh_var2 in
+	      let var1 = self#fresh_gmp_var() in
+	      let var2 = self#fresh_gmp_var() in
+	      self#insert (Code(Format.sprintf "mpz_t %s, %s;" var1 var2));
+	      self#insert Line_break;
 	      self#insert
-		(Instru(Gmp_init_set_si(decl_var1, self#ctype_fragment x)));
-	      let init_var1 = Initialized_gmp_var decl_var1 in
+		(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var1 x));
+	      self#insert Line_break;
 	      self#insert
-		(Instru(Gmp_init_set_si(decl_var2, self#ctype_fragment y)));
-	      let init_var2 = Initialized_gmp_var decl_var2 in
-	      self#insert (Instru(Gmp_binop(op,init_var,init_var1,init_var2)));
-	      self#insert (Instru(Gmp_clear init_var1));
-	      self#insert (Instru(Gmp_clear init_var2));
-	      Gmp_fragment init_var
+		(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var2 y));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "%s(%s, %s, %s);" op' var var1 var2));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var1));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var2));
+	      self#insert Line_break;
+	      var
 	    | _ -> assert false
 	  end
 	| Lreal -> assert false (* TODO: reals *)
@@ -420,19 +390,22 @@ class gather_insertions props = object(self)
 	  begin
 	    match t1.term_type, t2.term_type with
 	    | Linteger, Linteger ->
-	      let var = Fresh_ctype_var Cil.intType in
+	      let var = self#fresh_term_var() in
 	      let x = self#term t1 in
 	      let y = self#term t2 in
-	      self#insert (Decl_ctype_var var);
-	      self#insert (Instru(Affect(var, Gmp_cmp(op, self#gmp_fragment x,
-						      self#gmp_fragment y))));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment y)));
-	      Ctype_fragment var
+	      self#insert
+		(Code(Pretty_utils.sfprintf "int %s = __gmpz_cmp(%s, %s) %a 0;"
+			var x y Printer.pp_binop op));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y));
+	      self#insert Line_break;
+	      var
 	    | _ ->
-	      let x = self#ctype_fragment (self#term t1) in
-	      let y = self#ctype_fragment (self#term t2) in
-	      Ctype_fragment (Binop(op, x, y))
+	      let x = self#term t1 in
+	      let y = self#term t2 in
+	      Pretty_utils.sfprintf "(%s %a %s)" x Printer.pp_binop op y
 	  end
 	| _ -> assert false (* unreachable ? *)
       end
@@ -444,32 +417,37 @@ class gather_insertions props = object(self)
 	  begin
 	    match ty with (* dest type *)
 	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	      let v = self#gmp_fragment (self#term t') in
-	      let var = Fresh_ctype_var ty' in
-	      self#insert (Decl_ctype_var var);
-	      self#insert (Instru(Affect(var, Gmp_get_ui v)));
-	      self#insert (Instru(Gmp_clear v));
-	      Ctype_fragment var
+	      let v = self#term t' in
+	      let var = self#fresh_term_var() in
+	      self#insert
+		(Code(Pretty_utils.sfprintf "%a %s = __gmpz_get_ui(%s);"
+			Printer.pp_typ ty' var v));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" v));
+	      self#insert Line_break;
+	      var
 	    | Ctype (TInt _) ->
-	      let v = self#gmp_fragment (self#term t') in
-	      let var = Fresh_ctype_var ty' in
-	      self#insert (Decl_ctype_var var);
-	      self#insert (Instru(Affect(var, Gmp_get_si v)));
-	      self#insert (Instru(Gmp_clear v));
-	      Ctype_fragment var
+	      let v = self#term t' in
+	      let var = self#fresh_term_var() in
+	      self#insert
+		(Code(Pretty_utils.sfprintf "%a %s = __gmpz_get_si(%s);"
+			Printer.pp_typ ty' var v));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" v));
+	      self#insert Line_break;
+	      var
 	    | _ -> assert false (* unreachable *)
 	  end
 	| Lreal -> assert false (* reals *)
 	| Ctype _ ->
-	  let v = self#ctype_fragment (self#term t') in
-	  Ctype_fragment (Cast (ty', v))
+	  let v = self#term t' in
+	  Pretty_utils.sfprintf "(%a)%s" Printer.pp_typ ty' v
 	| _ -> assert false (* unreachable *)
       end
 
     | TAddrOf _
     | TStartOf _ ->
-      (*Pretty_utils.sfprintf "%a" Printer.pp_term t*)
-      assert false (* TODO ? *)
+      Pretty_utils.sfprintf "%a" Printer.pp_term t
 
     | Tapp (li, _ (* already substituted *), params) ->
       let builtin_name = li.l_var_info.lv_name in
@@ -480,15 +458,17 @@ class gather_insertions props = object(self)
 	    begin
 	      let param = List.hd params in
 	      assert (List.tl params = []);
-	      let x = self#gmp_fragment (self#term param) in
-	      let fresh_var = Fresh_gmp_var in
-	      self#insert (Decl_gmp_var fresh_var);
-	      let decl_var = Declared_gmp_var fresh_var in
-	      self#insert (Instru(Gmp_init decl_var));
-	      let init_var = Initialized_gmp_var decl_var in
-	      self#insert (Instru(Gmp_abs(init_var, x)));
-	      self#insert (Instru(Gmp_clear x));
-	      Gmp_fragment init_var
+	      let x = self#term param in
+	      let var = self#fresh_gmp_var() in
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_init(%s);" var));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_abs(%s, %s);" var x));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" x));
+	      self#insert Line_break;
+	      var
 	    end
 	  else
 	    if builtin_name = "\\min" || builtin_name = "\\max" ||
@@ -513,25 +493,33 @@ class gather_insertions props = object(self)
       begin
 	match ty with
 	| Linteger ->
-	  let fresh_var = Fresh_gmp_var in
-	  self#insert (Decl_gmp_var fresh_var);
-	  let decl_var = Declared_gmp_var fresh_var in
-	  let cond' = self#gmp_fragment (self#term cond) in
-	  self#insert (If_cond(Gmp_cmp_si(Ne, cond', Zero)));
-	  self#insert Block_open;
-	  let then_b' = self#gmp_fragment (self#term then_b) in
-	  self#insert (Instru(Gmp_init_set(decl_var, then_b')));
-	  let init_var = Initialized_gmp_var decl_var in
-	  self#insert (Instru(Gmp_clear(then_b')));
-	  self#insert Block_close;
-	  self#insert Else_cond;
-	  self#insert Block_open;
-	  let else_b' = self#gmp_fragment (self#term else_b) in
-	  self#insert (Instru(Gmp_init_set(decl_var, else_b')));
-	  self#insert (Instru(Gmp_clear(else_b')));
-	  self#insert Block_close;
-	  self#insert (Instru(Gmp_clear(cond')));
-	  Gmp_fragment init_var
+	  let var = self#fresh_gmp_var() in
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	  self#insert Line_break;
+	  let cond' = self#term cond in
+	  self#insert(Code(Format.sprintf"if (__gmpz_cmp(%s,0) != 0) {" cond'));
+	  self#insert Line_break;
+	  let then_b' = self#term then_b in
+	  self#insert
+	    (Code(Format.sprintf "__gmpz_init_set(%s, %s);" var then_b'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" then_b'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "}"));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "else {"));
+	  self#insert Line_break;
+	  let else_b' = self#term else_b in
+	  self#insert
+	    (Code(Format.sprintf "__gmpz_init_set(%s, %s);" var else_b'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" else_b'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "}"));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" cond'));
+	  self#insert Line_break;
+	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
       end
@@ -539,9 +527,7 @@ class gather_insertions props = object(self)
     | Tat(_, StmtLabel _) ->
       if current_function <> None then
 	Sd_options.Self.warning "%a unsupported" Printer.pp_term t;
-      (*Pretty_utils.sfprintf "%a" Printer.pp_term t*)
-      assert false (* TODO ? *)
-
+      Pretty_utils.sfprintf "%a" Printer.pp_term t
     | Tat(term,LogicLabel(_,stringlabel)) ->
       if stringlabel = "Old" || stringlabel = "Pre" then
 	let is_ptr =
@@ -561,14 +547,13 @@ class gather_insertions props = object(self)
 	  begin
 	    if current_function <> None then
 	      Sd_options.Self.warning "%a unsupported" Printer.pp_term t;
-	    (*Pretty_utils.sfprintf "%a" Printer.pp_term t*)
-	    assert false (* TODO ? *)
+	    Pretty_utils.sfprintf "%a" Printer.pp_term t
 	  end
 
     | Tbase_addr _ -> Sd_options.Self.not_yet_implemented "Tbase_addr"
     | Toffset _ -> Sd_options.Self.not_yet_implemented "Toffset"
     | Tblock_length _ -> Sd_options.Self.not_yet_implemented "Tblock_length"
-    | Tnull -> Ctype_fragment Zero
+    | Tnull -> "0"
 
     (* C type -> logic type *)
     | TLogic_coerce (_, t')
@@ -584,21 +569,23 @@ class gather_insertions props = object(self)
 	    in
 	    match ty' with
 	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	      let v = self#ctype_fragment (self#term t') in
-	      let fresh_var = Fresh_gmp_var in
-	      self#insert (Decl_gmp_var fresh_var);
-	      let decl_var = Declared_gmp_var fresh_var in
-	      self#insert (Instru(Gmp_init_set_ui(decl_var, v)));
-	      let init_var = Initialized_gmp_var decl_var in
-	      Gmp_fragment init_var
+	      let v = self#term t' in
+	      let var = self#fresh_gmp_var() in
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "__gmpz_init_set_ui(%s, %s);" var v));
+	      self#insert Line_break;
+	      var
 	    | Ctype(TInt _) | Ctype(TEnum _) ->
-	      let v = self#ctype_fragment (self#term t') in
-	      let fresh_var = Fresh_gmp_var in
-	      self#insert (Decl_gmp_var fresh_var);
-	      let decl_var = Declared_gmp_var fresh_var in
-	      self#insert (Instru(Gmp_init_set_ui(decl_var, v)));
-	      let init_var = Initialized_gmp_var decl_var in
-	      Gmp_fragment init_var
+	      let v = self#term t' in
+	      let var = self#fresh_gmp_var() in
+	      self#insert (Code(Format.sprintf "mpz_t %s;" var));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var v));
+	      self#insert Line_break;
+	      var
 	    | _ -> assert false
 	  end
 	| Lreal -> assert false (* TODO: reals *)
@@ -611,19 +598,23 @@ class gather_insertions props = object(self)
       begin
 	match t'.term_type with
 	| Linteger ->
-	  let v = self#gmp_fragment (self#term t') in
-	  let var = Fresh_ctype_var ty' in
-	  self#insert (Decl_ctype_var var);
+	  let v = self#term t' in
+	  let var = self#fresh_term_var() in
+	  self#insert
+	    (Code(Pretty_utils.sfprintf "%a %s;" Printer.pp_typ ty' var));
+	  self#insert Line_break;
 	  begin
 	    match ty' with
 	    | TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_) ->
-	      self#insert (Instru(Affect(var,Gmp_get_ui v)));
+	      self#insert (Code(Format.sprintf "%s = __gmpz_get_ui(%s);" var v))
 	    | TInt _ ->
-	      self#insert (Instru(Affect(var,Gmp_get_si v)));
+	      self#insert (Code(Format.sprintf "%s = __gmpz_get_si(%s);" var v))
 	    | _ -> assert false
 	  end;
-	  self#insert (Instru(Gmp_clear v));
-	  Ctype_fragment var
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" v));
+	  self#insert Line_break;
+	  var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
       end
@@ -642,33 +633,30 @@ class gather_insertions props = object(self)
 
   method private tlval (tlhost, toffset) =
     match tlhost with
-    | TResult _ ->
-      let var = Extlib.the result_varinfo in
-      Ctype_fragment (My_ctype_var(var.vtype, var.vname))
+    | TResult _ -> (Extlib.the result_varinfo).vname
     | _ ->
       let lhost = self#tlhost tlhost in
-      let rec aux ret = function
-	| TNoOffset -> ret
-	| TField (fi, tof) -> aux (Field(ret, fi.fname)) tof
-	| TModel _ -> assert false (* TODO *)
-	| TIndex (t, tof) ->
-	  let t' = self#term t in
-	  begin
-	    match t.term_type with
-	    | Linteger -> aux (Index(ret, Gmp_get_si(self#gmp_fragment t'))) tof
-	    | Lreal -> assert false (* unreachable *)
-	    | _ -> aux (Index(ret, self#ctype_fragment t')) tof
-	  end
-      in
-      match lhost with
-      | Gmp_fragment _ -> (* TODO *) assert (toffset = TNoOffset); lhost
-      | Ctype_fragment lhost' -> Ctype_fragment (aux lhost' toffset)
+      let offset = self#toffset toffset in
+      if offset = "" then lhost else "(" ^ lhost ^ ")" ^ offset
 
   method private tlhost lhost =
     match lhost with
     | TVar lv -> self#logic_var lv
     | TResult _ -> assert false
-    | TMem t -> Ctype_fragment (Deref (self#ctype_fragment (self#term t)))
+    | TMem t -> "*" ^ (self#term t)
+
+  method private toffset toffset =
+    match toffset with
+    | TNoOffset -> ""
+    | TField (fi, tof) -> "." ^ fi.fname ^ (self#toffset tof)
+    | TModel (mi, tof) -> "." ^ mi.mi_name ^ (self#toffset tof)
+    | TIndex (t, tof) ->
+      let t' = self#term t in
+      let v = self#toffset tof in
+      match t.term_type with
+      | Linteger -> "[__gmpz_get_si(" ^ t' ^ ")]" ^ v
+      | Lreal -> assert false (* TODO: reals *)
+      | _ -> "[" ^ t' ^ "]" ^ v
 
   (* modify result_varinfo when the function returns something *)
   method private compute_result_varinfo fct =
@@ -708,11 +696,11 @@ class gather_insertions props = object(self)
 	  (* TODO: add an option to translate anyway? (deleting the filter) *)
 	  let preconds = List.filter not_translated preconds in
 	  let do_precond p =
-	    let v = self#predicate(self#subst_pred p.ip_content) in
-	    if v <> One then (* '1' is for untreated predicates *)
+	    let v = self#predicate (self#subst_pred p.ip_content) in
+	    if v <> "1" then (* '1' is for untreated predicates *)
 	      begin
-		self#insert (If_cond(Unop(LNot, v)));
-		self#insert (Instru(Ret Zero))
+		self#insert (Code(Format.sprintf "if (!%s) return 0;" v));
+		self#insert Line_break
 	      end
 	  in
 	  if preconds <> [] then
@@ -754,7 +742,8 @@ class gather_insertions props = object(self)
     if (self#at_least_one_prop kf behaviors)
       || (Sd_options.Behavior_Reachability.get()) then
       begin
-	self#insert Block_open;
+	self#insert (Code(Format.sprintf "{"));
+	self#insert Line_break;
 	List.iter (fun b ->
 	  let post = b.b_post_cond in
 	  let to_prop = Property.ip_of_ensures kf Kglobal b in
@@ -771,9 +760,11 @@ class gather_insertions props = object(self)
 	      if not (Cil.is_default_behavior b)
 		&& (Sd_options.Behavior_Reachability.get()) then
 		begin
-		  let str =
-		    Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
-		  self#insert (Instru(Pc_to_framac str));
+		  self#insert
+		    (Code(Format.sprintf
+			    "pathcrawler_to_framac(\"@@FC:REACHABLE_BHV:%i\");"
+			    bhv_to_reach_cpt));
+		  self#insert Line_break;
 		  Sd_states.Behavior_Reachability.replace
 		    bhv_to_reach_cpt
 		    (kf, b, false);
@@ -783,7 +774,9 @@ class gather_insertions props = object(self)
 	      self#bhv_assumes_end b
 	    end
 	) behaviors;
-	self#insert Block_close
+	self#insert Line_break;
+	self#insert (Code(Format.sprintf "}"));
+	self#insert Line_break
       end;
     (* END postcond *)
 
@@ -808,68 +801,63 @@ class gather_insertions props = object(self)
 	try Cil_datatype.Varinfo.Hashtbl.find lengths v
 	with Not_found -> []
       in
-      let my_v = My_ctype_var((array_to_ptr v.vtype), v.vname) in
-      let my_old_v = My_ctype_var((array_to_ptr v.vtype), "old_"^v.vname) in
-      self#insert (Decl_ctype_var my_old_v);
-      self#insert (Instru(Affect(my_old_v, my_v)));
+      self#insert
+	(Code(Pretty_utils.sfprintf "%a old_%s = %s;"
+		Printer.pp_typ (array_to_ptr v.vtype) v.vname v.vname));
+      self#insert Line_break;
       let rec alloc_aux indices ty = function
 	| h :: t ->
 	  let all_indices = List.fold_left concat_indice "" indices in
-	  let old_ty = ty in
 	  let ty = dig_type ty in
 	  let h' = self#term h in
 	  let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
-	  let my_iterator = My_ctype_var(Cil.intType, iterator) in
-	  self#insert (Decl_ctype_var my_iterator);
+	  self#insert (Code(Format.sprintf "int %s;" iterator));
+	  self#insert Line_break;
 	  begin
 	    match h.term_type with
 	    | Linteger ->
-	      let my_old_ptr =
-		My_ctype_var(old_ty, "old_ptr_"^v.vname^all_indices) in
-	      let h' = self#gmp_fragment h' in
-	      self#insert (Instru(Affect(my_old_ptr,
-					 Malloc(Binop(Mult,(Gmp_get_si h'),
-						      Sizeof ty)))));
-	      self#insert (For(
-		(Some(Affect(my_iterator, Zero))),
-		(Some(Binop(Lt, my_iterator, Gmp_get_si h'))),
-		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
-	      ));
-	      self#insert Block_open;
+	      self#insert
+		(Code(Pretty_utils.sfprintf
+			"old_ptr_%s%s = malloc(__gmpz_get_si(%s)*sizeof(%a));"
+			v.vname all_indices h' Printer.pp_typ ty));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf
+			"for (%s = 0; %s < __gmpz_get_si(%s); %s++) {"
+			iterator iterator h' iterator));
+	      self#insert Line_break;
 	      iter_counter := !iter_counter + 1;
 	      alloc_aux (Sd_utils.append_end indices iterator) ty t;
-	      self#insert Block_close;
-	      self#insert (Instru(Gmp_clear h'))
+	      self#insert (Code(Format.sprintf "}"));
+	      self#insert Line_break
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
-	      let my_old_ptr =
-		My_ctype_var(old_ty, "old_ptr_"^v.vname^all_indices) in
-	      let h' = self#ctype_fragment h' in
-	      self#insert (Instru(Affect(my_old_ptr,
-					 Malloc(Binop(Mult,h',
-						      Sizeof ty)))));
-	      self#insert (For(
-		(Some(Affect(my_iterator, Zero))),
-		(Some(Binop(Lt, my_iterator, h'))),
-		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
-	      ));
-	      self#insert Block_open;
+	      self#insert
+		(Code(Pretty_utils.sfprintf
+			"old_ptr_%s%s = malloc((%s)*sizeof(%a));"
+			v.vname all_indices h' Printer.pp_typ ty));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "for (%s = 0; %s < %s; %s++) {"
+				  iterator iterator h' iterator));
+	      self#insert Line_break;
 	      iter_counter := !iter_counter + 1;
 	      alloc_aux (Sd_utils.append_end indices iterator) ty t;
-	      self#insert Block_close
+	      self#insert (Code(Format.sprintf "}"));
+	      self#insert Line_break;
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" h'));
+	      self#insert Line_break;
 	  end
 	| [] ->
 	  let all_indices = List.fold_left concat_indice "" indices in
-	  let my_old_ptr =
-	    My_ctype_var(ty, "old_ptr_"^v.vname^all_indices) in
-	  let my_var = My_ctype_var (ty, v.vname^all_indices) in
-	  self#insert (Instru(Affect(my_old_ptr, my_var)))
+	  self#insert (Code(Format.sprintf "old_ptr_%s%s = %s%s;"
+			      v.vname all_indices v.vname all_indices));
+	  self#insert Line_break
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
 	begin
-	  let my_old_ptr =
-	    My_ctype_var((array_to_ptr v.vtype), "old_ptr_"^v.vname) in
-	  self#insert (Decl_ctype_var my_old_ptr);
+	  self#insert (Code(Pretty_utils.sfprintf "%a old_ptr_%s;"
+			      Printer.pp_typ (array_to_ptr v.vtype) v.vname));
+	  self#insert Line_break;
 	  alloc_aux [] v.vtype terms
 	end
     in
@@ -892,13 +880,13 @@ class gather_insertions props = object(self)
 	    | [] -> ()
 	    | _ :: [] ->
 	      let all_indices = List.fold_left concat_indice "" indices in
-	      let my_old_ptr =
-		My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname^all_indices) in
-	      self#insert (Instru(Free(my_old_ptr)))
+	      self#insert
+		(Code(Format.sprintf"free(old_ptr_%s%s);" v.vname all_indices));
+	      self#insert Line_break
 	    | h :: t ->
 	      let iterator = "__stady_iter_"^(string_of_int !iter_counter) in
-	      let my_iterator = My_ctype_var(Cil.intType, iterator) in
-	      self#insert (Decl_ctype_var my_iterator);
+	      self#insert (Code(Format.sprintf "int %s;" iterator));
+	      self#insert Line_break;
 	      let h' = self#term h in
 	      let all_indices = List.fold_left concat_indice "" indices in
 	      iter_counter := !iter_counter + 1;
@@ -906,31 +894,29 @@ class gather_insertions props = object(self)
 	      begin
 		match h.term_type with
 		| Linteger ->
-		  let h' = self#gmp_fragment h' in
-		  self#insert (For(
-		    (Some(Affect(my_iterator, Zero))),
-		    (Some(Binop(Lt, my_iterator, Gmp_get_si h'))),
-		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
-		  ));
-		  self#insert Block_open;
+		  self#insert
+		    (Code(Format.sprintf
+			    "for (%s = 0; %s < __gmpz_get_si(%s); %s++) {"
+			    iterator iterator h' iterator));
+		  self#insert Line_break;
 		  dealloc_aux indices t;
-		  self#insert Block_close;
-		  self#insert (Instru(Gmp_clear h'))
+		  self#insert (Code(Format.sprintf "}"));
+		  self#insert Line_break;
+		  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" h'));
+		  self#insert Line_break
 		| Lreal -> assert false (* TODO: reals *)
 		| _ ->
-		  let h' = self#ctype_fragment h' in
-		  self#insert (For(
-		    (Some(Affect(my_iterator, Zero))),
-		    (Some(Binop(Lt, my_iterator, h'))),
-		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
-		  ));
-		  self#insert Block_open;
+		  self#insert
+		    (Code(Format.sprintf "for (%s = 0; %s < %s; %s++) {"
+			    iterator iterator h' iterator));
+		  self#insert Line_break;
 		  dealloc_aux indices t;
-		  self#insert Block_close
+		  self#insert (Code(Format.sprintf "}"));
+		  self#insert Line_break
 	      end;
-	      let my_old_ptr =
-		My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname^all_indices) in
-	      self#insert (Instru(Free(my_old_ptr)))
+	      self#insert
+		(Code(Format.sprintf"free(old_ptr_%s%s);" v.vname all_indices));
+	      self#insert Line_break
 	  in
 	  dealloc_aux [] terms
 	in
@@ -950,22 +936,24 @@ class gather_insertions props = object(self)
     if bhv.b_assumes <> [] then
       let f a = self#predicate (self#subst_pred a.ip_content) in
       let vars = List.map f bhv.b_assumes in
-      let rec aux ret = function
-	| [] -> ret
-	| h :: t -> aux (Binop(LAnd, ret, h)) t
-      in
-      let exp = aux One vars in 
-      self#insert (If_cond exp);
-      self#insert Block_open
+      self#insert (Code(Format.sprintf "if ("));
+      List.iter (fun v -> self#insert (Code(Format.sprintf "%s && " v))) vars;
+      self#insert (Code(Format.sprintf "1) {"));
+      self#insert Line_break
 	
   method private bhv_assumes_end bhv =
     if bhv.b_assumes <> [] then
-      self#insert Block_close
+      begin
+	self#insert (Code(Format.sprintf "}"));
+	self#insert Line_break
+      end
 
   method private pc_assert_exception pred msg id prop =
     let var = self#predicate (self#subst_pred pred) in
-    self#insert (If_cond(Unop(LNot, var)));
-    self#insert (Instru(Pc_assert_exn(msg, id)));
+    self#insert (Code(Format.sprintf "if(!%s)" var));
+    self#insert
+      (Code(Format.sprintf "pathcrawler_assert_exception(\"%s\", %i);" msg id));
+    self#insert Line_break;
     translated_properties <- prop :: translated_properties
 
   method private bhv_guard_begin behaviors =
@@ -973,21 +961,21 @@ class gather_insertions props = object(self)
       let f a = self#predicate (self#subst_pred a.ip_content) in
       let g assumes_list = List.map f assumes_list in
       let vars = List.map g behaviors in
-      let rec aux' ret = function
-	| [] -> ret
-	| h :: t -> aux' (Binop(LAnd, ret, h)) t
-      in
-      let rec aux ret = function
-	| [] -> ret
-	| h :: t -> aux (Binop(LOr, ret, aux' One h)) t
-      in
-      let exp = aux Zero vars in
-      self#insert (If_cond exp);
-      self#insert Block_open
+      self#insert (Code(Format.sprintf "if ("));
+      List.iter (fun assumes ->
+	self#insert (Code(Format.sprintf "("));
+	List.iter(fun a-> self#insert(Code(Format.sprintf "%s && " a))) assumes;
+	self#insert (Code(Format.sprintf "1 ) || "))
+      ) vars;
+      self#insert (Code(Format.sprintf "0) {"));
+      self#insert Line_break
 
   method private bhv_guard_end behaviors =
     if behaviors <> [] then
-      self#insert Block_close
+      begin
+	self#insert (Code(Format.sprintf "}"));
+	self#insert Line_break
+      end
 
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
@@ -1035,7 +1023,8 @@ class gather_insertions props = object(self)
 	if self#at_least_one_prop kf bhvs.spec_behavior then
 	  begin
 	    self#bhv_guard_begin behaviors;
-	    self#insert Block_open;
+	    self#insert (Code(Format.sprintf "{"));
+	    self#insert Line_break;
 	    List.iter (fun b ->
 	      let post = b.b_post_cond in
 	      let to_prop = Property.ip_of_ensures kf (Kstmt stmt) b in
@@ -1054,7 +1043,8 @@ class gather_insertions props = object(self)
 		  self#bhv_assumes_end b
 		end
 	    ) bhvs.spec_behavior;
-	    self#insert Block_close;
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
 	    self#bhv_guard_end behaviors
 	  end;
 
@@ -1101,44 +1091,82 @@ class gather_insertions props = object(self)
 	    match term.term_type with
 	    | Linteger ->
 	      current_label <- Some (BegStmt stmt.sid);
-	      let term' = self#gmp_fragment (self#term term) in
-	      self#insert (If_cond (Gmp_cmp_ui(Lt, term', Zero)));
-	      self#insert (Instru(Pc_assert_exn("Variant non positive", id)));
+	      let term' = self#term term in
+	      self#insert
+		(Code(Format.sprintf "if (__gmpz_cmp_ui(%s, 0) < 0)" term'));
+	      self#insert
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non positive\",%i);" id));
+	      self#insert Line_break;
 	      current_label <- Some (EndStmt stmt.sid);
-	      self#insert (Instru(Gmp_clear(term')));
+	      self#insert (Code(Format.sprintf "__gmpz_clear(%s);" term'));
+	      self#insert Line_break;
 	      current_label <- Some (BegIter stmt.sid);
-	      let term' = self#gmp_fragment (self#term term) in
-	      let fresh_variant = Fresh_gmp_var in
-	      self#insert (Decl_gmp_var fresh_variant);
-	      let decl_variant = Declared_gmp_var fresh_variant in
-	      self#insert (Instru(Gmp_init_set(decl_variant, term')));
-	      let init_variant = Initialized_gmp_var decl_variant in
+	      let term' = self#term term in
+	      self#insert (Code(Format.sprintf "mpz_t old_variant_%i;" id));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "__gmpz_init_set(old_variant_%i, %s);"
+			id term'));
+	      self#insert Line_break;
 	      current_label <- Some (EndIter stmt.sid);
-	      let term' = self#gmp_fragment (self#term term) in
-	      self#insert (If_cond(Gmp_cmp_ui(Lt, init_variant, Zero)));
-	      self#insert (Instru(Pc_assert_exn("Variant non positive", id)));
-	      self#insert (If_cond(Gmp_cmp(Ge, term', init_variant)));
-	      self#insert (Instru(Pc_assert_exn("Variant non decreasing", id)));
-	      self#insert (Instru(Gmp_clear(init_variant)));
+	      let term' = self#term term in
+	      self#insert
+		(Code(Format.sprintf
+			"if (__gmpz_cmp_ui(old_variant_%i,0) < 0)" id));
+	      self#insert
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non positive\",%i);"
+		      id));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "if (__gmpz_cmp(%s, old_variant_%i) >= 0)"
+			term' id));
+	      self#insert
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non decreasing\",%i);"
+		      id));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "__gmpz_clear(old_variant_%i);" id));
+	      self#insert Line_break;
 	      current_label <- None
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      current_label <- Some (BegStmt stmt.sid);
-	      let term' = self#ctype_fragment (self#term term) in
-	      self#insert (If_cond(Cmp(Rlt, term', Zero)));
-	      self#insert (Instru(Pc_assert_exn("Variant non positive", id)));
+	      let term' = self#term term in
+	      self#insert (Code(Format.sprintf "if ((%s) < 0)" term'));
+	      self#insert
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non positive\",%i);" id));
+	      self#insert Line_break;
 	      current_label <- Some (EndStmt stmt.sid);
 	      current_label <- Some (BegIter stmt.sid);
-	      let term' = self#ctype_fragment (self#term term) in
-	      let variant = Fresh_ctype_var Cil.intType in
-	      self#insert (Decl_ctype_var variant);
-	      self#insert (Instru(Affect(variant, term')));
+	      let term' = self#term term in
+	      self#insert
+		(Code(Format.sprintf "int old_variant_%i = %s;" id term'));
+	      self#insert Line_break;
 	      current_label <- Some (EndIter stmt.sid);
-	      let term' = self#ctype_fragment (self#term term) in
-	      self#insert (If_cond(Cmp(Rlt, variant, Zero)));
-	      self#insert (Instru(Pc_assert_exn("Variant non positive", id)));
-	      self#insert (If_cond(Cmp(Rge, term', variant)));
-	      self#insert (Instru(Pc_assert_exn("Variant non decreasing", id)));
+	      let term' = self#term term in
+	      self#insert (Code(Format.sprintf "if ((old_variant_%i) < 0)" id));
+	      self#insert
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non positive\",%i);"
+		      id));
+	      self#insert Line_break;
+	      self#insert
+		(Code(Format.sprintf "if ((%s) >= old_variant_%i)" term' id));
+	      self#insert
+		(Code
+		   (Format.sprintf
+		      "pathcrawler_assert_exception(\"Variant non decreasing\",%i);"
+		      id));
+	      self#insert Line_break;
 	      current_label <- None
 	  end;
 	  translated_properties <- prop :: translated_properties
@@ -1151,11 +1179,16 @@ class gather_insertions props = object(self)
     if List.mem stmt.sid stmts_to_reach then
       begin
 	current_label <- Some (BegStmt stmt.sid);
-	self#insert Block_open;
-	let str = Format.sprintf "@@FC:REACHABLE_STMT:%i" stmt.sid in
-	self#insert (Instru(Pc_to_framac str));
+	self#insert (Code(Format.sprintf "{"));
+	self#insert Line_break;
+	self#insert
+	  (Code
+	     (Format.sprintf"pathcrawler_to_framac(\"@@FC:REACHABLE_STMT:%i\");"
+		stmt.sid));
+	self#insert Line_break;
 	current_label <- Some (EndStmt stmt.sid);
-	self#insert Block_close;
+	self#insert (Code(Format.sprintf " }"));
+	self#insert Line_break;
 	current_label <- None
       end;
     let kf = Kernel_function.find_englobing_kf stmt in
@@ -1195,97 +1228,125 @@ class gather_insertions props = object(self)
       | _ -> Cil.DoChildren
     end
 
-  method private predicate_named pnamed : ctype_expr =
+  method private predicate_named pnamed =
     self#predicate pnamed.content
 
-  method private quantif_predicate ~forall logic_vars hyps goal : ctype_expr =
+  method private quantif_predicate ~forall logic_vars hyps goal =
     if (List.length logic_vars) > 1 then
       failwith "quantification on many variables unsupported!";
-    let var = Fresh_ctype_var Cil.intType in
+    let var = self#fresh_pred_var() in
     let guards, vars = Sd_utils.compute_guards [] logic_vars hyps in
     if vars <> [] then
       failwith "Unguarded variables in quantification!";
     let t1,r1,lv,r2,t2 = List.hd guards in
-    let iter_name = lv.lv_name in
-    self#insert (Decl_ctype_var var);
-    self#insert (Instru(Affect(var, (if forall then One else Zero))));
-    self#insert Block_open;
+    let iter = lv.lv_name in
+    self#insert
+      (Code(Format.sprintf "int %s = %i;" var (if forall then 1 else 0)));
+    self#insert Line_break;
+    self#insert (Code(Format.sprintf "{"));
+    self#insert Line_break;
     begin
       match t1.term_type with
       | Linteger ->
 	begin
 	  match t2.term_type with
 	  | Linteger ->
-	    let fresh_iter = My_gmp_var iter_name in
-	    self#insert (Decl_gmp_var fresh_iter);
-	    let decl_iter = Declared_gmp_var fresh_iter in
-	    let t1' = self#gmp_fragment (self#term t1) in
-	    let t2' = self#gmp_fragment (self#term t2) in
-	    self#insert (Instru(Gmp_init_set(decl_iter, t1')));
-	    let init_iter = Initialized_gmp_var decl_iter in
+	    self#insert (Code(Format.sprintf "mpz_t %s;" iter));
+	    self#insert Line_break;
+	    let t1' = self#term t1 in
+	    let t2' = self#term t2 in
+	    self#insert
+	      (Code(Format.sprintf "__gmpz_init_set(%s, %s);" iter t1'));
+	    self#insert Line_break;
 	    if r1 = Rlt then
-	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
-	    let exp1 = Gmp_cmpr(r2, init_iter, t2') in
-	    let exp2 = if forall then var else Unop(LNot, var) in
-	    self#insert (For(None, Some(Binop(LAnd, exp1, exp2)), None));
-	    self#insert Block_open;
-	    let goal_var = self#predicate_named goal in
-	    self#insert (Instru(Affect(var, goal_var)));
-	    self#insert (Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)));
-	    self#insert Block_close;
-	    self#insert (Instru(Gmp_clear init_iter));
-	    self#insert (Instru(Gmp_clear t1'));
-	    self#insert (Instru(Gmp_clear t2'))
+	      begin
+		self#insert
+		  (Code(Format.sprintf "__gmpz_add_ui(%s, %s, 1);" iter iter));
+		self#insert Line_break
+	      end;
+	    self#insert
+	      (Code(Pretty_utils.sfprintf
+		      "for (; __gmpz_cmp(%s, %s) %a 0 && %s %s;) {"
+		      iter t2' Printer.pp_relation r2
+		      (if forall then "" else "!") var));
+	    self#insert Line_break;
+	    let goal_var = self#predicate_named goal in 
+	    self#insert (Code(Format.sprintf "%s = %s;" var goal_var));
+	    self#insert Line_break;
+	    self#insert
+	      (Code(Format.sprintf"__gmpz_add_ui(%s, %s, 1);" iter iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t2'));
+	    self#insert Line_break;
 	  | Lreal -> assert false (* TODO: reals *)
 	  | _ ->
-	    let fresh_iter = My_gmp_var iter_name in
-	    self#insert (Decl_gmp_var fresh_iter);
-	    let decl_iter = Declared_gmp_var fresh_iter in
-	    let t1' = self#gmp_fragment (self#term t1) in
-	    let t2' = self#ctype_fragment (self#term t2) in
-	    self#insert (Instru(Gmp_init_set(decl_iter, t1')));
-	    let init_iter = Initialized_gmp_var decl_iter in
+	    self#insert (Code(Format.sprintf "mpz_t %s;" iter));
+	    self#insert Line_break;
+	    let t1' = self#term t1 in
+	    let t2' = self#term t2 in
+	    self#insert
+	      (Code(Format.sprintf "__gmpz_init_set(%s, %s);" iter t1'));
+	    self#insert Line_break;
 	    if r1 = Rlt then
-	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
-	    let exp1 = Gmp_cmpr_si(r2, init_iter, t2') in
-	    let exp2 = if forall then var else Unop(LNot, var) in
-	    self#insert (For(None, Some(Binop(LAnd, exp1, exp2)), None));
-	    self#insert Block_open;
+	      begin
+		self#insert
+		  (Code(Format.sprintf "__gmpz_add_ui(%s, %s, 1);" iter iter));
+		self#insert Line_break
+	      end;
+	    self#insert
+	      (Code(Pretty_utils.sfprintf
+		      "for (; __gmpz_cmp_si(%s, %s) %a 0 && %s %s;) {"
+		      iter t2' Printer.pp_relation r2
+		      (if forall then "" else "!") var));
+	    self#insert Line_break;
 	    let goal_var = self#predicate_named goal in 
-	    self#insert (Instru(Affect(var, goal_var)));
-	    self#insert (Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)));
-	    self#insert Block_close;
-	    self#insert (Instru(Gmp_clear init_iter));
-	    self#insert (Instru(Gmp_clear t1'))
+	    self#insert (Code(Format.sprintf "%s = %s;" var goal_var));
+	    self#insert Line_break;
+	    self#insert
+	      (Code(Format.sprintf"__gmpz_add_ui(%s, %s, 1);" iter iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "}"));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" iter));
+	    self#insert Line_break;
+	    self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	    self#insert Line_break
 	end
       | Lreal -> assert false (* TODO: reals *)
       | _ ->
-	let iter = My_ctype_var (Cil.intType, iter_name) in
-	self#insert (Decl_ctype_var iter);
-	let t1' = self#ctype_fragment (self#term t1) in
-	let t2' = self#ctype_fragment (self#term t2) in
-	let exp1 = Affect(iter, (match r1 with
-	  | Rlt -> Binop(PlusA,t1',One)
-	  | Rle -> t1'
-	  | _ -> assert false))
-	in
-	let exp2 = Binop(LAnd, (Cmp(r2,iter,t2')),
-			 (if forall then var else Unop(LNot, var))) in
-	let exp3 = Affect(iter,Binop(PlusA,iter,One)) in
-	self#insert (For(Some exp1, Some exp2, Some exp3));
-	self#insert Block_open;
+	self#insert (Code(Format.sprintf "int %s;" iter));
+	self#insert Line_break;
+	let t1' = self#term t1 in
+	let t2' = self#term t2 in
+	self#insert
+	  (Code
+	     (Pretty_utils.sfprintf "for (%s = %s%s; %s %a %s && %s %s; %s++) {"
+		iter t1'
+		(match r1 with Rlt -> "+1" | Rle -> "" | _ -> assert false) iter
+		Printer.pp_relation r2 t2' (if forall then "" else "!")
+		var iter));
+	self#insert Line_break;
 	let goal_var = self#predicate_named goal in 
-	self#insert (Instru(Affect(var, goal_var)));
-	self#insert Block_close
+	self#insert (Code(Format.sprintf "%s = %s;" var goal_var));
+	self#insert Line_break;
+	self#insert (Code(Format.sprintf "}"));
+	self#insert Line_break
     end;
-    self#insert Block_close;
+    self#insert (Code(Format.sprintf "}"));
+    self#insert Line_break;
     var
   (* end of quantif_predicate *)
 
-  method private predicate pred : ctype_expr =
+  method private predicate pred =
     match pred with
-    | Ptrue -> One
-    | Pfalse -> Zero
+    | Ptrue -> "1"
+    | Pfalse -> "0"
     | Pvalid(_,term) | Pvalid_read(_,term) ->
       let loc = term.term_loc in
       let pointer, offset =
@@ -1298,25 +1359,23 @@ class gather_insertions props = object(self)
 	  x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
 	| _ -> Sd_utils.error_term term
       in
+      let x' = self#term pointer in
+      let y' = self#term offset in
       begin
 	match offset.term_type with
 	| Linteger ->
-	  let x' = self#ctype_fragment (self#term pointer) in
-	  let y' = self#gmp_fragment (self#term offset) in
-	  let var = Fresh_ctype_var Cil.intType in
-	  self#insert (Decl_ctype_var var);
-	  let exp1 = Gmp_cmp_ui(Ge, y', Zero) in
-	  let exp2 = Gmp_cmp_ui(Lt, y', Pc_dim(x')) in
-	  self#insert (Instru(Affect(var, Binop(LAnd, exp1, exp2))));
-	  self#insert (Instru(Gmp_clear y'));
+	  let var = self#fresh_pred_var() in
+	  self#insert
+	    (Code(Format.sprintf "int %s = __gmpz_cmp_ui(%s, 0) >= 0 && \
+ __gmpz_cmp_ui(%s, pathcrawler_dimension(%s)) < 0;" var y' y' x'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" y'));
+	  self#insert Line_break;
 	  var
 	| Lreal -> assert false (* unreachable *)
 	| Ctype (TInt _) ->
-	  let x' = self#ctype_fragment (self#term pointer) in
-	  let y' = self#ctype_fragment (self#term offset) in
-	  let exp1 = Cmp(Rge, y', Zero) in
-	  let exp2 = Cmp(Rgt, Pc_dim(x'), y') in
-	  Binop(LAnd, exp1, exp2)
+	  Format.sprintf
+	    "(%s >= 0 && pathcrawler_dimension(%s) > %s)" y' x' y'
 	| _ -> assert false (* unreachable *)
       end
     | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
@@ -1327,79 +1386,89 @@ class gather_insertions props = object(self)
     | Pexists _ -> failwith "\\exists not of the form \\exists ...; a && b;"
     | Pnot(pred1) ->
       let pred1_var = self#predicate_named pred1 in
-      Unop(LNot, pred1_var)
+      Format.sprintf "(! %s)" pred1_var
     | Pand(pred1,pred2) ->
-      let var = Fresh_ctype_var Cil.intType in
+      let var = self#fresh_pred_var() in
       let pred1_var = self#predicate_named pred1 in
-      self#insert (Decl_ctype_var var);
-      self#insert (Instru(Affect(var, pred1_var)));
-      self#insert (If_cond var);
-      self#insert Block_open;
+      self#insert (Code(Format.sprintf "int %s = %s;" var pred1_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "if (%s) {" var));
+      self#insert Line_break;
       let pred2_var = self#predicate_named pred2 in
-      self#insert (Instru(Affect(var, pred2_var)));
-      self#insert Block_close;
+      self#insert (Code(Format.sprintf "%s = %s;" var pred2_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "}"));
+      self#insert Line_break;
       var
     | Por(pred1,pred2) ->
-      let var = Fresh_ctype_var Cil.intType  in
+      let var = self#fresh_pred_var() in
       let pred1_var = self#predicate_named pred1 in
-      self#insert (Decl_ctype_var var);
-      self#insert (Instru(Affect(var, pred1_var)));
-      self#insert (If_cond (Unop(LNot,var)));
-      self#insert Block_open;
+      self#insert (Code(Format.sprintf "int %s = %s;" var pred1_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "if (!%s) {" var));
+      self#insert Line_break;
       let pred2_var = self#predicate_named pred2 in
-      self#insert (Instru(Affect(var, pred2_var)));
-      self#insert Block_close;
+      self#insert (Code(Format.sprintf "%s = %s;" var pred2_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "}"));
+      self#insert Line_break;
       var
     | Pimplies(pred1,pred2) ->
-      let var = Fresh_ctype_var Cil.intType in
-      self#insert (Decl_ctype_var var);
-      self#insert (Instru(Affect(var, One)));
+      let var = self#fresh_pred_var() in
+      self#insert (Code(Format.sprintf "int %s = 1;" var));
+      self#insert Line_break;
       let pred1_var = self#predicate_named pred1 in
-      self#insert (If_cond pred1_var);
-      self#insert Block_open;
+      self#insert (Code(Format.sprintf "if (%s) {" pred1_var));
+      self#insert Line_break;
       let pred2_var = self#predicate_named pred2 in
-      self#insert (Instru(Affect(var, pred2_var)));
-      self#insert Block_close;
+      self#insert (Code(Format.sprintf "%s = %s;" var pred2_var));
+      self#insert Line_break;
+      self#insert (Code(Format.sprintf "}"));
+      self#insert Line_break;
       var
     | Piff(pred1,pred2) ->
       let pred1_var = self#predicate_named pred1 in
       let pred2_var = self#predicate_named pred2 in
-      let exp1 = Binop(LOr, Unop(LNot, pred1_var), pred2_var) in
-      let exp2 = Binop(LOr, Unop(LNot, pred2_var), pred1_var) in
-      Binop(LAnd, exp1, exp2)
+      Format.sprintf "( ( (!%s) || %s ) && ( (!%s) || %s ) )"
+	pred1_var pred2_var pred2_var pred1_var
     | Pif (t,pred1,pred2) -> (* untested *)
       begin
 	let term_var = self#term t in
-	let res_var = Fresh_ctype_var Cil.intType in
-	self#insert (Decl_ctype_var res_var);
+	let res_var = self#fresh_pred_var() in
+	self#insert (Code(Format.sprintf "int %s;" res_var));
+	self#insert Line_break;
 	let f () =
-	  let term_var = self#ctype_fragment term_var in
-	  self#insert (If_cond term_var);
-	  self#insert Block_open;
+	  self#insert (Code(Format.sprintf "if(%s) {" term_var));
+	  self#insert Line_break;
 	  let pred1_var = self#predicate_named pred1 in
-	  self#insert (Instru(Affect(res_var, pred1_var)));
-	  self#insert Block_close;
-	  self#insert Else_cond;
-	  self#insert Block_open;
+	  self#insert (Code(Format.sprintf "%s = %s;" res_var pred1_var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "} else {"));
+	  self#insert Line_break;
 	  let pred2_var = self#predicate_named pred2 in
-	  self#insert (Instru(Affect(res_var, pred2_var)));
-	  self#insert Block_close;
+	  self#insert (Code(Format.sprintf "%s = %s;" res_var pred2_var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "}"));
+	  self#insert Line_break;
 	  res_var
 	in
 	match t.term_type with
 	| Linteger ->
-	  let term_var = self#gmp_fragment term_var in
-	  self#insert (If_cond(Gmp_cmp_si(Ne, term_var, Zero)));
-	  self#insert Block_open;
+	  self#insert
+	    (Code(Format.sprintf "if(__gmpz_cmp_si(%s,0) != 0) {" term_var));
+	  self#insert Line_break;
 	  let pred1_var = self#predicate_named pred1 in
-	  self#insert (Instru(Affect(res_var, pred1_var)));
-	  self#insert Block_close;
-	  self#insert Else_cond;
-	  self#insert Block_open;
+	  self#insert (Code(Format.sprintf "%s = %s;" res_var pred1_var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "} else {"));
+	  self#insert Line_break;
 	  let pred2_var = self#predicate_named pred2 in
-	  self#insert (Instru(Affect(res_var, pred2_var)));
-	  self#insert Block_close;
-	  self#insert (Instru(Gmp_clear term_var));
+	  self#insert (Code(Format.sprintf "%s = %s;" res_var pred2_var));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "}"));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" term_var));
+	  self#insert Line_break;
 	  res_var
 	| Lreal -> assert false (* unreachable *)
 	| Ctype (TInt _) -> f ()
@@ -1411,63 +1480,86 @@ class gather_insertions props = object(self)
       begin
 	match t1.term_type, t2.term_type with
 	| Linteger, Linteger ->
-	  let var = Fresh_ctype_var Cil.intType in
-	  let t1' = self#gmp_fragment (self#term t1) in
-	  let t2' = self#gmp_fragment (self#term t2) in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr(rel, t1', t2'))));
-	  self#insert (Instru(Gmp_clear t1'));
-	  self#insert (Instru(Gmp_clear t2'));
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term t1 in
+	  let t2' = self#term t2 in
+	  self#insert
+	    (Code(Pretty_utils.sfprintf
+		    "int %s = __gmpz_cmp(%s, %s) %a 0;" var t1' t2'
+		    Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t2'));
+	  self#insert Line_break;
 	  var
 	| Linteger, Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	  let var = Fresh_ctype_var Cil.intType in
-	  let t1' = self#gmp_fragment (self#term t1) in
-	  let t2' = self#ctype_fragment (self#term t2) in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr_ui(rel, t1', t2'))));
-	  self#insert (Instru(Gmp_clear t1'));
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term t1 in
+	  let t2' = self#term t2 in
+	  self#insert
+	    (Code(Pretty_utils.sfprintf
+		    "int %s = __gmpz_cmp_ui(%s, %s) %a 0;" var t1' t2'
+		    Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	  self#insert Line_break;
 	  var
 	| Linteger, Ctype (TInt _) ->
-	  let var = Fresh_ctype_var Cil.intType in
-	  let t1' = self#gmp_fragment (self#term t1) in
-	  let t2' = self#ctype_fragment (self#term t2) in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr_si(rel, t1', t2'))));
-	  self#insert (Instru(Gmp_clear t1'));
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term t1 in
+	  let t2' = self#term t2 in
+	  self#insert
+	    (Code(Pretty_utils.sfprintf
+		    "int %s = __gmpz_cmp_si(%s, %s) %a 0;" var t1' t2'
+		    Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t1'));
+	  self#insert Line_break;
 	  var
 	| Lreal, Lreal -> assert false (* TODO: reals *)
 	| Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)), Linteger ->
-	  let var = Fresh_ctype_var Cil.intType in
-	  let t1' = self#ctype_fragment (self#term t1) in
-	  let t2' = self#gmp_fragment (self#term t2) in
-	  let fresh_var' = Fresh_gmp_var in
-	  self#insert (Decl_gmp_var fresh_var');
-	  let decl_var' = Declared_gmp_var fresh_var' in
-	  self#insert (Instru(Gmp_init_set_ui(decl_var', t1')));
-	  let init_var' = Initialized_gmp_var decl_var' in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr(rel, init_var', t2'))));
-	  self#insert (Instru(Gmp_clear t2'));
-	  self#insert (Instru(Gmp_clear init_var'));
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term t1 in
+	  let t2' = self#term t2 in
+	  let var' = self#fresh_gmp_var() in
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var'));
+	  self#insert Line_break;
+	  self#insert
+	    (Code(Format.sprintf "__gmpz_init_set_ui(%s, %s);" var' t1'));
+	  self#insert Line_break;
+	  self#insert
+	    (Code(Pretty_utils.sfprintf "int %s = __gmpz_cmp(%s, %s) %a 0;"
+		    var var' t2' Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t2'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var'));
+	  self#insert Line_break;
 	  var
 	| Ctype (TInt _), Linteger ->
-	  let var = Fresh_ctype_var Cil.intType in
-	  let t1' = self#ctype_fragment (self#term t1) in
-	  let t2' = self#gmp_fragment (self#term t2) in
-	  let fresh_var' = Fresh_gmp_var in
-	  self#insert (Decl_gmp_var fresh_var');
-	  let decl_var' = Declared_gmp_var fresh_var' in
-	  self#insert (Instru(Gmp_init_set_si(decl_var', t1')));
-	  let init_var' = Initialized_gmp_var decl_var' in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr(rel, init_var', t2'))));
-	  self#insert (Instru(Gmp_clear t2'));
-	  self#insert (Instru(Gmp_clear init_var'));
+	  let var = self#fresh_pred_var() in
+	  let t1' = self#term t1 in
+	  let t2' = self#term t2 in
+	  let var' = self#fresh_gmp_var() in
+	  self#insert (Code(Format.sprintf "mpz_t %s;" var'));
+	  self#insert Line_break;
+	  self#insert
+	    (Code(Format.sprintf "__gmpz_init_set_si(%s, %s);" var' t1'));
+	  self#insert Line_break;
+	  self#insert
+	    (Code(Pretty_utils.sfprintf "int %s = __gmpz_cmp(%s, %s) %a 0;"
+		    var var' t2' Printer.pp_relation rel));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" t2'));
+	  self#insert Line_break;
+	  self#insert (Code(Format.sprintf "__gmpz_clear(%s);" var'));
+	  self#insert Line_break;
 	  var
 	| _ ->
-          let t1' = self#ctype_fragment (self#term t1) in
-          let t2' = self#ctype_fragment (self#term t2) in
-	  Cmp(rel, t1', t2')
+          let t1' = self#term t1 in
+          let t2' = self#term t2 in
+	  Pretty_utils.sfprintf "(%s %a %s)" t1' Printer.pp_relation rel t2'
       end
       
     | Pat(p, LogicLabel(_,stringlabel)) when stringlabel = "Here" ->
@@ -1477,7 +1569,7 @@ class gather_insertions props = object(self)
       self#predicate_named p
     | _ ->
       Sd_options.Self.warning "%a unsupported" Printer.pp_predicate pred;
-      One
+      "1"
 (* end predicate *)
 end
 
@@ -1485,137 +1577,10 @@ class print_insertions insertions ~print_label () = object(self)
   inherit Printer.extensible_printer () as super
 
   val mutable current_function = None
-  val mutable last_gmp_var_id = -1
-  val mutable last_ctype_var_id = -1
-  val gmp_var_names = Hashtbl.create 64
-  val ctype_var_names = Hashtbl.create 64
-
-  method private pp_fresh_gmp fmt = function
-  | Fresh_gmp_var as v ->
-    last_gmp_var_id <- last_gmp_var_id + 1;
-    let name = "gmp_var_" ^ (string_of_int last_gmp_var_id) in
-    Hashtbl.replace gmp_var_names v name;
-    Format.fprintf fmt "%s" name
-  | My_gmp_var name -> Format.fprintf fmt "%s" name
-
-  method private pp_decl_gmp fmt = function
-  | Declared_gmp_var (Fresh_gmp_var as v) ->
-    let name = Hashtbl.find gmp_var_names v in
-    Format.fprintf fmt "%s" name
-  | Declared_gmp_var (My_gmp_var name) -> Format.fprintf fmt "%s" name
-
-  method private pp_init_gmp fmt = function
-  | Initialized_gmp_var v -> self#pp_decl_gmp fmt v
-
-  method private pp_gexpr fmt =
-    self#pp_init_gmp fmt
-
-  method private pp_cexpr fmt = function
-  | (Fresh_ctype_var _) as v ->
-    let name = Hashtbl.find ctype_var_names v in
-    Format.fprintf fmt "%s" name
-  | My_ctype_var (_, name) -> Format.fprintf fmt "%s" name
-  | Zero -> Format.fprintf fmt "0"
-  | One -> Format.fprintf fmt "1"
-  | Cst s -> Format.fprintf fmt "%s" s
-  | Cmp (rel, e1, e2) ->
-    Format.fprintf fmt "%a %a %a"
-      self#pp_cexpr e1 self#relation rel self#pp_cexpr e2
-  | Gmp_cmp (op, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_gexpr g2 self#binop op
-  | Gmp_cmp_ui (op, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp_ui(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_cexpr g2 self#binop op
-  | Gmp_cmp_si (op, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp_si(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_cexpr g2 self#binop op
-  | Gmp_cmpr (rel, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_gexpr g2 self#relation rel
-  | Gmp_cmpr_ui (rel, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp_ui(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_cexpr g2 self#relation rel
-  | Gmp_cmpr_si (rel, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp_si(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_cexpr g2 self#relation rel
-  | Gmp_get_ui g -> Format.fprintf fmt "__gmpz_get_ui(%a)" self#pp_gexpr g
-  | Gmp_get_si g -> Format.fprintf fmt "__gmpz_get_si(%a)" self#pp_gexpr g
-  | Unop (op, e) -> Format.fprintf fmt "(%a %a)" self#unop op self#pp_cexpr e
-  | Binop (op,x,y) ->
-    Format.fprintf fmt "(%a %a %a)"
-      self#pp_cexpr x self#binop op self#pp_cexpr y
-  | Pc_dim e -> Format.fprintf fmt "pathcrawler_dimension(%a)" self#pp_cexpr e
-  | Malloc e -> Format.fprintf fmt "malloc(%a)" self#pp_cexpr e
-  | Cast (t, e) -> Format.fprintf fmt "(%a)%a" (self#typ None) t self#pp_cexpr e
-  | Sizeof t -> Format.fprintf fmt "sizeof(%a)" (self#typ None) t
-  | Deref e -> Format.fprintf fmt "*%a" self#pp_cexpr e
-  | Index (e, i) -> Format.fprintf fmt "%a[%a]" self#pp_cexpr e self#pp_cexpr i
-  | Field (e, s) -> Format.fprintf fmt "%a.%s" self#pp_cexpr e s
-
-  method private pp_garith fmt = function
-  | PlusA -> Format.fprintf fmt "add"
-  | MinusA -> Format.fprintf fmt "sub"
-  | Mult -> Format.fprintf fmt "mult"
-  | Div -> Format.fprintf fmt "tdiv_q"
-  | Mod -> Format.fprintf fmt "tdiv_r"
-  | _ -> assert false (* not used by the translation *)
-
-  method private pp_instruction fmt = function
-  | Affect (x,y) -> Format.fprintf fmt "%a = %a" self#pp_cexpr x self#pp_cexpr y
-  | Free e -> Format.fprintf fmt "free(%a)" self#pp_cexpr e
-  | Pc_to_framac s -> Format.fprintf fmt "pathcrawler_to_framac(\"%s\")" s
-  | Pc_assert_exn (s,i) ->
-    Format.fprintf fmt "pathcrawler_assert_exception(\"%s\", %i)" s i
-  | Ret e -> Format.fprintf fmt "return %a" self#pp_cexpr e
-  | Gmp_clear g -> Format.fprintf fmt "__gmpz_clear(%a)" self#pp_gexpr g
-  | Gmp_init g -> Format.fprintf fmt "__gmpz_init(%a)" self#pp_decl_gmp g
-  | Gmp_init_set (g,g') ->
-    Format.fprintf fmt "__gmpz_init_set(%a,%a)"
-      self#pp_decl_gmp g self#pp_gexpr g'
-  | Gmp_init_set_ui (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_ui(%a,%a)"
-      self#pp_decl_gmp g self#pp_cexpr c
-  | Gmp_init_set_si (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_si(%a,%a)"
-      self#pp_decl_gmp g self#pp_cexpr c
-  | Gmp_init_set_str (g,s) ->
-    Format.fprintf fmt "__gmpz_init_set_str(%a,\"%s\",10)" self#pp_decl_gmp g s
-  | Gmp_abs (g,g') ->
-    Format.fprintf fmt "__gmpz_abs(%a,%a)" self#pp_gexpr g self#pp_gexpr g'
-  | Gmp_ui_sub (r,a,b) ->
-    Format.fprintf fmt "__gmpz_ui_sub(%a,%a,%a)"
-      self#pp_gexpr r self#pp_cexpr a self#pp_gexpr b
-  | Gmp_binop (op,r,a,b) ->
-    Format.fprintf fmt "__gmpz_%a(%a,%a,%a)"
-      self#pp_garith op self#pp_gexpr r self#pp_gexpr a self#pp_gexpr b
-  | Gmp_binop_ui (op,r,a,b) ->
-    Format.fprintf fmt "__gmpz_%a_ui(%a,%a,%a)"
-      self#pp_garith op self#pp_gexpr r self#pp_gexpr a self#pp_cexpr b
-  | Gmp_binop_si (op,r,a,b) ->
-    Format.fprintf fmt "__gmpz_%a_si(%a,%a,%a)"
-      self#pp_garith op self#pp_gexpr r self#pp_gexpr a self#pp_cexpr b
 
   method private pp_insertion fmt = function
-  | Instru i -> Format.fprintf fmt "%a;@\n" self#pp_instruction i
-  | Decl_gmp_var v -> Format.fprintf fmt "mpz_t %a;@\n" self#pp_fresh_gmp v
-  | Decl_ctype_var ((Fresh_ctype_var ty) as v) ->
-    last_ctype_var_id <- last_ctype_var_id + 1;
-    let name = "ctype_var_" ^ (string_of_int last_ctype_var_id) in
-    Hashtbl.replace ctype_var_names v name;
-    Format.fprintf fmt "%a %s;@\n" (self#typ None) ty name
-  | Decl_ctype_var (My_ctype_var (ty, name)) ->
-    Format.fprintf fmt "%a %s;@\n" (self#typ None) ty name
-  | Decl_ctype_var _ -> assert false
-  | If_cond exp -> Format.fprintf fmt "if(%a)@ " self#pp_cexpr exp
-  | Else_cond -> Format.fprintf fmt "else@ "
-  | For(None, Some e, None) -> Format.fprintf fmt "while(%a)@ " self#pp_cexpr e
-  | For(Some i1, Some e, Some i2) ->
-    Format.fprintf fmt "for(%a; %a; %a)@ " self#pp_instruction i1
-      self#pp_cexpr e self#pp_instruction i2
-  | For _ -> assert false (* not used by the translation *)
-  | Block_open -> Format.fprintf fmt "{@\n"
-  | Block_close -> Format.fprintf fmt "}@\n"
+  | Line_break -> Format.fprintf fmt "@\n"
+  | Code s -> Format.fprintf fmt "%s" s
 
   method private fundecl fmt f =
     let was_ghost = is_ghost in

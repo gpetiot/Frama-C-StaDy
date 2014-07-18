@@ -25,19 +25,17 @@ let second_pass filename props =
   Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
   let insertions = gatherer#get_insertions() in
 
-  (* Hashtbl.iter (fun k v -> *)
-  (*   let dkey = Sd_options.dkey_insertions in *)
-  (*   Sd_options.Self.feedback ~dkey *)
-  (*     "%a" Sd_insertions.pp_label k; *)
-  (*   let print = function *)
-  (*     | Sd_insertions.Line_break -> Sd_options.Self.feedback ~dkey "@\n" *)
-  (*     | Sd_insertions.Code s -> Sd_options.Self.feedback ~dkey "%s" s *)
-  (*     | Sd_insertions.Block_open -> Sd_options.Self.feedback ~dkey "{" *)
-  (*     | Sd_insertions.Block_close -> Sd_options.Self.feedback ~dkey "}" *)
-  (*   in *)
-  (*   Queue.iter print v; *)
-  (*   Sd_options.Self.feedback ~dkey "----------" *)
-  (* ) insertions; *)
+  Hashtbl.iter (fun k v ->
+    let dkey = Sd_options.dkey_insertions in
+    Sd_options.Self.feedback ~dkey
+      "%a" Sd_insertions.pp_label k;
+    let print = function
+      | Sd_insertions.Line_break -> Sd_options.Self.feedback ~dkey "@\n"
+      | Sd_insertions.Code s -> Sd_options.Self.feedback ~dkey "%s" s
+    in
+    Queue.iter print v;
+    Sd_options.Self.feedback ~dkey "----------"
+  ) insertions;
 
   let printer =
     new Sd_insertions.print_insertions insertions ~print_label:false () in

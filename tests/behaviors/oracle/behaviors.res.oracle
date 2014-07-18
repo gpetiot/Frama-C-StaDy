@@ -14,48 +14,34 @@ return 1;
 
 void f(int x, int y, int z)
 {
-  int old_x;
-  old_x = x;
-  int old_y;
-  old_y = y;
-  int old_z;
-  old_z = z;
+  int old_x = x;
+  int old_y = y;
+  int old_z = z;
   {
     {
-    if(((1 && x >= y) && x >= z))
-    {
-    int ctype_var_0;
-    ctype_var_0 = old_y <= old_x;
-    if(ctype_var_0)
-    {
-    ctype_var_0 = old_z <= old_x;
-    }
-    if((! ctype_var_0))
-    pathcrawler_assert_exception("Post-condition!", 14);
-    }
-    if(((1 && y >= x) && y >= z))
-    {
-    int ctype_var_1;
-    ctype_var_1 = old_x <= old_y;
-    if(ctype_var_1)
-    {
-    ctype_var_1 = old_z <= old_y;
-    }
-    if((! ctype_var_1))
-    pathcrawler_assert_exception("Post-condition!", 6);
-    }
-    if(((1 && z >= x) && z >= y))
-    {
-    int ctype_var_2;
-    ctype_var_2 = old_x <= old_z;
-    if(ctype_var_2)
-    {
-    ctype_var_2 = old_y <= old_z;
-    }
-    if((! ctype_var_2))
-    pathcrawler_assert_exception("Post-condition!", 0);
-    }
-    }
+      if ((x >= y) && (x >= z) && 1) {
+        int __stady_pred_0 = (old_y <= old_x);
+        if (__stady_pred_0) {
+        __stady_pred_0 = (old_z <= old_x);
+        }
+        if(!__stady_pred_0)pathcrawler_assert_exception("Post-condition!", 14);
+        }
+      if ((y >= x) && (y >= z) && 1) {
+        int __stady_pred_1 = (old_x <= old_y);
+        if (__stady_pred_1) {
+        __stady_pred_1 = (old_z <= old_y);
+        }
+        if(!__stady_pred_1)pathcrawler_assert_exception("Post-condition!", 6);
+        }
+      if ((z >= x) && (z >= y) && 1) {
+        int __stady_pred_2 = (old_x <= old_z);
+        if (__stady_pred_2) {
+        __stady_pred_2 = (old_y <= old_z);
+        }
+        if(!__stady_pred_2)pathcrawler_assert_exception("Post-condition!", 0);
+        }
+      
+      }
     return;
   }
 }

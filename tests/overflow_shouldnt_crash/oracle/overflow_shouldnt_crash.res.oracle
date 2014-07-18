@@ -18,8 +18,6 @@ void f(int x)
   {
     if (x > 0) 
       {
-        {
-        pathcrawler_to_framac("@FC:REACHABLE_STMT:3");
         mpz_t __stady_gmp_0;
         __gmpz_init_set_si(__stady_gmp_0, x);
         mpz_t __stady_gmp_1;
@@ -35,6 +33,7 @@ void f(int x)
         __gmpz_clear(__stady_gmp_2);
         __gmpz_clear(__stady_gmp_3);
         if(!__stady_pred_0)pathcrawler_assert_exception("Assert!", 0);
+        { pathcrawler_to_framac("@FC:REACHABLE_STMT:3");
         ; }
         }
          

@@ -68,8 +68,8 @@ return 1;
 
 int f(struct S *s, struct S *s2, int n)
 {
-  struct S * old_s = s;
-  struct S * old_ptr_s;
+  struct S *old_s = s;
+  struct S *old_ptr_s;
   mpz_t __stady_gmp_0;
   __gmpz_init_set_str(__stady_gmp_0, "1", 10);
   int __stady_iter_0;
@@ -77,8 +77,8 @@ int f(struct S *s, struct S *s2, int n)
   for (__stady_iter_0 = 0; __stady_iter_0 < __gmpz_get_si(__stady_gmp_0); __stady_iter_0++) {
   old_ptr_s[__stady_iter_0] = s[__stady_iter_0];
   }
-  struct S * old_s2 = s2;
-  struct S * old_ptr_s2;
+  struct S *old_s2 = s2;
+  struct S *old_ptr_s2;
   mpz_t __stady_gmp_1;
   __gmpz_init_set_str(__stady_gmp_1, "1", 10);
   int __stady_iter_1;
@@ -90,15 +90,13 @@ int f(struct S *s, struct S *s2, int n)
   {
     int __retres;
     if (s->i) {
-      {
-      pathcrawler_to_framac("@FC:REACHABLE_STMT:3");
+      { pathcrawler_to_framac("@FC:REACHABLE_STMT:3");
       __retres = 1; }
       
       goto return_label;
     }
     else {
-      {
-      pathcrawler_to_framac("@FC:REACHABLE_STMT:4");
+      { pathcrawler_to_framac("@FC:REACHABLE_STMT:4");
       __retres = -1; }
       
       goto return_label;
