@@ -1557,31 +1557,31 @@ class print_insertions insertions ~print_label () = object(self)
   | Gmp_clear g -> Format.fprintf fmt "__gmpz_clear(%a)" self#pp_gexpr g
   | Gmp_init g -> Format.fprintf fmt "__gmpz_init(%a)" self#pp_decl_gmp g
   | Gmp_init_set (g,g') ->
-    Format.fprintf fmt "__gmpz_init_set(%a,%a)"
+    Format.fprintf fmt "__gmpz_init_set(%a, %a)"
       self#pp_decl_gmp g self#pp_gexpr g'
   | Gmp_init_set_ui (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_ui(%a,%a)"
+    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)"
       self#pp_decl_gmp g self#pp_cexpr c
   | Gmp_init_set_si (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_si(%a,%a)"
+    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)"
       self#pp_decl_gmp g self#pp_cexpr c
   | Gmp_init_set_str (g,s) ->
-    Format.fprintf fmt "__gmpz_init_set_str(%a,\"%s\",10)" self#pp_decl_gmp g s
+    Format.fprintf fmt "__gmpz_init_set_str(%a, \"%s\", 10)"self#pp_decl_gmp g s
   | Gmp_set (g,g') ->
-    Format.fprintf fmt "__gmpz_set(%a,%a)" self#pp_gexpr g self#pp_gexpr g'
+    Format.fprintf fmt "__gmpz_set(%a, %a)" self#pp_gexpr g self#pp_gexpr g'
   | Gmp_abs (g,g') ->
-    Format.fprintf fmt "__gmpz_abs(%a,%a)" self#pp_gexpr g self#pp_gexpr g'
+    Format.fprintf fmt "__gmpz_abs(%a, %a)" self#pp_gexpr g self#pp_gexpr g'
   | Gmp_ui_sub (r,a,b) ->
-    Format.fprintf fmt "__gmpz_ui_sub(%a,%a,%a)"
+    Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)"
       self#pp_gexpr r self#pp_cexpr a self#pp_gexpr b
   | Gmp_binop (op,r,a,b) ->
-    Format.fprintf fmt "__gmpz_%a(%a,%a,%a)"
+    Format.fprintf fmt "__gmpz_%a(%a, %a, %a)"
       self#pp_garith op self#pp_gexpr r self#pp_gexpr a self#pp_gexpr b
   | Gmp_binop_ui (op,r,a,b) ->
-    Format.fprintf fmt "__gmpz_%a_ui(%a,%a,%a)"
+    Format.fprintf fmt "__gmpz_%a_ui(%a, %a, %a)"
       self#pp_garith op self#pp_gexpr r self#pp_gexpr a self#pp_cexpr b
   | Gmp_binop_si (op,r,a,b) ->
-    Format.fprintf fmt "__gmpz_%a_si(%a,%a,%a)"
+    Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
       self#pp_garith op self#pp_gexpr r self#pp_gexpr a self#pp_cexpr b
 
   method private pp_insertion fmt = function
