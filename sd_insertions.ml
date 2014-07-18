@@ -208,7 +208,7 @@ class gather_insertions props = object(self)
   | Ctype_fragment x -> x
   | Gmp_fragment _ -> assert false
 
-  method private lambda li lower upper _q t =
+  method private lambda li lower upper q t =
     let builtin_name = li.l_var_info.lv_name in
     let init_val = match builtin_name with
       | s when s = "\\sum" -> Zero
@@ -228,7 +228,7 @@ class gather_insertions props = object(self)
 	begin
 	  match upper.term_type with
 	  | Linteger ->
-	    let fresh_iter = self#fresh_gmp_var() in
+	    let fresh_iter = My_gmp_var q.lv_name in
 	    let decl_iter = self#decl_gmp_var fresh_iter in
 	    let init_iter =
 	      self#init_set_gmp_var decl_iter (self#gmp_fragment low) in
@@ -1527,7 +1527,7 @@ class print_insertions insertions ~print_label () = object(self)
       self#pp_gexpr g1 self#pp_cexpr g2 self#relation rel
   | Gmp_get_ui g -> Format.fprintf fmt "__gmpz_get_ui(%a)" self#pp_gexpr g
   | Gmp_get_si g -> Format.fprintf fmt "__gmpz_get_si(%a)" self#pp_gexpr g
-  | Unop (op, e) -> Format.fprintf fmt "(%a %a)" self#unop op self#pp_cexpr e
+  | Unop (op, e) -> Format.fprintf fmt "%a(%a)" self#unop op self#pp_cexpr e
   | Binop (op,x,y) ->
     Format.fprintf fmt "(%a %a %a)"
       self#pp_cexpr x self#binop op self#pp_cexpr y
