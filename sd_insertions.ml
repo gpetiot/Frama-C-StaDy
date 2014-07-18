@@ -41,13 +41,6 @@ and ctype_expr = (* distinguer type pointeur/int *)
 | My_ctype_var of typ * string (* when its name is predefined *)
 | Zero | One
 | Cst of string
-| Cmp of relation * ctype_expr * ctype_expr
-| Gmp_cmp of binop * gmp_expr * gmp_expr
-| Gmp_cmp_ui of binop * gmp_expr * ctype_expr
-| Gmp_cmp_si of binop * gmp_expr * ctype_expr
-| Gmp_cmpr of relation * gmp_expr * gmp_expr
-| Gmp_cmpr_ui of relation * gmp_expr * ctype_expr
-| Gmp_cmpr_si of relation * gmp_expr * ctype_expr
 | Gmp_get_ui of gmp_expr
 | Gmp_get_si of gmp_expr
 | Unop of unop * ctype_expr
@@ -59,6 +52,21 @@ and ctype_expr = (* distinguer type pointeur/int *)
 | Deref of ctype_expr
 | Index of ctype_expr * ctype_expr
 | Field of ctype_expr * string
+| Of_pred of pred_expr
+
+and pred_expr =
+| Fresh_pred_var of int (* uint *)
+| True | False
+| Cmp of relation * ctype_expr * ctype_expr
+| Gmp_cmp of binop * gmp_expr * gmp_expr
+| Gmp_cmp_ui of binop * gmp_expr * ctype_expr
+| Gmp_cmp_si of binop * gmp_expr * ctype_expr
+| Gmp_cmpr of relation * gmp_expr * gmp_expr
+| Gmp_cmpr_ui of relation * gmp_expr * ctype_expr
+| Gmp_cmpr_si of relation * gmp_expr * ctype_expr
+| Lnot of pred_expr
+| Land of pred_expr * pred_expr
+| Lor of pred_expr * pred_expr
 
 and fragment =
 | Gmp_fragment of gmp_expr
@@ -66,6 +74,7 @@ and fragment =
 
 and instruction =
 | Affect of ctype_expr * ctype_expr
+| Affect_pred of pred_expr * pred_expr
 | Free of ctype_expr
 | Pc_to_framac of string
 | Pc_assert_exn of string * int
@@ -87,9 +96,10 @@ type insertion =
 | Instru of instruction
 | Decl_gmp_var of fresh_gmp_var
 | Decl_ctype_var of ctype_expr
-| If_cond of ctype_expr
+| Decl_pred_var of pred_expr
+| If_cond of pred_expr
 | Else_cond
-| For of instruction option * ctype_expr option * instruction option
+| For of instruction option * pred_expr option * instruction option
 | Block_open
 | Block_close
 
@@ -107,6 +117,7 @@ class gather_insertions props = object(self)
   val mutable visited_globals = []
   val mutable last_gmp_var_id = -1
   val mutable last_ctype_var_id = -1
+  val mutable last_pred_var_id = -1
 
   (* list of (stmtkind * stmt) used for testing reachibility of some stmts *)
   val mutable stmts_to_reach = []
@@ -158,6 +169,10 @@ class gather_insertions props = object(self)
   method private fresh_ctype_var ty =
     last_ctype_var_id <- last_ctype_var_id + 1;
     Fresh_ctype_var (last_ctype_var_id, ty)
+
+  method private fresh_pred_var() =
+    last_pred_var_id <- last_pred_var_id + 1;
+    Fresh_pred_var last_pred_var_id
 
   (* unmodified *)
   method private in_current_function vi =
@@ -249,9 +264,9 @@ class gather_insertions props = object(self)
 	      | s when s = "\\numof" ->
 		(* lambda_term is of type:
 		   Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
-		self#insert (If_cond(self#ctype_fragment lambda_term));
-		self#insert (Instru(Gmp_binop_ui(PlusA, init_var,
-						 init_var, One)));
+		self#insert
+		  (If_cond(Cmp(Rneq,self#ctype_fragment lambda_term,Zero)));
+		self#insert (Instru(Gmp_binop_ui(PlusA,init_var,init_var,One)));
 	      | _ -> assert false
 	    end;
 	    self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter, One)));
@@ -440,8 +455,8 @@ class gather_insertions props = object(self)
 	      let x = self#term t1 in
 	      let y = self#term t2 in
 	      self#insert (Decl_ctype_var var);
-	      self#insert (Instru(Affect(var, Gmp_cmp(op, self#gmp_fragment x,
-						      self#gmp_fragment y))));
+	      let pred = Gmp_cmp(op, self#gmp_fragment x,self#gmp_fragment y) in
+	      self#insert (Instru(Affect(var, Of_pred pred)));
 	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)));
 	      self#insert (Instru(Gmp_clear(self#gmp_fragment y)));
 	      Ctype_fragment var
@@ -718,9 +733,9 @@ class gather_insertions props = object(self)
 	  let preconds = List.filter not_translated preconds in
 	  let do_precond p =
 	    let v = self#predicate(self#subst_pred p.ip_content) in
-	    if v <> One then (* '1' is for untreated predicates *)
+	    if v <> True then (* '1' is for untreated predicates *)
 	      begin
-		self#insert (If_cond(Unop(LNot, v)));
+		self#insert (If_cond(Lnot v));
 		self#insert (Instru(Ret Zero))
 	      end
 	  in
@@ -841,7 +856,7 @@ class gather_insertions props = object(self)
 						      Sizeof ty)))));
 	      self#insert (For(
 		(Some(Affect(my_iterator, Zero))),
-		(Some(Binop(Lt, my_iterator, Gmp_get_si h'))),
+		(Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
 		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
 	      ));
 	      self#insert Block_open;
@@ -859,7 +874,7 @@ class gather_insertions props = object(self)
 						      Sizeof ty)))));
 	      self#insert (For(
 		(Some(Affect(my_iterator, Zero))),
-		(Some(Binop(Lt, my_iterator, h'))),
+		(Some(Cmp(Rlt, my_iterator, h'))),
 		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
 	      ));
 	      self#insert Block_open;
@@ -918,7 +933,7 @@ class gather_insertions props = object(self)
 		  let h' = self#gmp_fragment h' in
 		  self#insert (For(
 		    (Some(Affect(my_iterator, Zero))),
-		    (Some(Binop(Lt, my_iterator, Gmp_get_si h'))),
+		    (Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
 		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
 		  ));
 		  self#insert Block_open;
@@ -930,7 +945,7 @@ class gather_insertions props = object(self)
 		  let h' = self#ctype_fragment h' in
 		  self#insert (For(
 		    (Some(Affect(my_iterator, Zero))),
-		    (Some(Binop(Lt, my_iterator, h'))),
+		    (Some(Cmp(Rlt, my_iterator, h'))),
 		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
 		  ));
 		  self#insert Block_open;
@@ -961,9 +976,9 @@ class gather_insertions props = object(self)
       let vars = List.map f bhv.b_assumes in
       let rec aux ret = function
 	| [] -> ret
-	| h :: t -> aux (Binop(LAnd, ret, h)) t
+	| h :: t -> aux (Land(ret, h)) t
       in
-      let exp = aux One vars in 
+      let exp = aux True vars in 
       self#insert (If_cond exp);
       self#insert Block_open
 	
@@ -973,7 +988,7 @@ class gather_insertions props = object(self)
 
   method private pc_assert_exception pred msg id prop =
     let var = self#predicate (self#subst_pred pred) in
-    self#insert (If_cond(Unop(LNot, var)));
+    self#insert (If_cond(Lnot var));
     self#insert (Instru(Pc_assert_exn(msg, id)));
     translated_properties <- prop :: translated_properties
 
@@ -984,13 +999,13 @@ class gather_insertions props = object(self)
       let vars = List.map g behaviors in
       let rec aux' ret = function
 	| [] -> ret
-	| h :: t -> aux' (Binop(LAnd, ret, h)) t
+	| h :: t -> aux' (Land(ret, h)) t
       in
       let rec aux ret = function
 	| [] -> ret
-	| h :: t -> aux (Binop(LOr, ret, aux' One h)) t
+	| h :: t -> aux (Lor(ret, aux' True h)) t
       in
-      let exp = aux Zero vars in
+      let exp = aux False vars in
       self#insert (If_cond exp);
       self#insert Block_open
 
@@ -1202,20 +1217,20 @@ class gather_insertions props = object(self)
       | _ -> Cil.DoChildren
     end
 
-  method private predicate_named pnamed : ctype_expr =
+  method private predicate_named pnamed : pred_expr =
     self#predicate pnamed.content
 
-  method private quantif_predicate ~forall logic_vars hyps goal : ctype_expr =
+  method private quantif_predicate ~forall logic_vars hyps goal : pred_expr =
     if (List.length logic_vars) > 1 then
       failwith "quantification on many variables unsupported!";
-    let var = self#fresh_ctype_var Cil.intType in
+    let var = self#fresh_pred_var() in
     let guards, vars = Sd_utils.compute_guards [] logic_vars hyps in
     if vars <> [] then
       failwith "Unguarded variables in quantification!";
     let t1,r1,lv,r2,t2 = List.hd guards in
     let iter_name = lv.lv_name in
-    self#insert (Decl_ctype_var var);
-    self#insert (Instru(Affect(var, (if forall then One else Zero))));
+    self#insert (Decl_pred_var var);
+    self#insert (Instru(Affect_pred(var, (if forall then True else False))));
     self#insert Block_open;
     begin
       match t1.term_type with
@@ -1231,11 +1246,11 @@ class gather_insertions props = object(self)
 	    if r1 = Rlt then
 	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
 	    let exp1 = Gmp_cmpr(r2, init_iter, t2') in
-	    let exp2 = if forall then var else Unop(LNot, var) in
-	    self#insert (For(None, Some(Binop(LAnd, exp1, exp2)), None));
+	    let exp2 = if forall then var else Lnot var in
+	    self#insert (For(None, Some(Land(exp1, exp2)), None));
 	    self#insert Block_open;
 	    let goal_var = self#predicate_named goal in
-	    self#insert (Instru(Affect(var, goal_var)));
+	    self#insert (Instru(Affect_pred(var, goal_var)));
 	    self#insert (Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)));
 	    self#insert Block_close;
 	    self#insert (Instru(Gmp_clear init_iter));
@@ -1251,11 +1266,11 @@ class gather_insertions props = object(self)
 	    if r1 = Rlt then
 	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
 	    let exp1 = Gmp_cmpr_si(r2, init_iter, t2') in
-	    let exp2 = if forall then var else Unop(LNot, var) in
-	    self#insert (For(None, Some(Binop(LAnd, exp1, exp2)), None));
+	    let exp2 = if forall then var else Lnot var in
+	    self#insert (For(None, Some(Land(exp1, exp2)), None));
 	    self#insert Block_open;
 	    let goal_var = self#predicate_named goal in 
-	    self#insert (Instru(Affect(var, goal_var)));
+	    self#insert (Instru(Affect_pred(var, goal_var)));
 	    self#insert (Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)));
 	    self#insert Block_close;
 	    self#insert (Instru(Gmp_clear init_iter));
@@ -1272,23 +1287,22 @@ class gather_insertions props = object(self)
 	  | Rle -> t1'
 	  | _ -> assert false))
 	in
-	let exp2 = Binop(LAnd, (Cmp(r2,iter,t2')),
-			 (if forall then var else Unop(LNot, var))) in
+	let exp2 =Land((Cmp(r2,iter,t2')),(if forall then var else Lnot var)) in
 	let exp3 = Affect(iter,Binop(PlusA,iter,One)) in
 	self#insert (For(Some exp1, Some exp2, Some exp3));
 	self#insert Block_open;
 	let goal_var = self#predicate_named goal in 
-	self#insert (Instru(Affect(var, goal_var)));
+	self#insert (Instru(Affect_pred(var, goal_var)));
 	self#insert Block_close
     end;
     self#insert Block_close;
     var
   (* end of quantif_predicate *)
 
-  method private predicate pred : ctype_expr =
+  method private predicate pred : pred_expr =
     match pred with
-    | Ptrue -> One
-    | Pfalse -> Zero
+    | Ptrue -> True
+    | Pfalse -> False
     | Pvalid(_,term) | Pvalid_read(_,term) ->
       let loc = term.term_loc in
       let pointer, offset =
@@ -1306,11 +1320,11 @@ class gather_insertions props = object(self)
 	| Linteger ->
 	  let x' = self#ctype_fragment (self#term pointer) in
 	  let y' = self#gmp_fragment (self#term offset) in
-	  let var = self#fresh_ctype_var Cil.intType in
-	  self#insert (Decl_ctype_var var);
+	  let var = self#fresh_pred_var() in
+	  self#insert (Decl_pred_var var);
 	  let exp1 = Gmp_cmp_ui(Ge, y', Zero) in
 	  let exp2 = Gmp_cmp_ui(Lt, y', Pc_dim(x')) in
-	  self#insert (Instru(Affect(var, Binop(LAnd, exp1, exp2))));
+	  self#insert (Instru(Affect_pred(var, Land(exp1, exp2))));
 	  self#insert (Instru(Gmp_clear y'));
 	  var
 	| Lreal -> assert false (* unreachable *)
@@ -1319,7 +1333,7 @@ class gather_insertions props = object(self)
 	  let y' = self#ctype_fragment (self#term offset) in
 	  let exp1 = Cmp(Rge, y', Zero) in
 	  let exp2 = Cmp(Rgt, Pc_dim(x'), y') in
-	  Binop(LAnd, exp1, exp2)
+	  Land(exp1, exp2)
 	| _ -> assert false (* unreachable *)
       end
     | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
@@ -1330,62 +1344,62 @@ class gather_insertions props = object(self)
     | Pexists _ -> failwith "\\exists not of the form \\exists ...; a && b;"
     | Pnot(pred1) ->
       let pred1_var = self#predicate_named pred1 in
-      Unop(LNot, pred1_var)
+      Lnot pred1_var
     | Pand(pred1,pred2) ->
-      let var = self#fresh_ctype_var Cil.intType in
+      let var = self#fresh_pred_var() in
       let pred1_var = self#predicate_named pred1 in
-      self#insert (Decl_ctype_var var);
-      self#insert (Instru(Affect(var, pred1_var)));
+      self#insert (Decl_pred_var var);
+      self#insert (Instru(Affect_pred(var, pred1_var)));
       self#insert (If_cond var);
       self#insert Block_open;
       let pred2_var = self#predicate_named pred2 in
-      self#insert (Instru(Affect(var, pred2_var)));
+      self#insert (Instru(Affect_pred(var, pred2_var)));
       self#insert Block_close;
       var
     | Por(pred1,pred2) ->
-      let var = self#fresh_ctype_var Cil.intType  in
+      let var = self#fresh_pred_var()  in
       let pred1_var = self#predicate_named pred1 in
-      self#insert (Decl_ctype_var var);
-      self#insert (Instru(Affect(var, pred1_var)));
-      self#insert (If_cond (Unop(LNot,var)));
+      self#insert (Decl_pred_var var);
+      self#insert (Instru(Affect_pred(var, pred1_var)));
+      self#insert (If_cond (Lnot var));
       self#insert Block_open;
       let pred2_var = self#predicate_named pred2 in
-      self#insert (Instru(Affect(var, pred2_var)));
+      self#insert (Instru(Affect_pred(var, pred2_var)));
       self#insert Block_close;
       var
     | Pimplies(pred1,pred2) ->
-      let var = self#fresh_ctype_var Cil.intType in
-      self#insert (Decl_ctype_var var);
-      self#insert (Instru(Affect(var, One)));
+      let var = self#fresh_pred_var() in
+      self#insert (Decl_pred_var var);
+      self#insert (Instru(Affect_pred(var, True)));
       let pred1_var = self#predicate_named pred1 in
       self#insert (If_cond pred1_var);
       self#insert Block_open;
       let pred2_var = self#predicate_named pred2 in
-      self#insert (Instru(Affect(var, pred2_var)));
+      self#insert (Instru(Affect_pred(var, pred2_var)));
       self#insert Block_close;
       var
     | Piff(pred1,pred2) ->
       let pred1_var = self#predicate_named pred1 in
       let pred2_var = self#predicate_named pred2 in
-      let exp1 = Binop(LOr, Unop(LNot, pred1_var), pred2_var) in
-      let exp2 = Binop(LOr, Unop(LNot, pred2_var), pred1_var) in
-      Binop(LAnd, exp1, exp2)
+      let exp1 = Lor(Lnot pred1_var, pred2_var) in
+      let exp2 = Lor(Lnot pred2_var, pred1_var) in
+      Land(exp1, exp2)
     | Pif (t,pred1,pred2) -> (* untested *)
       begin
 	let term_var = self#term t in
-	let res_var = self#fresh_ctype_var Cil.intType in
-	self#insert (Decl_ctype_var res_var);
+	let res_var = self#fresh_pred_var() in
+	self#insert (Decl_pred_var res_var);
 	let f () =
 	  let term_var = self#ctype_fragment term_var in
-	  self#insert (If_cond term_var);
+	  self#insert (If_cond (Cmp(Rneq,term_var,Zero)));
 	  self#insert Block_open;
 	  let pred1_var = self#predicate_named pred1 in
-	  self#insert (Instru(Affect(res_var, pred1_var)));
+	  self#insert (Instru(Affect_pred(res_var, pred1_var)));
 	  self#insert Block_close;
 	  self#insert Else_cond;
 	  self#insert Block_open;
 	  let pred2_var = self#predicate_named pred2 in
-	  self#insert (Instru(Affect(res_var, pred2_var)));
+	  self#insert (Instru(Affect_pred(res_var, pred2_var)));
 	  self#insert Block_close;
 	  res_var
 	in
@@ -1395,12 +1409,12 @@ class gather_insertions props = object(self)
 	  self#insert (If_cond(Gmp_cmp_si(Ne, term_var, Zero)));
 	  self#insert Block_open;
 	  let pred1_var = self#predicate_named pred1 in
-	  self#insert (Instru(Affect(res_var, pred1_var)));
+	  self#insert (Instru(Affect_pred(res_var, pred1_var)));
 	  self#insert Block_close;
 	  self#insert Else_cond;
 	  self#insert Block_open;
 	  let pred2_var = self#predicate_named pred2 in
-	  self#insert (Instru(Affect(res_var, pred2_var)));
+	  self#insert (Instru(Affect_pred(res_var, pred2_var)));
 	  self#insert Block_close;
 	  self#insert (Instru(Gmp_clear term_var));
 	  res_var
@@ -1414,52 +1428,52 @@ class gather_insertions props = object(self)
       begin
 	match t1.term_type, t2.term_type with
 	| Linteger, Linteger ->
-	  let var = self#fresh_ctype_var Cil.intType in
+	  let var = self#fresh_pred_var() in
 	  let t1' = self#gmp_fragment (self#term t1) in
 	  let t2' = self#gmp_fragment (self#term t2) in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr(rel, t1', t2'))));
+	  self#insert (Decl_pred_var var);
+	  self#insert (Instru(Affect_pred(var, Gmp_cmpr(rel, t1', t2'))));
 	  self#insert (Instru(Gmp_clear t1'));
 	  self#insert (Instru(Gmp_clear t2'));
 	  var
 	| Linteger, Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	  let var = self#fresh_ctype_var Cil.intType in
+	  let var = self#fresh_pred_var() in
 	  let t1' = self#gmp_fragment (self#term t1) in
 	  let t2' = self#ctype_fragment (self#term t2) in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr_ui(rel, t1', t2'))));
+	  self#insert (Decl_pred_var var);
+	  self#insert (Instru(Affect_pred(var, Gmp_cmpr_ui(rel, t1', t2'))));
 	  self#insert (Instru(Gmp_clear t1'));
 	  var
 	| Linteger, Ctype (TInt _) ->
-	  let var = self#fresh_ctype_var Cil.intType in
+	  let var = self#fresh_pred_var() in
 	  let t1' = self#gmp_fragment (self#term t1) in
 	  let t2' = self#ctype_fragment (self#term t2) in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr_si(rel, t1', t2'))));
+	  self#insert (Decl_pred_var var);
+	  self#insert (Instru(Affect_pred(var, Gmp_cmpr_si(rel, t1', t2'))));
 	  self#insert (Instru(Gmp_clear t1'));
 	  var
 	| Lreal, Lreal -> assert false (* TODO: reals *)
 	| Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)), Linteger ->
-	  let var = self#fresh_ctype_var Cil.intType in
+	  let var = self#fresh_pred_var() in
 	  let t1' = self#ctype_fragment (self#term t1) in
 	  let t2' = self#gmp_fragment (self#term t2) in
 	  let fresh_var' = self#fresh_gmp_var() in
 	  let decl_var' = self#decl_gmp_var fresh_var' in
 	  let init_var' = self#init_set_ui_gmp_var decl_var' t1' in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr(rel, init_var', t2'))));
+	  self#insert (Decl_pred_var var);
+	  self#insert (Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))));
 	  self#insert (Instru(Gmp_clear t2'));
 	  self#insert (Instru(Gmp_clear init_var'));
 	  var
 	| Ctype (TInt _), Linteger ->
-	  let var = self#fresh_ctype_var Cil.intType in
+	  let var = self#fresh_pred_var() in
 	  let t1' = self#ctype_fragment (self#term t1) in
 	  let t2' = self#gmp_fragment (self#term t2) in
 	  let fresh_var' = self#fresh_gmp_var() in
 	  let decl_var' = self#decl_gmp_var fresh_var' in
 	  let init_var' = self#init_set_si_gmp_var decl_var' t1' in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_cmpr(rel, init_var', t2'))));
+	  self#insert (Decl_pred_var var);
+	  self#insert (Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))));
 	  self#insert (Instru(Gmp_clear t2'));
 	  self#insert (Instru(Gmp_clear init_var'));
 	  var
@@ -1476,7 +1490,7 @@ class gather_insertions props = object(self)
       self#predicate_named p
     | _ ->
       Sd_options.Self.warning "%a unsupported" Printer.pp_predicate pred;
-      One
+      True
 (* end predicate *)
 end
 
@@ -1500,6 +1514,24 @@ let rec pp_cexpr fmt = function
   | Zero -> Format.fprintf fmt "0"
   | One -> Format.fprintf fmt "1"
   | Cst s -> Format.fprintf fmt "%s" s
+  | Gmp_get_ui g -> Format.fprintf fmt "__gmpz_get_ui(%a)" pp_gexpr g
+  | Gmp_get_si g -> Format.fprintf fmt "__gmpz_get_si(%a)" pp_gexpr g
+  | Unop (op, e) -> Format.fprintf fmt "%a(%a)" Printer.pp_unop op pp_cexpr e
+  | Binop (op,x,y) ->
+    Format.fprintf fmt "(%a %a %a)" pp_cexpr x Printer.pp_binop op pp_cexpr y
+  | Pc_dim e -> Format.fprintf fmt "pathcrawler_dimension(%a)" pp_cexpr e
+  | Malloc e -> Format.fprintf fmt "malloc(%a)" pp_cexpr e
+  | Cast (t, e) -> Format.fprintf fmt "(%a)%a" Printer.pp_typ t pp_cexpr e
+  | Sizeof t -> Format.fprintf fmt "sizeof(%a)" Printer.pp_typ t
+  | Deref e -> Format.fprintf fmt "*%a" pp_cexpr e
+  | Index (e, i) -> Format.fprintf fmt "%a[%a]" pp_cexpr e pp_cexpr i
+  | Field (e, s) -> Format.fprintf fmt "%a.%s" pp_cexpr e s
+  | Of_pred p -> Format.fprintf fmt "%a" pp_pexpr p
+
+and pp_pexpr fmt = function
+  | Fresh_pred_var id -> Format.fprintf fmt "__stady_pred_%i" id
+  | True -> Format.fprintf fmt "1"
+  | False -> Format.fprintf fmt "0"
   | Cmp (rel, e1, e2) ->
     Format.fprintf fmt "%a %a %a"pp_cexpr e1 Printer.pp_relation rel pp_cexpr e2
   | Gmp_cmp (op, g1, g2) ->
@@ -1520,18 +1552,9 @@ let rec pp_cexpr fmt = function
   | Gmp_cmpr_si (rel, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp_si(%a, %a) %a 0"
       pp_gexpr g1 pp_cexpr g2 Printer.pp_relation rel
-  | Gmp_get_ui g -> Format.fprintf fmt "__gmpz_get_ui(%a)" pp_gexpr g
-  | Gmp_get_si g -> Format.fprintf fmt "__gmpz_get_si(%a)" pp_gexpr g
-  | Unop (op, e) -> Format.fprintf fmt "%a(%a)" Printer.pp_unop op pp_cexpr e
-  | Binop (op,x,y) ->
-    Format.fprintf fmt "(%a %a %a)" pp_cexpr x Printer.pp_binop op pp_cexpr y
-  | Pc_dim e -> Format.fprintf fmt "pathcrawler_dimension(%a)" pp_cexpr e
-  | Malloc e -> Format.fprintf fmt "malloc(%a)" pp_cexpr e
-  | Cast (t, e) -> Format.fprintf fmt "(%a)%a" Printer.pp_typ t pp_cexpr e
-  | Sizeof t -> Format.fprintf fmt "sizeof(%a)" Printer.pp_typ t
-  | Deref e -> Format.fprintf fmt "*%a" pp_cexpr e
-  | Index (e, i) -> Format.fprintf fmt "%a[%a]" pp_cexpr e pp_cexpr i
-  | Field (e, s) -> Format.fprintf fmt "%a.%s" pp_cexpr e s
+  | Lnot p -> Format.fprintf fmt "!(%a)" pp_pexpr p
+  | Land (p, p') -> Format.fprintf fmt "(%a && %a)" pp_pexpr p pp_pexpr p'
+  | Lor (p, p') -> Format.fprintf fmt "(%a || %a)" pp_pexpr p pp_pexpr p'
 
 let pp_garith fmt = function
   | PlusA -> Format.fprintf fmt "add"
@@ -1543,6 +1566,7 @@ let pp_garith fmt = function
 
 let pp_instruction fmt = function
   | Affect (x,y) -> Format.fprintf fmt "%a = %a" pp_cexpr x pp_cexpr y
+  | Affect_pred (x,y) -> Format.fprintf fmt "%a = %a" pp_pexpr x pp_pexpr y
   | Free e -> Format.fprintf fmt "free(%a)" pp_cexpr e
   | Pc_to_framac s -> Format.fprintf fmt "pathcrawler_to_framac(\"%s\")" s
   | Pc_assert_exn (s,i) ->
@@ -1583,12 +1607,13 @@ let pp_insertion fmt = function
   | Decl_ctype_var (My_ctype_var (ty, name)) ->
     Format.fprintf fmt "%a %s;@\n" Printer.pp_typ ty name
   | Decl_ctype_var _ -> assert false
-  | If_cond exp -> Format.fprintf fmt "if(%a)@ " pp_cexpr exp
+  | Decl_pred_var p -> Format.fprintf fmt "int %a;@\n" pp_pexpr p
+  | If_cond exp -> Format.fprintf fmt "if(%a)@ " pp_pexpr exp
   | Else_cond -> Format.fprintf fmt "else@ "
-  | For(None, Some e, None) -> Format.fprintf fmt "while(%a)@ " pp_cexpr e
+  | For(None, Some e, None) -> Format.fprintf fmt "while(%a)@ " pp_pexpr e
   | For(Some i1, Some e, Some i2) ->
     Format.fprintf fmt "for(%a; %a; %a)@ " pp_instruction i1
-      pp_cexpr e pp_instruction i2
+      pp_pexpr e pp_instruction i2
   | For _ -> assert false (* not used by the translation *)
   | Block_open -> Format.fprintf fmt "{@\n"
   | Block_close -> Format.fprintf fmt "}@\n"
