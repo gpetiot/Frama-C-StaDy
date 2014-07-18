@@ -1542,7 +1542,7 @@ class print_insertions insertions ~print_label () = object(self)
   method private pp_garith fmt = function
   | PlusA -> Format.fprintf fmt "add"
   | MinusA -> Format.fprintf fmt "sub"
-  | Mult -> Format.fprintf fmt "mult"
+  | Mult -> Format.fprintf fmt "mul"
   | Div -> Format.fprintf fmt "tdiv_q"
   | Mod -> Format.fprintf fmt "tdiv_r"
   | _ -> assert false (* not used by the translation *)
