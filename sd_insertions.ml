@@ -1480,66 +1480,60 @@ class gather_insertions props = object(self)
 (* end predicate *)
 end
 
-class print_insertions insertions ~print_label () = object(self)
-  inherit Printer.extensible_printer () as super
 
-  val mutable current_function = None
 
-  method private pp_fresh_gmp fmt = function
+let pp_fresh_gmp fmt = function
   | Fresh_gmp_var id -> Format.fprintf fmt "__stady_gmp_%i" id
   | My_gmp_var name -> Format.fprintf fmt "%s" name
 
-  method private pp_decl_gmp fmt = function
-  | Declared_gmp_var v -> self#pp_fresh_gmp fmt v
+let pp_decl_gmp fmt = function
+  | Declared_gmp_var v -> pp_fresh_gmp fmt v
 
-  method private pp_init_gmp fmt = function
-  | Initialized_gmp_var v -> self#pp_decl_gmp fmt v
+let pp_init_gmp fmt = function
+  | Initialized_gmp_var v -> pp_decl_gmp fmt v
 
-  method private pp_gexpr fmt =
-    self#pp_init_gmp fmt
+let pp_gexpr fmt = pp_init_gmp fmt
 
-  method private pp_cexpr fmt = function
+let rec pp_cexpr fmt = function
   | Fresh_ctype_var (id, _ty) -> Format.fprintf fmt "__stady_term_%i" id
   | My_ctype_var (_, name) -> Format.fprintf fmt "%s" name
   | Zero -> Format.fprintf fmt "0"
   | One -> Format.fprintf fmt "1"
   | Cst s -> Format.fprintf fmt "%s" s
   | Cmp (rel, e1, e2) ->
-    Format.fprintf fmt "%a %a %a"
-      self#pp_cexpr e1 self#relation rel self#pp_cexpr e2
+    Format.fprintf fmt "%a %a %a"pp_cexpr e1 Printer.pp_relation rel pp_cexpr e2
   | Gmp_cmp (op, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_gexpr g2 self#binop op
+      pp_gexpr g1 pp_gexpr g2 Printer.pp_binop op
   | Gmp_cmp_ui (op, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp_ui(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_cexpr g2 self#binop op
+      pp_gexpr g1 pp_cexpr g2 Printer.pp_binop op
   | Gmp_cmp_si (op, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp_si(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_cexpr g2 self#binop op
+      pp_gexpr g1 pp_cexpr g2 Printer.pp_binop op
   | Gmp_cmpr (rel, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_gexpr g2 self#relation rel
+      pp_gexpr g1 pp_gexpr g2 Printer.pp_relation rel
   | Gmp_cmpr_ui (rel, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp_ui(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_cexpr g2 self#relation rel
+      pp_gexpr g1 pp_cexpr g2 Printer.pp_relation rel
   | Gmp_cmpr_si (rel, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp_si(%a, %a) %a 0"
-      self#pp_gexpr g1 self#pp_cexpr g2 self#relation rel
-  | Gmp_get_ui g -> Format.fprintf fmt "__gmpz_get_ui(%a)" self#pp_gexpr g
-  | Gmp_get_si g -> Format.fprintf fmt "__gmpz_get_si(%a)" self#pp_gexpr g
-  | Unop (op, e) -> Format.fprintf fmt "%a(%a)" self#unop op self#pp_cexpr e
+      pp_gexpr g1 pp_cexpr g2 Printer.pp_relation rel
+  | Gmp_get_ui g -> Format.fprintf fmt "__gmpz_get_ui(%a)" pp_gexpr g
+  | Gmp_get_si g -> Format.fprintf fmt "__gmpz_get_si(%a)" pp_gexpr g
+  | Unop (op, e) -> Format.fprintf fmt "%a(%a)" Printer.pp_unop op pp_cexpr e
   | Binop (op,x,y) ->
-    Format.fprintf fmt "(%a %a %a)"
-      self#pp_cexpr x self#binop op self#pp_cexpr y
-  | Pc_dim e -> Format.fprintf fmt "pathcrawler_dimension(%a)" self#pp_cexpr e
-  | Malloc e -> Format.fprintf fmt "malloc(%a)" self#pp_cexpr e
-  | Cast (t, e) -> Format.fprintf fmt "(%a)%a" (self#typ None) t self#pp_cexpr e
-  | Sizeof t -> Format.fprintf fmt "sizeof(%a)" (self#typ None) t
-  | Deref e -> Format.fprintf fmt "*%a" self#pp_cexpr e
-  | Index (e, i) -> Format.fprintf fmt "%a[%a]" self#pp_cexpr e self#pp_cexpr i
-  | Field (e, s) -> Format.fprintf fmt "%a.%s" self#pp_cexpr e s
+    Format.fprintf fmt "(%a %a %a)" pp_cexpr x Printer.pp_binop op pp_cexpr y
+  | Pc_dim e -> Format.fprintf fmt "pathcrawler_dimension(%a)" pp_cexpr e
+  | Malloc e -> Format.fprintf fmt "malloc(%a)" pp_cexpr e
+  | Cast (t, e) -> Format.fprintf fmt "(%a)%a" Printer.pp_typ t pp_cexpr e
+  | Sizeof t -> Format.fprintf fmt "sizeof(%a)" Printer.pp_typ t
+  | Deref e -> Format.fprintf fmt "*%a" pp_cexpr e
+  | Index (e, i) -> Format.fprintf fmt "%a[%a]" pp_cexpr e pp_cexpr i
+  | Field (e, s) -> Format.fprintf fmt "%a.%s" pp_cexpr e s
 
-  method private pp_garith fmt = function
+let pp_garith fmt = function
   | PlusA -> Format.fprintf fmt "add"
   | MinusA -> Format.fprintf fmt "sub"
   | Mult -> Format.fprintf fmt "mul"
@@ -1547,60 +1541,64 @@ class print_insertions insertions ~print_label () = object(self)
   | Mod -> Format.fprintf fmt "tdiv_r"
   | _ -> assert false (* not used by the translation *)
 
-  method private pp_instruction fmt = function
-  | Affect (x,y) -> Format.fprintf fmt "%a = %a" self#pp_cexpr x self#pp_cexpr y
-  | Free e -> Format.fprintf fmt "free(%a)" self#pp_cexpr e
+let pp_instruction fmt = function
+  | Affect (x,y) -> Format.fprintf fmt "%a = %a" pp_cexpr x pp_cexpr y
+  | Free e -> Format.fprintf fmt "free(%a)" pp_cexpr e
   | Pc_to_framac s -> Format.fprintf fmt "pathcrawler_to_framac(\"%s\")" s
   | Pc_assert_exn (s,i) ->
     Format.fprintf fmt "pathcrawler_assert_exception(\"%s\", %i)" s i
-  | Ret e -> Format.fprintf fmt "return %a" self#pp_cexpr e
-  | Gmp_clear g -> Format.fprintf fmt "__gmpz_clear(%a)" self#pp_gexpr g
-  | Gmp_init g -> Format.fprintf fmt "__gmpz_init(%a)" self#pp_decl_gmp g
+  | Ret e -> Format.fprintf fmt "return %a" pp_cexpr e
+  | Gmp_clear g -> Format.fprintf fmt "__gmpz_clear(%a)" pp_gexpr g
+  | Gmp_init g -> Format.fprintf fmt "__gmpz_init(%a)" pp_decl_gmp g
   | Gmp_init_set (g,g') ->
-    Format.fprintf fmt "__gmpz_init_set(%a, %a)"
-      self#pp_decl_gmp g self#pp_gexpr g'
+    Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_decl_gmp g pp_gexpr g'
   | Gmp_init_set_ui (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)"
-      self#pp_decl_gmp g self#pp_cexpr c
+    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_decl_gmp g pp_cexpr c
   | Gmp_init_set_si (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)"
-      self#pp_decl_gmp g self#pp_cexpr c
+    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_decl_gmp g pp_cexpr c
   | Gmp_init_set_str (g,s) ->
-    Format.fprintf fmt "__gmpz_init_set_str(%a, \"%s\", 10)"self#pp_decl_gmp g s
+    Format.fprintf fmt "__gmpz_init_set_str(%a, \"%s\", 10)" pp_decl_gmp g s
   | Gmp_set (g,g') ->
-    Format.fprintf fmt "__gmpz_set(%a, %a)" self#pp_gexpr g self#pp_gexpr g'
+    Format.fprintf fmt "__gmpz_set(%a, %a)" pp_gexpr g pp_gexpr g'
   | Gmp_abs (g,g') ->
-    Format.fprintf fmt "__gmpz_abs(%a, %a)" self#pp_gexpr g self#pp_gexpr g'
+    Format.fprintf fmt "__gmpz_abs(%a, %a)" pp_gexpr g pp_gexpr g'
   | Gmp_ui_sub (r,a,b) ->
     Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)"
-      self#pp_gexpr r self#pp_cexpr a self#pp_gexpr b
+      pp_gexpr r pp_cexpr a pp_gexpr b
   | Gmp_binop (op,r,a,b) ->
     Format.fprintf fmt "__gmpz_%a(%a, %a, %a)"
-      self#pp_garith op self#pp_gexpr r self#pp_gexpr a self#pp_gexpr b
+      pp_garith op pp_gexpr r pp_gexpr a pp_gexpr b
   | Gmp_binop_ui (op,r,a,b) ->
     Format.fprintf fmt "__gmpz_%a_ui(%a, %a, %a)"
-      self#pp_garith op self#pp_gexpr r self#pp_gexpr a self#pp_cexpr b
+      pp_garith op pp_gexpr r pp_gexpr a pp_cexpr b
   | Gmp_binop_si (op,r,a,b) ->
     Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
-      self#pp_garith op self#pp_gexpr r self#pp_gexpr a self#pp_cexpr b
+      pp_garith op pp_gexpr r pp_gexpr a pp_cexpr b
 
-  method private pp_insertion fmt = function
-  | Instru i -> Format.fprintf fmt "%a;@\n" self#pp_instruction i
-  | Decl_gmp_var v -> Format.fprintf fmt "mpz_t %a;@\n" self#pp_fresh_gmp v
+let pp_insertion fmt = function
+  | Instru i -> Format.fprintf fmt "%a;@\n" pp_instruction i
+  | Decl_gmp_var v -> Format.fprintf fmt "mpz_t %a;@\n" pp_fresh_gmp v
   | Decl_ctype_var ((Fresh_ctype_var (_id, ty)) as v) ->
-    Format.fprintf fmt "%a %a;@\n" (self#typ None) ty self#pp_cexpr v
+    Format.fprintf fmt "%a %a;@\n" Printer.pp_typ ty pp_cexpr v
   | Decl_ctype_var (My_ctype_var (ty, name)) ->
-    Format.fprintf fmt "%a %s;@\n" (self#typ None) ty name
+    Format.fprintf fmt "%a %s;@\n" Printer.pp_typ ty name
   | Decl_ctype_var _ -> assert false
-  | If_cond exp -> Format.fprintf fmt "if(%a)@ " self#pp_cexpr exp
+  | If_cond exp -> Format.fprintf fmt "if(%a)@ " pp_cexpr exp
   | Else_cond -> Format.fprintf fmt "else@ "
-  | For(None, Some e, None) -> Format.fprintf fmt "while(%a)@ " self#pp_cexpr e
+  | For(None, Some e, None) -> Format.fprintf fmt "while(%a)@ " pp_cexpr e
   | For(Some i1, Some e, Some i2) ->
-    Format.fprintf fmt "for(%a; %a; %a)@ " self#pp_instruction i1
-      self#pp_cexpr e self#pp_instruction i2
+    Format.fprintf fmt "for(%a; %a; %a)@ " pp_instruction i1
+      pp_cexpr e pp_instruction i2
   | For _ -> assert false (* not used by the translation *)
   | Block_open -> Format.fprintf fmt "{@\n"
   | Block_close -> Format.fprintf fmt "}@\n"
+
+
+
+class print_insertions insertions ~print_label () = object(self)
+  inherit Printer.extensible_printer () as super
+
+  val mutable current_function = None
 
   method private fundecl fmt f =
     let was_ghost = is_ghost in
@@ -1623,7 +1621,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* BegFunc %s */ " precond;
-		Format.fprintf fmt "%a" self#pp_insertion s) q
+		Format.fprintf fmt "%a" pp_insertion s) q
 	  with _ -> ()
 	end;
 	Format.fprintf fmt "return 1;@]@]@\n}@\n@\n"
@@ -1643,7 +1641,7 @@ class print_insertions insertions ~print_label () = object(self)
 	  (fun s ->
 	    if print_label then
 	      Format.fprintf fmt "/* BegFunc %s */ " f.svar.vname;
-	    Format.fprintf fmt "%a" self#pp_insertion s) q
+	    Format.fprintf fmt "%a" pp_insertion s) q
       with _ -> ()
     end;
     self#block ~braces:true fmt f.sbody;
@@ -1670,7 +1668,7 @@ class print_insertions insertions ~print_label () = object(self)
 	  (fun s ->
 	    if print_label then
 	      Format.fprintf fmt "/* BegStmt %i */ " stmt.sid;
-	    Format.fprintf fmt "%a" self#pp_insertion s) q
+	    Format.fprintf fmt "%a" pp_insertion s) q
       with _ -> ()
     end;
     begin
@@ -1685,7 +1683,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* BegIter %i */ " stmt.sid;
-		Format.fprintf fmt "%a" self#pp_insertion s) q
+		Format.fprintf fmt "%a" pp_insertion s) q
 	  with _ -> ()
 	end;
 	Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
@@ -1696,7 +1694,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* EndIter %i */ " stmt.sid;
-		Format.fprintf fmt "%a" self#pp_insertion s) q
+		Format.fprintf fmt "%a" pp_insertion s) q
 	  with _ -> ()
 	end;
 	Format.fprintf fmt "}@\n @]"
@@ -1709,7 +1707,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* EndFunc %s */ " f;
-		Format.fprintf fmt "%a" self#pp_insertion s) q
+		Format.fprintf fmt "%a" pp_insertion s) q
 	  with _ -> ()
 	end;
 	self#stmtkind next fmt stmt.skind
@@ -1722,7 +1720,7 @@ class print_insertions insertions ~print_label () = object(self)
 	  (fun s ->
 	    if print_label then
 	      Format.fprintf fmt "/* EndStmt %i */ " stmt.sid;
-	    Format.fprintf fmt "%a" self#pp_insertion s) q
+	    Format.fprintf fmt "%a" pp_insertion s) q
       with _ -> ()
     end;
     if has_code_annots then Format.fprintf fmt "}@\n @]";
