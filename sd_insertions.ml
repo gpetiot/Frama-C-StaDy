@@ -97,11 +97,12 @@ type insertion =
 | Decl_gmp_var of fresh_gmp_var
 | Decl_ctype_var of ctype_expr
 | Decl_pred_var of pred_expr
-| If_cond of pred_expr
-| Else_cond
+| If_cond of pred_expr (* to remove *)
+| Else_cond (* to remove *)
+| If of pred_expr * insertion list * insertion list
 | For of instruction option * pred_expr option * instruction option
-| Block_open
-| Block_close
+| Block_open (* to remove *)
+| Block_close (* to remove *)
 
 
 class gather_insertions props = object(self)
@@ -262,11 +263,9 @@ class gather_insertions props = object(self)
 	      | s when s = "\\numof" ->
 		(* lambda_term is of type:
 		   Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
-		self#insert
-		  (If_cond(Cmp(Rneq,self#ctype_fragment lambda_term,Zero)));
-		self#insert Block_open;
-		self#insert (Instru(Gmp_binop_ui(PlusA,init_var,init_var,One)));
-		self#insert Block_close
+		let cond = Cmp(Rneq,self#ctype_fragment lambda_term,Zero) in
+		let instr = Instru(Gmp_binop_ui(PlusA,init_var,init_var,One)) in
+		self#insert (If(cond, [instr], []))
 	      | _ -> assert false
 	    end;
 	    self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter, One)));
@@ -546,18 +545,14 @@ class gather_insertions props = object(self)
 	  let decl_var = self#decl_gmp_var fresh_var in
 	  let init_var = self#init_gmp_var decl_var in
 	  let cond' = self#gmp_fragment (self#term cond) in
-	  self#insert (If_cond(Gmp_cmp_si(Ne, cond', Zero)));
-	  self#insert Block_open;
+	  let cond'' = Gmp_cmp_si(Ne, cond', Zero) in
 	  let then_b' = self#gmp_fragment (self#term then_b) in
-	  self#insert (Instru(Gmp_set(init_var, then_b')));
-	  self#insert (Instru(Gmp_clear(then_b')));
-	  self#insert Block_close;
-	  self#insert Else_cond;
-	  self#insert Block_open;
 	  let else_b' = self#gmp_fragment (self#term else_b) in
-	  self#insert (Instru(Gmp_set(init_var, else_b')));
-	  self#insert (Instru(Gmp_clear(else_b')));
-	  self#insert Block_close;
+	  let then_instrs = [Instru(Gmp_set(init_var, then_b'));
+			     Instru(Gmp_clear(then_b'))] in
+	  let else_instrs = [Instru(Gmp_set(init_var, else_b'));
+			     Instru(Gmp_clear(else_b'))] in
+	  self#insert (If(cond'',then_instrs,else_instrs));
 	  self#insert (Instru(Gmp_clear(cond')));
 	  Gmp_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
@@ -734,12 +729,7 @@ class gather_insertions props = object(self)
 	  let do_precond p =
 	    let v = self#predicate(self#subst_pred p.ip_content) in
 	    if v <> True then (* '1' is for untreated predicates *)
-	      begin
-		self#insert (If_cond(Lnot v));
-		self#insert Block_open;
-		self#insert (Instru(Ret Zero));
-		self#insert Block_close
-	      end
+	      self#insert (If(Lnot v, [Instru(Ret Zero)], []))
 	  in
 	  if preconds <> [] then
 	    begin
@@ -990,10 +980,7 @@ class gather_insertions props = object(self)
 
   method private pc_assert_exception pred msg id prop =
     let var = self#predicate (self#subst_pred pred) in
-    self#insert (If_cond(Lnot var));
-    self#insert Block_open;
-    self#insert (Instru(Pc_assert_exn(msg, id)));
-    self#insert Block_close;
+    self#insert (If(Lnot var, [Instru(Pc_assert_exn(msg, id))], []));
     translated_properties <- prop :: translated_properties
 
   method private bhv_guard_begin behaviors =
@@ -1130,10 +1117,9 @@ class gather_insertions props = object(self)
 	    | Linteger ->
 	      current_label <- Some (BegStmt stmt.sid);
 	      let term' = self#gmp_fragment (self#term term) in
-	      self#insert (If_cond (Gmp_cmp_ui(Lt, term', Zero)));
-	      self#insert Block_open;
-	      self#insert (Instru(Pc_assert_exn("Variant non positive", id)));
-	      self#insert Block_close;
+	      let cond = Gmp_cmp_ui(Lt, term', Zero) in
+	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
+	      self#insert (If (cond, [instr], []));
 	      current_label <- Some (EndStmt stmt.sid);
 	      self#insert (Instru(Gmp_clear(term')));
 	      current_label <- Some (BegIter stmt.sid);
@@ -1143,24 +1129,21 @@ class gather_insertions props = object(self)
 	      let init_variant = self#init_set_gmp_var decl_variant term' in
 	      current_label <- Some (EndIter stmt.sid);
 	      let term' = self#gmp_fragment (self#term term) in
-	      self#insert (If_cond(Gmp_cmp_ui(Lt, init_variant, Zero)));
-	      self#insert Block_open;
-	      self#insert (Instru(Pc_assert_exn("Variant non positive", id)));
-	      self#insert Block_close;
-	      self#insert (If_cond(Gmp_cmp(Ge, term', init_variant)));
-	      self#insert Block_open;
-	      self#insert (Instru(Pc_assert_exn("Variant non decreasing", id)));
-	      self#insert Block_close;
+	      let cond = Gmp_cmp_ui(Lt, init_variant, Zero) in
+	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
+	      self#insert (If(cond, [instr], []));
+	      let cond = Gmp_cmp(Ge, term', init_variant) in
+	      let instr = Instru(Pc_assert_exn("Variant non decreasing", id)) in
+	      self#insert (If(cond, [instr] ,[]));
 	      self#insert (Instru(Gmp_clear(init_variant)));
 	      current_label <- None
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      current_label <- Some (BegStmt stmt.sid);
 	      let term' = self#ctype_fragment (self#term term) in
-	      self#insert (If_cond(Cmp(Rlt, term', Zero)));
-	      self#insert Block_open;
-	      self#insert (Instru(Pc_assert_exn("Variant non positive", id)));
-	      self#insert Block_close;
+	      let cond = Cmp(Rlt, term', Zero) in
+	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
+	      self#insert (If(cond, [instr], []));
 	      current_label <- Some (EndStmt stmt.sid);
 	      current_label <- Some (BegIter stmt.sid);
 	      let term' = self#ctype_fragment (self#term term) in
@@ -1169,14 +1152,12 @@ class gather_insertions props = object(self)
 	      self#insert (Instru(Affect(variant, term')));
 	      current_label <- Some (EndIter stmt.sid);
 	      let term' = self#ctype_fragment (self#term term) in
-	      self#insert (If_cond(Cmp(Rlt, variant, Zero)));
-	      self#insert Block_open;
-	      self#insert (Instru(Pc_assert_exn("Variant non positive", id)));
-	      self#insert Block_close;
-	      self#insert (If_cond(Cmp(Rge, term', variant)));
-	      self#insert Block_open;
-	      self#insert (Instru(Pc_assert_exn("Variant non decreasing", id)));
-	      self#insert Block_close;
+	      let cond = Cmp(Rlt, variant, Zero) in
+	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
+	      self#insert (If(cond, [instr], []));
+	      let cond = Cmp(Rge, term', variant) in
+	      let instr = Instru(Pc_assert_exn("Variant non decreasing", id)) in
+	      self#insert (If(cond, [instr], []));
 	      current_label <- None
 	  end;
 	  translated_properties <- prop :: translated_properties
@@ -1199,7 +1180,7 @@ class gather_insertions props = object(self)
     let kf = Kernel_function.find_englobing_kf stmt in
     begin
       match stmt.skind with
-      | If(_exp,b1,b2,_loc) ->
+      | Cil_types.If(_exp,b1,b2,_loc) ->
 	begin
       	  match b1.bstmts with
       	  | first_stmt :: _ ->
@@ -1615,7 +1596,7 @@ let pp_instruction fmt = function
     Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
       pp_garith op pp_gexpr r pp_gexpr a pp_cexpr b
 
-let pp_insertion fmt = function
+let rec pp_insertion fmt = function
   | Instru i -> Format.fprintf fmt "@\n@[%a;@]" pp_instruction i
   | Decl_gmp_var v -> Format.fprintf fmt "@\n@[mpz_t %a;@]" pp_fresh_gmp v
   | Decl_ctype_var ((Fresh_ctype_var (_id, ty)) as v) ->
@@ -1626,23 +1607,23 @@ let pp_insertion fmt = function
   | Decl_pred_var p -> Format.fprintf fmt "@\n@[int %a;@]" pp_pexpr p
   | If_cond exp -> Format.fprintf fmt "@\n@[if(%a)@]" pp_pexpr exp
   | Else_cond -> Format.fprintf fmt "@\n@[else@]"
+  | If (cond,b1,b2) ->
+    Format.fprintf fmt "@\n@[<hov 2>if(%a) {" pp_pexpr cond;
+    List.iter (fun i -> pp_insertion fmt i) b1;
+    Format.fprintf fmt "@]@\n}";
+    if b2 <> [] then
+      begin
+	Format.fprintf fmt "@\n@[<hov 2>else {";
+	List.iter (fun i -> pp_insertion fmt i) b2;
+	Format.fprintf fmt "@]@\n}"
+      end
   | For(None, Some e, None) -> Format.fprintf fmt "@\n@[while(%a)@]" pp_pexpr e
   | For(Some i1, Some e, Some i2) ->
     Format.fprintf fmt "@\n@[for(%a; %a; %a)@]" pp_instruction i1
       pp_pexpr e pp_instruction i2
   | For _ -> assert false (* not used by the translation *)
-  | Block_open ->
-    Format.fprintf fmt "@\n@[{@[<hov 2>"
-    (*Format.force_newline();
-    Format.open_box 0;
-    Format.fprintf fmt "{";
-    Format.open_hovbox 2*)
-  | Block_close ->
-    Format.fprintf fmt "@]@\n}@]"
-    (*Format.close_box();
-    Format.force_newline();
-    Format.fprintf fmt "}";
-    Format.close_box()*)
+  | Block_open -> Format.fprintf fmt "@\n@[{@[<hov 2>"
+  | Block_close -> Format.fprintf fmt "@]@\n}@]"
 
 
 
