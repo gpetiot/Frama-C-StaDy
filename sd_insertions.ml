@@ -888,50 +888,60 @@ class gather_insertions props = object(self)
 	| h :: t ->
 	  let ty = dig_type ty in
 	  let inserts_0, h' = self#term h in
-	  List.iter self#insert inserts_0;
 	  let my_iterator = self#fresh_ctype_var Cil.intType in
-	  self#insert (Decl_ctype_var my_iterator);
+	  let insert_1 = Decl_ctype_var my_iterator in
 	  begin
 	    match h.term_type with
 	    | Linteger ->
 	      let h' = self#gmp_fragment h' in
-	      self#insert (Instru(Affect(my_old_ptr,
-					 Malloc(Binop(Mult,(Gmp_get_si h'),
-						      Sizeof ty)))));
-	      self#insert (For_cond(
-		(Some(Affect(my_iterator, Zero))),
-		(Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
-		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
-	      ));
-	      self#insert Block_open;
-	      alloc_aux
-		(Index(my_old_ptr, my_iterator))
-		(Index(my_ptr, my_iterator)) ty t;
-	      self#insert Block_close;
-	      self#insert (Instru(Gmp_clear h'))
+	      let insert_2 =
+		Instru(Affect(my_old_ptr,
+			      Malloc(Binop(Mult,(Gmp_get_si h'), Sizeof ty))))
+	      in
+	      let inserts_block =
+		alloc_aux
+		  (Index(my_old_ptr, my_iterator))
+		  (Index(my_ptr, my_iterator)) ty t
+	      in
+	      let insert_3 =
+		For(
+		  (Some(Affect(my_iterator, Zero))),
+		  (Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
+		  (Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One))))),
+		  inserts_block
+		)
+	      in
+	      let insert_4 = Instru(Gmp_clear h') in
+	      inserts_0 @ [insert_1; insert_2; insert_3; insert_4]
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      let h' = self#ctype_fragment h' in
-	      self#insert (Instru(Affect(my_old_ptr,
-					 Malloc(Binop(Mult,h', Sizeof ty)))));
-	      self#insert (For_cond(
-		(Some(Affect(my_iterator, Zero))),
-		(Some(Cmp(Rlt, my_iterator, h'))),
-		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
-	      ));
-	      self#insert Block_open;
-	      alloc_aux
-		(Index(my_old_ptr, my_iterator))
-		(Index(my_ptr, my_iterator)) ty t;
-	      self#insert Block_close
+	      let insert_2 =
+		Instru(Affect(my_old_ptr, Malloc(Binop(Mult,h', Sizeof ty))))
+	      in
+	      let inserts_block =
+		alloc_aux
+		  (Index(my_old_ptr, my_iterator))
+		  (Index(my_ptr, my_iterator)) ty t
+	      in
+	      let insert_3 =
+		For(
+		  (Some(Affect(my_iterator, Zero))),
+		  (Some(Cmp(Rlt, my_iterator, h'))),
+		  (Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One))))),
+		  inserts_block
+		)
+	      in
+	      inserts_0 @ [insert_1; insert_2; insert_3]
 	  end
-	| [] -> self#insert (Instru(Affect(my_old_ptr, my_ptr)))
+	| [] -> [Instru(Affect(my_old_ptr, my_ptr))]
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
 	begin
 	  let my_old_ptr = My_ctype_var(v.vtype, "old_ptr_"^v.vname) in
 	  self#insert (Decl_ctype_var my_old_ptr);
-	  alloc_aux my_old_ptr my_v v.vtype terms
+	  let inserts = alloc_aux my_old_ptr my_v v.vtype terms in
+	  List.iter self#insert inserts;
 	end
     in
     List.iter do_varinfo visited_globals;
@@ -948,42 +958,50 @@ class gather_insertions props = object(self)
 	  with Not_found -> []
 	in
 	let rec dealloc_aux my_old_ptr = function
-	  | [] -> ()
-	  | _ :: [] -> self#insert (Instru(Free(my_old_ptr)))
+	  | [] -> []
+	  | _ :: [] -> [Instru(Free my_old_ptr)]
 	  | h :: t ->
 	    let my_iterator = self#fresh_ctype_var Cil.intType in
-	    self#insert (Decl_ctype_var my_iterator);
-	    let inserts_0, h' = self#term h in
-	    List.iter self#insert inserts_0;
-	    begin
+	    let insert_0 = Decl_ctype_var my_iterator in
+	    let inserts_1, h' = self#term h in
+	    let inserts' =
 	      match h.term_type with
 	      | Linteger ->
 		let h' = self#gmp_fragment h' in
-		self#insert (For_cond(
-		  (Some(Affect(my_iterator, Zero))),
-		  (Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
-		  (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
-		));
-		self#insert Block_open;
-		dealloc_aux (Index(my_old_ptr, my_iterator)) t;
-		self#insert Block_close;
-		self#insert (Instru(Gmp_clear h'))
+		let inserts_block =
+		  dealloc_aux (Index(my_old_ptr, my_iterator)) t
+		in
+		let insert_2 =
+		  For(
+		    (Some(Affect(my_iterator, Zero))),
+		    (Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
+		    (Some(Affect(my_iterator, (Binop(PlusA,my_iterator,One))))),
+		    inserts_block
+		  )
+		in
+		let insert_3 = Instru(Gmp_clear h') in
+		[insert_2; insert_3]
 	      | Lreal -> assert false (* TODO: reals *)
 	      | _ ->
 		let h' = self#ctype_fragment h' in
-		self#insert (For_cond(
-		  (Some(Affect(my_iterator, Zero))),
-		  (Some(Cmp(Rlt, my_iterator, h'))),
-		  (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
-		));
-		self#insert Block_open;
-		dealloc_aux (Index(my_old_ptr, my_iterator)) t;
-		self#insert Block_close
-	    end;
-	    self#insert (Instru(Free(my_old_ptr)))
+		let inserts_block =
+		  dealloc_aux (Index(my_old_ptr, my_iterator)) t
+		in
+		let insert_2 =
+		  For(
+		    (Some(Affect(my_iterator, Zero))),
+		    (Some(Cmp(Rlt, my_iterator, h'))),
+		    (Some(Affect(my_iterator, (Binop(PlusA,my_iterator,One))))),
+		    inserts_block
+		  )
+		in
+		[insert_2]
+	    in
+	    [insert_0] @ inserts_1 @ inserts' @ [Instru(Free(my_old_ptr))]
 	in
 	let my_old_ptr = My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname) in
-	dealloc_aux my_old_ptr terms
+	let insertions = dealloc_aux my_old_ptr terms in
+	List.iter self#insert insertions
       in
       List.iter do_varinfo visited_globals;
       List.iter do_varinfo (Kernel_function.get_formals kf)
