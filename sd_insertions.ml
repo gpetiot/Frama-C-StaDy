@@ -866,8 +866,7 @@ class gather_insertions props = object(self)
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
 	begin
-	  let my_old_ptr =
-	    My_ctype_var(v.vtype, "old_ptr_"^v.vname) in
+	  let my_old_ptr = My_ctype_var(v.vtype, "old_ptr_"^v.vname) in
 	  self#insert (Decl_ctype_var my_old_ptr);
 	  alloc_aux my_old_ptr my_v v.vtype terms
 	end
@@ -880,29 +879,19 @@ class gather_insertions props = object(self)
     (* dealloc variables for \at terms *)
     begin
       try
-	let concat_indice str ind = str ^ "[" ^ ind ^ "]" in
-	let iter_counter = ref 0 in
 	let lengths = Sd_utils.lengths_from_requires kf in
 	let do_varinfo v =
 	  let terms =
 	    try Cil_datatype.Varinfo.Hashtbl.find lengths v
 	    with Not_found -> []
 	  in
-	  let rec dealloc_aux indices = function
+	  let rec dealloc_aux my_old_ptr = function
 	    | [] -> ()
-	    | _ :: [] ->
-	      let all_indices = List.fold_left concat_indice "" indices in
-	      let my_old_ptr =
-		My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname^all_indices) in
-	      self#insert (Instru(Free(my_old_ptr)))
+	    | _ :: [] -> self#insert (Instru(Free(my_old_ptr)))
 	    | h :: t ->
-	      let iterator = "__stady_iter_"^(string_of_int !iter_counter) in
-	      let my_iterator = My_ctype_var(Cil.intType, iterator) in
+	      let my_iterator = self#fresh_ctype_var Cil.intType in
 	      self#insert (Decl_ctype_var my_iterator);
 	      let h' = self#term h in
-	      let all_indices = List.fold_left concat_indice "" indices in
-	      iter_counter := !iter_counter + 1;
-	      let indices = Sd_utils.append_end indices iterator in
 	      begin
 		match h.term_type with
 		| Linteger ->
@@ -913,7 +902,7 @@ class gather_insertions props = object(self)
 		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
 		  ));
 		  self#insert Block_open;
-		  dealloc_aux indices t;
+		  dealloc_aux (Index(my_old_ptr, my_iterator)) t;
 		  self#insert Block_close;
 		  self#insert (Instru(Gmp_clear h'))
 		| Lreal -> assert false (* TODO: reals *)
@@ -925,14 +914,13 @@ class gather_insertions props = object(self)
 		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
 		  ));
 		  self#insert Block_open;
-		  dealloc_aux indices t;
+		  dealloc_aux (Index(my_old_ptr, my_iterator)) t;
 		  self#insert Block_close
 	      end;
-	      let my_old_ptr =
-		My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname^all_indices) in
 	      self#insert (Instru(Free(my_old_ptr)))
 	  in
-	  dealloc_aux [] terms
+	  let my_old_ptr = My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname) in
+	  dealloc_aux my_old_ptr terms
 	in
 	List.iter do_varinfo visited_globals;
 	List.iter do_varinfo (Kernel_function.get_formals kf)
