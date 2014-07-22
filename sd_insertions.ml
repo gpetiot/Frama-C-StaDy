@@ -97,12 +97,16 @@ type insertion =
 | Decl_gmp_var of fresh_gmp_var
 | Decl_ctype_var of ctype_expr
 | Decl_pred_var of pred_expr
-| If_cond of pred_expr (* to remove *)
-| Else_cond (* to remove *)
 | If of pred_expr * insertion list * insertion list
-| For of instruction option * pred_expr option * instruction option
-| Block_open (* to remove *)
-| Block_close (* to remove *)
+| For of instruction option * pred_expr option * instruction option *
+    insertion list
+
+(* to remove *)
+| Block_open
+| Block_close
+| If_cond of pred_expr
+| Else_cond
+| For_cond of instruction option * pred_expr option * instruction option
 
 
 class gather_insertions props = object(self)
@@ -248,8 +252,8 @@ class gather_insertions props = object(self)
 	    let decl_iter = self#decl_gmp_var fresh_iter in
 	    let init_iter =
 	      self#init_set_gmp_var decl_iter (self#gmp_fragment low) in
-	    self#insert(For(None, Some(Gmp_cmp(Le, init_iter,
-					      self#gmp_fragment up)), None));
+	    let cond = Gmp_cmp(Le,init_iter,self#gmp_fragment up) in
+	    self#insert(For_cond(None,Some cond,None));
 	    self#insert Block_open;
 	    let lambda_term = self#term t in
 	    begin
@@ -834,7 +838,7 @@ class gather_insertions props = object(self)
 	      self#insert (Instru(Affect(my_old_ptr,
 					 Malloc(Binop(Mult,(Gmp_get_si h'),
 						      Sizeof ty)))));
-	      self#insert (For(
+	      self#insert (For_cond(
 		(Some(Affect(my_iterator, Zero))),
 		(Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
 		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
@@ -851,7 +855,7 @@ class gather_insertions props = object(self)
 	      self#insert (Instru(Affect(my_old_ptr,
 					 Malloc(Binop(Mult,h',
 						      Sizeof ty)))));
-	      self#insert (For(
+	      self#insert (For_cond(
 		(Some(Affect(my_iterator, Zero))),
 		(Some(Cmp(Rlt, my_iterator, h'))),
 		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
@@ -896,7 +900,7 @@ class gather_insertions props = object(self)
 		match h.term_type with
 		| Linteger ->
 		  let h' = self#gmp_fragment h' in
-		  self#insert (For(
+		  self#insert (For_cond(
 		    (Some(Affect(my_iterator, Zero))),
 		    (Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
 		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
@@ -908,7 +912,7 @@ class gather_insertions props = object(self)
 		| Lreal -> assert false (* TODO: reals *)
 		| _ ->
 		  let h' = self#ctype_fragment h' in
-		  self#insert (For(
+		  self#insert (For_cond(
 		    (Some(Affect(my_iterator, Zero))),
 		    (Some(Cmp(Rlt, my_iterator, h'))),
 		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
@@ -1216,7 +1220,7 @@ class gather_insertions props = object(self)
 	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
 	    let exp1 = Gmp_cmpr(r2, init_iter, t2') in
 	    let exp2 = if forall then var else Lnot var in
-	    self#insert (For(None, Some(Land(exp1, exp2)), None));
+	    self#insert (For_cond(None, Some(Land(exp1, exp2)), None));
 	    self#insert Block_open;
 	    let goal_var = self#predicate_named goal in
 	    self#insert (Instru(Affect_pred(var, goal_var)));
@@ -1236,7 +1240,7 @@ class gather_insertions props = object(self)
 	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
 	    let exp1 = Gmp_cmpr_si(r2, init_iter, t2') in
 	    let exp2 = if forall then var else Lnot var in
-	    self#insert (For(None, Some(Land(exp1, exp2)), None));
+	    self#insert (For_cond(None, Some(Land(exp1, exp2)), None));
 	    self#insert Block_open;
 	    let goal_var = self#predicate_named goal in 
 	    self#insert (Instru(Affect_pred(var, goal_var)));
@@ -1258,7 +1262,7 @@ class gather_insertions props = object(self)
 	in
 	let exp2 =Land((Cmp(r2,iter,t2')),(if forall then var else Lnot var)) in
 	let exp3 = Affect(iter,Binop(PlusA,iter,One)) in
-	self#insert (For(Some exp1, Some exp2, Some exp3));
+	self#insert (For_cond(Some exp1, Some exp2, Some exp3));
 	self#insert Block_open;
 	let goal_var = self#predicate_named goal in 
 	self#insert (Instru(Affect_pred(var, goal_var)));
@@ -1589,10 +1593,21 @@ let rec pp_insertion fmt = function
 	List.iter (fun i -> pp_insertion fmt i) b2;
 	Format.fprintf fmt "@]@\n}"
       end
-  | For(None, Some e, None) -> Format.fprintf fmt "@\n@[while(%a)@]" pp_pexpr e
-  | For(Some i1, Some e, Some i2) ->
+  | For_cond(None, Some e, None) ->
+    Format.fprintf fmt "@\n@[while(%a)@]" pp_pexpr e
+  | For(None, Some e, None, b) ->
+    Format.fprintf fmt "@\n@[<hov 2>while(%a) {" pp_pexpr e;
+    List.iter (fun i -> pp_insertion fmt i) b;
+    Format.fprintf fmt "@]@\n}"
+  | For_cond(Some i1, Some e, Some i2) ->
     Format.fprintf fmt "@\n@[for(%a; %a; %a)@]" pp_instruction i1
       pp_pexpr e pp_instruction i2
+  | For(Some i1, Some e, Some i2, b) ->
+    Format.fprintf fmt "@\n@[<hov 2>for(%a; %a; %a) {"
+      pp_instruction i1 pp_pexpr e pp_instruction i2;
+    List.iter (fun i -> pp_insertion fmt i) b;
+    Format.fprintf fmt "@]@\n}"
+  | For_cond _ -> assert false (* not used by the translation *)
   | For _ -> assert false (* not used by the translation *)
   | Block_open -> Format.fprintf fmt "@\n@[{@[<hov 2>"
   | Block_close -> Format.fprintf fmt "@]@\n}@]"
