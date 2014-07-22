@@ -736,11 +736,14 @@ class gather_insertions props = object(self)
 	      self#insert (If(Lnot v, [Instru(Ret Zero)], []))
 	  in
 	  if preconds <> [] then
-	    begin
-	      self#bhv_assumes_begin b;
+	    if b.b_assumes <> [] then
+	      let exp = self#cond_of_assumes b.b_assumes in
+	      self#insert (If_cond exp);
+	      self#insert Block_open;
 	      List.iter do_precond preconds;
-	      self#bhv_assumes_end b
-	    end
+	      self#insert Block_close
+	    else
+	      List.iter do_precond preconds
 	) behaviors;
       end
     (* END precond (entry-point) *)
@@ -759,11 +762,14 @@ class gather_insertions props = object(self)
 	      pred.ip_content "Pre-condition!" id prop
 	  in
 	  if pre <> [] then
-	    begin
-	      self#bhv_assumes_begin b;
+	    if b.b_assumes <> [] then
+	      let exp = self#cond_of_assumes b.b_assumes in
+	      self#insert (If_cond exp);
+	      self#insert Block_open;
 	      List.iter do_precond pre;
-	      self#bhv_assumes_end b
-	    end
+	      self#insert Block_close
+	    else
+	      List.iter do_precond pre
 	) behaviors
       end;
     (* END precond (not entry-point) *)
@@ -785,22 +791,37 @@ class gather_insertions props = object(self)
 	    self#pc_assert_exception
 	      pred.ip_content "Post-condition!" id prop
 	  in
+	  let str = Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
+	  let add_reach_info =
+	    not (Cil.is_default_behavior b)
+	    && (Sd_options.Behavior_Reachability.get())
+	  in
 	  if post <> [] || (Sd_options.Behavior_Reachability.get()) then
 	    begin
-	      self#bhv_assumes_begin b;
-	      if not (Cil.is_default_behavior b)
-		&& (Sd_options.Behavior_Reachability.get()) then
+	      if b.b_assumes <> [] then
+		let exp = self#cond_of_assumes b.b_assumes in
+		self#insert (If_cond exp);
+		self#insert Block_open;
+		if add_reach_info then
+		  begin
+		    self#insert (Instru(Pc_to_framac str));
+		    Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt
+		      (kf, b, false);
+		    bhv_to_reach_cpt <- bhv_to_reach_cpt+1
+		  end;
+		List.iter do_postcond post;
+		self#insert Block_close
+	      else
 		begin
-		  let str =
-		    Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
-		  self#insert (Instru(Pc_to_framac str));
-		  Sd_states.Behavior_Reachability.replace
-		    bhv_to_reach_cpt
-		    (kf, b, false);
-		  bhv_to_reach_cpt <- bhv_to_reach_cpt+1
-		end;
-	      List.iter do_postcond post;
-	      self#bhv_assumes_end b
+		  if add_reach_info then
+		    begin
+		      self#insert (Instru(Pc_to_framac str));
+		      Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt
+			(kf, b, false);
+		      bhv_to_reach_cpt <- bhv_to_reach_cpt+1
+		    end;
+		  List.iter do_postcond post
+		end
 	    end
 	) behaviors;
 	self#insert Block_close
@@ -938,47 +959,27 @@ class gather_insertions props = object(self)
 
   method private subst_pred p = (new Sd_subst.subst)#subst_pred p [] [] [] []
 
-  method private bhv_assumes_begin bhv =
-    if bhv.b_assumes <> [] then
-      let f a = self#predicate (self#subst_pred a.ip_content) in
-      let vars = List.map f bhv.b_assumes in
-      let rec aux ret = function
-	| [] -> ret
-	| h :: t -> aux (Land(ret, h)) t
+  method private cond_of_assumes pred_list =
+    let f a = self#predicate (self#subst_pred a.ip_content) in
+    let vars = List.map f pred_list in
+    let rec aux ret = function
+      | [] -> ret
+      | h :: t -> aux (Land(ret, h)) t
+    in
+    aux True vars
+
+  method private cond_of_behaviors pred_lists =
+    let conds = List.map self#cond_of_assumes pred_lists in
+    let rec aux ret = function
+      | [] -> ret
+      | h :: t -> aux (Lor(ret, h)) t
       in
-      let exp = aux True vars in 
-      self#insert (If_cond exp);
-      self#insert Block_open
-	
-  method private bhv_assumes_end bhv =
-    if bhv.b_assumes <> [] then
-      self#insert Block_close
+    aux False conds
 
   method private pc_assert_exception pred msg id prop =
     let var = self#predicate (self#subst_pred pred) in
     self#insert (If(Lnot var, [Instru(Pc_assert_exn(msg, id))], []));
     translated_properties <- prop :: translated_properties
-
-  method private bhv_guard_begin behaviors =
-    if behaviors <> [] then
-      let f a = self#predicate (self#subst_pred a.ip_content) in
-      let g assumes_list = List.map f assumes_list in
-      let vars = List.map g behaviors in
-      let rec aux' ret = function
-	| [] -> ret
-	| h :: t -> aux' (Land(ret, h)) t
-      in
-      let rec aux ret = function
-	| [] -> ret
-	| h :: t -> aux (Lor(ret, aux' True h)) t
-      in
-      let exp = aux False vars in
-      self#insert (If_cond exp);
-      self#insert Block_open
-
-  method private bhv_guard_end behaviors =
-    if behaviors <> [] then
-      self#insert Block_close
 
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
@@ -1001,8 +1002,7 @@ class gather_insertions props = object(self)
 	
 	current_label <- Some (BegStmt stmt.sid);
 
-	self#bhv_guard_begin behaviors;
-	List.iter (fun b ->
+	let do_behavior b =
 	  let pre = b.b_requires in
 	  let to_prop = Property.ip_of_requires kf (Kstmt stmt) b in
 	  let pre = List.filter (fun p -> List.mem (to_prop p) props) pre in
@@ -1013,21 +1013,31 @@ class gather_insertions props = object(self)
 	      "Stmt Pre-condition!" id prop
 	  in
 	  if pre <> [] then
-	    begin
-	      self#bhv_assumes_begin b;
+	    if b.b_assumes <> [] then
+	      let exp = self#cond_of_assumes b.b_assumes in
+	      self#insert (If_cond exp);
+	      self#insert Block_open;
 	      List.iter do_precond pre;
-	      self#bhv_assumes_end b
-	    end
-	) bhvs.spec_behavior;
-	self#bhv_guard_end behaviors;
+	      self#insert Block_close
+	    else
+	      List.iter do_precond pre
+	in
 
+	if behaviors <> [] then
+	  let cond = self#cond_of_behaviors behaviors in
+	  self#insert (If_cond cond);
+	  self#insert Block_open;
+	  List.iter do_behavior bhvs.spec_behavior;
+	  self#insert Block_close
+	else
+	  List.iter do_behavior bhvs.spec_behavior;
+	
 	current_label <- Some (EndStmt stmt.sid);
 	
 	if self#at_least_one_prop kf bhvs.spec_behavior then
 	  begin
-	    self#bhv_guard_begin behaviors;
-	    self#insert Block_open;
-	    List.iter (fun b ->
+
+	    let do_behavior b =
 	      let post = b.b_post_cond in
 	      let to_prop = Property.ip_of_ensures kf (Kstmt stmt) b in
 	      let post =
@@ -1039,14 +1049,24 @@ class gather_insertions props = object(self)
 		  "Stmt Post-condition!" id prop
 	      in
 	      if post <> [] then
-		begin
-		  self#bhv_assumes_begin b;
+		if b.b_assumes <> [] then
+		  let exp = self#cond_of_assumes b.b_assumes in
+		  self#insert (If_cond exp);
+		  self#insert Block_open;
 		  List.iter do_postcond post;
-		  self#bhv_assumes_end b
-		end
-	    ) bhvs.spec_behavior;
-	    self#insert Block_close;
-	    self#bhv_guard_end behaviors
+		  self#insert Block_close
+		else
+		  List.iter do_postcond post
+	    in
+
+	    if behaviors <> [] then
+	      let cond = self#cond_of_behaviors behaviors in
+	      self#insert (If_cond cond);
+	      self#insert Block_open;
+	      List.iter do_behavior bhvs.spec_behavior;
+	      self#insert Block_close
+	    else
+	      List.iter do_behavior bhvs.spec_behavior
 	  end;
 
 	current_label <- None
@@ -1059,9 +1079,14 @@ class gather_insertions props = object(self)
 	if List.mem prop props then
 	  begin
 	    let id = Sd_utils.to_id prop in
-	    self#bhv_guard_begin behaviors;
-	    self#pc_assert_exception pred.content "Assert!" id prop;
-	    self#bhv_guard_end behaviors
+	    if behaviors <> [] then
+	      let cond = self#cond_of_behaviors behaviors in
+	      self#insert (If_cond cond);
+	      self#insert Block_open;
+	      self#pc_assert_exception pred.content "Assert!" id prop;
+	      self#insert Block_close
+	    else
+	      self#pc_assert_exception pred.content "Assert!" id prop
 	  end;
 
 	current_label <- None
@@ -1072,9 +1097,14 @@ class gather_insertions props = object(self)
 	if List.mem prop props then
 	  let id = Sd_utils.to_id prop in
 	  let f msg =
-	    self#bhv_guard_begin behaviors;
-	    self#pc_assert_exception pred.content msg id prop;
-	    self#bhv_guard_end behaviors
+	    if behaviors <> [] then
+	      let cond = self#cond_of_behaviors behaviors in
+	      self#insert (If_cond cond);
+	      self#insert Block_open;
+	      self#pc_assert_exception pred.content msg id prop;
+	      self#insert Block_close
+	    else
+	      self#pc_assert_exception pred.content msg id prop
 	  in
 	  current_label <- Some (BegStmt stmt.sid);
 	  f "Loop invariant not established!";
