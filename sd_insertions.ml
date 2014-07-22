@@ -806,42 +806,30 @@ class gather_insertions props = object(self)
     current_label <- Some (BegFunc f.svar.vname);
 
     (* alloc variables for \at terms *)
-    let concat_indice str ind = str ^ "[" ^ ind ^ "]" in
-    let rec array_to_ptr = function
-      | TArray(ty,_,_,attributes) -> TPtr(array_to_ptr ty, attributes)
-      | x -> x
-    in
-    let array_to_ptr x = array_to_ptr (Cil.unrollTypeDeep x) in
     let dig_type = function
       | TPtr(ty,_) | TArray(ty,_,_,_) -> ty
       | ty -> Sd_options.Self.abort "dig_type %a" Printer.pp_typ ty
     in
     let dig_type x = dig_type (Cil.unrollTypeDeep x) in
-    let iter_counter = ref 0 in
     let lengths = Sd_utils.lengths_from_requires kf in
     let do_varinfo v =
       let terms =
 	try Cil_datatype.Varinfo.Hashtbl.find lengths v
 	with Not_found -> []
       in
-      let my_v = My_ctype_var((array_to_ptr v.vtype), v.vname) in
-      let my_old_v = My_ctype_var((array_to_ptr v.vtype), "old_"^v.vname) in
+      let my_v = My_ctype_var(v.vtype, v.vname) in
+      let my_old_v = My_ctype_var(v.vtype, "old_"^v.vname) in
       self#insert (Decl_ctype_var my_old_v);
       self#insert (Instru(Affect(my_old_v, my_v)));
-      let rec alloc_aux indices ty = function
+      let rec alloc_aux my_old_ptr my_ptr ty = function
 	| h :: t ->
-	  let all_indices = List.fold_left concat_indice "" indices in
-	  let old_ty = ty in
 	  let ty = dig_type ty in
 	  let h' = self#term h in
-	  let iterator = "__stady_iter_" ^ (string_of_int !iter_counter) in
-	  let my_iterator = My_ctype_var(Cil.intType, iterator) in
+	  let my_iterator = self#fresh_ctype_var Cil.intType in
 	  self#insert (Decl_ctype_var my_iterator);
 	  begin
 	    match h.term_type with
 	    | Linteger ->
-	      let my_old_ptr =
-		My_ctype_var(old_ty, "old_ptr_"^v.vname^all_indices) in
 	      let h' = self#gmp_fragment h' in
 	      self#insert (Instru(Affect(my_old_ptr,
 					 Malloc(Binop(Mult,(Gmp_get_si h'),
@@ -852,14 +840,13 @@ class gather_insertions props = object(self)
 		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
 	      ));
 	      self#insert Block_open;
-	      iter_counter := !iter_counter + 1;
-	      alloc_aux (Sd_utils.append_end indices iterator) ty t;
+	      alloc_aux
+		(Index(my_old_ptr, my_iterator))
+		(Index(my_ptr, my_iterator)) ty t;
 	      self#insert Block_close;
 	      self#insert (Instru(Gmp_clear h'))
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
-	      let my_old_ptr =
-		My_ctype_var(old_ty, "old_ptr_"^v.vname^all_indices) in
 	      let h' = self#ctype_fragment h' in
 	      self#insert (Instru(Affect(my_old_ptr,
 					 Malloc(Binop(Mult,h',
@@ -870,23 +857,19 @@ class gather_insertions props = object(self)
 		(Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One)))))
 	      ));
 	      self#insert Block_open;
-	      iter_counter := !iter_counter + 1;
-	      alloc_aux (Sd_utils.append_end indices iterator) ty t;
+	      alloc_aux
+		(Index(my_old_ptr, my_iterator))
+		(Index(my_ptr, my_iterator)) ty t;
 	      self#insert Block_close
 	  end
-	| [] ->
-	  let all_indices = List.fold_left concat_indice "" indices in
-	  let my_old_ptr =
-	    My_ctype_var(ty, "old_ptr_"^v.vname^all_indices) in
-	  let my_var = My_ctype_var (ty, v.vname^all_indices) in
-	  self#insert (Instru(Affect(my_old_ptr, my_var)))
+	| [] -> self#insert (Instru(Affect(my_old_ptr, my_ptr)))
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
 	begin
 	  let my_old_ptr =
-	    My_ctype_var((array_to_ptr v.vtype), "old_ptr_"^v.vname) in
+	    My_ctype_var(v.vtype, "old_ptr_"^v.vname) in
 	  self#insert (Decl_ctype_var my_old_ptr);
-	  alloc_aux [] v.vtype terms
+	  alloc_aux my_old_ptr my_v v.vtype terms
 	end
     in
     List.iter do_varinfo visited_globals;
@@ -897,6 +880,7 @@ class gather_insertions props = object(self)
     (* dealloc variables for \at terms *)
     begin
       try
+	let concat_indice str ind = str ^ "[" ^ ind ^ "]" in
 	let iter_counter = ref 0 in
 	let lengths = Sd_utils.lengths_from_requires kf in
 	let do_varinfo v =
