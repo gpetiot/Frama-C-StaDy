@@ -148,28 +148,22 @@ class gather_insertions props = object(self)
     Fresh_gmp_var last_gmp_var_id
 
   method private decl_gmp_var var =
-    self#insert (Decl_gmp_var var);
-    Declared_gmp_var var
+    Decl_gmp_var var, Declared_gmp_var var
 
   method private init_gmp_var var =
-    self#insert (Instru(Gmp_init var));
-    Initialized_gmp_var var
+    Instru(Gmp_init var), Initialized_gmp_var var
 
   method private init_set_gmp_var var v =
-    self#insert (Instru(Gmp_init_set (var, v)));
-    Initialized_gmp_var var
+    Instru(Gmp_init_set (var, v)), Initialized_gmp_var var
 
   method private init_set_si_gmp_var var v =
-    self#insert (Instru(Gmp_init_set_si (var, v)));
-    Initialized_gmp_var var
+    Instru(Gmp_init_set_si (var, v)), Initialized_gmp_var var
 
   method private init_set_ui_gmp_var var v =
-    self#insert (Instru(Gmp_init_set_ui (var, v)));
-    Initialized_gmp_var var
+    Instru(Gmp_init_set_ui (var, v)), Initialized_gmp_var var
 
   method private init_set_str_gmp_var var v =
-    self#insert (Instru(Gmp_init_set_str (var, v)));
-    Initialized_gmp_var var
+    Instru(Gmp_init_set_str (var, v)), Initialized_gmp_var var
 
   method private fresh_ctype_var ty =
     last_ctype_var_id <- last_ctype_var_id + 1;
@@ -196,14 +190,14 @@ class gather_insertions props = object(self)
     let ret =
       match current_function with
       | Some _ when in_old_term ->
+	let prefix =
+	  match v.lv_type with
+	  | Ctype ty
+	      when (Cil.isPointerType ty || Cil.isArrayType ty) && in_old_ptr ->
+	    "old_ptr"
+	  | _ -> "old"
+	in
 	begin
-	  let prefix =
-	    match v.lv_type with
-	    | Ctype ty
-		when (Cil.isPointerType ty || Cil.isArrayType ty) && in_old_ptr ->
-	      "old_ptr"
-	    | _ -> "old"
-	  in
 	  match v.lv_origin with
 	  | Some _ -> prefix ^ "_" ^ v.lv_name
 	  | None -> v.lv_name
@@ -217,7 +211,7 @@ class gather_insertions props = object(self)
     | Ctype ty -> Ctype_fragment (My_ctype_var (ty, ret))
     | _ -> assert false
 
-  method private term t : fragment =
+  method private term t : insertion list * fragment =
     self#term_node t
 
   method private gmp_fragment = function
@@ -237,11 +231,11 @@ class gather_insertions props = object(self)
       | _ -> assert false (* unreachable *)
     in
     let fresh_var = self#fresh_gmp_var() in
-    let decl_var = self#decl_gmp_var fresh_var in
-    let init_var = self#init_set_si_gmp_var decl_var init_val in
-    self#insert Block_open;
-    let low = self#term lower in
-    let up = self#term upper in
+    let insert_0, decl_var = self#decl_gmp_var fresh_var in
+    let insert_1, init_var = self#init_set_si_gmp_var decl_var init_val in
+    let insert_2 = Block_open in
+    let inserts_3, low = self#term lower in
+    let inserts_4, up = self#term upper in
     begin
       match lower.term_type with
       | Linteger ->
@@ -249,38 +243,49 @@ class gather_insertions props = object(self)
 	  match upper.term_type with
 	  | Linteger ->
 	    let fresh_iter = My_gmp_var q.lv_name in
-	    let decl_iter = self#decl_gmp_var fresh_iter in
-	    let init_iter =
+	    let insert_5, decl_iter = self#decl_gmp_var fresh_iter in
+	    let insert_6, init_iter =
 	      self#init_set_gmp_var decl_iter (self#gmp_fragment low) in
-	    let cond = Gmp_cmp(Le,init_iter,self#gmp_fragment up) in
-	    self#insert(For_cond(None,Some cond,None));
-	    self#insert Block_open;
-	    let lambda_term = self#term t in
-	    begin
+	    let inserts_for_block_0, lambda_term = self#term t in
+	    let insert_for_block_1 =
 	      match builtin_name with
 	      | s when s = "\\sum" ->
-		self#insert (Instru(Gmp_binop(PlusA, init_var, init_var,
-					      self#gmp_fragment lambda_term)));
+		Instru(Gmp_binop(PlusA, init_var, init_var,
+				 self#gmp_fragment lambda_term));
 	      | s when s = "\\product" ->
-		self#insert (Instru(Gmp_binop(Mult, init_var, init_var,
-					      self#gmp_fragment lambda_term)));
+		Instru(Gmp_binop(Mult, init_var, init_var,
+				 self#gmp_fragment lambda_term));
 	      | s when s = "\\numof" ->
 		(* lambda_term is of type:
 		   Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
 		let cond = Cmp(Rneq,self#ctype_fragment lambda_term,Zero) in
 		let instr = Instru(Gmp_binop_ui(PlusA,init_var,init_var,One)) in
-		self#insert (If(cond, [instr], []))
+		If(cond, [instr], [])
 	      | _ -> assert false
-	    end;
-	    self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter, One)));
-	    if builtin_name <> "\\numof" then
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment lambda_term)));
-	    self#insert Block_close;
-	    self#insert (Instru(Gmp_clear init_iter));
-	    self#insert (Instru(Gmp_clear(self#gmp_fragment low)));
-	    self#insert (Instru(Gmp_clear(self#gmp_fragment up)));
-	    self#insert Block_close;
-	    Gmp_fragment init_var
+	    in
+	    let insert_for_block_2 = 
+	      Instru(Gmp_binop_ui(PlusA,init_iter,init_iter, One)) in
+	    let inserts_for_block = inserts_for_block_0 @
+	      [insert_for_block_1; insert_for_block_2] in
+	    let inserts_for_block =
+	      if builtin_name <> "\\numof" then
+		Sd_utils.append_end inserts_for_block
+		  (Instru(Gmp_clear(self#gmp_fragment lambda_term)))
+	      else
+		inserts_for_block
+	    in
+	    let cond = Gmp_cmp(Le,init_iter,self#gmp_fragment up) in
+	    let insert_7 = For(None, Some cond, None, inserts_for_block) in
+	    let insert_8 = Instru(Gmp_clear init_iter) in
+	    let insert_9 = Instru(Gmp_clear(self#gmp_fragment low)) in
+	    let insert_10 = Instru(Gmp_clear(self#gmp_fragment up)) in
+	    let insert_11 = Block_close in
+	    let inserts =
+	      [insert_0; insert_1; insert_2] @ inserts_3 @ inserts_4 @
+		[insert_5; insert_6; insert_7; insert_8; insert_9; insert_10;
+		 insert_11]
+	    in
+	    inserts, Gmp_fragment init_var
 	  | Lreal -> assert false (* unreachable *)
 	  | _ -> assert false (* unreachable ? *)
 	end
@@ -300,12 +305,13 @@ class gather_insertions props = object(self)
 	match ty with
 	| Linteger ->
 	  let fresh_var = self#fresh_gmp_var() in
-	  let decl_var = self#decl_gmp_var fresh_var in
+	  let insert_0, decl_var = self#decl_gmp_var fresh_var in
 	  let str = Pretty_utils.sfprintf "%a" Printer.pp_term t in
-	  let init_var = self#init_set_str_gmp_var decl_var str in
-	  Gmp_fragment init_var
+	  let insert_1, init_var = self#init_set_str_gmp_var decl_var str in
+	  [insert_0; insert_1], Gmp_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
-	| _ -> Ctype_fragment(Cst(Pretty_utils.sfprintf "%a" Printer.pp_term t))
+	| _ ->
+	  [], Ctype_fragment(Cst(Pretty_utils.sfprintf "%a" Printer.pp_term t))
       end
 
     | TLval tlval ->
@@ -313,10 +319,11 @@ class gather_insertions props = object(self)
 	match ty with
 	| Linteger ->
 	  let fresh_var = self#fresh_gmp_var() in
-	  let t' = self#gmp_fragment (self#tlval tlval) in
-	  let decl_var = self#decl_gmp_var fresh_var in
-	  let init_var = self#init_set_gmp_var decl_var t' in
-	  Gmp_fragment init_var
+	  let inserts_0, t' = self#tlval tlval in
+	  let t' = self#gmp_fragment t' in
+	  let insert_1, decl_var = self#decl_gmp_var fresh_var in
+	  let insert_2, init_var = self#init_set_gmp_var decl_var t' in
+	  inserts_0 @ [insert_1; insert_2], Gmp_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> self#tlval tlval
       end
@@ -334,118 +341,121 @@ class gather_insertions props = object(self)
 	match ty with
 	| Linteger ->
 	  assert(op = Neg);
-	  let x = self#term t' in
+	  let inserts_0, x = self#term t' in
 	  let fresh_var = self#fresh_gmp_var() in
-	  let decl_var = self#decl_gmp_var fresh_var in
-	  let init_var = self#init_gmp_var decl_var in
-	  begin
+	  let insert_1, decl_var = self#decl_gmp_var fresh_var in
+	  let insert_2, init_var = self#init_gmp_var decl_var in
+	  let inserts_3 =
 	    match t'.term_type with
 	    | Linteger ->
-	      self#insert
-		(Instru(Gmp_ui_sub(init_var,Zero,self#gmp_fragment x)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)))
+	      [Instru(Gmp_ui_sub(init_var,Zero,self#gmp_fragment x));
+	       Instru(Gmp_clear(self#gmp_fragment x))]
 	    | Lreal -> assert false (* unreachable *)
 	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
 	      let fresh_var' = self#fresh_gmp_var() in
-	      let decl_var' = self#decl_gmp_var fresh_var' in
-	      let init_var' =
+	      let insert_0', decl_var' = self#decl_gmp_var fresh_var' in
+	      let insert_1', init_var' =
 		self#init_set_ui_gmp_var decl_var' (self#ctype_fragment x) in
-	      self#insert (Instru(Gmp_ui_sub(init_var', Zero,init_var')));
-	      self#insert (Instru(Gmp_clear init_var'))
+	      [insert_0'; insert_1';
+	       Instru(Gmp_ui_sub(init_var', Zero,init_var'));
+	       Instru(Gmp_clear init_var')]
 	    | Ctype(TInt _) ->
 	      let fresh_var' = self#fresh_gmp_var() in
-	      let decl_var' = self#decl_gmp_var fresh_var' in
-	      let init_var' =
+	      let insert_0', decl_var' = self#decl_gmp_var fresh_var' in
+	      let insert_1', init_var' =
 		self#init_set_si_gmp_var decl_var' (self#ctype_fragment x) in
-	      self#insert (Instru(Gmp_ui_sub(init_var', Zero, init_var')));
-	      self#insert (Instru(Gmp_clear init_var'));
+	      [insert_0'; insert_1';
+	       Instru(Gmp_ui_sub(init_var', Zero, init_var'));
+	       Instru(Gmp_clear init_var')];
 	    | _ -> assert false (* unreachable *)
-	  end;
-	  Gmp_fragment init_var
+	  in
+	  inserts_0 @ [insert_1; insert_2] @ inserts_3, Gmp_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ ->
-	  let x = self#ctype_fragment (self#term t') in
-	  Ctype_fragment (Unop(op, x))
+	  let inserts, x = self#term t' in
+	  inserts, Ctype_fragment (Unop(op, self#ctype_fragment x))
       end
 
     | TBinOp((IndexPI|PlusPI|MinusPI) as op, t1, t2) ->
       begin
 	match t2.term_type with
 	| Linteger ->
-	  let x = self#ctype_fragment (self#term t1)
-	  and y = self#gmp_fragment (self#term t2) in
+	  let inserts_0, x = self#term t1 in
+	  let x = self#ctype_fragment x in
+	  let inserts_1, y = self#term t2 in
+	  let y = self#gmp_fragment y in
 	  let var = self#fresh_ctype_var Cil.intType in
-	  self#insert (Decl_ctype_var var);
-	  self#insert (Instru(Affect(var, Gmp_get_si y)));
-	  self#insert (Instru(Gmp_clear y));
+	  let insert_2 = Decl_ctype_var var in
+	  let insert_3 = Instru(Affect(var, Gmp_get_si y)) in
+	  let insert_4 = Instru(Gmp_clear y) in
+	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4],
 	  Ctype_fragment (Binop(op, x, var))
 	| Lreal -> assert false (* unreachable *)
 	| _ ->
-	  let x = self#ctype_fragment (self#term t1)
-	  and y = self#ctype_fragment (self#term t2) in
-	  Ctype_fragment (Binop(op, x, y))
+	  let inserts_0, x = self#term t1 in
+	  let x = self#ctype_fragment x in
+	  let inserts_1, y = self#term t2 in
+	  let y = self#ctype_fragment y in
+	  inserts_0 @ inserts_1, Ctype_fragment (Binop(op, x, y))
       end
 
     | TBinOp(op, t1, t2) ->
       begin
 	match ty with
 	| Linteger ->
-	  let x = self#term t1 and y = self#term t2 in
+	  let inserts_0, x = self#term t1 in
+	  let inserts_1, y = self#term t2 in
 	  let fresh_var = self#fresh_gmp_var() in
-	  let decl_var = self#decl_gmp_var fresh_var in
-	  let init_var = self#init_gmp_var decl_var in
+	  let insert_2, decl_var = self#decl_gmp_var fresh_var in
+	  let insert_3, init_var = self#init_gmp_var decl_var in
 	  begin
 	    match t1.term_type, t2.term_type with
 	    | Linteger, Linteger ->
-	      self#insert (Instru(Gmp_binop(op, init_var, self#gmp_fragment x,
-					    self#gmp_fragment y)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment y)));
+	      let x = self#gmp_fragment x and y = self#gmp_fragment y in
+	      inserts_0 @ inserts_1 @ [insert_2; insert_3]
+	      @ [Instru(Gmp_binop(op, init_var, x, y));
+		 Instru(Gmp_clear x); Instru(Gmp_clear y)],
 	      Gmp_fragment init_var
 	    | Linteger,Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_))->
-	      self#insert (Instru(Gmp_binop_ui(op, init_var,self#gmp_fragment x,
-					       self#ctype_fragment y)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)));
+	      let x = self#gmp_fragment x and y = self#ctype_fragment y in
+	      inserts_0 @ inserts_1 @ [insert_2; insert_3]
+	      @ [Instru(Gmp_binop_ui(op, init_var, x, y)); Instru(Gmp_clear x)],
 	      Gmp_fragment init_var
 	    | Linteger, Ctype (TInt _) ->
-	      self#insert (Instru(Gmp_binop_si(op, init_var,self#gmp_fragment x,
-					       self#ctype_fragment y)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)));
+	      let x = self#gmp_fragment x and y = self#ctype_fragment y in
+	      inserts_0 @ inserts_1 @ [insert_2; insert_3]
+	      @ [Instru(Gmp_binop_si(op, init_var, x, y)); Instru(Gmp_clear x)],
 	      Gmp_fragment init_var
 	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)),Linteger->
 	      if op = PlusA || op = Mult then
-		begin
-		  self#insert (Instru(Gmp_binop_ui(op, init_var,
-						   self#gmp_fragment y,
-						   self#ctype_fragment x)));
-		  self#insert (Instru(Gmp_clear(self#gmp_fragment y)));
-		  Gmp_fragment init_var
-		end
+		let x = self#ctype_fragment x and y = self#gmp_fragment y in
+		inserts_0 @ inserts_1 @ [insert_2; insert_3]
+		@ [Instru(Gmp_binop_ui(op,init_var,y,x)); Instru(Gmp_clear y)],
+		Gmp_fragment init_var
 	      else
 		assert false (* TODO *)
 	    | Ctype (TInt _), Linteger ->
 	      if op = PlusA || op = Mult then
-		begin
-		  self#insert (Instru(Gmp_binop_si(op, init_var,
-						   self#gmp_fragment y,
-						   self#ctype_fragment x)));
-		  self#insert (Instru(Gmp_clear(self#gmp_fragment y)));
-		  Gmp_fragment init_var
-		end
+		let x = self#ctype_fragment x and y = self#gmp_fragment y in
+		inserts_0 @ inserts_1 @ [insert_2; insert_3]
+		@ [Instru(Gmp_binop_si(op, init_var,y,x)); Instru(Gmp_clear y)],
+		Gmp_fragment init_var
 	      else
 		assert false (* TODO *)
 	    | Ctype(TInt _), Ctype(TInt _) ->
 	      let fresh_var1 = self#fresh_gmp_var() in
-	      let decl_var1 = self#decl_gmp_var fresh_var1 in
+	      let insert_4, decl_var1 = self#decl_gmp_var fresh_var1 in
 	      let fresh_var2 = self#fresh_gmp_var() in
-	      let decl_var2 = self#decl_gmp_var fresh_var2 in
-	      let init_var1 =
+	      let insert_5, decl_var2 = self#decl_gmp_var fresh_var2 in
+	      let insert_6, init_var1 =
 		self#init_set_si_gmp_var decl_var1 (self#ctype_fragment x) in
-	      let init_var2 =
+	      let insert_7, init_var2 =
 		self#init_set_si_gmp_var decl_var2 (self#ctype_fragment y) in
-	      self#insert (Instru(Gmp_binop(op,init_var,init_var1,init_var2)));
-	      self#insert (Instru(Gmp_clear init_var1));
-	      self#insert (Instru(Gmp_clear init_var2));
+	      inserts_0 @ inserts_1
+	      @	[insert_2; insert_3; insert_4; insert_5; insert_6; insert_7;
+		 Instru(Gmp_binop(op,init_var,init_var1,init_var2));
+		 Instru(Gmp_clear init_var1);
+		 Instru(Gmp_clear init_var2)],
 	      Gmp_fragment init_var
 	    | _ -> assert false
 	  end
@@ -455,18 +465,20 @@ class gather_insertions props = object(self)
 	    match t1.term_type, t2.term_type with
 	    | Linteger, Linteger ->
 	      let var = self#fresh_ctype_var Cil.intType in
-	      let x = self#term t1 in
-	      let y = self#term t2 in
-	      self#insert (Decl_ctype_var var);
+	      let inserts_0, x = self#term t1 in
+	      let inserts_1, y = self#term t2 in
 	      let pred = Gmp_cmp(op, self#gmp_fragment x,self#gmp_fragment y) in
-	      self#insert (Instru(Affect(var, Of_pred pred)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment x)));
-	      self#insert (Instru(Gmp_clear(self#gmp_fragment y)));
+	      inserts_0 @ inserts_1
+	      @ [Decl_ctype_var var;
+		 Instru(Affect(var, Of_pred pred));
+		 Instru(Gmp_clear(self#gmp_fragment x));
+		 Instru(Gmp_clear(self#gmp_fragment y))],
 	      Ctype_fragment var
 	    | _ ->
-	      let x = self#ctype_fragment (self#term t1) in
-	      let y = self#ctype_fragment (self#term t2) in
-	      Ctype_fragment (Binop(op, x, y))
+	      let inserts_0, x = self#term t1 in
+	      let inserts_1, y = self#term t2 in
+	      let x = self#ctype_fragment x and y = self#ctype_fragment y in
+	      inserts_0 @ inserts_1, Ctype_fragment (Binop(op, x, y))
 	  end
 	| _ -> assert false (* unreachable ? *)
       end
@@ -478,25 +490,29 @@ class gather_insertions props = object(self)
 	  begin
 	    match ty with (* dest type *)
 	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	      let v = self#gmp_fragment (self#term t') in
+	      let inserts_0, v = self#term t' in
+	      let v = self#gmp_fragment v in
 	      let var = self#fresh_ctype_var ty' in
-	      self#insert (Decl_ctype_var var);
-	      self#insert (Instru(Affect(var, Gmp_get_ui v)));
-	      self#insert (Instru(Gmp_clear v));
+	      inserts_0
+	      @ [Decl_ctype_var var;
+		 Instru(Affect(var, Gmp_get_ui v));
+		 Instru(Gmp_clear v)],
 	      Ctype_fragment var
 	    | Ctype (TInt _) ->
-	      let v = self#gmp_fragment (self#term t') in
+	      let inserts_0, v = self#term t' in
+	      let v = self#gmp_fragment v in
 	      let var = self#fresh_ctype_var ty' in
-	      self#insert (Decl_ctype_var var);
-	      self#insert (Instru(Affect(var, Gmp_get_si v)));
-	      self#insert (Instru(Gmp_clear v));
+	      inserts_0
+	      @ [Decl_ctype_var var;
+		 Instru(Affect(var, Gmp_get_si v));
+		 Instru(Gmp_clear v)],
 	      Ctype_fragment var
 	    | _ -> assert false (* unreachable *)
 	  end
 	| Lreal -> assert false (* reals *)
 	| Ctype _ ->
-	  let v = self#ctype_fragment (self#term t') in
-	  Ctype_fragment (Cast (ty', v))
+	  let inserts_0, v = self#term t' in
+	  inserts_0, Ctype_fragment (Cast (ty', self#ctype_fragment v))
 	| _ -> assert false (* unreachable *)
       end
 
@@ -514,12 +530,15 @@ class gather_insertions props = object(self)
 	    begin
 	      let param = List.hd params in
 	      assert (List.tl params = []);
-	      let x = self#gmp_fragment (self#term param) in
+	      let inserts_0, x = self#term param in
+	      let x = self#gmp_fragment x in
 	      let fresh_var = self#fresh_gmp_var() in
-	      let decl_var = self#decl_gmp_var fresh_var in
-	      let init_var = self#init_gmp_var decl_var in
-	      self#insert (Instru(Gmp_abs(init_var, x)));
-	      self#insert (Instru(Gmp_clear x));
+	      let insert_1, decl_var = self#decl_gmp_var fresh_var in
+	      let insert_2, init_var = self#init_gmp_var decl_var in
+	      inserts_0
+	      @ [insert_1; insert_2;
+		 Instru(Gmp_abs(init_var, x));
+		 Instru(Gmp_clear x)],
 	      Gmp_fragment init_var
 	    end
 	  else
@@ -546,18 +565,27 @@ class gather_insertions props = object(self)
 	match ty with
 	| Linteger ->
 	  let fresh_var = self#fresh_gmp_var() in
-	  let decl_var = self#decl_gmp_var fresh_var in
-	  let init_var = self#init_gmp_var decl_var in
-	  let cond' = self#gmp_fragment (self#term cond) in
+	  let insert_0, decl_var = self#decl_gmp_var fresh_var in
+	  let insert_1, init_var = self#init_gmp_var decl_var in
+	  let inserts_2, cond' = self#term cond in
+	  let cond' = self#gmp_fragment cond' in
 	  let cond'' = Gmp_cmp_si(Ne, cond', Zero) in
-	  let then_b' = self#gmp_fragment (self#term then_b) in
-	  let else_b' = self#gmp_fragment (self#term else_b) in
-	  let then_instrs = [Instru(Gmp_set(init_var, then_b'));
-			     Instru(Gmp_clear(then_b'))] in
-	  let else_instrs = [Instru(Gmp_set(init_var, else_b'));
-			     Instru(Gmp_clear(else_b'))] in
-	  self#insert (If(cond'',then_instrs,else_instrs));
-	  self#insert (Instru(Gmp_clear(cond')));
+
+	  let inserts_then =
+	    let inserts_then_0, then_b' = self#term then_b in
+	    let then_b' = self#gmp_fragment then_b' in
+	    inserts_then_0
+	    @ [Instru(Gmp_set(init_var, then_b')); Instru(Gmp_clear then_b')]
+	  in
+	  let inserts_else =
+	    let inserts_else_0, else_b' = self#term else_b in
+	    let else_b' = self#gmp_fragment else_b' in
+	    inserts_else_0
+	    @ [Instru(Gmp_set(init_var, else_b')); Instru(Gmp_clear else_b')]
+	  in
+	  let insert_3 = If(cond'', inserts_then, inserts_else) in
+	  let insert_4 = Instru(Gmp_clear cond') in
+	  [insert_0; insert_1] @ inserts_2 @ [insert_3; insert_4],
 	  Gmp_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
@@ -595,7 +623,7 @@ class gather_insertions props = object(self)
     | Tbase_addr _ -> Sd_options.Self.not_yet_implemented "Tbase_addr"
     | Toffset _ -> Sd_options.Self.not_yet_implemented "Toffset"
     | Tblock_length _ -> Sd_options.Self.not_yet_implemented "Tblock_length"
-    | Tnull -> Ctype_fragment Zero
+    | Tnull -> [], Ctype_fragment Zero
 
     (* C type -> logic type *)
     | TLogic_coerce (_, t')
@@ -611,17 +639,19 @@ class gather_insertions props = object(self)
 	    in
 	    match ty' with
 	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	      let v = self#ctype_fragment (self#term t') in
+	      let inserts_0, v = self#term t' in
+	      let v = self#ctype_fragment v in
 	      let fresh_var = self#fresh_gmp_var() in
-	      let decl_var = self#decl_gmp_var fresh_var in
-	      let init_var = self#init_set_ui_gmp_var decl_var v in
-	      Gmp_fragment init_var
+	      let insert_1, decl_var = self#decl_gmp_var fresh_var in
+	      let insert_2, init_var = self#init_set_ui_gmp_var decl_var v in
+	      inserts_0 @ [insert_1; insert_2], Gmp_fragment init_var
 	    | Ctype(TInt _) | Ctype(TEnum _) ->
-	      let v = self#ctype_fragment (self#term t') in
+	      let inserts_0, v = self#term t' in
+	      let v = self#ctype_fragment v in
 	      let fresh_var = self#fresh_gmp_var() in
-	      let decl_var = self#decl_gmp_var fresh_var in
-	      let init_var = self#init_set_si_gmp_var decl_var v in
-	      Gmp_fragment init_var
+	      let insert_1, decl_var = self#decl_gmp_var fresh_var in
+	      let insert_2, init_var = self#init_set_si_gmp_var decl_var v in
+	      inserts_0 @ [insert_1; insert_2], Gmp_fragment init_var
 	    | _ -> assert false
 	  end
 	| Lreal -> assert false (* TODO: reals *)
@@ -634,18 +664,18 @@ class gather_insertions props = object(self)
       begin
 	match t'.term_type with
 	| Linteger ->
-	  let v = self#gmp_fragment (self#term t') in
+	  let inserts_0, v = self#term t' in
+	  let v = self#gmp_fragment v in
 	  let var = self#fresh_ctype_var ty' in
-	  self#insert (Decl_ctype_var var);
-	  begin
+	  let insert_1 = Decl_ctype_var var in
+	  let insert_2 =
 	    match ty' with
 	    | TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_) ->
-	      self#insert (Instru(Affect(var,Gmp_get_ui v)));
-	    | TInt _ ->
-	      self#insert (Instru(Affect(var,Gmp_get_si v)));
+	      Instru(Affect(var,Gmp_get_ui v))
+	    | TInt _ -> Instru(Affect(var,Gmp_get_si v))
 	    | _ -> assert false
-	  end;
-	  self#insert (Instru(Gmp_clear v));
+	  in
+	  inserts_0 @ [insert_1; insert_2; Instru(Gmp_clear v)],
 	  Ctype_fragment var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
@@ -667,31 +697,39 @@ class gather_insertions props = object(self)
     match tlhost with
     | TResult _ ->
       let var = Extlib.the result_varinfo in
-      Ctype_fragment (My_ctype_var(var.vtype, var.vname))
+      [], Ctype_fragment (My_ctype_var(var.vtype, var.vname))
     | _ ->
-      let lhost = self#tlhost tlhost in
-      let rec aux ret = function
-	| TNoOffset -> ret
-	| TField (fi, tof) -> aux (Field(ret, fi.fname)) tof
+      let inserts_0, lhost = self#tlhost tlhost in
+      let rec aux insertions ret = function
+	| TNoOffset -> insertions, ret
+	| TField (fi, tof) -> aux insertions (Field(ret, fi.fname)) tof
 	| TModel _ -> assert false (* TODO *)
 	| TIndex (t, tof) ->
-	  let t' = self#term t in
+	  let inserts_1, t' = self#term t in
 	  begin
 	    match t.term_type with
-	    | Linteger -> aux (Index(ret, Gmp_get_si(self#gmp_fragment t'))) tof
+	    | Linteger ->
+	      aux (insertions @ inserts_1)
+		(Index(ret, Gmp_get_si(self#gmp_fragment t'))) tof
 	    | Lreal -> assert false (* unreachable *)
-	    | _ -> aux (Index(ret, self#ctype_fragment t')) tof
+	    | _ -> aux insertions (Index(ret, self#ctype_fragment t')) tof
 	  end
       in
       match lhost with
-      | Gmp_fragment _ -> (* TODO *) assert (toffset = TNoOffset); lhost
-      | Ctype_fragment lhost' -> Ctype_fragment (aux lhost' toffset)
+      | Gmp_fragment _ -> (* TODO *)
+	assert (toffset = TNoOffset);
+	inserts_0, lhost
+      | Ctype_fragment lhost' ->
+	let insertions, ret = aux inserts_0 lhost' toffset in
+	insertions, Ctype_fragment ret
 
   method private tlhost lhost =
     match lhost with
-    | TVar lv -> self#logic_var lv
+    | TVar lv -> [], self#logic_var lv
     | TResult _ -> assert false
-    | TMem t -> Ctype_fragment (Deref (self#ctype_fragment (self#term t)))
+    | TMem t ->
+      let inserts_0, t' = self#term t in
+      inserts_0, Ctype_fragment (Deref (self#ctype_fragment t'))
 
   (* modify result_varinfo when the function returns something *)
   method private compute_result_varinfo fct =
@@ -849,7 +887,8 @@ class gather_insertions props = object(self)
       let rec alloc_aux my_old_ptr my_ptr ty = function
 	| h :: t ->
 	  let ty = dig_type ty in
-	  let h' = self#term h in
+	  let inserts_0, h' = self#term h in
+	  List.iter self#insert inserts_0;
 	  let my_iterator = self#fresh_ctype_var Cil.intType in
 	  self#insert (Decl_ctype_var my_iterator);
 	  begin
@@ -914,7 +953,8 @@ class gather_insertions props = object(self)
 	  | h :: t ->
 	    let my_iterator = self#fresh_ctype_var Cil.intType in
 	    self#insert (Decl_ctype_var my_iterator);
-	    let h' = self#term h in
+	    let inserts_0, h' = self#term h in
+	    List.iter self#insert inserts_0;
 	    begin
 	      match h.term_type with
 	      | Linteger ->
@@ -1118,19 +1158,28 @@ class gather_insertions props = object(self)
 	    match term.term_type with
 	    | Linteger ->
 	      current_label <- Some (BegStmt stmt.sid);
-	      let term' = self#gmp_fragment (self#term term) in
+	      let inserts_0, term' = self#term term in
+	      List.iter self#insert inserts_0;
+	      let term' = self#gmp_fragment term' in
 	      let cond = Gmp_cmp_ui(Lt, term', Zero) in
 	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
 	      self#insert (If (cond, [instr], []));
 	      current_label <- Some (EndStmt stmt.sid);
 	      self#insert (Instru(Gmp_clear(term')));
 	      current_label <- Some (BegIter stmt.sid);
-	      let term' = self#gmp_fragment (self#term term) in
+	      let inserts_1, term' = self#term term in
+	      List.iter self#insert inserts_1;
+	      let term' = self#gmp_fragment term' in
 	      let fresh_variant = self#fresh_gmp_var() in
-	      let decl_variant = self#decl_gmp_var fresh_variant in
-	      let init_variant = self#init_set_gmp_var decl_variant term' in
+	      let insert_2, decl_variant = self#decl_gmp_var fresh_variant in
+	      self#insert insert_2;
+	      let insert_3, init_variant =
+		self#init_set_gmp_var decl_variant term' in
+	      self#insert insert_3;
 	      current_label <- Some (EndIter stmt.sid);
-	      let term' = self#gmp_fragment (self#term term) in
+	      let inserts_4, term' = self#term term in
+	      List.iter self#insert inserts_4;
+	      let term' = self#gmp_fragment term' in
 	      let cond = Gmp_cmp_ui(Lt, init_variant, Zero) in
 	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
 	      self#insert (If(cond, [instr], []));
@@ -1142,18 +1191,24 @@ class gather_insertions props = object(self)
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      current_label <- Some (BegStmt stmt.sid);
-	      let term' = self#ctype_fragment (self#term term) in
+	      let inserts_0, term' = self#term term in
+	      List.iter self#insert inserts_0;
+	      let term' = self#ctype_fragment term' in
 	      let cond = Cmp(Rlt, term', Zero) in
 	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
 	      self#insert (If(cond, [instr], []));
 	      current_label <- Some (EndStmt stmt.sid);
 	      current_label <- Some (BegIter stmt.sid);
-	      let term' = self#ctype_fragment (self#term term) in
+	      let inserts_1, term' = self#term term in
+	      List.iter self#insert inserts_1;
+	      let term' = self#ctype_fragment term' in
 	      let variant = self#fresh_ctype_var Cil.intType in
 	      self#insert (Decl_ctype_var variant);
 	      self#insert (Instru(Affect(variant, term')));
 	      current_label <- Some (EndIter stmt.sid);
-	      let term' = self#ctype_fragment (self#term term) in
+	      let inserts_2, term' = self#term term in
+	      List.iter self#insert inserts_2;
+	      let term' = self#ctype_fragment term' in
 	      let cond = Cmp(Rlt, variant, Zero) in
 	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
 	      self#insert (If(cond, [instr], []));
@@ -1238,10 +1293,16 @@ class gather_insertions props = object(self)
 	  match t2.term_type with
 	  | Linteger ->
 	    let fresh_iter = My_gmp_var iter_name in
-	    let decl_iter = self#decl_gmp_var fresh_iter in
-	    let t1' = self#gmp_fragment (self#term t1) in
-	    let t2' = self#gmp_fragment (self#term t2) in
-	    let init_iter = self#init_set_gmp_var decl_iter t1' in
+	    let insert_0, decl_iter = self#decl_gmp_var fresh_iter in
+	    self#insert insert_0;
+	    let inserts_1, t1' = self#term t1 in
+	    List.iter self#insert inserts_1;
+	    let t1' = self#gmp_fragment t1' in
+	    let inserts_2, t2' = self#term t2 in
+	    List.iter self#insert inserts_2;
+	    let t2' = self#gmp_fragment t2' in
+	    let insert_3, init_iter = self#init_set_gmp_var decl_iter t1' in
+	    self#insert insert_3;
 	    if r1 = Rlt then
 	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
 	    let exp1 = Gmp_cmpr(r2, init_iter, t2') in
@@ -1258,10 +1319,16 @@ class gather_insertions props = object(self)
 	  | Lreal -> assert false (* TODO: reals *)
 	  | _ ->
 	    let fresh_iter = My_gmp_var iter_name in
-	    let decl_iter = self#decl_gmp_var fresh_iter in
-	    let t1' = self#gmp_fragment (self#term t1) in
-	    let t2' = self#ctype_fragment (self#term t2) in
-	    let init_iter = self#init_set_gmp_var decl_iter t1' in
+	    let insert_0, decl_iter = self#decl_gmp_var fresh_iter in
+	    self#insert insert_0;
+	    let inserts_1, t1' = self#term t1 in
+	    List.iter self#insert inserts_1;
+	    let t1' = self#gmp_fragment t1' in
+	    let inserts_2, t2' = self#term t2 in
+	    List.iter self#insert inserts_2;
+	    let t2' = self#ctype_fragment t2' in
+	    let insert_3, init_iter = self#init_set_gmp_var decl_iter t1' in
+	    self#insert insert_3;
 	    if r1 = Rlt then
 	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
 	    let exp1 = Gmp_cmpr_si(r2, init_iter, t2') in
@@ -1279,8 +1346,12 @@ class gather_insertions props = object(self)
       | _ ->
 	let iter = My_ctype_var (Cil.intType, iter_name) in
 	self#insert (Decl_ctype_var iter);
-	let t1' = self#ctype_fragment (self#term t1) in
-	let t2' = self#ctype_fragment (self#term t2) in
+	let inserts_0, t1' = self#term t1 in
+	List.iter self#insert inserts_0;
+	let t1' = self#ctype_fragment t1' in
+	let inserts_1, t2' = self#term t2 in
+	List.iter self#insert inserts_1;
+	let t2' = self#ctype_fragment t2' in
 	let exp1 = Affect(iter, (match r1 with
 	  | Rlt -> Binop(PlusA,t1',One)
 	  | Rle -> t1'
@@ -1317,8 +1388,12 @@ class gather_insertions props = object(self)
       begin
 	match offset.term_type with
 	| Linteger ->
-	  let x' = self#ctype_fragment (self#term pointer) in
-	  let y' = self#gmp_fragment (self#term offset) in
+	  let inserts_0, x' = self#term pointer in
+	  List.iter self#insert inserts_0;
+	  let x' = self#ctype_fragment x' in
+	  let inserts_1, y' = self#term offset in
+	  List.iter self#insert inserts_1;
+	  let y' = self#gmp_fragment y' in
 	  let var = self#fresh_pred_var() in
 	  self#insert (Decl_pred_var var);
 	  let exp1 = Gmp_cmp_ui(Ge, y', Zero) in
@@ -1328,8 +1403,12 @@ class gather_insertions props = object(self)
 	  var
 	| Lreal -> assert false (* unreachable *)
 	| Ctype (TInt _) ->
-	  let x' = self#ctype_fragment (self#term pointer) in
-	  let y' = self#ctype_fragment (self#term offset) in
+	  let inserts_0, x' = self#term pointer in
+	  List.iter self#insert inserts_0;
+	  let x' = self#ctype_fragment x' in
+	  let inserts_1, y' = self#term offset in
+	  List.iter self#insert inserts_1;
+	  let y' = self#ctype_fragment y' in
 	  let exp1 = Cmp(Rge, y', Zero) in
 	  let exp2 = Cmp(Rgt, Pc_dim(x'), y') in
 	  Land(exp1, exp2)
@@ -1385,7 +1464,8 @@ class gather_insertions props = object(self)
       Land(exp1, exp2)
     | Pif (t,pred1,pred2) -> (* untested *)
       begin
-	let term_var = self#term t in
+	let inserts_0, term_var = self#term t in
+	List.iter self#insert inserts_0;
 	let res_var = self#fresh_pred_var() in
 	self#insert (Decl_pred_var res_var);
 	let f () =
@@ -1428,8 +1508,12 @@ class gather_insertions props = object(self)
 	match t1.term_type, t2.term_type with
 	| Linteger, Linteger ->
 	  let var = self#fresh_pred_var() in
-	  let t1' = self#gmp_fragment (self#term t1) in
-	  let t2' = self#gmp_fragment (self#term t2) in
+	  let inserts_0, t1' = self#term t1 in
+	  List.iter self#insert inserts_0;
+	  let t1' = self#gmp_fragment t1' in
+	  let inserts_1, t2' = self#term t2 in
+	  List.iter self#insert inserts_1;
+	  let t2' = self#gmp_fragment t2' in
 	  self#insert (Decl_pred_var var);
 	  self#insert (Instru(Affect_pred(var, Gmp_cmpr(rel, t1', t2'))));
 	  self#insert (Instru(Gmp_clear t1'));
@@ -1437,16 +1521,24 @@ class gather_insertions props = object(self)
 	  var
 	| Linteger, Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
 	  let var = self#fresh_pred_var() in
-	  let t1' = self#gmp_fragment (self#term t1) in
-	  let t2' = self#ctype_fragment (self#term t2) in
+	  let inserts_0, t1' = self#term t1 in
+	  List.iter self#insert inserts_0;
+	  let t1' = self#gmp_fragment t1' in
+	  let inserts_1, t2' = self#term t2 in
+	  List.iter self#insert inserts_1;
+	  let t2' = self#ctype_fragment t2' in
 	  self#insert (Decl_pred_var var);
 	  self#insert (Instru(Affect_pred(var, Gmp_cmpr_ui(rel, t1', t2'))));
 	  self#insert (Instru(Gmp_clear t1'));
 	  var
 	| Linteger, Ctype (TInt _) ->
 	  let var = self#fresh_pred_var() in
-	  let t1' = self#gmp_fragment (self#term t1) in
-	  let t2' = self#ctype_fragment (self#term t2) in
+	  let inserts_0, t1' = self#term t1 in
+	  List.iter self#insert inserts_0;
+	  let t1' = self#gmp_fragment t1' in
+	  let inserts_1, t2' = self#term t2 in
+	  List.iter self#insert inserts_1;
+	  let t2' = self#ctype_fragment t2' in
 	  self#insert (Decl_pred_var var);
 	  self#insert (Instru(Affect_pred(var, Gmp_cmpr_si(rel, t1', t2'))));
 	  self#insert (Instru(Gmp_clear t1'));
@@ -1454,11 +1546,17 @@ class gather_insertions props = object(self)
 	| Lreal, Lreal -> assert false (* TODO: reals *)
 	| Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)), Linteger ->
 	  let var = self#fresh_pred_var() in
-	  let t1' = self#ctype_fragment (self#term t1) in
-	  let t2' = self#gmp_fragment (self#term t2) in
+	  let inserts_0, t1' = self#term t1 in
+	  List.iter self#insert inserts_0;
+	  let t1' = self#ctype_fragment t1' in
+	  let inserts_1, t2' = self#term t2 in
+	  List.iter self#insert inserts_1;
+	  let t2' = self#gmp_fragment t2' in
 	  let fresh_var' = self#fresh_gmp_var() in
-	  let decl_var' = self#decl_gmp_var fresh_var' in
-	  let init_var' = self#init_set_ui_gmp_var decl_var' t1' in
+	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
+	  self#insert insert_2;
+	  let insert_3, init_var' = self#init_set_ui_gmp_var decl_var' t1' in
+	  self#insert insert_3;
 	  self#insert (Decl_pred_var var);
 	  self#insert (Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))));
 	  self#insert (Instru(Gmp_clear t2'));
@@ -1466,19 +1564,29 @@ class gather_insertions props = object(self)
 	  var
 	| Ctype (TInt _), Linteger ->
 	  let var = self#fresh_pred_var() in
-	  let t1' = self#ctype_fragment (self#term t1) in
-	  let t2' = self#gmp_fragment (self#term t2) in
+	  let inserts_0, t1' = self#term t1 in
+	  List.iter self#insert inserts_0;
+	  let t1' = self#ctype_fragment t1' in
+	  let inserts_1, t2' = self#term t2 in
+	  List.iter self#insert inserts_1;
+	  let t2' = self#gmp_fragment t2' in
 	  let fresh_var' = self#fresh_gmp_var() in
-	  let decl_var' = self#decl_gmp_var fresh_var' in
-	  let init_var' = self#init_set_si_gmp_var decl_var' t1' in
+	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
+	  self#insert insert_2;
+	  let insert_3, init_var' = self#init_set_si_gmp_var decl_var' t1' in
+	  self#insert insert_3;
 	  self#insert (Decl_pred_var var);
 	  self#insert (Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))));
 	  self#insert (Instru(Gmp_clear t2'));
 	  self#insert (Instru(Gmp_clear init_var'));
 	  var
 	| _ ->
-          let t1' = self#ctype_fragment (self#term t1) in
-          let t2' = self#ctype_fragment (self#term t2) in
+	  let inserts_0, t1' = self#term t1 in
+	  List.iter self#insert inserts_0;
+	  let t1' = self#ctype_fragment t1' in
+	  let inserts_1, t2' = self#term t2 in
+	  List.iter self#insert inserts_1;
+	  let t2' = self#ctype_fragment t2' in
 	  Cmp(rel, t1', t2')
       end
       
