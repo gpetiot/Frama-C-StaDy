@@ -874,8 +874,7 @@ class gather_insertions props = object(self)
 	    | _ ->
 	      let h' = self#ctype_fragment h' in
 	      self#insert (Instru(Affect(my_old_ptr,
-					 Malloc(Binop(Mult,h',
-						      Sizeof ty)))));
+					 Malloc(Binop(Mult,h', Sizeof ty)))));
 	      self#insert (For_cond(
 		(Some(Affect(my_iterator, Zero))),
 		(Some(Cmp(Rlt, my_iterator, h'))),
@@ -903,53 +902,51 @@ class gather_insertions props = object(self)
 
     (* dealloc variables for \at terms *)
     begin
-      try
-	let lengths = Sd_utils.lengths_from_requires kf in
-	let do_varinfo v =
-	  let terms =
-	    try Cil_datatype.Varinfo.Hashtbl.find lengths v
-	    with Not_found -> []
-	  in
-	  let rec dealloc_aux my_old_ptr = function
-	    | [] -> ()
-	    | _ :: [] -> self#insert (Instru(Free(my_old_ptr)))
-	    | h :: t ->
-	      let my_iterator = self#fresh_ctype_var Cil.intType in
-	      self#insert (Decl_ctype_var my_iterator);
-	      let h' = self#term h in
-	      begin
-		match h.term_type with
-		| Linteger ->
-		  let h' = self#gmp_fragment h' in
-		  self#insert (For_cond(
-		    (Some(Affect(my_iterator, Zero))),
-		    (Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
-		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
-		  ));
-		  self#insert Block_open;
-		  dealloc_aux (Index(my_old_ptr, my_iterator)) t;
-		  self#insert Block_close;
-		  self#insert (Instru(Gmp_clear h'))
-		| Lreal -> assert false (* TODO: reals *)
-		| _ ->
-		  let h' = self#ctype_fragment h' in
-		  self#insert (For_cond(
-		    (Some(Affect(my_iterator, Zero))),
-		    (Some(Cmp(Rlt, my_iterator, h'))),
-		    (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
-		  ));
-		  self#insert Block_open;
-		  dealloc_aux (Index(my_old_ptr, my_iterator)) t;
-		  self#insert Block_close
-	      end;
-	      self#insert (Instru(Free(my_old_ptr)))
-	  in
-	  let my_old_ptr = My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname) in
-	  dealloc_aux my_old_ptr terms
+      let lengths = Sd_utils.lengths_from_requires kf in
+      let do_varinfo v =
+	let terms =
+	  try Cil_datatype.Varinfo.Hashtbl.find lengths v
+	  with Not_found -> []
 	in
-	List.iter do_varinfo visited_globals;
-	List.iter do_varinfo (Kernel_function.get_formals kf)
-      with Not_found -> ()
+	let rec dealloc_aux my_old_ptr = function
+	  | [] -> ()
+	  | _ :: [] -> self#insert (Instru(Free(my_old_ptr)))
+	  | h :: t ->
+	    let my_iterator = self#fresh_ctype_var Cil.intType in
+	    self#insert (Decl_ctype_var my_iterator);
+	    let h' = self#term h in
+	    begin
+	      match h.term_type with
+	      | Linteger ->
+		let h' = self#gmp_fragment h' in
+		self#insert (For_cond(
+		  (Some(Affect(my_iterator, Zero))),
+		  (Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
+		  (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
+		));
+		self#insert Block_open;
+		dealloc_aux (Index(my_old_ptr, my_iterator)) t;
+		self#insert Block_close;
+		self#insert (Instru(Gmp_clear h'))
+	      | Lreal -> assert false (* TODO: reals *)
+	      | _ ->
+		let h' = self#ctype_fragment h' in
+		self#insert (For_cond(
+		  (Some(Affect(my_iterator, Zero))),
+		  (Some(Cmp(Rlt, my_iterator, h'))),
+		  (Some(Affect(my_iterator, (Binop(PlusA, my_iterator,One)))))
+		));
+		self#insert Block_open;
+		dealloc_aux (Index(my_old_ptr, my_iterator)) t;
+		self#insert Block_close
+	    end;
+	    self#insert (Instru(Free(my_old_ptr)))
+	in
+	let my_old_ptr = My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname) in
+	dealloc_aux my_old_ptr terms
+      in
+      List.iter do_varinfo visited_globals;
+      List.iter do_varinfo (Kernel_function.get_formals kf)
     end;
 
     current_label <- None;
@@ -1036,7 +1033,6 @@ class gather_insertions props = object(self)
 	
 	if self#at_least_one_prop kf bhvs.spec_behavior then
 	  begin
-
 	    let do_behavior b =
 	      let post = b.b_post_cond in
 	      let to_prop = Property.ip_of_ensures kf (Kstmt stmt) b in
