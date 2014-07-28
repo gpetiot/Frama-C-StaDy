@@ -86,10 +86,7 @@ let rec compute_guards
     | Pand(p1, p2) ->
       let acc, vars = compute_guards acc vars p1 in
       compute_guards acc vars p2
-    | _ ->
-      Sd_options.Self.feedback
-	"compute_guards of %a" Printer.pp_predicate_named p;
-      assert false
+    | _ -> acc, vars
 
 let error_term : term -> 'a =
   fun term ->
