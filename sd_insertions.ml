@@ -102,10 +102,6 @@ type insertion =
     insertion list
 | Block of insertion list
 
-(* to remove *)
-| Block_open
-| Block_close
-
 
 class gather_insertions props = object(self)
   inherit Visitor.frama_c_inplace as super
@@ -1089,7 +1085,6 @@ class gather_insertions props = object(self)
 	  else
 	    []
 	in
-
 	if behaviors <> [] then
 	  let inserts_0, cond = self#cond_of_behaviors behaviors in
 	  let inserts_then =
@@ -1131,7 +1126,6 @@ class gather_insertions props = object(self)
 	      else
 		[]
 	    in
-
 	    if behaviors <> [] then
 	      let inserts_0, cond = self#cond_of_behaviors behaviors in
 	      let inserts_then =
@@ -1200,7 +1194,6 @@ class gather_insertions props = object(self)
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
 	  let id = Sd_utils.to_id prop in
-	  
 	  begin
 	    match term.term_type with
 	    | Linteger ->
@@ -1274,13 +1267,8 @@ class gather_insertions props = object(self)
     if List.mem stmt.sid stmts_to_reach then
       begin
 	current_label <- Some (BegStmt stmt.sid);
-	(* the constructor Block cannot be used here because the block
-	   is opened and closed at 2 different labels *)
-	self#insert Block_open;
 	let str = Format.sprintf "@@FC:REACHABLE_STMT:%i" stmt.sid in
 	self#insert (Instru(Pc_to_framac str));
-	current_label <- Some (EndStmt stmt.sid);
-	self#insert Block_close;
 	current_label <- None
       end;
     let kf = Kernel_function.find_englobing_kf stmt in
@@ -1779,8 +1767,6 @@ let rec pp_insertion ?(line_break = true) fmt ins =
 	  print_inserts_without_last_line_break fmt b;
 	  Format.fprintf fmt "@]@\n}"
 	end
-    | Block_open -> Format.fprintf fmt "@\n@[{@[<hov 2>"
-    | Block_close -> Format.fprintf fmt "@]@\n}@]"
   end;
   if line_break then Format.fprintf fmt "@\n"
 
@@ -1849,21 +1835,22 @@ class print_insertions insertions ~print_label () = object(self)
     Format.pp_open_hvbox fmt 2;
     self#stmt_labels fmt stmt;
     Format.pp_open_hvbox fmt 0;
-    let has_code_annots = List.length (Annotations.code_annot stmt) > 0 in
     let kf = Kernel_function.find_englobing_kf stmt in
-    let loc = Cil_datatype.Stmt.loc stmt in
-    if has_code_annots then Format.fprintf fmt "%a@[<v 2>{@\n"
-      (fun fmt -> self#line_directive ~forcefile:false fmt) loc;
-    begin
-      try
-	let q = Hashtbl.find insertions (BegStmt stmt.sid) in
-	Queue.iter
-	  (fun s ->
-	    if print_label then
-	      Format.fprintf fmt "/* BegStmt %i */ " stmt.sid;
-	    Format.fprintf fmt "%a" pp_insertion_lb s) q
-      with _ -> ()
-    end;
+    let beg_stmt =
+      try Hashtbl.find insertions (BegStmt stmt.sid)
+      with _ -> Queue.create()
+    in
+    let end_stmt =
+      try Hashtbl.find insertions (EndStmt stmt.sid)
+      with _ -> Queue.create()
+    in
+    if not (Queue.is_empty beg_stmt) || not(Queue.is_empty end_stmt) then
+      Format.fprintf fmt "@[<hov 2>{@\n";
+    Queue.iter
+      (fun s ->
+	if print_label then
+	  Format.fprintf fmt "/* BegStmt %i */ " stmt.sid;
+	Format.fprintf fmt "%a" pp_insertion_lb s) beg_stmt;
     begin
       match stmt.skind with
       | Loop(_,b,l,_,_) ->
@@ -1906,17 +1893,13 @@ class print_insertions insertions ~print_label () = object(self)
 	self#stmtkind next fmt stmt.skind
       | _ -> self#stmtkind next fmt stmt.skind
     end;
-    begin
-      try
-	let q = Hashtbl.find insertions (EndStmt stmt.sid) in
-	Queue.iter
-	  (fun s ->
-	    if print_label then
-	      Format.fprintf fmt "/* EndStmt %i */ " stmt.sid;
-	    Format.fprintf fmt "%a" pp_insertion_lb s) q
-      with _ -> ()
-    end;
-    if has_code_annots then Format.fprintf fmt "}@\n @]";
+    Queue.iter
+      (fun s ->
+	if print_label then
+	  Format.fprintf fmt "/* EndStmt %i */ " stmt.sid;
+	Format.fprintf fmt "%a" pp_insertion_lb s) end_stmt;
+    if not(Queue.is_empty beg_stmt) || not(Queue.is_empty end_stmt) then
+      Format.fprintf fmt "@]@\n}";
     Format.pp_close_box fmt ();
     Format.pp_close_box fmt ()
   (* end of annotated_stmt *)
