@@ -77,7 +77,7 @@ and instruction =
 | Affect_pred of pred_expr * pred_expr
 | Free of ctype_expr
 | Pc_to_framac of string
-| Pc_assert_exn of string * int
+| Pc_exn of string * int
 | Ret of ctype_expr
 | Gmp_clear of gmp_expr
 | Gmp_init of declared_gmp_var
@@ -235,10 +235,11 @@ class gather_insertions props = object(self)
 	  | Linteger ->
 	    let inserts_3, low = self#term lower in
 	    let inserts_4, up = self#term upper in
+	    let low = self#gmp_fragment low in
+	    let up = self#gmp_fragment up in
 	    let fresh_iter = My_gmp_var q.lv_name in
 	    let insert_5, decl_iter = self#decl_gmp_var fresh_iter in
-	    let insert_6, init_iter =
-	      self#init_set_gmp_var decl_iter (self#gmp_fragment low) in
+	    let insert_6, init_iter = self#init_set_gmp_var decl_iter low in
 	    let inserts_for_block_0, lambda_term = self#term t in
 	    let insert_for_block_1 =
 	      match builtin_name with
@@ -267,11 +268,11 @@ class gather_insertions props = object(self)
 	      else
 		inserts_for_block
 	    in
-	    let cond = Gmp_cmp(Le,init_iter,self#gmp_fragment up) in
+	    let cond = Gmp_cmp(Le,init_iter,up) in
 	    let insert_7 = For(None, Some cond, None, inserts_for_block) in
 	    let insert_8 = Instru(Gmp_clear init_iter) in
-	    let insert_9 = Instru(Gmp_clear(self#gmp_fragment low)) in
-	    let insert_10 = Instru(Gmp_clear(self#gmp_fragment up)) in
+	    let insert_9 = Instru(Gmp_clear low) in
+	    let insert_10 = Instru(Gmp_clear up) in
 	    inserts_3 @ inserts_4
 	    @ [insert_5; insert_6; insert_7; insert_8; insert_9; insert_10]
 	  | Lreal -> assert false (* unreachable *)
@@ -323,7 +324,6 @@ class gather_insertions props = object(self)
     | TSizeOfStr _
     | TAlignOf _
     | TAlignOfE _ ->
-      (*Pretty_utils.sfprintf "%a" Printer.pp_term t*)
       assert false (* TODO ? *)
 
     | TUnOp(op, t') ->
@@ -483,20 +483,18 @@ class gather_insertions props = object(self)
 	      let inserts_0, v = self#term t' in
 	      let v = self#gmp_fragment v in
 	      let var = self#fresh_ctype_var ty' in
-	      inserts_0
-	      @ [Decl_ctype_var var;
-		 Instru(Affect(var, Gmp_get_ui v));
-		 Instru(Gmp_clear v)],
-	      Ctype_fragment var
+	      let insert_1 = Decl_ctype_var var in
+	      let insert_2 = Instru(Affect(var, Gmp_get_ui v)) in
+	      let insert_3 = Instru(Gmp_clear v) in
+	      inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
 	    | Ctype (TInt _) ->
 	      let inserts_0, v = self#term t' in
 	      let v = self#gmp_fragment v in
 	      let var = self#fresh_ctype_var ty' in
-	      inserts_0
-	      @ [Decl_ctype_var var;
-		 Instru(Affect(var, Gmp_get_si v));
-		 Instru(Gmp_clear v)],
-	      Ctype_fragment var
+	      let insert_1 = Decl_ctype_var var in
+	      let insert_2 = Instru(Affect(var, Gmp_get_si v)) in
+	      let insert_3 = Instru(Gmp_clear v) in
+	      inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
 	    | _ -> assert false (* unreachable *)
 	  end
 	| Lreal -> assert false (* reals *)
@@ -508,7 +506,6 @@ class gather_insertions props = object(self)
 
     | TAddrOf _
     | TStartOf _ ->
-      (*Pretty_utils.sfprintf "%a" Printer.pp_term t*)
       assert false (* TODO ? *)
 
     | Tapp (li, _ (* already substituted *), params) ->
@@ -525,22 +522,19 @@ class gather_insertions props = object(self)
 	      let fresh_var = self#fresh_gmp_var() in
 	      let insert_1, decl_var = self#decl_gmp_var fresh_var in
 	      let insert_2, init_var = self#init_gmp_var decl_var in
-	      inserts_0
-	      @ [insert_1; insert_2;
-		 Instru(Gmp_abs(init_var, x));
-		 Instru(Gmp_clear x)],
+	      let insert_3 = Instru(Gmp_abs(init_var, x)) in
+	      let insert_4 = Instru(Gmp_clear x) in
+	      inserts_0 @ [insert_1; insert_2; insert_3; insert_4],
 	      Gmp_fragment init_var
 	    end
 	  else
 	    if builtin_name = "\\min" || builtin_name = "\\max" ||
 	      builtin_name = "\\sum" || builtin_name = "\\product" ||
 	      builtin_name = "\\numof" then
-	      begin
-		match params with
-		| [lower;upper;{term_node=Tlambda([q],t)}] ->
-		  self#lambda li lower upper q t
-		| _ -> assert false
-	      end
+	      match params with
+	      | [lower;upper;{term_node=Tlambda([q],t)}] ->
+		self#lambda li lower upper q t
+	      | _ -> assert false
 	    else
 	      assert false
 	| Lreal -> assert false (* TODO: reals *)
@@ -583,7 +577,6 @@ class gather_insertions props = object(self)
     | Tat(_, StmtLabel _) ->
       if current_function <> None then
 	Sd_options.Self.warning "%a unsupported" Printer.pp_term t;
-      (*Pretty_utils.sfprintf "%a" Printer.pp_term t*)
       assert false (* TODO ? *)
 
     | Tat(term,LogicLabel(_,stringlabel)) ->
@@ -605,7 +598,6 @@ class gather_insertions props = object(self)
 	  begin
 	    if current_function <> None then
 	      Sd_options.Self.warning "%a unsupported" Printer.pp_term t;
-	    (*Pretty_utils.sfprintf "%a" Printer.pp_term t*)
 	    assert false (* TODO ? *)
 	  end
 
@@ -657,13 +649,13 @@ class gather_insertions props = object(self)
 	  let v = self#gmp_fragment v in
 	  let var = self#fresh_ctype_var ty' in
 	  let insert_1 = Decl_ctype_var var in
-	  let insert_2 =
+	  let value =
 	    match ty' with
-	    | TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_) ->
-	      Instru(Affect(var,Gmp_get_ui v))
-	    | TInt _ -> Instru(Affect(var,Gmp_get_si v))
+	    | TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_) -> Gmp_get_ui v
+	    | TInt _ -> Gmp_get_si v
 	    | _ -> assert false
 	  in
+	  let insert_2 = Instru(Affect(var,value)) in
 	  inserts_0 @ [insert_1; insert_2; Instru(Gmp_clear v)],
 	  Ctype_fragment var
 	| Lreal -> assert false (* TODO: reals *)
@@ -680,7 +672,7 @@ class gather_insertions props = object(self)
     | Tcomprehension _ -> Sd_options.Self.not_yet_implemented "Tcomprehension"
     | Trange _ -> assert false (* unreachable *)
     | Tlet _ -> assert false (* unreachable *)
-  (*end term*)
+  (* end term *)
 
   method private tlval (tlhost, toffset) =
     match tlhost with
@@ -739,7 +731,6 @@ class gather_insertions props = object(self)
     let entry_point_name =
       Kernel_function.get_name (fst(Globals.entry_point())) in
     let kf = Globals.Functions.find_by_name f.svar.vname in
-    (*let loc = Kernel_function.get_location kf in*)
     let behaviors = Annotations.behaviors kf in
     self#compute_result_varinfo f;
 
@@ -755,7 +746,6 @@ class gather_insertions props = object(self)
 	    Sd_states.Not_Translated_Predicates.fold_left
 	      (fun b e -> b || e = p.ip_id) false
 	  in
-	  (* TODO: add an option to translate anyway? (deleting the filter) *)
 	  let preconds = List.filter not_translated preconds in
 	  let do_precond p =
 	    let inserts, v = self#predicate(self#subst_pred p.ip_content) in
@@ -795,9 +785,8 @@ class gather_insertions props = object(self)
 	  if pre <> [] then
 	    if b.b_assumes <> [] then
 	      let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-	      let inserts_then =
-		List.fold_left (@) [] (List.map do_precond pre) in
-	      let insert_1 = If(exp, inserts_then, []) in
+	      let inserts_t = List.fold_left (@) [] (List.map do_precond pre) in
+	      let insert_1 = If(exp, inserts_t, []) in
 	      let inserts = inserts_0 @ [insert_1] in
 	      List.iter self#insert inserts
 	    else
@@ -898,44 +887,29 @@ class gather_insertions props = object(self)
 	    match h.term_type with
 	    | Linteger ->
 	      let h' = self#gmp_fragment h' in
-	      let insert_2 =
-		Instru(Affect(my_old_ptr,
-			      Malloc(Binop(Mult,(Gmp_get_si h'), Sizeof ty))))
-	      in
-	      let inserts_block =
-		alloc_aux
-		  (Index(my_old_ptr, my_iterator))
-		  (Index(my_ptr, my_iterator)) ty t
-	      in
-	      let insert_3 =
-		For(
-		  (Some(Affect(my_iterator, Zero))),
-		  (Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
-		  (Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One))))),
-		  inserts_block
-		)
-	      in
+	      let malloc = Malloc(Binop(Mult,(Gmp_get_si h'), Sizeof ty)) in
+	      let insert_2 = Instru(Affect(my_old_ptr, malloc)) in
+	      let my_new_old_ptr = Index(my_old_ptr, my_iterator) in
+	      let my_new_ptr = Index(my_ptr, my_iterator) in
+	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
+	      let init = Affect(my_iterator, Zero) in
+	      let cond = Cmp(Rlt, my_iterator, Gmp_get_si h') in
+	      let step = Affect(my_iterator, (Binop(PlusA, my_iterator,One))) in
+	      let insert_3 = For(Some init,Some cond,Some step,inserts_block) in
 	      let insert_4 = Instru(Gmp_clear h') in
 	      inserts_0 @ [insert_1; insert_2; insert_3; insert_4]
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      let h' = self#ctype_fragment h' in
 	      let insert_2 =
-		Instru(Affect(my_old_ptr, Malloc(Binop(Mult,h', Sizeof ty))))
-	      in
-	      let inserts_block =
-		alloc_aux
-		  (Index(my_old_ptr, my_iterator))
-		  (Index(my_ptr, my_iterator)) ty t
-	      in
-	      let insert_3 =
-		For(
-		  (Some(Affect(my_iterator, Zero))),
-		  (Some(Cmp(Rlt, my_iterator, h'))),
-		  (Some(Affect(my_iterator, (Binop(PlusA, my_iterator, One))))),
-		  inserts_block
-		)
-	      in
+		Instru(Affect(my_old_ptr, Malloc(Binop(Mult,h', Sizeof ty)))) in
+	      let my_new_old_ptr = Index(my_old_ptr, my_iterator) in
+	      let my_new_ptr = Index(my_ptr, my_iterator) in
+	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
+	      let init = Affect(my_iterator, Zero) in
+	      let cond = Cmp(Rlt, my_iterator, h') in
+	      let step = Affect(my_iterator, (Binop(PlusA, my_iterator,One))) in
+	      let insert_3 = For(Some init,Some cond,Some step,inserts_block) in
 	      inserts_0 @ [insert_1; insert_2; insert_3]
 	  end
 	| [] -> [Instru(Affect(my_old_ptr, my_ptr))]
@@ -972,33 +946,21 @@ class gather_insertions props = object(self)
 	      match h.term_type with
 	      | Linteger ->
 		let h' = self#gmp_fragment h' in
-		let inserts_block =
-		  dealloc_aux (Index(my_old_ptr, my_iterator)) t
-		in
-		let insert_2 =
-		  For(
-		    (Some(Affect(my_iterator, Zero))),
-		    (Some(Cmp(Rlt, my_iterator, Gmp_get_si h'))),
-		    (Some(Affect(my_iterator, (Binop(PlusA,my_iterator,One))))),
-		    inserts_block
-		  )
-		in
+		let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
+		let init = Affect(my_iterator, Zero) in
+		let cond = Cmp(Rlt, my_iterator, Gmp_get_si h') in
+		let step = Affect(my_iterator,(Binop(PlusA,my_iterator,One))) in
+		let insert_2=For(Some init,Some cond,Some step,inserts_block) in
 		let insert_3 = Instru(Gmp_clear h') in
 		[insert_2; insert_3]
 	      | Lreal -> assert false (* TODO: reals *)
 	      | _ ->
 		let h' = self#ctype_fragment h' in
-		let inserts_block =
-		  dealloc_aux (Index(my_old_ptr, my_iterator)) t
-		in
-		let insert_2 =
-		  For(
-		    (Some(Affect(my_iterator, Zero))),
-		    (Some(Cmp(Rlt, my_iterator, h'))),
-		    (Some(Affect(my_iterator, (Binop(PlusA,my_iterator,One))))),
-		    inserts_block
-		  )
-		in
+		let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
+		let init = Affect(my_iterator, Zero) in
+		let cond = Cmp(Rlt, my_iterator, h') in
+		let step = Affect(my_iterator,(Binop(PlusA,my_iterator,One))) in
+		let insert_2=For(Some init,Some cond,Some step,inserts_block) in
 		[insert_2]
 	    in
 	    [insert_0] @ inserts_1 @ inserts' @ [Instru(Free(my_old_ptr))]
@@ -1014,7 +976,7 @@ class gather_insertions props = object(self)
     current_label <- None;
 
     Cil.DoChildren
-  (*end vfunc*)
+  (* end vfunc *)
 
   method private subst_pred p = (new Sd_subst.subst)#subst_pred p [] [] [] []
 
@@ -1038,7 +1000,7 @@ class gather_insertions props = object(self)
 
   method private pc_assert_exception pred msg id prop =
     let inserts_0, var = self#predicate (self#subst_pred pred) in
-    let insert_1 = If(Lnot var, [Instru(Pc_assert_exn(msg, id))], []) in
+    let insert_1 = If(Lnot var, [Instru(Pc_exn(msg, id))], []) in
     translated_properties <- prop :: translated_properties;
     inserts_0 @ [insert_1]
 
@@ -1202,10 +1164,10 @@ class gather_insertions props = object(self)
 	      List.iter self#insert inserts_0;
 	      let term' = self#gmp_fragment term' in
 	      let cond = Gmp_cmp_ui(Lt, term', Zero) in
-	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
+	      let instr = Instru(Pc_exn("Variant non positive", id)) in
 	      self#insert (If (cond, [instr], []));
 	      current_label <- Some (EndStmt stmt.sid);
-	      self#insert (Instru(Gmp_clear(term')));
+	      self#insert (Instru(Gmp_clear term'));
 	      current_label <- Some (BegIter stmt.sid);
 	      let inserts_1, term' = self#term term in
 	      List.iter self#insert inserts_1;
@@ -1221,12 +1183,12 @@ class gather_insertions props = object(self)
 	      List.iter self#insert inserts_4;
 	      let term' = self#gmp_fragment term' in
 	      let cond = Gmp_cmp_ui(Lt, init_variant, Zero) in
-	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
+	      let instr = Instru(Pc_exn("Variant non positive", id)) in
 	      self#insert (If(cond, [instr], []));
 	      let cond = Gmp_cmp(Ge, term', init_variant) in
-	      let instr = Instru(Pc_assert_exn("Variant non decreasing", id)) in
+	      let instr = Instru(Pc_exn("Variant non decreasing", id)) in
 	      self#insert (If(cond, [instr] ,[]));
-	      self#insert (Instru(Gmp_clear(init_variant)));
+	      self#insert (Instru(Gmp_clear init_variant));
 	      current_label <- None
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
@@ -1235,7 +1197,7 @@ class gather_insertions props = object(self)
 	      List.iter self#insert inserts_0;
 	      let term' = self#ctype_fragment term' in
 	      let cond = Cmp(Rlt, term', Zero) in
-	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
+	      let instr = Instru(Pc_exn("Variant non positive", id)) in
 	      self#insert (If(cond, [instr], []));
 	      current_label <- Some (EndStmt stmt.sid);
 	      current_label <- Some (BegIter stmt.sid);
@@ -1250,10 +1212,10 @@ class gather_insertions props = object(self)
 	      List.iter self#insert inserts_2;
 	      let term' = self#ctype_fragment term' in
 	      let cond = Cmp(Rlt, variant, Zero) in
-	      let instr = Instru(Pc_assert_exn("Variant non positive", id)) in
+	      let instr = Instru(Pc_exn("Variant non positive", id)) in
 	      self#insert (If(cond, [instr], []));
 	      let cond = Cmp(Rge, term', variant) in
-	      let instr = Instru(Pc_assert_exn("Variant non decreasing", id)) in
+	      let instr = Instru(Pc_exn("Variant non decreasing", id)) in
 	      self#insert (If(cond, [instr], []));
 	      current_label <- None
 	  end;
@@ -1379,8 +1341,7 @@ class gather_insertions props = object(self)
 		Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)) in
 	      ins_b_0 @ [ins_b_1; ins_b_2]
 	    in
-	    let insert_5 =
-	      For(None, Some(Land(exp1, exp2)), None, inserts_block) in
+	    let insert_5 = For(None,Some(Land(exp1,exp2)),None,inserts_block) in
 	    let insert_6 = Instru(Gmp_clear init_iter) in
 	    let insert_7 = Instru(Gmp_clear t1') in
 	    [insert_0] @ inserts_1 @ inserts_2 @ [insert_3] @ inserts_4
@@ -1577,8 +1538,7 @@ class gather_insertions props = object(self)
 	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
 	  let insert_3, init_var' = self#init_set_ui_gmp_var decl_var' t1' in
 	  let insert_4 = Decl_pred_var var in
-	  let insert_5 =
-	    Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))) in
+	  let insert_5 = Instru(Affect_pred(var,Gmp_cmpr(rel,init_var',t2'))) in
 	  let insert_6 = Instru(Gmp_clear t2') in
 	  let insert_7 = Instru(Gmp_clear init_var') in
 	  inserts_0 @ inserts_1
@@ -1593,8 +1553,7 @@ class gather_insertions props = object(self)
 	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
 	  let insert_3, init_var' = self#init_set_si_gmp_var decl_var' t1' in
 	  let insert_4 = Decl_pred_var var in
-	  let insert_5 =
-	    Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))) in
+	  let insert_5 = Instru(Affect_pred(var,Gmp_cmpr(rel,init_var',t2'))) in
 	  let insert_6 = Instru(Gmp_clear t2') in
 	  let insert_7 = Instru(Gmp_clear init_var') in
 	  inserts_0 @ inserts_1
@@ -1693,8 +1652,7 @@ let pp_instruction fmt = function
   | Affect_pred (x,y) -> Format.fprintf fmt "%a = %a" pp_pexpr x pp_pexpr y
   | Free e -> Format.fprintf fmt "free(%a)" pp_cexpr e
   | Pc_to_framac s -> Format.fprintf fmt "pathcrawler_to_framac(\"%s\")" s
-  | Pc_assert_exn (s,i) ->
-    Format.fprintf fmt "pathcrawler_assert_exception(\"%s\", %i)" s i
+  | Pc_exn(s,i)->Format.fprintf fmt"pathcrawler_assert_exception(\"%s\",%i)" s i
   | Ret e -> Format.fprintf fmt "return %a" pp_cexpr e
   | Gmp_clear g -> Format.fprintf fmt "__gmpz_clear(%a)" pp_gexpr g
   | Gmp_init g -> Format.fprintf fmt "__gmpz_init(%a)" pp_decl_gmp g
@@ -1706,10 +1664,8 @@ let pp_instruction fmt = function
     Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_decl_gmp g pp_cexpr c
   | Gmp_init_set_str (g,s) ->
     Format.fprintf fmt "__gmpz_init_set_str(%a, \"%s\", 10)" pp_decl_gmp g s
-  | Gmp_set (g,g') ->
-    Format.fprintf fmt "__gmpz_set(%a, %a)" pp_gexpr g pp_gexpr g'
-  | Gmp_abs (g,g') ->
-    Format.fprintf fmt "__gmpz_abs(%a, %a)" pp_gexpr g pp_gexpr g'
+  | Gmp_set(g,h)-> Format.fprintf fmt "__gmpz_set(%a, %a)" pp_gexpr g pp_gexpr h
+  | Gmp_abs(g,h)-> Format.fprintf fmt "__gmpz_abs(%a, %a)" pp_gexpr g pp_gexpr h
   | Gmp_ui_sub (r,a,b) ->
     Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)"
       pp_gexpr r pp_cexpr a pp_gexpr b
@@ -1724,11 +1680,10 @@ let pp_instruction fmt = function
       pp_garith op pp_gexpr r pp_gexpr a pp_cexpr b
 
 let rec pp_insertion ?(line_break = true) fmt ins =
-  let rec print_inserts_without_last_line_break fmt = function
+  let rec aux fmt = function
     | [] -> ()
     | h :: [] -> pp_insertion ~line_break:false fmt h
-    | h :: t -> pp_insertion ~line_break:true fmt h;
-      print_inserts_without_last_line_break fmt t
+    | h :: t -> pp_insertion ~line_break:true fmt h; aux fmt t
   in
   begin
     match ins with
@@ -1741,32 +1696,18 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     | Decl_ctype_var _ -> assert false
     | Decl_pred_var p -> Format.fprintf fmt "@[int %a;@]" pp_pexpr p
     | If (cond,b1,b2) ->
-      Format.fprintf fmt "@[<hov 2>if(%a) {@\n" pp_pexpr cond;
-      print_inserts_without_last_line_break fmt b1;
-      Format.fprintf fmt "@]@\n}";
+      Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_pexpr cond aux b1;
       if b2 <> [] then
-	begin
-	  Format.fprintf fmt "@\n@[<hov 2>else {@\n";
-	  print_inserts_without_last_line_break fmt b2;
-	  Format.fprintf fmt "@]@\n}"
-	end
+	Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
     | For(None, Some e, None, b) ->
-      Format.fprintf fmt "@[<hov 2>while(%a) {@\n" pp_pexpr e;
-      print_inserts_without_last_line_break fmt b;
-      Format.fprintf fmt "@]@\n}"
+      Format.fprintf fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" pp_pexpr e aux b
     | For(Some i1, Some e, Some i2, b) ->
-      Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n"
-	pp_instruction i1 pp_pexpr e pp_instruction i2;
-      print_inserts_without_last_line_break fmt b;
-      Format.fprintf fmt "@]@\n}"
+      Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n%a@]@\n}"
+	pp_instruction i1 pp_pexpr e pp_instruction i2 aux b
     | For _ -> assert false (* not used by the translation *)
     | Block b ->
       if b <> [] then
-	begin
-	  Format.fprintf fmt "@[<hov 2>{@\n";
-	  print_inserts_without_last_line_break fmt b;
-	  Format.fprintf fmt "@]@\n}"
-	end
+	Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
   end;
   if line_break then Format.fprintf fmt "@\n"
 
@@ -1837,13 +1778,9 @@ class print_insertions insertions ~print_label () = object(self)
     Format.pp_open_hvbox fmt 0;
     let kf = Kernel_function.find_englobing_kf stmt in
     let beg_stmt =
-      try Hashtbl.find insertions (BegStmt stmt.sid)
-      with _ -> Queue.create()
-    in
+      try Hashtbl.find insertions (BegStmt stmt.sid) with _ -> Queue.create() in
     let end_stmt =
-      try Hashtbl.find insertions (EndStmt stmt.sid)
-      with _ -> Queue.create()
-    in
+      try Hashtbl.find insertions (EndStmt stmt.sid) with _ -> Queue.create() in
     if not (Queue.is_empty beg_stmt) || not(Queue.is_empty end_stmt) then
       Format.fprintf fmt "@[<hov 2>{@\n";
     Queue.iter
