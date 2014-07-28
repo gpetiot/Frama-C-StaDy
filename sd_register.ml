@@ -29,7 +29,7 @@ let second_pass filename props =
     let dkey = Sd_options.dkey_insertions in
     let f ins =
       Sd_options.Self.feedback ~dkey "/* %a */ %a"
-	Sd_insertions.pp_label k Sd_insertions.pp_insertion ins
+	Sd_insertions.pp_label k Sd_insertions.pp_insertion_lb ins
     in
     Queue.iter f v;
     Sd_options.Self.feedback ~dkey "--------------------"

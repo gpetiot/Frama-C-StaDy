@@ -100,13 +100,11 @@ type insertion =
 | If of pred_expr * insertion list * insertion list
 | For of instruction option * pred_expr option * instruction option *
     insertion list
+| Block of insertion list
 
 (* to remove *)
 | Block_open
 | Block_close
-| If_cond of pred_expr
-| Else_cond
-| For_cond of instruction option * pred_expr option * instruction option
 
 
 class gather_insertions props = object(self)
@@ -233,15 +231,14 @@ class gather_insertions props = object(self)
     let fresh_var = self#fresh_gmp_var() in
     let insert_0, decl_var = self#decl_gmp_var fresh_var in
     let insert_1, init_var = self#init_set_si_gmp_var decl_var init_val in
-    let insert_2 = Block_open in
-    let inserts_3, low = self#term lower in
-    let inserts_4, up = self#term upper in
-    begin
+    let inserts_block =
       match lower.term_type with
       | Linteger ->
 	begin
 	  match upper.term_type with
 	  | Linteger ->
+	    let inserts_3, low = self#term lower in
+	    let inserts_4, up = self#term upper in
 	    let fresh_iter = My_gmp_var q.lv_name in
 	    let insert_5, decl_iter = self#decl_gmp_var fresh_iter in
 	    let insert_6, init_iter =
@@ -279,19 +276,16 @@ class gather_insertions props = object(self)
 	    let insert_8 = Instru(Gmp_clear init_iter) in
 	    let insert_9 = Instru(Gmp_clear(self#gmp_fragment low)) in
 	    let insert_10 = Instru(Gmp_clear(self#gmp_fragment up)) in
-	    let insert_11 = Block_close in
-	    let inserts =
-	      [insert_0; insert_1; insert_2] @ inserts_3 @ inserts_4 @
-		[insert_5; insert_6; insert_7; insert_8; insert_9; insert_10;
-		 insert_11]
-	    in
-	    inserts, Gmp_fragment init_var
+	    inserts_3 @ inserts_4
+	    @ [insert_5; insert_6; insert_7; insert_8; insert_9; insert_10]
 	  | Lreal -> assert false (* unreachable *)
 	  | _ -> assert false (* unreachable ? *)
-	end
+	 end
       | Lreal -> assert false (* unreachable *)
       | _ -> assert false (* unreachable ? *)
-    end
+    in
+    let insert_2 = Block inserts_block in
+    [insert_0; insert_1; insert_2], Gmp_fragment init_var
 
   method private term_node t =
     let ty = match t.term_type with
@@ -570,7 +564,6 @@ class gather_insertions props = object(self)
 	  let inserts_2, cond' = self#term cond in
 	  let cond' = self#gmp_fragment cond' in
 	  let cond'' = Gmp_cmp_si(Ne, cond', Zero) in
-
 	  let inserts_then =
 	    let inserts_then_0, then_b' = self#term then_b in
 	    let then_b' = self#gmp_fragment then_b' in
@@ -769,19 +762,24 @@ class gather_insertions props = object(self)
 	  (* TODO: add an option to translate anyway? (deleting the filter) *)
 	  let preconds = List.filter not_translated preconds in
 	  let do_precond p =
-	    let v = self#predicate(self#subst_pred p.ip_content) in
+	    let inserts, v = self#predicate(self#subst_pred p.ip_content) in
 	    if v <> True then (* '1' is for untreated predicates *)
-	      self#insert (If(Lnot v, [Instru(Ret Zero)], []))
+	      inserts @ [If(Lnot v, [Instru(Ret Zero)], [])]
+	    else
+	      inserts
 	  in
 	  if preconds <> [] then
 	    if b.b_assumes <> [] then
-	      let exp = self#cond_of_assumes b.b_assumes in
-	      self#insert (If_cond exp);
-	      self#insert Block_open;
-	      List.iter do_precond preconds;
-	      self#insert Block_close
+	      let inserts_0, exp = self#cond_of_assumes b.b_assumes in
+	      let inserts_then =
+		List.fold_left (@) [] (List.map do_precond preconds) in
+	      let insert_1 = If(exp, inserts_then, []) in
+	      let inserts = inserts_0 @ [insert_1] in
+	      List.iter self#insert inserts
 	    else
-	      List.iter do_precond preconds
+	      let inserts =
+		List.fold_left (@) [] (List.map do_precond preconds) in
+	      List.iter self#insert inserts
 	) behaviors;
       end
     (* END precond (entry-point) *)
@@ -796,18 +794,19 @@ class gather_insertions props = object(self)
 	  let do_precond pred =
 	    let prop = to_prop pred in
 	    let id = Sd_utils.to_id prop in
-	    self#pc_assert_exception
-	      pred.ip_content "Pre-condition!" id prop
+	    self#pc_assert_exception pred.ip_content "Pre-condition!" id prop
 	  in
 	  if pre <> [] then
 	    if b.b_assumes <> [] then
-	      let exp = self#cond_of_assumes b.b_assumes in
-	      self#insert (If_cond exp);
-	      self#insert Block_open;
-	      List.iter do_precond pre;
-	      self#insert Block_close
+	      let inserts_0, exp = self#cond_of_assumes b.b_assumes in
+	      let inserts_then =
+		List.fold_left (@) [] (List.map do_precond pre) in
+	      let insert_1 = If(exp, inserts_then, []) in
+	      let inserts = inserts_0 @ [insert_1] in
+	      List.iter self#insert inserts
 	    else
-	      List.iter do_precond pre
+	      let inserts = List.fold_left (@) [] (List.map do_precond pre) in
+	      List.iter self#insert inserts
 	) behaviors
       end;
     (* END precond (not entry-point) *)
@@ -818,16 +817,14 @@ class gather_insertions props = object(self)
     if (self#at_least_one_prop kf behaviors)
       || (Sd_options.Behavior_Reachability.get()) then
       begin
-	self#insert Block_open;
-	List.iter (fun b ->
+	let do_behavior b =
 	  let post = b.b_post_cond in
 	  let to_prop = Property.ip_of_ensures kf Kglobal b in
 	  let post = List.filter (fun x -> List.mem (to_prop x) props) post in
 	  let do_postcond (tk,pred) =
 	    let prop = to_prop (tk,pred) in
 	    let id = Sd_utils.to_id prop in
-	    self#pc_assert_exception
-	      pred.ip_content "Post-condition!" id prop
+	    self#pc_assert_exception pred.ip_content "Post-condition!" id prop
 	  in
 	  let str = Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
 	  let add_reach_info =
@@ -837,32 +834,43 @@ class gather_insertions props = object(self)
 	  if post <> [] || (Sd_options.Behavior_Reachability.get()) then
 	    begin
 	      if b.b_assumes <> [] then
-		let exp = self#cond_of_assumes b.b_assumes in
-		self#insert (If_cond exp);
-		self#insert Block_open;
-		if add_reach_info then
-		  begin
-		    self#insert (Instru(Pc_to_framac str));
-		    Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt
-		      (kf, b, false);
-		    bhv_to_reach_cpt <- bhv_to_reach_cpt+1
-		  end;
-		List.iter do_postcond post;
-		self#insert Block_close
-	      else
-		begin
+		let inserts_0, exp = self#cond_of_assumes b.b_assumes in
+		let inserts_then_0 =
 		  if add_reach_info then
 		    begin
-		      self#insert (Instru(Pc_to_framac str));
 		      Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt
 			(kf, b, false);
-		      bhv_to_reach_cpt <- bhv_to_reach_cpt+1
-		    end;
-		  List.iter do_postcond post
-		end
+		      bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
+		      [Instru(Pc_to_framac str)]
+		    end
+		  else
+		    []
+		in
+		let inserts_then_1 =
+		  List.fold_left (@) [] (List.map do_postcond post) in
+		let insert_1 = If(exp, inserts_then_0 @ inserts_then_1, []) in
+		inserts_0 @ [insert_1]
+	      else
+		let inserts_0 = 
+		  if add_reach_info then
+		    begin
+		      Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt
+			(kf, b, false);
+		      bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
+		      [Instru(Pc_to_framac str)]
+		    end
+		  else
+		    []
+		in
+		let inserts_1 =
+		  List.fold_left (@) [] (List.map do_postcond post) in
+		inserts_0 @ inserts_1
 	    end
-	) behaviors;
-	self#insert Block_close
+	  else
+	    []
+	in
+	let inserts = List.fold_left (@) [] (List.map do_behavior behaviors) in
+	self#insert (Block inserts)
       end;
     (* END postcond *)
 
@@ -1015,26 +1023,28 @@ class gather_insertions props = object(self)
   method private subst_pred p = (new Sd_subst.subst)#subst_pred p [] [] [] []
 
   method private cond_of_assumes pred_list =
-    let f a = self#predicate (self#subst_pred a.ip_content) in
-    let vars = List.map f pred_list in
-    let rec aux ret = function
-      | [] -> ret
-      | h :: t -> aux (Land(ret, h)) t
+    let rec aux insertions ret = function
+      | [] -> insertions, ret
+      | h :: t ->
+	let ins, v = self#predicate (self#subst_pred h.ip_content) in
+	aux (insertions @ ins) (Land(ret, v)) t
     in
-    aux True vars
+    aux [] True pred_list
 
   method private cond_of_behaviors pred_lists =
-    let conds = List.map self#cond_of_assumes pred_lists in
-    let rec aux ret = function
-      | [] -> ret
-      | h :: t -> aux (Lor(ret, h)) t
+    let rec aux insertions ret = function
+      | [] -> insertions, ret
+      | h :: t ->
+	let ins, v = self#cond_of_assumes h in
+	aux (insertions @ ins) (Lor(ret, v)) t
       in
-    aux False conds
+    aux [] False pred_lists
 
   method private pc_assert_exception pred msg id prop =
-    let var = self#predicate (self#subst_pred pred) in
-    self#insert (If(Lnot var, [Instru(Pc_assert_exn(msg, id))], []));
-    translated_properties <- prop :: translated_properties
+    let inserts_0, var = self#predicate (self#subst_pred pred) in
+    let insert_1 = If(Lnot var, [Instru(Pc_assert_exn(msg, id))], []) in
+    translated_properties <- prop :: translated_properties;
+    inserts_0 @ [insert_1]
 
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
@@ -1064,29 +1074,36 @@ class gather_insertions props = object(self)
 	  let do_precond pred =
 	    let prop = to_prop pred in
 	    let id = Sd_utils.to_id prop in
-	    self#pc_assert_exception pred.ip_content
-	      "Stmt Pre-condition!" id prop
+	    self#pc_assert_exception
+	      pred.ip_content "Stmt Pre-condition!" id prop
 	  in
 	  if pre <> [] then
 	    if b.b_assumes <> [] then
-	      let exp = self#cond_of_assumes b.b_assumes in
-	      self#insert (If_cond exp);
-	      self#insert Block_open;
-	      List.iter do_precond pre;
-	      self#insert Block_close
+	      let inserts_0, exp = self#cond_of_assumes b.b_assumes in
+	      let inserts_then =
+		List.fold_left (@) [] (List.map do_precond pre) in
+	      let insert_1 = If(exp, inserts_then, []) in
+	      inserts_0 @ [insert_1]
 	    else
-	      List.iter do_precond pre
+	      List.fold_left (@) [] (List.map do_precond pre)
+	  else
+	    []
 	in
 
 	if behaviors <> [] then
-	  let cond = self#cond_of_behaviors behaviors in
-	  self#insert (If_cond cond);
-	  self#insert Block_open;
-	  List.iter do_behavior bhvs.spec_behavior;
-	  self#insert Block_close
+	  let inserts_0, cond = self#cond_of_behaviors behaviors in
+	  let inserts_then =
+	    List.fold_left (@) [] (List.map do_behavior bhvs.spec_behavior) in
+	  let insert_1 = If(cond, inserts_then, []) in
+	  let inserts = inserts_0 @ [insert_1] in
+	  List.iter self#insert inserts
 	else
-	  List.iter do_behavior bhvs.spec_behavior;
-	
+	  begin
+	    let inserts =
+	      List.fold_left (@) [] (List.map do_behavior bhvs.spec_behavior) in
+	    List.iter self#insert inserts
+	  end;
+	  
 	current_label <- Some (EndStmt stmt.sid);
 	
 	if self#at_least_one_prop kf bhvs.spec_behavior then
@@ -1104,23 +1121,30 @@ class gather_insertions props = object(self)
 	      in
 	      if post <> [] then
 		if b.b_assumes <> [] then
-		  let exp = self#cond_of_assumes b.b_assumes in
-		  self#insert (If_cond exp);
-		  self#insert Block_open;
-		  List.iter do_postcond post;
-		  self#insert Block_close
+		  let inserts_0, exp = self#cond_of_assumes b.b_assumes in
+		  let inserts_then =
+		    List.fold_left (@) [] (List.map do_postcond post) in
+		  let insert_1 = If(exp, inserts_then, []) in
+		  inserts_0 @ [insert_1]
 		else
-		  List.iter do_postcond post
+		  List.fold_left (@) [] (List.map do_postcond post)
+	      else
+		[]
 	    in
 
 	    if behaviors <> [] then
-	      let cond = self#cond_of_behaviors behaviors in
-	      self#insert (If_cond cond);
-	      self#insert Block_open;
-	      List.iter do_behavior bhvs.spec_behavior;
-	      self#insert Block_close
+	      let inserts_0, cond = self#cond_of_behaviors behaviors in
+	      let inserts_then =
+		List.fold_left (@) [] (List.map do_behavior bhvs.spec_behavior)
+	      in
+	      let insert_1 = If(cond, inserts_then, []) in
+	      let inserts = inserts_0 @ [insert_1] in
+	      List.iter self#insert inserts
 	    else
-	      List.iter do_behavior bhvs.spec_behavior
+	      let inserts =
+		List.fold_left (@) [] (List.map do_behavior bhvs.spec_behavior)
+	      in
+	      List.iter self#insert inserts
 	  end;
 
 	current_label <- None
@@ -1134,13 +1158,16 @@ class gather_insertions props = object(self)
 	  begin
 	    let id = Sd_utils.to_id prop in
 	    if behaviors <> [] then
-	      let cond = self#cond_of_behaviors behaviors in
-	      self#insert (If_cond cond);
-	      self#insert Block_open;
-	      self#pc_assert_exception pred.content "Assert!" id prop;
-	      self#insert Block_close
+	      let inserts_0, cond = self#cond_of_behaviors behaviors in
+	      let inserts_then =
+		self#pc_assert_exception pred.content "Assert!" id prop in
+	      let insert_1 = If(cond, inserts_then, []) in
+	      let inserts = inserts_0 @ [insert_1] in
+	      List.iter self#insert inserts
 	    else
-	      self#pc_assert_exception pred.content "Assert!" id prop
+	      let ins =
+		self#pc_assert_exception pred.content "Assert!" id prop in
+	      List.iter self#insert ins
 	  end;
 
 	current_label <- None
@@ -1152,13 +1179,15 @@ class gather_insertions props = object(self)
 	  let id = Sd_utils.to_id prop in
 	  let f msg =
 	    if behaviors <> [] then
-	      let cond = self#cond_of_behaviors behaviors in
-	      self#insert (If_cond cond);
-	      self#insert Block_open;
-	      self#pc_assert_exception pred.content msg id prop;
-	      self#insert Block_close
+	      let inserts_0, cond = self#cond_of_behaviors behaviors in
+	      let inserts_then =
+		self#pc_assert_exception pred.content msg id prop in
+	      let insert_1 = If(cond, inserts_then, []) in
+	      let inserts = inserts_0 @ [insert_1] in
+	      List.iter self#insert inserts
 	    else
-	      self#pc_assert_exception pred.content msg id prop
+	      let ins = self#pc_assert_exception pred.content msg id prop in
+	      List.iter self#insert ins
 	  in
 	  current_label <- Some (BegStmt stmt.sid);
 	  f "Loop invariant not established!";
@@ -1245,6 +1274,8 @@ class gather_insertions props = object(self)
     if List.mem stmt.sid stmts_to_reach then
       begin
 	current_label <- Some (BegStmt stmt.sid);
+	(* the constructor Block cannot be used here because the block
+	   is opened and closed at 2 different labels *)
 	self#insert Block_open;
 	let str = Format.sprintf "@@FC:REACHABLE_STMT:%i" stmt.sid in
 	self#insert (Instru(Pc_to_framac str));
@@ -1289,10 +1320,10 @@ class gather_insertions props = object(self)
       | _ -> Cil.DoChildren
     end
 
-  method private predicate_named pnamed : pred_expr =
+  method private predicate_named pnamed : insertion list * pred_expr =
     self#predicate pnamed.content
 
-  method private quantif_predicate ~forall logic_vars hyps goal : pred_expr =
+  method private quantif_predicate ~forall logic_vars hyps goal =
     if (List.length logic_vars) > 1 then
       failwith "quantification on many variables unsupported!";
     let var = self#fresh_pred_var() in
@@ -1301,10 +1332,9 @@ class gather_insertions props = object(self)
       failwith "Unguarded variables in quantification!";
     let t1,r1,lv,r2,t2 = List.hd guards in
     let iter_name = lv.lv_name in
-    self#insert (Decl_pred_var var);
-    self#insert (Instru(Affect_pred(var, (if forall then True else False))));
-    self#insert Block_open;
-    begin
+    let insert_0 = Decl_pred_var var in
+    let insert_1 = Instru(Affect_pred(var, (if forall then True else False))) in
+    let inserts_3 =
       match t1.term_type with
       | Linteger ->
 	begin
@@ -1312,63 +1342,69 @@ class gather_insertions props = object(self)
 	  | Linteger ->
 	    let fresh_iter = My_gmp_var iter_name in
 	    let insert_0, decl_iter = self#decl_gmp_var fresh_iter in
-	    self#insert insert_0;
 	    let inserts_1, t1' = self#term t1 in
-	    List.iter self#insert inserts_1;
 	    let t1' = self#gmp_fragment t1' in
 	    let inserts_2, t2' = self#term t2 in
-	    List.iter self#insert inserts_2;
 	    let t2' = self#gmp_fragment t2' in
 	    let insert_3, init_iter = self#init_set_gmp_var decl_iter t1' in
-	    self#insert insert_3;
-	    if r1 = Rlt then
-	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
+	    let inserts_4 =
+	      if r1 = Rlt then
+		[Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One))]
+	      else []
+	    in
 	    let exp1 = Gmp_cmpr(r2, init_iter, t2') in
 	    let exp2 = if forall then var else Lnot var in
-	    self#insert (For_cond(None, Some(Land(exp1, exp2)), None));
-	    self#insert Block_open;
-	    let goal_var = self#predicate_named goal in
-	    self#insert (Instru(Affect_pred(var, goal_var)));
-	    self#insert (Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)));
-	    self#insert Block_close;
-	    self#insert (Instru(Gmp_clear init_iter));
-	    self#insert (Instru(Gmp_clear t1'));
-	    self#insert (Instru(Gmp_clear t2'))
+	    let inserts_block =
+	      let ins_b_0, goal_var = self#predicate_named goal in
+	      let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
+	      let ins_b_2 =
+		Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)) in
+	      ins_b_0 @ [ins_b_1; ins_b_2]
+	    in
+	    let insert_5 =
+	      For(None, Some(Land(exp1, exp2)), None, inserts_block) in
+	    let insert_6 = Instru(Gmp_clear init_iter) in
+	    let insert_7 = Instru(Gmp_clear t1') in
+	    let insert_8 = Instru(Gmp_clear t2') in
+	    [insert_0] @ inserts_1 @ inserts_2 @ [insert_3] @ inserts_4
+	    @ [insert_5; insert_6; insert_7; insert_8]
 	  | Lreal -> assert false (* TODO: reals *)
 	  | _ ->
 	    let fresh_iter = My_gmp_var iter_name in
 	    let insert_0, decl_iter = self#decl_gmp_var fresh_iter in
-	    self#insert insert_0;
 	    let inserts_1, t1' = self#term t1 in
-	    List.iter self#insert inserts_1;
 	    let t1' = self#gmp_fragment t1' in
 	    let inserts_2, t2' = self#term t2 in
-	    List.iter self#insert inserts_2;
 	    let t2' = self#ctype_fragment t2' in
 	    let insert_3, init_iter = self#init_set_gmp_var decl_iter t1' in
-	    self#insert insert_3;
-	    if r1 = Rlt then
-	      self#insert (Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)));
+	    let inserts_4 =
+	      if r1 = Rlt then
+		[Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One))]
+	      else []
+	    in
 	    let exp1 = Gmp_cmpr_si(r2, init_iter, t2') in
 	    let exp2 = if forall then var else Lnot var in
-	    self#insert (For_cond(None, Some(Land(exp1, exp2)), None));
-	    self#insert Block_open;
-	    let goal_var = self#predicate_named goal in 
-	    self#insert (Instru(Affect_pred(var, goal_var)));
-	    self#insert (Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)));
-	    self#insert Block_close;
-	    self#insert (Instru(Gmp_clear init_iter));
-	    self#insert (Instru(Gmp_clear t1'))
+	    let inserts_block =
+	      let ins_b_0, goal_var = self#predicate_named goal in 
+	      let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
+	      let ins_b_2 =
+		Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)) in
+	      ins_b_0 @ [ins_b_1; ins_b_2]
+	    in
+	    let insert_5 =
+	      For(None, Some(Land(exp1, exp2)), None, inserts_block) in
+	    let insert_6 = Instru(Gmp_clear init_iter) in
+	    let insert_7 = Instru(Gmp_clear t1') in
+	    [insert_0] @ inserts_1 @ inserts_2 @ [insert_3] @ inserts_4
+	    @ [insert_5; insert_6; insert_7]
 	end
       | Lreal -> assert false (* TODO: reals *)
       | _ ->
 	let iter = My_ctype_var (Cil.intType, iter_name) in
-	self#insert (Decl_ctype_var iter);
-	let inserts_0, t1' = self#term t1 in
-	List.iter self#insert inserts_0;
+	let insert_0 = Decl_ctype_var iter in
+	let inserts_1, t1' = self#term t1 in
 	let t1' = self#ctype_fragment t1' in
-	let inserts_1, t2' = self#term t2 in
-	List.iter self#insert inserts_1;
+	let inserts_2, t2' = self#term t2 in
 	let t2' = self#ctype_fragment t2' in
 	let exp1 = Affect(iter, (match r1 with
 	  | Rlt -> Binop(PlusA,t1',One)
@@ -1377,20 +1413,22 @@ class gather_insertions props = object(self)
 	in
 	let exp2 =Land((Cmp(r2,iter,t2')),(if forall then var else Lnot var)) in
 	let exp3 = Affect(iter,Binop(PlusA,iter,One)) in
-	self#insert (For_cond(Some exp1, Some exp2, Some exp3));
-	self#insert Block_open;
-	let goal_var = self#predicate_named goal in 
-	self#insert (Instru(Affect_pred(var, goal_var)));
-	self#insert Block_close
-    end;
-    self#insert Block_close;
-    var
+	let inserts_block =
+	  let ins_b_0, goal_var = self#predicate_named goal in
+	  let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
+	  ins_b_0 @ [ins_b_1]
+	in
+	let insert_3 = For(Some exp1, Some exp2, Some exp3, inserts_block) in
+	[insert_0] @ inserts_1 @ inserts_2 @ [insert_3]
+    in
+    let insert_4 = Block inserts_3 in
+    [insert_0; insert_1; insert_4], var
   (* end of quantif_predicate *)
 
-  method private predicate pred : pred_expr =
+  method private predicate pred : insertion list * pred_expr =
     match pred with
-    | Ptrue -> True
-    | Pfalse -> False
+    | Ptrue -> [], True
+    | Pfalse -> [], False
     | Pvalid(_,term) | Pvalid_read(_,term) ->
       let loc = term.term_loc in
       let pointer, offset =
@@ -1407,29 +1445,25 @@ class gather_insertions props = object(self)
 	match offset.term_type with
 	| Linteger ->
 	  let inserts_0, x' = self#term pointer in
-	  List.iter self#insert inserts_0;
 	  let x' = self#ctype_fragment x' in
 	  let inserts_1, y' = self#term offset in
-	  List.iter self#insert inserts_1;
 	  let y' = self#gmp_fragment y' in
 	  let var = self#fresh_pred_var() in
-	  self#insert (Decl_pred_var var);
+	  let insert_2 = Decl_pred_var var in
 	  let exp1 = Gmp_cmp_ui(Ge, y', Zero) in
 	  let exp2 = Gmp_cmp_ui(Lt, y', Pc_dim(x')) in
-	  self#insert (Instru(Affect_pred(var, Land(exp1, exp2))));
-	  self#insert (Instru(Gmp_clear y'));
-	  var
+	  let insert_3 = Instru(Affect_pred(var, Land(exp1, exp2))) in
+	  let insert_4 = Instru(Gmp_clear y') in
+	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4], var
 	| Lreal -> assert false (* unreachable *)
 	| Ctype (TInt _) ->
 	  let inserts_0, x' = self#term pointer in
-	  List.iter self#insert inserts_0;
 	  let x' = self#ctype_fragment x' in
 	  let inserts_1, y' = self#term offset in
-	  List.iter self#insert inserts_1;
 	  let y' = self#ctype_fragment y' in
 	  let exp1 = Cmp(Rge, y', Zero) in
 	  let exp2 = Cmp(Rgt, Pc_dim(x'), y') in
-	  Land(exp1, exp2)
+	  inserts_0 @ inserts_1, Land(exp1, exp2)
 	| _ -> assert false (* unreachable *)
       end
     | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
@@ -1439,82 +1473,71 @@ class gather_insertions props = object(self)
     | Pforall _ -> failwith "\\forall not of the form \\forall ...; a ==> b;"
     | Pexists _ -> failwith "\\exists not of the form \\exists ...; a && b;"
     | Pnot(pred1) ->
-      let pred1_var = self#predicate_named pred1 in
-      Lnot pred1_var
+      let ins, pred1_var = self#predicate_named pred1 in
+      ins, Lnot pred1_var
     | Pand(pred1,pred2) ->
       let var = self#fresh_pred_var() in
-      let pred1_var = self#predicate_named pred1 in
-      self#insert (Decl_pred_var var);
-      self#insert (Instru(Affect_pred(var, pred1_var)));
-      self#insert (If_cond var);
-      self#insert Block_open;
-      let pred2_var = self#predicate_named pred2 in
-      self#insert (Instru(Affect_pred(var, pred2_var)));
-      self#insert Block_close;
-      var
+      let inserts_0, pred1_var = self#predicate_named pred1 in
+      let insert_1 = Decl_pred_var var in
+      let insert_2 = Instru(Affect_pred(var, pred1_var)) in
+      let inserts_b_0, pred2_var = self#predicate_named pred2 in
+      let insert_b_1 = Instru(Affect_pred(var, pred2_var)) in
+      let insert_3 = If(var, inserts_b_0 @ [insert_b_1], []) in
+      inserts_0 @ [insert_1; insert_2; insert_3], var
     | Por(pred1,pred2) ->
       let var = self#fresh_pred_var()  in
-      let pred1_var = self#predicate_named pred1 in
-      self#insert (Decl_pred_var var);
-      self#insert (Instru(Affect_pred(var, pred1_var)));
-      self#insert (If_cond (Lnot var));
-      self#insert Block_open;
-      let pred2_var = self#predicate_named pred2 in
-      self#insert (Instru(Affect_pred(var, pred2_var)));
-      self#insert Block_close;
-      var
+      let inserts_0, pred1_var = self#predicate_named pred1 in
+      let insert_1 = Decl_pred_var var in
+      let insert_2 = Instru(Affect_pred(var, pred1_var)) in
+      let inserts_b_0, pred2_var = self#predicate_named pred2 in
+      let insert_b_1 = Instru(Affect_pred(var, pred2_var)) in
+      let insert_3 = If(var, [], inserts_b_0 @ [insert_b_1]) in
+      inserts_0 @ [insert_1; insert_2; insert_3], var
     | Pimplies(pred1,pred2) ->
       let var = self#fresh_pred_var() in
-      self#insert (Decl_pred_var var);
-      self#insert (Instru(Affect_pred(var, True)));
-      let pred1_var = self#predicate_named pred1 in
-      self#insert (If_cond pred1_var);
-      self#insert Block_open;
-      let pred2_var = self#predicate_named pred2 in
-      self#insert (Instru(Affect_pred(var, pred2_var)));
-      self#insert Block_close;
-      var
+      let insert_0 = Decl_pred_var var in
+      let insert_1 = Instru(Affect_pred(var, True)) in
+      let inserts_2, pred1_var = self#predicate_named pred1 in
+      let inserts_b_0, pred2_var = self#predicate_named pred2 in
+      let insert_b_1 = Instru(Affect_pred(var, pred2_var)) in
+      let insert_3 = If(pred1_var, inserts_b_0 @ [insert_b_1], []) in
+      [insert_0; insert_1] @ inserts_2 @ [insert_3], var
     | Piff(pred1,pred2) ->
-      let pred1_var = self#predicate_named pred1 in
-      let pred2_var = self#predicate_named pred2 in
+      let inserts_0, pred1_var = self#predicate_named pred1 in
+      let inserts_1, pred2_var = self#predicate_named pred2 in
       let exp1 = Lor(Lnot pred1_var, pred2_var) in
       let exp2 = Lor(Lnot pred2_var, pred1_var) in
-      Land(exp1, exp2)
+      inserts_0 @ inserts_1, Land(exp1, exp2)
     | Pif (t,pred1,pred2) -> (* untested *)
       begin
 	let inserts_0, term_var = self#term t in
-	List.iter self#insert inserts_0;
 	let res_var = self#fresh_pred_var() in
-	self#insert (Decl_pred_var res_var);
+	let insert_1 = Decl_pred_var res_var in
 	let f () =
 	  let term_var = self#ctype_fragment term_var in
-	  self#insert (If_cond (Cmp(Rneq,term_var,Zero)));
-	  self#insert Block_open;
-	  let pred1_var = self#predicate_named pred1 in
-	  self#insert (Instru(Affect_pred(res_var, pred1_var)));
-	  self#insert Block_close;
-	  self#insert Else_cond;
-	  self#insert Block_open;
-	  let pred2_var = self#predicate_named pred2 in
-	  self#insert (Instru(Affect_pred(res_var, pred2_var)));
-	  self#insert Block_close;
-	  res_var
+	  let cond = Cmp(Rneq,term_var,Zero) in
+	  let inserts_then_0, pred1_var = self#predicate_named pred1 in
+	  let insert_then_1 = Instru(Affect_pred(res_var, pred1_var)) in
+	  let inserts_then = inserts_then_0 @ [insert_then_1] in
+	  let inserts_else_0, pred2_var = self#predicate_named pred2 in
+	  let insert_else_1 = Instru(Affect_pred(res_var, pred2_var)) in
+	  let inserts_else = inserts_else_0 @ [insert_else_1] in
+	  let insert_2 = If(cond, inserts_then, inserts_else) in
+	  inserts_0 @ [insert_1; insert_2], res_var
 	in
 	match t.term_type with
 	| Linteger ->
 	  let term_var = self#gmp_fragment term_var in
-	  self#insert (If_cond(Gmp_cmp_si(Ne, term_var, Zero)));
-	  self#insert Block_open;
-	  let pred1_var = self#predicate_named pred1 in
-	  self#insert (Instru(Affect_pred(res_var, pred1_var)));
-	  self#insert Block_close;
-	  self#insert Else_cond;
-	  self#insert Block_open;
-	  let pred2_var = self#predicate_named pred2 in
-	  self#insert (Instru(Affect_pred(res_var, pred2_var)));
-	  self#insert Block_close;
-	  self#insert (Instru(Gmp_clear term_var));
-	  res_var
+	  let cond = Gmp_cmp_si(Ne, term_var, Zero) in
+	  let inserts_then_0, pred1_var = self#predicate_named pred1 in
+	  let insert_then_1 = Instru(Affect_pred(res_var, pred1_var)) in
+	  let inserts_then = inserts_then_0 @ [insert_then_1] in
+	  let inserts_else_0, pred2_var = self#predicate_named pred2 in
+	  let insert_else_1 = Instru(Affect_pred(res_var, pred2_var)) in
+	  let inserts_else = inserts_else_0 @ [insert_else_1] in
+	  let insert_2 = If(cond, inserts_then, inserts_else) in
+	  let insert_3 = Instru(Gmp_clear term_var) in
+	  inserts_0 @ [insert_1; insert_2; insert_3], res_var
 	| Lreal -> assert false (* unreachable *)
 	| Ctype (TInt _) -> f ()
 	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean -> f ()
@@ -1527,85 +1550,73 @@ class gather_insertions props = object(self)
 	| Linteger, Linteger ->
 	  let var = self#fresh_pred_var() in
 	  let inserts_0, t1' = self#term t1 in
-	  List.iter self#insert inserts_0;
 	  let t1' = self#gmp_fragment t1' in
 	  let inserts_1, t2' = self#term t2 in
-	  List.iter self#insert inserts_1;
 	  let t2' = self#gmp_fragment t2' in
-	  self#insert (Decl_pred_var var);
-	  self#insert (Instru(Affect_pred(var, Gmp_cmpr(rel, t1', t2'))));
-	  self#insert (Instru(Gmp_clear t1'));
-	  self#insert (Instru(Gmp_clear t2'));
-	  var
+	  let insert_2 = Decl_pred_var var in
+	  let insert_3 = Instru(Affect_pred(var, Gmp_cmpr(rel, t1', t2'))) in
+	  let insert_4 = Instru(Gmp_clear t1') in
+	  let insert_5 = Instru(Gmp_clear t2') in
+	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4; insert_5], var
 	| Linteger, Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
 	  let var = self#fresh_pred_var() in
 	  let inserts_0, t1' = self#term t1 in
-	  List.iter self#insert inserts_0;
 	  let t1' = self#gmp_fragment t1' in
 	  let inserts_1, t2' = self#term t2 in
-	  List.iter self#insert inserts_1;
 	  let t2' = self#ctype_fragment t2' in
-	  self#insert (Decl_pred_var var);
-	  self#insert (Instru(Affect_pred(var, Gmp_cmpr_ui(rel, t1', t2'))));
-	  self#insert (Instru(Gmp_clear t1'));
-	  var
+	  let insert_2 = Decl_pred_var var in
+	  let insert_3 = Instru(Affect_pred(var, Gmp_cmpr_ui(rel, t1', t2'))) in
+	  let insert_4 = Instru(Gmp_clear t1') in
+	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4], var
 	| Linteger, Ctype (TInt _) ->
 	  let var = self#fresh_pred_var() in
 	  let inserts_0, t1' = self#term t1 in
-	  List.iter self#insert inserts_0;
 	  let t1' = self#gmp_fragment t1' in
 	  let inserts_1, t2' = self#term t2 in
-	  List.iter self#insert inserts_1;
 	  let t2' = self#ctype_fragment t2' in
-	  self#insert (Decl_pred_var var);
-	  self#insert (Instru(Affect_pred(var, Gmp_cmpr_si(rel, t1', t2'))));
-	  self#insert (Instru(Gmp_clear t1'));
-	  var
+	  let insert_2 = Decl_pred_var var in
+	  let insert_3 = Instru(Affect_pred(var, Gmp_cmpr_si(rel, t1', t2'))) in
+	  let insert_4 = Instru(Gmp_clear t1') in
+	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4], var
 	| Lreal, Lreal -> assert false (* TODO: reals *)
 	| Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)), Linteger ->
 	  let var = self#fresh_pred_var() in
 	  let inserts_0, t1' = self#term t1 in
-	  List.iter self#insert inserts_0;
 	  let t1' = self#ctype_fragment t1' in
 	  let inserts_1, t2' = self#term t2 in
-	  List.iter self#insert inserts_1;
 	  let t2' = self#gmp_fragment t2' in
 	  let fresh_var' = self#fresh_gmp_var() in
 	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
-	  self#insert insert_2;
 	  let insert_3, init_var' = self#init_set_ui_gmp_var decl_var' t1' in
-	  self#insert insert_3;
-	  self#insert (Decl_pred_var var);
-	  self#insert (Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))));
-	  self#insert (Instru(Gmp_clear t2'));
-	  self#insert (Instru(Gmp_clear init_var'));
-	  var
+	  let insert_4 = Decl_pred_var var in
+	  let insert_5 =
+	    Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))) in
+	  let insert_6 = Instru(Gmp_clear t2') in
+	  let insert_7 = Instru(Gmp_clear init_var') in
+	  inserts_0 @ inserts_1
+	  @ [insert_2; insert_3; insert_4; insert_5; insert_6; insert_7], var
 	| Ctype (TInt _), Linteger ->
 	  let var = self#fresh_pred_var() in
 	  let inserts_0, t1' = self#term t1 in
-	  List.iter self#insert inserts_0;
 	  let t1' = self#ctype_fragment t1' in
 	  let inserts_1, t2' = self#term t2 in
-	  List.iter self#insert inserts_1;
 	  let t2' = self#gmp_fragment t2' in
 	  let fresh_var' = self#fresh_gmp_var() in
 	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
-	  self#insert insert_2;
 	  let insert_3, init_var' = self#init_set_si_gmp_var decl_var' t1' in
-	  self#insert insert_3;
-	  self#insert (Decl_pred_var var);
-	  self#insert (Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))));
-	  self#insert (Instru(Gmp_clear t2'));
-	  self#insert (Instru(Gmp_clear init_var'));
-	  var
+	  let insert_4 = Decl_pred_var var in
+	  let insert_5 =
+	    Instru(Affect_pred(var, Gmp_cmpr(rel, init_var', t2'))) in
+	  let insert_6 = Instru(Gmp_clear t2') in
+	  let insert_7 = Instru(Gmp_clear init_var') in
+	  inserts_0 @ inserts_1
+	  @ [insert_2; insert_3; insert_4; insert_5; insert_6; insert_7], var
 	| _ ->
 	  let inserts_0, t1' = self#term t1 in
-	  List.iter self#insert inserts_0;
 	  let t1' = self#ctype_fragment t1' in
 	  let inserts_1, t2' = self#term t2 in
-	  List.iter self#insert inserts_1;
 	  let t2' = self#ctype_fragment t2' in
-	  Cmp(rel, t1', t2')
+	  inserts_0 @ inserts_1, Cmp(rel, t1', t2')
       end
       
     | Pat(p, LogicLabel(_,stringlabel)) when stringlabel = "Here" ->
@@ -1615,7 +1626,7 @@ class gather_insertions props = object(self)
       self#predicate_named p
     | _ ->
       Sd_options.Self.warning "%a unsupported" Printer.pp_predicate pred;
-      True
+      [], True
 (* end predicate *)
 end
 
@@ -1724,47 +1735,57 @@ let pp_instruction fmt = function
     Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
       pp_garith op pp_gexpr r pp_gexpr a pp_cexpr b
 
-let rec pp_insertion fmt = function
-  | Instru i -> Format.fprintf fmt "@\n@[%a;@]" pp_instruction i
-  | Decl_gmp_var v -> Format.fprintf fmt "@\n@[mpz_t %a;@]" pp_fresh_gmp v
-  | Decl_ctype_var ((Fresh_ctype_var (_id, ty)) as v) ->
-    Format.fprintf fmt "@\n@[%a %a;@]" Printer.pp_typ ty pp_cexpr v
-  | Decl_ctype_var (My_ctype_var (ty, name)) ->
-    Format.fprintf fmt "@\n@[%a %s;@]" Printer.pp_typ ty name
-  | Decl_ctype_var _ -> assert false
-  | Decl_pred_var p -> Format.fprintf fmt "@\n@[int %a;@]" pp_pexpr p
-  | If_cond exp -> Format.fprintf fmt "@\n@[if(%a)@]" pp_pexpr exp
-  | Else_cond -> Format.fprintf fmt "@\n@[else@]"
-  | If (cond,b1,b2) ->
-    Format.fprintf fmt "@\n@[<hov 2>if(%a) {" pp_pexpr cond;
-    List.iter (fun i -> pp_insertion fmt i) b1;
-    Format.fprintf fmt "@]@\n}";
-    if b2 <> [] then
-      begin
-	Format.fprintf fmt "@\n@[<hov 2>else {";
-	List.iter (fun i -> pp_insertion fmt i) b2;
-	Format.fprintf fmt "@]@\n}"
-      end
-  | For_cond(None, Some e, None) ->
-    Format.fprintf fmt "@\n@[while(%a)@]" pp_pexpr e
-  | For(None, Some e, None, b) ->
-    Format.fprintf fmt "@\n@[<hov 2>while(%a) {" pp_pexpr e;
-    List.iter (fun i -> pp_insertion fmt i) b;
-    Format.fprintf fmt "@]@\n}"
-  | For_cond(Some i1, Some e, Some i2) ->
-    Format.fprintf fmt "@\n@[for(%a; %a; %a)@]" pp_instruction i1
-      pp_pexpr e pp_instruction i2
-  | For(Some i1, Some e, Some i2, b) ->
-    Format.fprintf fmt "@\n@[<hov 2>for(%a; %a; %a) {"
-      pp_instruction i1 pp_pexpr e pp_instruction i2;
-    List.iter (fun i -> pp_insertion fmt i) b;
-    Format.fprintf fmt "@]@\n}"
-  | For_cond _ -> assert false (* not used by the translation *)
-  | For _ -> assert false (* not used by the translation *)
-  | Block_open -> Format.fprintf fmt "@\n@[{@[<hov 2>"
-  | Block_close -> Format.fprintf fmt "@]@\n}@]"
+let rec pp_insertion ?(line_break = true) fmt ins =
+  let rec print_inserts_without_last_line_break fmt = function
+    | [] -> ()
+    | h :: [] -> pp_insertion ~line_break:false fmt h
+    | h :: t -> pp_insertion ~line_break:true fmt h;
+      print_inserts_without_last_line_break fmt t
+  in
+  begin
+    match ins with
+    | Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
+    | Decl_gmp_var v -> Format.fprintf fmt "@[mpz_t %a;@]" pp_fresh_gmp v
+    | Decl_ctype_var ((Fresh_ctype_var (_id, ty)) as v) ->
+      Format.fprintf fmt "@[%a %a;@]" Printer.pp_typ ty pp_cexpr v
+    | Decl_ctype_var (My_ctype_var (ty, name)) ->
+      Format.fprintf fmt "@[%a %s;@]" Printer.pp_typ ty name
+    | Decl_ctype_var _ -> assert false
+    | Decl_pred_var p -> Format.fprintf fmt "@[int %a;@]" pp_pexpr p
+    | If (cond,b1,b2) ->
+      Format.fprintf fmt "@[<hov 2>if(%a) {@\n" pp_pexpr cond;
+      print_inserts_without_last_line_break fmt b1;
+      Format.fprintf fmt "@]@\n}";
+      if b2 <> [] then
+	begin
+	  Format.fprintf fmt "@\n@[<hov 2>else {@\n";
+	  print_inserts_without_last_line_break fmt b2;
+	  Format.fprintf fmt "@]@\n}"
+	end
+    | For(None, Some e, None, b) ->
+      Format.fprintf fmt "@[<hov 2>while(%a) {@\n" pp_pexpr e;
+      print_inserts_without_last_line_break fmt b;
+      Format.fprintf fmt "@]@\n}"
+    | For(Some i1, Some e, Some i2, b) ->
+      Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n"
+	pp_instruction i1 pp_pexpr e pp_instruction i2;
+      print_inserts_without_last_line_break fmt b;
+      Format.fprintf fmt "@]@\n}"
+    | For _ -> assert false (* not used by the translation *)
+    | Block b ->
+      if b <> [] then
+	begin
+	  Format.fprintf fmt "@[<hov 2>{@\n";
+	  print_inserts_without_last_line_break fmt b;
+	  Format.fprintf fmt "@]@\n}"
+	end
+    | Block_open -> Format.fprintf fmt "@\n@[{@[<hov 2>"
+    | Block_close -> Format.fprintf fmt "@]@\n}@]"
+  end;
+  if line_break then Format.fprintf fmt "@\n"
 
-
+let pp_insertion_lb = pp_insertion ~line_break:true
+let pp_insertion_nlb = pp_insertion ~line_break:false
 
 class print_insertions insertions ~print_label () = object(self)
   inherit Printer.extensible_printer () as super
@@ -1782,7 +1803,7 @@ class print_insertions insertions ~print_label () = object(self)
 	let x,y,z =
 	  match f.svar.vtype with TFun(_,x,y,z) -> x,y,z | _ -> assert false
 	in
-	Format.fprintf fmt "%a@ {@\n@[<v 2>@["
+	Format.fprintf fmt "%a@ @[<hov 2>{@\n"
 	  (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" precond)))
 	  (TFun(Cil.intType,x,y,z));
 	begin
@@ -1792,10 +1813,11 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* BegFunc %s */ " precond;
-		Format.fprintf fmt "%a" pp_insertion s) q
+		Format.fprintf fmt "%a" pp_insertion_lb s) q
 	  with _ -> ()
 	end;
-	Format.fprintf fmt "return 1;@]@]@\n}@\n@\n"
+	Format.fprintf fmt "@[return 1;@]";
+	Format.fprintf fmt "@]@\n}@\n@\n"
       end;
     (* END precond (entry-point) *)
     Format.fprintf fmt "@[%t%a@\n@[<v 2>"
@@ -1804,7 +1826,7 @@ class print_insertions insertions ~print_label () = object(self)
       self#vdecl f.svar;
     (* body. *)
     if entering_ghost then is_ghost <- true;
-    Format.fprintf fmt "@[<h 2>{@\n";
+    Format.fprintf fmt "@[<hov 2>{@\n";
     begin
       try
 	let q = Hashtbl.find insertions (BegFunc f.svar.vname) in
@@ -1812,7 +1834,7 @@ class print_insertions insertions ~print_label () = object(self)
 	  (fun s ->
 	    if print_label then
 	      Format.fprintf fmt "/* BegFunc %s */ " f.svar.vname;
-	    Format.fprintf fmt "%a" pp_insertion s) q
+	    Format.fprintf fmt "%a" pp_insertion_lb s) q
       with _ -> ()
     end;
     self#block ~braces:true fmt f.sbody;
@@ -1839,7 +1861,7 @@ class print_insertions insertions ~print_label () = object(self)
 	  (fun s ->
 	    if print_label then
 	      Format.fprintf fmt "/* BegStmt %i */ " stmt.sid;
-	    Format.fprintf fmt "%a" pp_insertion s) q
+	    Format.fprintf fmt "%a" pp_insertion_lb s) q
       with _ -> ()
     end;
     begin
@@ -1854,7 +1876,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* BegIter %i */ " stmt.sid;
-		Format.fprintf fmt "%a" pp_insertion s) q
+		Format.fprintf fmt "%a" pp_insertion_lb s) q
 	  with _ -> ()
 	end;
 	Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
@@ -1865,7 +1887,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* EndIter %i */ " stmt.sid;
-		Format.fprintf fmt "%a" pp_insertion s) q
+		Format.fprintf fmt "%a" pp_insertion_lb s) q
 	  with _ -> ()
 	end;
 	Format.fprintf fmt "}@\n @]"
@@ -1878,7 +1900,7 @@ class print_insertions insertions ~print_label () = object(self)
 	      (fun s ->
 		if print_label then
 		  Format.fprintf fmt "/* EndFunc %s */ " f;
-		Format.fprintf fmt "%a" pp_insertion s) q
+		Format.fprintf fmt "%a" pp_insertion_lb s) q
 	  with _ -> ()
 	end;
 	self#stmtkind next fmt stmt.skind
@@ -1891,7 +1913,7 @@ class print_insertions insertions ~print_label () = object(self)
 	  (fun s ->
 	    if print_label then
 	      Format.fprintf fmt "/* EndStmt %i */ " stmt.sid;
-	    Format.fprintf fmt "%a" pp_insertion s) q
+	    Format.fprintf fmt "%a" pp_insertion_lb s) q
       with _ -> ()
     end;
     if has_code_annots then Format.fprintf fmt "}@\n @]";
