@@ -29,7 +29,7 @@ void f(int x, int y, int z)
           __stady_pred_0 = old_z <= old_x;
         }
         if(!(__stady_pred_0)) {
-          pathcrawler_assert_exception("Post-condition!",14);
+          pathcrawler_assert_exception("Post-condition!",15);
         }
       }
       if(((1 && y >= x) && y >= z)) {
@@ -39,7 +39,7 @@ void f(int x, int y, int z)
           __stady_pred_1 = old_z <= old_y;
         }
         if(!(__stady_pred_1)) {
-          pathcrawler_assert_exception("Post-condition!",6);
+          pathcrawler_assert_exception("Post-condition!",8);
         }
       }
       if(((1 && z >= x) && z >= y)) {
@@ -59,7 +59,9 @@ void f(int x, int y, int z)
 
 
 [kernel] preprocessing with "gcc -C -E -I.  __sd_instru_behaviors_f.c"
+/usr/include/x86_64-linux-gnu/gmp.h:1721:[kernel] warning: Calling undeclared function __builtin_expect. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_behaviors_f.c"
+/usr/include/x86_64-linux-gnu/gmp.h:1721:[kernel] warning: Calling undeclared function __builtin_expect. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler___sd_instru_behaviors_f/lanceur_f utilities ...
 [pc] Compiling pathcrawler___sd_instru_behaviors_f/lanceur_f ...
