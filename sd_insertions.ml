@@ -240,8 +240,8 @@ class gather_insertions props = object(self)
 	    let fresh_iter = My_gmp_var q.lv_name in
 	    let insert_5, decl_iter = self#decl_gmp_var fresh_iter in
 	    let insert_6, init_iter = self#init_set_gmp_var decl_iter low in
-	    let inserts_for_block_0, lambda_term = self#term t in
-	    let insert_for_block_1 =
+	    let ins_b_0, lambda_term = self#term t in
+	    let ins_b_1 =
 	      match builtin_name with
 	      | s when s = "\\sum" ->
 		Instru(Gmp_binop(PlusA, init_var, init_var,
@@ -257,19 +257,16 @@ class gather_insertions props = object(self)
 		If(cond, [instr], [])
 	      | _ -> assert false
 	    in
-	    let insert_for_block_2 = 
-	      Instru(Gmp_binop_ui(PlusA,init_iter,init_iter, One)) in
-	    let inserts_for_block = inserts_for_block_0 @
-	      [insert_for_block_1; insert_for_block_2] in
-	    let inserts_for_block =
+	    let ins_b_2 = Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)) in
+	    let ins_b = ins_b_0 @ [ins_b_1; ins_b_2] in
+	    let ins_b =
 	      if builtin_name <> "\\numof" then
-		Sd_utils.append_end inserts_for_block
-		  (Instru(Gmp_clear(self#gmp_fragment lambda_term)))
+		ins_b @ [(Instru(Gmp_clear(self#gmp_fragment lambda_term)))]
 	      else
-		inserts_for_block
+		ins_b
 	    in
 	    let cond = Gmp_cmp(Le,init_iter,up) in
-	    let insert_7 = For(None, Some cond, None, inserts_for_block) in
+	    let insert_7 = For(None, Some cond, None, ins_b) in
 	    let insert_8 = Instru(Gmp_clear init_iter) in
 	    let insert_9 = Instru(Gmp_clear low) in
 	    let insert_10 = Instru(Gmp_clear up) in
@@ -457,12 +454,12 @@ class gather_insertions props = object(self)
 	      let var = self#fresh_ctype_var Cil.intType in
 	      let inserts_0, x = self#term t1 in
 	      let inserts_1, y = self#term t2 in
+	      let insert_2 = Decl_ctype_var var in
 	      let pred = Gmp_cmp(op, self#gmp_fragment x,self#gmp_fragment y) in
-	      inserts_0 @ inserts_1
-	      @ [Decl_ctype_var var;
-		 Instru(Affect(var, Of_pred pred));
-		 Instru(Gmp_clear(self#gmp_fragment x));
-		 Instru(Gmp_clear(self#gmp_fragment y))],
+	      let insert_3 = Instru(Affect(var, Of_pred pred)) in
+	      let insert_4 = Instru(Gmp_clear(self#gmp_fragment x)) in
+	      let insert_5 = Instru(Gmp_clear(self#gmp_fragment y)) in
+	      inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4; insert_5],
 	      Ctype_fragment var
 	    | _ ->
 	      let inserts_0, x = self#term t1 in
@@ -532,8 +529,7 @@ class gather_insertions props = object(self)
 	      builtin_name = "\\sum" || builtin_name = "\\product" ||
 	      builtin_name = "\\numof" then
 	      match params with
-	      | [lower;upper;{term_node=Tlambda([q],t)}] ->
-		self#lambda li lower upper q t
+	      | [l;u;{term_node=Tlambda([q],t)}] -> self#lambda li l u q t
 	      | _ -> assert false
 	    else
 	      assert false
@@ -612,29 +608,24 @@ class gather_insertions props = object(self)
       begin
 	match ty with
 	| Linteger ->
-	  begin
-	    let ty' =
-	      match t'.term_type with
-	      | Ctype x -> Ctype (Cil.unrollType x)
-	      | x -> x
-	    in
+	  let ty' =
+	    match t'.term_type with
+	    | Ctype x -> Ctype (Cil.unrollType x)
+	    | x -> x
+	  in
+	  let inserts_0, v = self#term t' in
+	  let v = self#ctype_fragment v in
+	  let fresh_var = self#fresh_gmp_var() in
+	  let insert_1, decl_var = self#decl_gmp_var fresh_var in
+	  let insert_2, init_var =
 	    match ty' with
 	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	      let inserts_0, v = self#term t' in
-	      let v = self#ctype_fragment v in
-	      let fresh_var = self#fresh_gmp_var() in
-	      let insert_1, decl_var = self#decl_gmp_var fresh_var in
-	      let insert_2, init_var = self#init_set_ui_gmp_var decl_var v in
-	      inserts_0 @ [insert_1; insert_2], Gmp_fragment init_var
+	      self#init_set_ui_gmp_var decl_var v
 	    | Ctype(TInt _) | Ctype(TEnum _) ->
-	      let inserts_0, v = self#term t' in
-	      let v = self#ctype_fragment v in
-	      let fresh_var = self#fresh_gmp_var() in
-	      let insert_1, decl_var = self#decl_gmp_var fresh_var in
-	      let insert_2, init_var = self#init_set_si_gmp_var decl_var v in
-	      inserts_0 @ [insert_1; insert_2], Gmp_fragment init_var
+	      self#init_set_si_gmp_var decl_var v
 	    | _ -> assert false
-	  end
+	  in
+	  inserts_0 @ [insert_1; insert_2], Gmp_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
       end
@@ -656,8 +647,8 @@ class gather_insertions props = object(self)
 	    | _ -> assert false
 	  in
 	  let insert_2 = Instru(Affect(var,value)) in
-	  inserts_0 @ [insert_1; insert_2; Instru(Gmp_clear v)],
-	  Ctype_fragment var
+	  let insert_3 = Instru(Gmp_clear v) in
+	  inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
       end
