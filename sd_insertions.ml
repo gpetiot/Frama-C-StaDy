@@ -719,14 +719,13 @@ class gather_insertions props = object(self)
     List.fold_left in_bhv false behaviors
 
   method! vfunc f =
-    let entry_point_name =
-      Kernel_function.get_name (fst(Globals.entry_point())) in
+    let entry_point = Kernel_function.get_name (fst(Globals.entry_point())) in
     let kf = Globals.Functions.find_by_name f.svar.vname in
     let behaviors = Annotations.behaviors kf in
     self#compute_result_varinfo f;
 
     (* BEGIN precond (entry-point) *)
-    if f.svar.vname = entry_point_name then
+    if f.svar.vname = entry_point then
       begin
 	current_label <- Some (BegFunc (f.svar.vname ^ "_precond"));
 	List.iter (fun b ->
@@ -740,7 +739,7 @@ class gather_insertions props = object(self)
 	  let preconds = List.filter not_translated preconds in
 	  let do_precond p =
 	    let inserts, v = self#predicate(self#subst_pred p.ip_content) in
-	    if v <> True then (* '1' is for untreated predicates *)
+	    if v <> True then (* untreated predicates are translated as True *)
 	      inserts @ [If(Lnot v, [Instru(Ret Zero)], [])]
 	    else
 	      inserts
@@ -1003,13 +1002,9 @@ class gather_insertions props = object(self)
       | AAssert (b,_) | AStmtSpec (b,_) | AInvariant (b,_,_) -> b
       | _ -> []
     in
-    let behaviors =
-      List.map (fun bname ->
-	Annotations.fold_behaviors (fun _ b ret ->
-	  if b.b_name = bname then b.b_assumes else ret
-	) kf []
-      ) bhv_names
-    in
+    let on_behavior s _ b ret = if b.b_name = s then b.b_assumes else ret in
+    let on_behavior_name s = Annotations.fold_behaviors (on_behavior s) kf [] in
+    let behaviors = List.map on_behavior_name bhv_names in
     begin
       match ca.annot_content with
       | AStmtSpec (_,bhvs) ->
