@@ -608,14 +608,13 @@ class gather_insertions props = object(self)
 	  let v = self#ctype_fragment v in
 	  let fresh_var = self#fresh_gmp_var() in
 	  let insert_1, decl_var = self#decl_gmp_var fresh_var in
-	  let insert_2, init_var =
+	  let init_set =
 	    match ty' with
-	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	      self#init_set_ui_gmp_var decl_var v
-	    | Ctype(TInt _) | Ctype(TEnum _) ->
-	      self#init_set_si_gmp_var decl_var v
+	    | Ctype x when Cil.isUnsignedInteger x -> self#init_set_ui_gmp_var
+	    | Ctype x when Cil.isSignedInteger x -> self#init_set_si_gmp_var
 	    | _ -> assert false
 	  in
+	  let insert_2, init_var = init_set decl_var v in
 	  inserts_0 @ [insert_1; insert_2], Gmp_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
@@ -633,8 +632,8 @@ class gather_insertions props = object(self)
 	  let insert_1 = Decl_ctype_var var in
 	  let value =
 	    match ty' with
-	    | TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_) -> Gmp_get_ui v
-	    | TInt _ -> Gmp_get_si v
+	    | x when Cil.isUnsignedInteger x -> Gmp_get_ui v
+	    | x when Cil.isSignedInteger x -> Gmp_get_si v
 	    | _ -> assert false
 	  in
 	  let insert_2 = Instru(Affect(var,value)) in
@@ -1484,28 +1483,23 @@ class gather_insertions props = object(self)
 	  let insert_4 = Instru(Gmp_clear t1') in
 	  let insert_5 = Instru(Gmp_clear t2') in
 	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4; insert_5], var
-	| Linteger, Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
+	| Linteger, Ctype x ->
 	  let var = self#fresh_pred_var() in
 	  let inserts_0, t1' = self#term t1 in
 	  let t1' = self#gmp_fragment t1' in
 	  let inserts_1, t2' = self#term t2 in
 	  let t2' = self#ctype_fragment t2' in
 	  let insert_2 = Decl_pred_var var in
-	  let insert_3 = Instru(Affect_pred(var, Gmp_cmpr_ui(rel, t1', t2'))) in
-	  let insert_4 = Instru(Gmp_clear t1') in
-	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4], var
-	| Linteger, Ctype (TInt _) ->
-	  let var = self#fresh_pred_var() in
-	  let inserts_0, t1' = self#term t1 in
-	  let t1' = self#gmp_fragment t1' in
-	  let inserts_1, t2' = self#term t2 in
-	  let t2' = self#ctype_fragment t2' in
-	  let insert_2 = Decl_pred_var var in
-	  let insert_3 = Instru(Affect_pred(var, Gmp_cmpr_si(rel, t1', t2'))) in
+	  let value =
+	    if Cil.isUnsignedInteger x then Gmp_cmpr_ui(rel, t1', t2')
+	    else if Cil.isSignedInteger x then Gmp_cmpr_si(rel, t1', t2')
+	    else assert false
+	  in
+	  let insert_3 = Instru(Affect_pred(var, value)) in
 	  let insert_4 = Instru(Gmp_clear t1') in
 	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4], var
 	| Lreal, Lreal -> assert false (* TODO: reals *)
-	| Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)), Linteger ->
+	| Ctype x, Linteger ->
 	  let var = self#fresh_pred_var() in
 	  let inserts_0, t1' = self#term t1 in
 	  let t1' = self#ctype_fragment t1' in
@@ -1513,22 +1507,12 @@ class gather_insertions props = object(self)
 	  let t2' = self#gmp_fragment t2' in
 	  let fresh_var' = self#fresh_gmp_var() in
 	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
-	  let insert_3, init_var' = self#init_set_ui_gmp_var decl_var' t1' in
-	  let insert_4 = Decl_pred_var var in
-	  let insert_5 = Instru(Affect_pred(var,Gmp_cmpr(rel,init_var',t2'))) in
-	  let insert_6 = Instru(Gmp_clear t2') in
-	  let insert_7 = Instru(Gmp_clear init_var') in
-	  inserts_0 @ inserts_1
-	  @ [insert_2; insert_3; insert_4; insert_5; insert_6; insert_7], var
-	| Ctype (TInt _), Linteger ->
-	  let var = self#fresh_pred_var() in
-	  let inserts_0, t1' = self#term t1 in
-	  let t1' = self#ctype_fragment t1' in
-	  let inserts_1, t2' = self#term t2 in
-	  let t2' = self#gmp_fragment t2' in
-	  let fresh_var' = self#fresh_gmp_var() in
-	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
-	  let insert_3, init_var' = self#init_set_si_gmp_var decl_var' t1' in
+	  let init_set =
+	    if Cil.isUnsignedInteger x then self#init_set_ui_gmp_var
+	    else if Cil.isSignedInteger x then self#init_set_si_gmp_var
+	    else assert false
+	  in
+	  let insert_3, init_var' = init_set decl_var' t1' in
 	  let insert_4 = Decl_pred_var var in
 	  let insert_5 = Instru(Affect_pred(var,Gmp_cmpr(rel,init_var',t2'))) in
 	  let insert_6 = Instru(Gmp_clear t2') in
