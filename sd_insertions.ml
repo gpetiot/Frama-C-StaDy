@@ -1211,24 +1211,17 @@ class gather_insertions props = object(self)
     begin
       match stmt.skind with
       | Cil_types.If(_exp,b1,b2,_loc) ->
-	begin
-      	  match b1.bstmts with
-      	  | first_stmt :: _ ->
+	let add_block_reachability b =
+	  match b.bstmts with
+	  | first_stmt :: _ ->
       	    Sd_options.Self.debug ~dkey:Sd_options.dkey_reach
 	      "stmt %i to reach" first_stmt.sid;
 	    Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
       	    stmts_to_reach <- first_stmt.sid :: stmts_to_reach
       	  | _ -> ()
-	end;
-	begin
-      	  match b2.bstmts with
-      	  | first_stmt :: _ ->
-	    Sd_options.Self.debug ~dkey:Sd_options.dkey_reach
-	      "stmt %i to reach" first_stmt.sid;
-	    Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
-      	    stmts_to_reach <- first_stmt.sid :: stmts_to_reach
-      	  | _ -> ()
-	end
+	in
+	add_block_reachability b1;
+        add_block_reachability b2
       | _ -> ()
     end;
     Cil.DoChildren
