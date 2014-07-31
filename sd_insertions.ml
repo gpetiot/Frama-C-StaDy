@@ -474,26 +474,19 @@ class gather_insertions props = object(self)
       begin
 	match t'.term_type with (* source type *)
 	| Linteger ->
-	  begin
+	  let inserts_0, v = self#term t' in
+	  let v = self#gmp_fragment v in
+	  let var = self#fresh_ctype_var ty' in
+	  let insert_1 = Decl_ctype_var var in
+	  let insert_2 =
 	    match ty with (* dest type *)
 	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	      let inserts_0, v = self#term t' in
-	      let v = self#gmp_fragment v in
-	      let var = self#fresh_ctype_var ty' in
-	      let insert_1 = Decl_ctype_var var in
-	      let insert_2 = Instru(Affect(var, Gmp_get_ui v)) in
-	      let insert_3 = Instru(Gmp_clear v) in
-	      inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
-	    | Ctype (TInt _) ->
-	      let inserts_0, v = self#term t' in
-	      let v = self#gmp_fragment v in
-	      let var = self#fresh_ctype_var ty' in
-	      let insert_1 = Decl_ctype_var var in
-	      let insert_2 = Instru(Affect(var, Gmp_get_si v)) in
-	      let insert_3 = Instru(Gmp_clear v) in
-	      inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
+	      Instru(Affect(var, Gmp_get_ui v))
+	    | Ctype (TInt _) -> Instru(Affect(var, Gmp_get_si v))
 	    | _ -> assert false (* unreachable *)
-	  end
+	  in
+	  let insert_3 = Instru(Gmp_clear v) in
+	  inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
 	| Lreal -> assert false (* reals *)
 	| Ctype _ ->
 	  let inserts_0, v = self#term t' in
