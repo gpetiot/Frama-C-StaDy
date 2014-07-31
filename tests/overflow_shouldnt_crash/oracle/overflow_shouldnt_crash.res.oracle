@@ -46,7 +46,9 @@ void f(int x)
 
 
 [kernel] preprocessing with "gcc -C -E -I.  __sd_instru_overflow_shouldnt_crash_f.c"
+/usr/include/x86_64-linux-gnu/gmp.h:1721:[kernel] warning: Calling undeclared function __builtin_expect. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_overflow_shouldnt_crash_f.c"
+/usr/include/x86_64-linux-gnu/gmp.h:1721:[kernel] warning: Calling undeclared function __builtin_expect. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler___sd_instru_overflow_shouldnt_crash_f/lanceur_f utilities ...
 [pc] Compiling pathcrawler___sd_instru_overflow_shouldnt_crash_f/lanceur_f ...
