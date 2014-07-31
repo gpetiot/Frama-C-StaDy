@@ -1678,6 +1678,15 @@ class print_insertions insertions ~print_label () = object(self)
 
   val mutable current_function = None
 
+  method private insertions_at fmt label =
+    try
+      let q = Hashtbl.find insertions label in
+      Queue.iter
+	(fun s ->
+	  if print_label then Format.fprintf fmt "/* %a */ " pp_label label;
+	  Format.fprintf fmt "%a" pp_insertion_lb s) q
+    with _ -> ()
+
   method private fundecl fmt f =
     let was_ghost = is_ghost in
     let entry_point_name=Kernel_function.get_name(fst(Globals.entry_point())) in
@@ -1692,16 +1701,7 @@ class print_insertions insertions ~print_label () = object(self)
 	Format.fprintf fmt "%a@ @[<hov 2>{@\n"
 	  (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" precond)))
 	  (TFun(Cil.intType,x,y,z));
-	begin
-	  try
-	    let q = Hashtbl.find insertions (BegFunc precond) in
-	    Queue.iter
-	      (fun s ->
-		if print_label then
-		  Format.fprintf fmt "/* BegFunc %s */ " precond;
-		Format.fprintf fmt "%a" pp_insertion_lb s) q
-	  with _ -> ()
-	end;
+	Format.fprintf fmt "%a" self#insertions_at (BegFunc precond);
 	Format.fprintf fmt "@[return 1;@]";
 	Format.fprintf fmt "@]@\n}@\n@\n"
       end;
@@ -1713,16 +1713,7 @@ class print_insertions insertions ~print_label () = object(self)
     (* body. *)
     if entering_ghost then is_ghost <- true;
     Format.fprintf fmt "@[<hov 2>{@\n";
-    begin
-      try
-	let q = Hashtbl.find insertions (BegFunc f.svar.vname) in
-	Queue.iter
-	  (fun s ->
-	    if print_label then
-	      Format.fprintf fmt "/* BegFunc %s */ " f.svar.vname;
-	    Format.fprintf fmt "%a" pp_insertion_lb s) q
-      with _ -> ()
-    end;
+    Format.fprintf fmt "%a" self#insertions_at (BegFunc f.svar.vname);
     self#block ~braces:true fmt f.sbody;
     (* EndFunc not necessary here ? *)
     Format.fprintf fmt "@.}";
@@ -1736,66 +1727,31 @@ class print_insertions insertions ~print_label () = object(self)
     self#stmt_labels fmt stmt;
     Format.pp_open_hvbox fmt 0;
     let kf = Kernel_function.find_englobing_kf stmt in
-    let beg_stmt =
-      try Hashtbl.find insertions (BegStmt stmt.sid) with _ -> Queue.create() in
-    let end_stmt =
-      try Hashtbl.find insertions (EndStmt stmt.sid) with _ -> Queue.create() in
-    if not (Queue.is_empty beg_stmt) || not(Queue.is_empty end_stmt) then
-      Format.fprintf fmt "@[<hov 2>{@\n";
-    Queue.iter
-      (fun s ->
-	if print_label then
-	  Format.fprintf fmt "/* BegStmt %i */ " stmt.sid;
-	Format.fprintf fmt "%a" pp_insertion_lb s) beg_stmt;
+    let insert_something =
+      (try not (Queue.is_empty (Hashtbl.find insertions (BegStmt stmt.sid)))
+       with _ -> false)
+      || (try not (Queue.is_empty (Hashtbl.find insertions (EndStmt stmt.sid)))
+	with _ -> false)
+    in
+    if insert_something then Format.fprintf fmt "@[<hov 2>{@\n";
+    Format.fprintf fmt "%a" self#insertions_at (BegStmt stmt.sid);
     begin
       match stmt.skind with
       | Loop(_,b,l,_,_) ->
 	Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
 	  (fun fmt -> self#line_directive fmt) l;
-	begin
-	  try
-	    let q = Hashtbl.find insertions (BegIter stmt.sid) in
-	    Queue.iter
-	      (fun s ->
-		if print_label then
-		  Format.fprintf fmt "/* BegIter %i */ " stmt.sid;
-		Format.fprintf fmt "%a" pp_insertion_lb s) q
-	  with _ -> ()
-	end;
+	Format.fprintf fmt "%a" self#insertions_at (BegIter stmt.sid);
 	Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
-	begin
-	  try
-	    let q = Hashtbl.find insertions (EndIter stmt.sid) in
-	    Queue.iter
-	      (fun s ->
-		if print_label then
-		  Format.fprintf fmt "/* EndIter %i */ " stmt.sid;
-		Format.fprintf fmt "%a" pp_insertion_lb s) q
-	  with _ -> ()
-	end;
+	Format.fprintf fmt "%a" self#insertions_at (EndIter stmt.sid);
 	Format.fprintf fmt "}@\n @]"
       | Return _ ->
 	let f = Kernel_function.get_name kf in
-	begin
-	  try
-	    let q = Hashtbl.find insertions (EndFunc f) in
-	    Queue.iter
-	      (fun s ->
-		if print_label then
-		  Format.fprintf fmt "/* EndFunc %s */ " f;
-		Format.fprintf fmt "%a" pp_insertion_lb s) q
-	  with _ -> ()
-	end;
+	Format.fprintf fmt "%a" self#insertions_at (EndFunc f);
 	self#stmtkind next fmt stmt.skind
       | _ -> self#stmtkind next fmt stmt.skind
     end;
-    Queue.iter
-      (fun s ->
-	if print_label then
-	  Format.fprintf fmt "/* EndStmt %i */ " stmt.sid;
-	Format.fprintf fmt "%a" pp_insertion_lb s) end_stmt;
-    if not(Queue.is_empty beg_stmt) || not(Queue.is_empty end_stmt) then
-      Format.fprintf fmt "@]@\n}";
+    Format.fprintf fmt "%a" self#insertions_at (EndStmt stmt.sid);
+    if insert_something then Format.fprintf fmt "@]@\n}";
     Format.pp_close_box fmt ();
     Format.pp_close_box fmt ()
   (* end of annotated_stmt *)
