@@ -341,14 +341,12 @@ class gather_insertions props = object(self)
 	    | Ctype ty' ->
 	      let fresh_var' = self#fresh_gmp_var() in
 	      let insert_0', decl_var' = self#decl_gmp_var fresh_var' in
-	      let insert_1', init_var' =
-		if Cil.isUnsignedInteger ty' then
-		  self#init_set_ui_gmp_var decl_var' (self#ctype_fragment x)
-		else if Cil.isSignedInteger ty' then
-		  self#init_set_si_gmp_var decl_var' (self#ctype_fragment x)
-		else
-		  assert false
+	      let f =
+		if Cil.isUnsignedInteger ty' then self#init_set_ui_gmp_var
+		else if Cil.isSignedInteger ty' then self#init_set_si_gmp_var
+		else assert false
 	      in
+	      let insert_1', init_var' = f decl_var' (self#ctype_fragment x) in
 	      let insert_2' = Instru(Gmp_ui_sub(init_var', Zero, init_var')) in
 	      let insert_3' = Instru(Gmp_clear init_var') in
 	      [insert_0'; insert_1'; insert_2'; insert_3']
