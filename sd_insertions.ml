@@ -338,22 +338,20 @@ class gather_insertions props = object(self)
 	      [Instru(Gmp_ui_sub(init_var,Zero,self#gmp_fragment x));
 	       Instru(Gmp_clear(self#gmp_fragment x))]
 	    | Lreal -> assert false (* unreachable *)
-	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
+	    | Ctype ty' ->
 	      let fresh_var' = self#fresh_gmp_var() in
 	      let insert_0', decl_var' = self#decl_gmp_var fresh_var' in
 	      let insert_1', init_var' =
-		self#init_set_ui_gmp_var decl_var' (self#ctype_fragment x) in
-	      [insert_0'; insert_1';
-	       Instru(Gmp_ui_sub(init_var', Zero,init_var'));
-	       Instru(Gmp_clear init_var')]
-	    | Ctype(TInt _) ->
-	      let fresh_var' = self#fresh_gmp_var() in
-	      let insert_0', decl_var' = self#decl_gmp_var fresh_var' in
-	      let insert_1', init_var' =
-		self#init_set_si_gmp_var decl_var' (self#ctype_fragment x) in
-	      [insert_0'; insert_1';
-	       Instru(Gmp_ui_sub(init_var', Zero, init_var'));
-	       Instru(Gmp_clear init_var')];
+		if Cil.isUnsignedInteger ty' then
+		  self#init_set_ui_gmp_var decl_var' (self#ctype_fragment x)
+		else if Cil.isSignedInteger ty' then
+		  self#init_set_si_gmp_var decl_var' (self#ctype_fragment x)
+		else
+		  assert false
+	      in
+	      let insert_2' = Instru(Gmp_ui_sub(init_var', Zero, init_var')) in
+	      let insert_3' = Instru(Gmp_clear init_var') in
+	      [insert_0'; insert_1'; insert_2'; insert_3']
 	    | _ -> assert false (* unreachable *)
 	  in
 	  inserts_0 @ [insert_1; insert_2] @ inserts_3, Gmp_fragment init_var
@@ -403,17 +401,17 @@ class gather_insertions props = object(self)
 	      @ [Instru(Gmp_binop(op, init_var, x, y));
 		 Instru(Gmp_clear x); Instru(Gmp_clear y)],
 	      Gmp_fragment init_var
-	    | Linteger,Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_))->
+	    | Linteger, Ctype ty' when Cil.isUnsignedInteger ty' ->
 	      let x = self#gmp_fragment x and y = self#ctype_fragment y in
 	      inserts_0 @ inserts_1 @ [insert_2; insert_3]
 	      @ [Instru(Gmp_binop_ui(op, init_var, x, y)); Instru(Gmp_clear x)],
 	      Gmp_fragment init_var
-	    | Linteger, Ctype (TInt _) ->
+	    | Linteger, Ctype ty' when Cil.isSignedInteger ty' ->
 	      let x = self#gmp_fragment x and y = self#ctype_fragment y in
 	      inserts_0 @ inserts_1 @ [insert_2; insert_3]
 	      @ [Instru(Gmp_binop_si(op, init_var, x, y)); Instru(Gmp_clear x)],
 	      Gmp_fragment init_var
-	    | Ctype(TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)),Linteger->
+	    | Ctype ty', Linteger when Cil.isUnsignedInteger ty' ->
 	      if op = PlusA || op = Mult then
 		let x = self#ctype_fragment x and y = self#gmp_fragment y in
 		inserts_0 @ inserts_1 @ [insert_2; insert_3]
@@ -421,7 +419,7 @@ class gather_insertions props = object(self)
 		Gmp_fragment init_var
 	      else
 		assert false (* TODO *)
-	    | Ctype (TInt _), Linteger ->
+	    | Ctype ty', Linteger when Cil.isSignedInteger ty' ->
 	      if op = PlusA || op = Mult then
 		let x = self#ctype_fragment x and y = self#gmp_fragment y in
 		inserts_0 @ inserts_1 @ [insert_2; insert_3]
@@ -478,13 +476,13 @@ class gather_insertions props = object(self)
 	  let v = self#gmp_fragment v in
 	  let var = self#fresh_ctype_var ty' in
 	  let insert_1 = Decl_ctype_var var in
-	  let insert_2 =
+	  let value =
 	    match ty with (* dest type *)
-	    | Ctype (TInt((IULongLong|IULong|IUShort|IUInt|IUChar),_)) ->
-	      Instru(Affect(var, Gmp_get_ui v))
-	    | Ctype (TInt _) -> Instru(Affect(var, Gmp_get_si v))
+	    | Ctype x when Cil.isUnsignedInteger x -> Gmp_get_ui v
+	    | Ctype x when Cil.isSignedInteger x -> Gmp_get_si v
 	    | _ -> assert false (* unreachable *)
 	  in
+	  let insert_2 = Instru(Affect(var, value)) in
 	  let insert_3 = Instru(Gmp_clear v) in
 	  inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
 	| Lreal -> assert false (* reals *)
