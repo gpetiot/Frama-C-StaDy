@@ -146,8 +146,7 @@ class subst = object(self)
     | TStartOf _ -> Sd_options.Self.not_yet_implemented "TStartOf"
     | Tapp (li,[],[lower;upper;({term_node=Tlambda([_],_)} as lambda)]) ->
       let builtin_name = li.l_var_info.lv_name in
-      if builtin_name = "\\min" || builtin_name = "\\max" ||
-	builtin_name = "\\sum" || builtin_name = "\\product" ||
+      if builtin_name = "\\sum" || builtin_name = "\\product" ||
 	builtin_name = "\\numof" then
 	Tapp (li,[],[self#subst_term lower labels args quantifs;
 		     self#subst_term upper labels args quantifs;

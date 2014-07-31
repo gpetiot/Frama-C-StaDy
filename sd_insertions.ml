@@ -514,8 +514,7 @@ class gather_insertions props = object(self)
 	      Gmp_fragment init_var
 	    end
 	  else
-	    if builtin_name = "\\min" || builtin_name = "\\max" ||
-	      builtin_name = "\\sum" || builtin_name = "\\product" ||
+	    if builtin_name = "\\sum" || builtin_name = "\\product" ||
 	      builtin_name = "\\numof" then
 	      match params with
 	      | [l;u;{term_node=Tlambda([q],t)}] -> self#lambda li l u q t
