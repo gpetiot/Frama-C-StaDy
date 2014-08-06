@@ -9,15 +9,17 @@ extern void* malloc(unsigned);
 extern void free(void*);
 int f_precond(int x)
 {
-return 1;
+  return 1;
 }
 
 void f(int x)
 {
-  int old_x = x;
+  int old_x;
+  old_x = x;
   {
     if (x > 0) 
       {
+        pathcrawler_to_framac("@FC:REACHABLE_STMT:3");
         mpz_t __stady_gmp_0;
         __gmpz_init_set_si(__stady_gmp_0, x);
         mpz_t __stady_gmp_1;
@@ -29,21 +31,24 @@ void f(int x)
         __gmpz_clear(__stady_gmp_1);
         mpz_t __stady_gmp_3;
         __gmpz_init_set_str(__stady_gmp_3, "0", 10);
-        int __stady_pred_0 = __gmpz_cmp(__stady_gmp_2, __stady_gmp_3) > 0;
+        int __stady_pred_0;
+        __stady_pred_0 = __gmpz_cmp(__stady_gmp_2, __stady_gmp_3) > 0;
         __gmpz_clear(__stady_gmp_2);
         __gmpz_clear(__stady_gmp_3);
-        if(!__stady_pred_0)pathcrawler_assert_exception("Assert!", 0);
-        { pathcrawler_to_framac("@FC:REACHABLE_STMT:3");
-        ; }
+        if(!(__stady_pred_0)) {
+          pathcrawler_assert_exception("Assert!",0);
         }
-         
+        ;
+      }
     return;
   }
 }
 
 
 [kernel] preprocessing with "gcc -C -E -I.  __sd_instru_overflow_shouldnt_crash_f.c"
+/usr/include/x86_64-linux-gnu/gmp.h:1721:[kernel] warning: Calling undeclared function __builtin_expect. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_overflow_shouldnt_crash_f.c"
+/usr/include/x86_64-linux-gnu/gmp.h:1721:[kernel] warning: Calling undeclared function __builtin_expect. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler___sd_instru_overflow_shouldnt_crash_f/lanceur_f utilities ...
 [pc] Compiling pathcrawler___sd_instru_overflow_shouldnt_crash_f/lanceur_f ...

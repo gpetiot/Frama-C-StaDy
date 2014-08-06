@@ -26,19 +26,19 @@ end)
 
 let () = Socket_Type.set_possible_values ["internet"; "unix"; "stdio"]
 
-module Functions = Self.StringList (struct
+module Functions = Self.String_list (struct
   let option_name = "-stady-fct"
   let arg_name = "f,..."
   let help = ""
 end)
 
-module Behaviors = Self.StringList (struct
+module Behaviors = Self.String_list (struct
   let option_name = "-stady-bhv"
   let arg_name = "b,..."
   let help = ""
 end)
 
-module Properties = Self.StringList (struct
+module Properties = Self.String_list (struct
   let option_name = "-stady-prop"
   let arg_name = "p,..."
   let help = ""
@@ -58,3 +58,4 @@ let dkey_socket = Self.register_category "socket"
 let dkey_generated_c = Self.register_category "generated-c"
 let dkey_properties = Self.register_category "properties"
 let dkey_reach = Self.register_category "reach"
+let dkey_insertions = Self.register_category "insertions"

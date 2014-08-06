@@ -9,46 +9,59 @@ extern void* malloc(unsigned);
 extern void free(void*);
 int f_precond(int x, int y, int z)
 {
-return 1;
+  return 1;
 }
 
 void f(int x, int y, int z)
 {
-  int old_x = x;
-  int old_y = y;
-  int old_z = z;
+  int old_x;
+  old_x = x;
+  int old_y;
+  old_y = y;
+  int old_z;
+  old_z = z;
   {
     {
-      if ((x >= y) && (x >= z) && 1) {
-        int __stady_pred_0 = (old_y <= old_x);
-        if (__stady_pred_0) {
-        __stady_pred_0 = (old_z <= old_x);
+      if(((1 && x >= y) && x >= z)) {
+        int __stady_pred_0;
+        __stady_pred_0 = old_y <= old_x;
+        if(__stady_pred_0) {
+          __stady_pred_0 = old_z <= old_x;
         }
-        if(!__stady_pred_0)pathcrawler_assert_exception("Post-condition!", 14);
+        if(!(__stady_pred_0)) {
+          pathcrawler_assert_exception("Post-condition!",15);
         }
-      if ((y >= x) && (y >= z) && 1) {
-        int __stady_pred_1 = (old_x <= old_y);
-        if (__stady_pred_1) {
-        __stady_pred_1 = (old_z <= old_y);
-        }
-        if(!__stady_pred_1)pathcrawler_assert_exception("Post-condition!", 6);
-        }
-      if ((z >= x) && (z >= y) && 1) {
-        int __stady_pred_2 = (old_x <= old_z);
-        if (__stady_pred_2) {
-        __stady_pred_2 = (old_y <= old_z);
-        }
-        if(!__stady_pred_2)pathcrawler_assert_exception("Post-condition!", 0);
-        }
-      
       }
+      if(((1 && y >= x) && y >= z)) {
+        int __stady_pred_1;
+        __stady_pred_1 = old_x <= old_y;
+        if(__stady_pred_1) {
+          __stady_pred_1 = old_z <= old_y;
+        }
+        if(!(__stady_pred_1)) {
+          pathcrawler_assert_exception("Post-condition!",8);
+        }
+      }
+      if(((1 && z >= x) && z >= y)) {
+        int __stady_pred_2;
+        __stady_pred_2 = old_x <= old_z;
+        if(__stady_pred_2) {
+          __stady_pred_2 = old_y <= old_z;
+        }
+        if(!(__stady_pred_2)) {
+          pathcrawler_assert_exception("Post-condition!",0);
+        }
+      }
+    }
     return;
   }
 }
 
 
 [kernel] preprocessing with "gcc -C -E -I.  __sd_instru_behaviors_f.c"
+/usr/include/x86_64-linux-gnu/gmp.h:1721:[kernel] warning: Calling undeclared function __builtin_expect. Old style K&R code?
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_behaviors_f.c"
+/usr/include/x86_64-linux-gnu/gmp.h:1721:[kernel] warning: Calling undeclared function __builtin_expect. Old style K&R code?
 [pc] analyzing...
 [pc] Compiling pathcrawler___sd_instru_behaviors_f/lanceur_f utilities ...
 [pc] Compiling pathcrawler___sd_instru_behaviors_f/lanceur_f ...

@@ -20,7 +20,23 @@ let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 let second_pass filename props =
   Kernel.Unicode.set false;
-  let printer = new Sd_printer.sd_printer props () in
+
+  let gatherer = new Sd_insertions.gather_insertions props in
+  Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
+  let insertions = gatherer#get_insertions() in
+
+  Hashtbl.iter (fun k v ->
+    let dkey = Sd_options.dkey_insertions in
+    let f ins =
+      Sd_options.Self.feedback ~dkey "/* %a */ %a"
+	Sd_insertions.pp_label k Sd_insertions.pp_insertion_lb ins
+    in
+    Queue.iter f v;
+    Sd_options.Self.feedback ~dkey "--------------------"
+  ) insertions;
+
+  let printer =
+    new Sd_insertions.print_insertions insertions ~print_label:false () in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
@@ -36,7 +52,7 @@ let second_pass filename props =
   flush out_file;
   close_out out_file;
   Buffer.clear buf;
-  printer#translated_properties()
+  gatherer#translated_properties()
 
 
 let emitter =
