@@ -107,6 +107,8 @@ class gather_insertions props = object(self)
   inherit Visitor.frama_c_inplace as super
 
   val insertions : (label, insertion Queue.t) Hashtbl.t = Hashtbl.create 64
+  val type_invariants : (typ, (logic_info * location) list) Hashtbl.t =
+    Hashtbl.create 4
   val mutable current_label : label option = None
   val mutable result_varinfo = None
   val mutable current_function = None
@@ -981,6 +983,21 @@ class gather_insertions props = object(self)
     translated_properties <- prop :: translated_properties;
     inserts_0 @ [insert_1]
 
+  method! vannotation a =
+    begin
+      match a with
+      | Dtype_annot (l, loc) ->
+	let parameter = List.hd l.l_profile in (* always a singleton *)
+	let ty = match parameter.lv_type with
+	  | Ctype x -> x
+	  | _ -> assert false (* unreachable *)
+	in
+	let ll = try Hashtbl.find type_invariants ty with Not_found -> [] in
+        Hashtbl.replace type_invariants ty (ll @ [(l, loc)])
+      | _ -> ()
+    end;
+    Cil.DoChildren
+
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
     let kf = Kernel_function.find_englobing_kf stmt in
@@ -1221,6 +1238,50 @@ class gather_insertions props = object(self)
 	in
 	add_block_reachability b1;
         add_block_reachability b2
+      | _ -> ()
+    end;
+    Cil.DoChildren
+
+  method! vinst i =
+    begin
+      match i with
+      | Set (lval',_,_)
+      | Call (Some lval',_,_,_) ->
+	let stmt = Extlib.the self#current_stmt in
+	let old_label = current_label in
+	current_label <- Some (EndStmt stmt.sid);
+	let rec on_lval ins lval =
+	  let ins' =
+	    try
+	      let invs = Hashtbl.find type_invariants (Cil.typeOfLval lval) in
+	      let on_inv (l, loc') =
+		let pred = match l.l_body with
+		  | LBpred p -> p
+		  | _ -> assert false (* unreachable ? *)
+		in
+		let parameter = List.hd l.l_profile in (* always a singleton *)
+		let lty = parameter.lv_type in
+		let ty = match lty with Ctype x -> x | _ -> assert false in
+		let name = l.l_var_info.lv_name in
+		let prop = Property.ip_type_invariant (name, ty, pred, loc') in
+		let id = Sd_utils.to_id prop in
+		let msg = "Type invariant " ^ name in
+		let tlval = Logic_utils.lval_to_term_lval ~cast:false lval in
+		let exp_info = {exp_type=lty; exp_name=[]} in
+		let t = Cil.term_of_exp_info loc' (TLval tlval) exp_info in
+		let pred = Papp (l, [], [t]) in
+		self#pc_assert_exception pred msg id prop
+	      in
+	      List.fold_left (fun ins' inv -> ins' @ (on_inv inv)) ins invs
+	    with Not_found -> ins
+	  in
+	  match Cil.removeOffsetLval lval with
+	  | _, NoOffset -> ins'
+	  | x, _ -> on_lval ins' x
+	in
+	let ins = on_lval [] lval' in
+	List.iter self#insert ins;
+	current_label <- old_label
       | _ -> ()
     end;
     Cil.DoChildren
