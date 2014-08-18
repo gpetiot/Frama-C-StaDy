@@ -1413,35 +1413,26 @@ class gather_insertions props = object(self)
 	let inserts_0, term_var = self#term t in
 	let res_var = self#fresh_pred_var() in
 	let insert_1 = Decl_pred_var res_var in
-	let f () =
-	  let term_var = self#ctype_fragment term_var in
-	  let cond = Cmp(Rneq,term_var,Zero) in
-	  let inserts_then_0, pred1_var = self#predicate_named pred1 in
-	  let insert_then_1 = Instru(Affect_pred(res_var, pred1_var)) in
-	  let inserts_then = inserts_then_0 @ [insert_then_1] in
-	  let inserts_else_0, pred2_var = self#predicate_named pred2 in
-	  let insert_else_1 = Instru(Affect_pred(res_var, pred2_var)) in
-	  let inserts_else = inserts_else_0 @ [insert_else_1] in
-	  let insert_2 = If(cond, inserts_then, inserts_else) in
-	  inserts_0 @ [insert_1; insert_2], res_var
+	let cond, insert_3 =
+	  match t.term_type with
+	  | Linteger ->
+	    let x = self#gmp_fragment term_var in
+	    Gmp_cmp_si(Ne, x, Zero), [Instru(Gmp_clear x)]
+	  | Lreal -> assert false (* unreachable *)
+	  | Ctype (TInt _) -> 
+	    Cmp(Rneq, self#ctype_fragment term_var, Zero), []
+	  | Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
+	    Cmp(Rneq, self#ctype_fragment term_var, Zero), []
+	  | _ -> assert false (* unreachable *)
 	in
-	match t.term_type with
-	| Linteger ->
-	  let term_var = self#gmp_fragment term_var in
-	  let cond = Gmp_cmp_si(Ne, term_var, Zero) in
-	  let inserts_then_0, pred1_var = self#predicate_named pred1 in
-	  let insert_then_1 = Instru(Affect_pred(res_var, pred1_var)) in
-	  let inserts_then = inserts_then_0 @ [insert_then_1] in
-	  let inserts_else_0, pred2_var = self#predicate_named pred2 in
-	  let insert_else_1 = Instru(Affect_pred(res_var, pred2_var)) in
-	  let inserts_else = inserts_else_0 @ [insert_else_1] in
-	  let insert_2 = If(cond, inserts_then, inserts_else) in
-	  let insert_3 = Instru(Gmp_clear term_var) in
-	  inserts_0 @ [insert_1; insert_2; insert_3], res_var
-	| Lreal -> assert false (* unreachable *)
-	| Ctype (TInt _) -> f ()
-	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean -> f ()
-	| _ -> assert false (* unreachable *)
+	let inserts_then_0, pred1_var = self#predicate_named pred1 in
+	let insert_then_1 = Instru(Affect_pred(res_var, pred1_var)) in
+	let inserts_then = inserts_then_0 @ [insert_then_1] in
+	let inserts_else_0, pred2_var = self#predicate_named pred2 in
+	let insert_else_1 = Instru(Affect_pred(res_var, pred2_var)) in
+	let inserts_else = inserts_else_0 @ [insert_else_1] in
+	let insert_2 = If(cond, inserts_then, inserts_else) in
+	inserts_0 @ [insert_1; insert_2] @ insert_3, res_var
       end
 
     | Prel(rel,t1,t2) ->
@@ -1502,8 +1493,7 @@ class gather_insertions props = object(self)
 	  inserts_0 @ inserts_1, Cmp(rel, t1', t2')
       end
       
-    | Pat(p, LogicLabel(_,stringlabel)) when stringlabel = "Here" ->
-      self#predicate_named p
+    | Pat(p, LogicLabel(_,l)) when l = "Here" -> self#predicate_named p
     | Pat (p,_) ->
       Sd_options.Self.warning "%a unsupported!" Printer.pp_predicate pred;
       self#predicate_named p
