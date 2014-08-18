@@ -345,69 +345,59 @@ class gather_insertions props = object(self)
       end
 
     | TBinOp((IndexPI|PlusPI|MinusPI) as op, t1, t2) ->
-      begin
+      let inserts_0, x = self#term t1 in
+      let x = self#ctype_fragment x in
+      let inserts_1, y = self#term t2 in
+      let inserts, var =
 	match t2.term_type with
 	| Linteger ->
-	  let inserts_0, x = self#term t1 in
-	  let x = self#ctype_fragment x in
-	  let inserts_1, y = self#term t2 in
 	  let y = self#gmp_fragment y in
 	  let var = self#fresh_ctype_var Cil.intType in
 	  let insert_2 = Decl_ctype_var var in
 	  let insert_3 = Instru(Affect(var, Gmp_get_si y)) in
 	  let insert_4 = Instru(Gmp_clear y) in
-	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4],
-	  Ctype_fragment (Binop(op, x, var))
+	  [insert_2; insert_3; insert_4], var
 	| Lreal -> assert false (* unreachable *)
-	| _ ->
-	  let inserts_0, x = self#term t1 in
-	  let x = self#ctype_fragment x in
-	  let inserts_1, y = self#term t2 in
-	  let y = self#ctype_fragment y in
-	  inserts_0 @ inserts_1, Ctype_fragment (Binop(op, x, y))
-      end
+	| _ -> [], self#ctype_fragment y
+      in
+      inserts_0 @ inserts_1 @ inserts, Ctype_fragment (Binop(op, x, var))
 
     | TBinOp(op, t1, t2) ->
+      let inserts_0, x = self#term t1 in
+      let inserts_1, y = self#term t2 in
       begin
 	match ty with
 	| Linteger ->
-	  let inserts_0, x = self#term t1 in
-	  let inserts_1, y = self#term t2 in
 	  let fresh_var = self#fresh_gmp_var() in
 	  let insert_2, decl_var = self#decl_gmp_var fresh_var in
 	  let insert_3, init_var = self#init_gmp_var decl_var in
-	  begin
+	  let clear_t1 = match t1.term_type with
+	    Linteger -> [Instru(Gmp_clear (self#gmp_fragment x))] | _ -> []
+	  in
+	  let clear_t2 = match t2.term_type with
+	    Linteger -> [Instru(Gmp_clear (self#gmp_fragment y))] | _ -> []
+	  in
+	  let inserts =
 	    match t1.term_type, t2.term_type with
 	    | Linteger, Linteger ->
 	      let x = self#gmp_fragment x and y = self#gmp_fragment y in
-	      inserts_0 @ inserts_1 @ [insert_2; insert_3]
-	      @ [Instru(Gmp_binop(op, init_var, x, y));
-		 Instru(Gmp_clear x); Instru(Gmp_clear y)],
-	      Gmp_fragment init_var
+	      [Instru(Gmp_binop(op, init_var, x, y))]
 	    | Linteger, Ctype ty' when Cil.isUnsignedInteger ty' ->
 	      let x = self#gmp_fragment x and y = self#ctype_fragment y in
-	      inserts_0 @ inserts_1 @ [insert_2; insert_3]
-	      @ [Instru(Gmp_binop_ui(op, init_var, x, y)); Instru(Gmp_clear x)],
-	      Gmp_fragment init_var
+	      [Instru(Gmp_binop_ui(op, init_var, x, y))]
 	    | Linteger, Ctype ty' when Cil.isSignedInteger ty' ->
 	      let x = self#gmp_fragment x and y = self#ctype_fragment y in
-	      inserts_0 @ inserts_1 @ [insert_2; insert_3]
-	      @ [Instru(Gmp_binop_si(op, init_var, x, y)); Instru(Gmp_clear x)],
-	      Gmp_fragment init_var
+	      [Instru(Gmp_binop_si(op, init_var, x, y))]
 	    | Ctype ty', Linteger when Cil.isUnsignedInteger ty' ->
 	      if op = PlusA || op = Mult then
 		let x = self#ctype_fragment x and y = self#gmp_fragment y in
-		inserts_0 @ inserts_1 @ [insert_2; insert_3]
-		@ [Instru(Gmp_binop_ui(op,init_var,y,x)); Instru(Gmp_clear y)],
-		Gmp_fragment init_var
+	        [Instru(Gmp_binop_ui(op,init_var,y,x))]
 	      else
 		assert false (* TODO *)
 	    | Ctype ty', Linteger when Cil.isSignedInteger ty' ->
 	      if op = PlusA || op = Mult then
 		let x = self#ctype_fragment x and y = self#gmp_fragment y in
-		inserts_0 @ inserts_1 @ [insert_2; insert_3]
-		@ [Instru(Gmp_binop_si(op, init_var,y,x)); Instru(Gmp_clear y)],
-		Gmp_fragment init_var
+	        [Instru(Gmp_binop_si(op, init_var,y,x))]
 	      else
 		assert false (* TODO *)
 	    | Ctype(TInt _), Ctype(TInt _) ->
@@ -419,22 +409,21 @@ class gather_insertions props = object(self)
 		self#init_set_si_gmp_var decl_var1 (self#ctype_fragment x) in
 	      let insert_7, init_var2 =
 		self#init_set_si_gmp_var decl_var2 (self#ctype_fragment y) in
-	      inserts_0 @ inserts_1
-	      @	[insert_2; insert_3; insert_4; insert_5; insert_6; insert_7;
-		 Instru(Gmp_binop(op,init_var,init_var1,init_var2));
-		 Instru(Gmp_clear init_var1);
-		 Instru(Gmp_clear init_var2)],
-	      Gmp_fragment init_var
+	      [insert_4; insert_5; insert_6; insert_7;
+	       Instru(Gmp_binop(op,init_var,init_var1,init_var2));
+	       Instru(Gmp_clear init_var1);
+	       Instru(Gmp_clear init_var2)]
 	    | _ -> assert false
-	  end
+	  in
+	  inserts_0 @ inserts_1 @ [insert_2; insert_3] @ inserts
+	  @ clear_t1 @ clear_t2,
+	  Gmp_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
 	  begin
 	    match t1.term_type, t2.term_type with
 	    | Linteger, Linteger ->
 	      let var = self#fresh_ctype_var Cil.intType in
-	      let inserts_0, x = self#term t1 in
-	      let inserts_1, y = self#term t2 in
 	      let insert_2 = Decl_ctype_var var in
 	      let pred = Gmp_cmp(op, self#gmp_fragment x,self#gmp_fragment y) in
 	      let insert_3 = Instru(Affect(var, Of_pred pred)) in
@@ -443,8 +432,6 @@ class gather_insertions props = object(self)
 	      inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4; insert_5],
 	      Ctype_fragment var
 	    | _ ->
-	      let inserts_0, x = self#term t1 in
-	      let inserts_1, y = self#term t2 in
 	      let x = self#ctype_fragment x and y = self#ctype_fragment y in
 	      inserts_0 @ inserts_1, Ctype_fragment (Binop(op, x, y))
 	  end

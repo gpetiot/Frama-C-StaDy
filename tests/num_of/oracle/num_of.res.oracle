@@ -113,18 +113,18 @@ int num_of(int n, int *t)
         while(__gmpz_cmp(k, __stady_gmp_19) <= 0) {
           mpz_t __stady_gmp_20;
           __gmpz_init_set(__stady_gmp_20, k);
-          int __stady_term_4;
-          __stady_term_4 = __gmpz_get_si(__stady_gmp_20);
+          int __stady_term_3;
+          __stady_term_3 = __gmpz_get_si(__stady_gmp_20);
           __gmpz_clear(__stady_gmp_20);
           mpz_t __stady_gmp_21;
-          __gmpz_init_set_si(__stady_gmp_21, *(t + __stady_term_4));
+          __gmpz_init_set_si(__stady_gmp_21, *(t + __stady_term_3));
           mpz_t __stady_gmp_22;
           __gmpz_init_set_str(__stady_gmp_22, "0", 10);
-          int __stady_term_3;
-          __stady_term_3 = __gmpz_cmp(__stady_gmp_21, __stady_gmp_22) == 0;
+          int __stady_term_4;
+          __stady_term_4 = __gmpz_cmp(__stady_gmp_21, __stady_gmp_22) == 0;
           __gmpz_clear(__stady_gmp_21);
           __gmpz_clear(__stady_gmp_22);
-          if(__stady_term_3 != 0) {
+          if(__stady_term_4 != 0) {
             __gmpz_add_ui(__stady_gmp_15, __stady_gmp_15, 1);
           }
           __gmpz_add_ui(k, k, 1);
@@ -216,18 +216,18 @@ int num_of(int n, int *t)
           while(__gmpz_cmp(k, __stady_gmp_28) <= 0) {
             mpz_t __stady_gmp_29;
             __gmpz_init_set(__stady_gmp_29, k);
-            int __stady_term_6;
-            __stady_term_6 = __gmpz_get_si(__stady_gmp_29);
+            int __stady_term_5;
+            __stady_term_5 = __gmpz_get_si(__stady_gmp_29);
             __gmpz_clear(__stady_gmp_29);
             mpz_t __stady_gmp_30;
-            __gmpz_init_set_si(__stady_gmp_30, *(t + __stady_term_6));
+            __gmpz_init_set_si(__stady_gmp_30, *(t + __stady_term_5));
             mpz_t __stady_gmp_31;
             __gmpz_init_set_str(__stady_gmp_31, "0", 10);
-            int __stady_term_5;
-            __stady_term_5 = __gmpz_cmp(__stady_gmp_30, __stady_gmp_31) == 0;
+            int __stady_term_6;
+            __stady_term_6 = __gmpz_cmp(__stady_gmp_30, __stady_gmp_31) == 0;
             __gmpz_clear(__stady_gmp_30);
             __gmpz_clear(__stady_gmp_31);
-            if(__stady_term_5 != 0) {
+            if(__stady_term_6 != 0) {
               __gmpz_add_ui(__stady_gmp_24, __stady_gmp_24, 1);
             }
             __gmpz_add_ui(k, k, 1);
@@ -285,18 +285,18 @@ int num_of(int n, int *t)
         while(__gmpz_cmp(k, __stady_gmp_5) <= 0) {
           mpz_t __stady_gmp_6;
           __gmpz_init_set(__stady_gmp_6, k);
-          int __stady_term_1;
-          __stady_term_1 = __gmpz_get_si(__stady_gmp_6);
+          int __stady_term_0;
+          __stady_term_0 = __gmpz_get_si(__stady_gmp_6);
           __gmpz_clear(__stady_gmp_6);
           mpz_t __stady_gmp_7;
-          __gmpz_init_set_si(__stady_gmp_7, *(old_t + __stady_term_1));
+          __gmpz_init_set_si(__stady_gmp_7, *(old_t + __stady_term_0));
           mpz_t __stady_gmp_8;
           __gmpz_init_set_str(__stady_gmp_8, "0", 10);
-          int __stady_term_0;
-          __stady_term_0 = __gmpz_cmp(__stady_gmp_7, __stady_gmp_8) == 0;
+          int __stady_term_1;
+          __stady_term_1 = __gmpz_cmp(__stady_gmp_7, __stady_gmp_8) == 0;
           __gmpz_clear(__stady_gmp_7);
           __gmpz_clear(__stady_gmp_8);
-          if(__stady_term_0 != 0) {
+          if(__stady_term_1 != 0) {
             __gmpz_add_ui(__stady_gmp_1, __stady_gmp_1, 1);
           }
           __gmpz_add_ui(k, k, 1);
