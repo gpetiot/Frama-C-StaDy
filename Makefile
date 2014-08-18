@@ -4,7 +4,6 @@ FRAMAC_LIBDIR	:=$(shell frama-c.byte -print-libpath)
 PLUGIN_NAME	:= StaDy
 
 PLUGIN_TESTS_DIRS := \
-	type_invariants \
 	behaviors \
 	quantified \
 	binary_search \
@@ -27,7 +26,7 @@ PLUGIN_TESTS_DIRS := \
 	overflow_should_crash \
 	overflow_shouldnt_crash
 
-#unused tests: deleteSubstr0 deleteSubstr1b deleteSubstr1d deleteSubstr2a deleteSubstr2c
+#unused tests: deleteSubstr0 deleteSubstr1b deleteSubstr1d deleteSubstr2a deleteSubstr2c type_invariants
 
 PLUGIN_PTESTS_OPTS := -j 1
 
