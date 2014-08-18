@@ -1328,12 +1328,12 @@ class gather_insertions props = object(self)
 	  x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
 	| _ -> Sd_utils.error_term term
       in
-      begin
+      let inserts_0, x' = self#term pointer in
+      let x' = self#ctype_fragment x' in
+      let inserts_1, y' = self#term offset in
+      let inserts, ret =
 	match offset.term_type with
 	| Linteger ->
-	  let inserts_0, x' = self#term pointer in
-	  let x' = self#ctype_fragment x' in
-	  let inserts_1, y' = self#term offset in
 	  let y' = self#gmp_fragment y' in
 	  let var = self#fresh_pred_var() in
 	  let insert_2 = Decl_pred_var var in
@@ -1341,18 +1341,13 @@ class gather_insertions props = object(self)
 	  let exp2 = Gmp_cmp_ui(Lt, y', Pc_dim(x')) in
 	  let insert_3 = Instru(Affect_pred(var, Land(exp1, exp2))) in
 	  let insert_4 = Instru(Gmp_clear y') in
-	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4], var
-	| Lreal -> assert false (* unreachable *)
+	  [insert_2; insert_3; insert_4], var
 	| Ctype (TInt _) ->
-	  let inserts_0, x' = self#term pointer in
-	  let x' = self#ctype_fragment x' in
-	  let inserts_1, y' = self#term offset in
 	  let y' = self#ctype_fragment y' in
-	  let exp1 = Cmp(Rge, y', Zero) in
-	  let exp2 = Cmp(Rgt, Pc_dim(x'), y') in
-	  inserts_0 @ inserts_1, Land(exp1, exp2)
+	  [], Land(Cmp(Rge, y', Zero), Cmp(Rgt, Pc_dim(x'), y'))
 	| _ -> assert false (* unreachable *)
-      end
+      in
+      inserts_0 @ inserts_1 @ inserts, ret
     | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
       self#quantif_predicate ~forall:true logic_vars hyps goal
     | Pexists(logic_vars,{content=Pand(hyps,goal)}) ->
