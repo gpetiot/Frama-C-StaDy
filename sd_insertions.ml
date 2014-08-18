@@ -1423,24 +1423,26 @@ class gather_insertions props = object(self)
       end
 
     | Prel(rel,t1,t2) ->
-      begin
+      let inserts_0, t1' = self#term t1 in
+      let inserts_1, t2' = self#term t2 in
+      let clear_t1 = match t1.term_type with
+	Linteger -> [Instru(Gmp_clear (self#gmp_fragment t1'))] | _ -> []
+      in
+      let clear_t2 = match t2.term_type with
+	Linteger -> [Instru(Gmp_clear (self#gmp_fragment t2'))] | _ -> []
+      in
+      let inserts, ret =
 	match t1.term_type, t2.term_type with
 	| Linteger, Linteger ->
 	  let var = self#fresh_pred_var() in
-	  let inserts_0, t1' = self#term t1 in
 	  let t1' = self#gmp_fragment t1' in
-	  let inserts_1, t2' = self#term t2 in
 	  let t2' = self#gmp_fragment t2' in
 	  let insert_2 = Decl_pred_var var in
 	  let insert_3 = Instru(Affect_pred(var, Gmp_cmpr(rel, t1', t2'))) in
-	  let insert_4 = Instru(Gmp_clear t1') in
-	  let insert_5 = Instru(Gmp_clear t2') in
-	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4; insert_5], var
+	  [insert_2; insert_3], var
 	| Linteger, Ctype x ->
 	  let var = self#fresh_pred_var() in
-	  let inserts_0, t1' = self#term t1 in
 	  let t1' = self#gmp_fragment t1' in
-	  let inserts_1, t2' = self#term t2 in
 	  let t2' = self#ctype_fragment t2' in
 	  let insert_2 = Decl_pred_var var in
 	  let value =
@@ -1449,14 +1451,11 @@ class gather_insertions props = object(self)
 	    else assert false
 	  in
 	  let insert_3 = Instru(Affect_pred(var, value)) in
-	  let insert_4 = Instru(Gmp_clear t1') in
-	  inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4], var
+	  [insert_2; insert_3], var
 	| Lreal, Lreal -> assert false (* TODO: reals *)
 	| Ctype x, Linteger ->
 	  let var = self#fresh_pred_var() in
-	  let inserts_0, t1' = self#term t1 in
 	  let t1' = self#ctype_fragment t1' in
-	  let inserts_1, t2' = self#term t2 in
 	  let t2' = self#gmp_fragment t2' in
 	  let fresh_var' = self#fresh_gmp_var() in
 	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
@@ -1468,17 +1467,11 @@ class gather_insertions props = object(self)
 	  let insert_3, init_var' = init_set decl_var' t1' in
 	  let insert_4 = Decl_pred_var var in
 	  let insert_5 = Instru(Affect_pred(var,Gmp_cmpr(rel,init_var',t2'))) in
-	  let insert_6 = Instru(Gmp_clear t2') in
 	  let insert_7 = Instru(Gmp_clear init_var') in
-	  inserts_0 @ inserts_1
-	  @ [insert_2; insert_3; insert_4; insert_5; insert_6; insert_7], var
-	| _ ->
-	  let inserts_0, t1' = self#term t1 in
-	  let t1' = self#ctype_fragment t1' in
-	  let inserts_1, t2' = self#term t2 in
-	  let t2' = self#ctype_fragment t2' in
-	  inserts_0 @ inserts_1, Cmp(rel, t1', t2')
-      end
+	  [insert_2; insert_3; insert_4; insert_5; insert_7], var
+	| _ -> [], Cmp(rel, self#ctype_fragment t1', self#ctype_fragment t2')
+      in
+      inserts_0 @ inserts_1 @ inserts @ clear_t1 @ clear_t2, ret
       
     | Pat(p, LogicLabel(_,l)) when l = "Here" -> self#predicate_named p
     | Pat (p,_) ->
