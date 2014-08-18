@@ -220,55 +220,48 @@ class gather_insertions props = object(self)
     let insert_0, decl_var = self#decl_gmp_var fresh_var in
     let insert_1, init_var = self#init_set_si_gmp_var decl_var init_val in
     let inserts_block =
-      match lower.term_type with
-      | Linteger ->
-	begin
-	  match upper.term_type with
-	  | Linteger ->
-	    let inserts_3, low = self#term lower in
-	    let inserts_4, up = self#term upper in
-	    let low = self#gmp_fragment low in
-	    let up = self#gmp_fragment up in
-	    let fresh_iter = My_gmp_var q.lv_name in
-	    let insert_5, decl_iter = self#decl_gmp_var fresh_iter in
-	    let insert_6, init_iter = self#init_set_gmp_var decl_iter low in
-	    let ins_b_0, lambda_term = self#term t in
-	    let ins_b_1 =
-	      match builtin_name with
-	      | s when s = "\\sum" ->
-		Instru(Gmp_binop(PlusA, init_var, init_var,
-				 self#gmp_fragment lambda_term));
-	      | s when s = "\\product" ->
-		Instru(Gmp_binop(Mult, init_var, init_var,
-				 self#gmp_fragment lambda_term));
-	      | s when s = "\\numof" ->
-		(* lambda_term is of type:
-		   Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
-		let cond = Cmp(Rneq,self#ctype_fragment lambda_term,Zero) in
-		let instr = Instru(Gmp_binop_ui(PlusA,init_var,init_var,One)) in
-		If(cond, [instr], [])
-	      | _ -> assert false
-	    in
-	    let ins_b_2 = Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)) in
-	    let ins_b = ins_b_0 @ [ins_b_1; ins_b_2] in
-	    let ins_b =
-	      if builtin_name <> "\\numof" then
-		ins_b @ [(Instru(Gmp_clear(self#gmp_fragment lambda_term)))]
-	      else
-		ins_b
-	    in
-	    let cond = Gmp_cmp(Le,init_iter,up) in
-	    let insert_7 = For(None, Some cond, None, ins_b) in
-	    let insert_8 = Instru(Gmp_clear init_iter) in
-	    let insert_9 = Instru(Gmp_clear low) in
-	    let insert_10 = Instru(Gmp_clear up) in
-	    inserts_3 @ inserts_4
-	    @ [insert_5; insert_6; insert_7; insert_8; insert_9; insert_10]
-	  | Lreal -> assert false (* unreachable *)
-	  | _ -> assert false (* unreachable ? *)
-	 end
-      | Lreal -> assert false (* unreachable *)
-      | _ -> assert false (* unreachable ? *)
+      match lower.term_type, upper.term_type with
+      | Linteger, Linteger ->
+	let inserts_3, low = self#term lower in
+	let inserts_4, up = self#term upper in
+	let low = self#gmp_fragment low in
+	let up = self#gmp_fragment up in
+	let fresh_iter = My_gmp_var q.lv_name in
+	let insert_5, decl_iter = self#decl_gmp_var fresh_iter in
+	let insert_6, init_iter = self#init_set_gmp_var decl_iter low in
+	let ins_b_0, lambda_term = self#term t in
+	let ins_b_1 =
+	  match builtin_name with
+	  | s when s = "\\sum" ->
+	    Instru(Gmp_binop(PlusA, init_var, init_var,
+			     self#gmp_fragment lambda_term));
+	  | s when s = "\\product" ->
+	    Instru(Gmp_binop(Mult, init_var, init_var,
+			     self#gmp_fragment lambda_term));
+	  | s when s = "\\numof" ->
+	    (* lambda_term is of type:
+	       Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean *)
+	    let cond = Cmp(Rneq,self#ctype_fragment lambda_term,Zero) in
+	    let instr = Instru(Gmp_binop_ui(PlusA,init_var,init_var,One)) in
+	    If(cond, [instr], [])
+	  | _ -> assert false
+	in
+	let ins_b_2 = Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)) in
+	let ins_b = ins_b_0 @ [ins_b_1; ins_b_2] in
+	let ins_b =
+	  if builtin_name <> "\\numof" then
+	    ins_b @ [(Instru(Gmp_clear(self#gmp_fragment lambda_term)))]
+	  else
+	    ins_b
+	in
+	let cond = Gmp_cmp(Le,init_iter,up) in
+	let insert_7 = For(None, Some cond, None, ins_b) in
+	let insert_8 = Instru(Gmp_clear init_iter) in
+	let insert_9 = Instru(Gmp_clear low) in
+	let insert_10 = Instru(Gmp_clear up) in
+	inserts_3 @ inserts_4
+	@ [insert_5; insert_6; insert_7; insert_8; insert_9; insert_10]
+      | _ -> assert false (* unreachable *)
     in
     let insert_2 = Block inserts_block in
     [insert_0; insert_1; insert_2], Gmp_fragment init_var
