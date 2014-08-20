@@ -93,7 +93,6 @@ class gather_insertions props = object(self)
   inherit Visitor.frama_c_inplace as super
 
   val insertions : (label, insertion Queue.t) Hashtbl.t = Hashtbl.create 64
-  val mutable current_label : label option = None
   val mutable result_varinfo = None
   val mutable current_function = None
   val mutable in_old_term = false
@@ -114,8 +113,7 @@ class gather_insertions props = object(self)
   method get_insertions () =
     insertions
 
-  method private insert str =
-    let label = Extlib.the current_label in
+  method private insert label str =
     try
       Queue.add str (Hashtbl.find insertions label)
     with Not_found ->
@@ -753,32 +751,24 @@ class gather_insertions props = object(self)
     let behaviors = Annotations.behaviors kf in
     self#compute_result_varinfo f;
 
-    let inserts_pre =
+    let label_pre, inserts_pre =
       if f.svar.vname = entry_point then
-	begin
-	  current_label <- Some (BegFunc (f.svar.vname ^ "_precond"));
-	  self#pre ~pre_entry_point:true kf behaviors Kglobal
-	end
+	BegFunc (f.svar.vname ^ "_precond"),
+	self#pre ~pre_entry_point:true kf behaviors Kglobal
       else
-	begin
-	  current_label <- Some (BegFunc f.svar.vname);
-	  self#pre ~pre_entry_point:false kf behaviors Kglobal
-	end
+	BegFunc f.svar.vname,
+	self#pre ~pre_entry_point:false kf behaviors Kglobal
     in
-    List.iter self#insert inserts_pre;
-
-    current_label <- Some (EndFunc f.svar.vname);
+    List.iter (self#insert label_pre) inserts_pre;
 
     (* BEGIN postcond *)
     if (self#at_least_one_prop kf behaviors Kglobal)
       || (Sd_options.Behavior_Reachability.get()) then
       begin
 	let inserts = self#post kf behaviors Kglobal in
-	self#insert (Block inserts)
+	self#insert (EndFunc f.svar.vname) (Block inserts)
       end;
     (* END postcond *)
-
-    current_label <- Some (BegFunc f.svar.vname);
 
     (* alloc variables for \at terms *)
     let dig_type = function
@@ -794,8 +784,8 @@ class gather_insertions props = object(self)
       in
       let my_v = My_ctype_var(v.vtype, v.vname) in
       let my_old_v = My_ctype_var(v.vtype, "old_"^v.vname) in
-      self#insert (Decl_ctype_var my_old_v);
-      self#insert (Instru(Affect(my_old_v, my_v)));
+      self#insert (BegFunc f.svar.vname) (Decl_ctype_var my_old_v);
+      self#insert (BegFunc f.svar.vname) (Instru(Affect(my_old_v, my_v)));
       let rec alloc_aux my_old_ptr my_ptr ty = function
 	| h :: t ->
 	  let ty = dig_type ty in
@@ -813,7 +803,7 @@ class gather_insertions props = object(self)
 	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	      let init = Affect(my_iterator, Zero) in
 	      let cond = Cmp(Rlt, my_iterator, Gmp_get_si h') in
-	      let step = Affect(my_iterator, (Binop(PlusA, my_iterator,One))) in
+	      let step = Affect(my_iterator, Binop(PlusA, my_iterator,One)) in
 	      let insert_3 = For(Some init,Some cond,Some step,inserts_block) in
 	      let insert_4 = Instru(Gmp_clear h') in
 	      inserts_0 @ [insert_1; insert_2; insert_3; insert_4]
@@ -827,7 +817,7 @@ class gather_insertions props = object(self)
 	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	      let init = Affect(my_iterator, Zero) in
 	      let cond = Cmp(Rlt, my_iterator, h') in
-	      let step = Affect(my_iterator, (Binop(PlusA, my_iterator,One))) in
+	      let step = Affect(my_iterator, Binop(PlusA, my_iterator,One)) in
 	      let insert_3 = For(Some init,Some cond,Some step,inserts_block) in
 	      inserts_0 @ [insert_1; insert_2; insert_3]
 	  end
@@ -836,15 +826,13 @@ class gather_insertions props = object(self)
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
 	begin
 	  let my_old_ptr = My_ctype_var(v.vtype, "old_ptr_"^v.vname) in
-	  self#insert (Decl_ctype_var my_old_ptr);
+	  self#insert (BegFunc f.svar.vname) (Decl_ctype_var my_old_ptr);
 	  let inserts = alloc_aux my_old_ptr my_v v.vtype terms in
-	  List.iter self#insert inserts;
+	  List.iter (self#insert (BegFunc f.svar.vname)) inserts;
 	end
     in
     List.iter do_varinfo visited_globals;
     List.iter do_varinfo (Kernel_function.get_formals kf);
-
-    current_label <- Some (EndFunc f.svar.vname);
 
     (* dealloc variables for \at terms *)
     begin
@@ -868,31 +856,27 @@ class gather_insertions props = object(self)
 		let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
 		let init = Affect(my_iterator, Zero) in
 		let cond = Cmp(Rlt, my_iterator, Gmp_get_si h') in
-		let step = Affect(my_iterator,(Binop(PlusA,my_iterator,One))) in
+		let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
 		let insert_2=For(Some init,Some cond,Some step,inserts_block) in
-		let insert_3 = Instru(Gmp_clear h') in
-		[insert_2; insert_3]
+		[insert_2; Instru(Gmp_clear h')]
 	      | Lreal -> assert false (* TODO: reals *)
 	      | _ ->
 		let h' = self#ctype_fragment h' in
 		let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
 		let init = Affect(my_iterator, Zero) in
 		let cond = Cmp(Rlt, my_iterator, h') in
-		let step = Affect(my_iterator,(Binop(PlusA,my_iterator,One))) in
-		let insert_2=For(Some init,Some cond,Some step,inserts_block) in
-		[insert_2]
+		let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
+		[For(Some init,Some cond,Some step,inserts_block)]
 	    in
 	    [insert_0] @ inserts_1 @ inserts' @ [Instru(Free(my_old_ptr))]
 	in
 	let my_old_ptr = My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname) in
 	let insertions = dealloc_aux my_old_ptr terms in
-	List.iter self#insert insertions
+	List.iter (self#insert (EndFunc f.svar.vname)) insertions
       in
       List.iter do_varinfo visited_globals;
       List.iter do_varinfo (Kernel_function.get_formals kf)
     end;
-
-    current_label <- None;
 
     Cil.DoChildren
   (* end vfunc *)
@@ -951,55 +935,40 @@ class gather_insertions props = object(self)
 	  begin
 	    let stmt_behaviors = bhvs.spec_behavior in
 
-	    current_label <- Some (BegStmt stmt.sid);
-
 	    let inserts' =
 	      self#pre ~pre_entry_point:false kf stmt_behaviors (Kstmt stmt) in
 	    let inserts = self#for_behaviors for_behaviors inserts' in
-	    List.iter self#insert inserts;
-
-	    current_label <- Some (EndStmt stmt.sid);
+	    List.iter (self#insert (BegStmt stmt.sid)) inserts;
 
 	    let inserts' = self#post kf stmt_behaviors (Kstmt stmt) in
 	    let inserts =
 	      if for_behaviors = [] then [Block inserts']
 	      else self#for_behaviors for_behaviors inserts'
 	    in
-	    List.iter self#insert inserts;
-
-	    current_label <- None
+	    List.iter (self#insert (EndStmt stmt.sid)) inserts;
 	  end
 
       | AAssert (_,pred) ->
 
-	current_label <- Some (BegStmt stmt.sid);
-
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  begin
-	    let id = Sd_utils.to_id prop in
-	    let ins = self#pc_assert_exception pred.content "Assert!" id prop in
-	    let inserts = self#for_behaviors for_behaviors ins in
-	    List.iter self#insert inserts
-	  end;
-
-	current_label <- None
+	  let id = Sd_utils.to_id prop in
+	  let ins = self#pc_assert_exception pred.content "Assert!" id prop in
+	  let inserts = self#for_behaviors for_behaviors ins in
+	  List.iter (self#insert (BegStmt stmt.sid)) inserts
 
       | AInvariant (_,true,pred) ->
 
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
 	  let id = Sd_utils.to_id prop in
-	  let f msg =
+	  let f label msg =
 	    let ins = self#pc_assert_exception pred.content msg id prop in
 	    let inserts = self#for_behaviors for_behaviors ins in
-	    List.iter self#insert inserts
+	    List.iter (self#insert label) inserts
 	  in
-	  current_label <- Some (BegStmt stmt.sid);
-	  f "Loop invariant not established!";
-	  current_label <- Some (EndIter stmt.sid);
-	  f "Loop invariant not preserved!";
-	  current_label <- None
+	  f (BegStmt stmt.sid) "Loop invariant not established!";
+	  f (EndIter stmt.sid) "Loop invariant not preserved!"
 
       | AVariant (term,_) ->
 
@@ -1009,65 +978,55 @@ class gather_insertions props = object(self)
 	  begin
 	    match term.term_type with
 	    | Linteger ->
-	      current_label <- Some (BegStmt stmt.sid);
 	      let inserts_0, term' = self#term term in
-	      List.iter self#insert inserts_0;
+	      List.iter (self#insert (BegStmt stmt.sid)) inserts_0;
 	      let term' = self#gmp_fragment term' in
 	      let cond = Gmp_cmp_ui(Lt, term', Zero) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
-	      self#insert (If (cond, [instr], []));
-	      current_label <- Some (EndStmt stmt.sid);
-	      self#insert (Instru(Gmp_clear term'));
-	      current_label <- Some (BegIter stmt.sid);
+	      self#insert (BegStmt stmt.sid)(If (cond, [instr], []));
+	      self#insert (EndStmt stmt.sid) (Instru(Gmp_clear term'));
 	      let inserts_1, term' = self#term term in
-	      List.iter self#insert inserts_1;
+	      List.iter (self#insert (BegIter stmt.sid)) inserts_1;
 	      let term' = self#gmp_fragment term' in
 	      let fresh_variant = self#fresh_gmp_var() in
 	      let insert_2, decl_variant = self#decl_gmp_var fresh_variant in
-	      self#insert insert_2;
+	      self#insert (BegIter stmt.sid) insert_2;
 	      let insert_3, init_variant =
 		self#init_set_gmp_var decl_variant term' in
-	      self#insert insert_3;
-	      current_label <- Some (EndIter stmt.sid);
+	      self#insert (BegIter stmt.sid) insert_3;
 	      let inserts_4, term' = self#term term in
-	      List.iter self#insert inserts_4;
+	      List.iter (self#insert (EndIter stmt.sid)) inserts_4;
 	      let term' = self#gmp_fragment term' in
 	      let cond = Gmp_cmp_ui(Lt, init_variant, Zero) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
-	      self#insert (If(cond, [instr], []));
+	      self#insert (EndIter stmt.sid) (If(cond, [instr], []));
 	      let cond = Gmp_cmp(Ge, term', init_variant) in
 	      let instr = Instru(Pc_exn("Variant non decreasing", id)) in
-	      self#insert (If(cond, [instr] ,[]));
-	      self#insert (Instru(Gmp_clear init_variant));
-	      current_label <- None
+	      self#insert (EndIter stmt.sid) (If(cond, [instr] ,[]));
+	      self#insert (EndIter stmt.sid) (Instru(Gmp_clear init_variant))
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
-	      current_label <- Some (BegStmt stmt.sid);
 	      let inserts_0, term' = self#term term in
-	      List.iter self#insert inserts_0;
+	      List.iter (self#insert (BegStmt stmt.sid)) inserts_0;
 	      let term' = self#ctype_fragment term' in
 	      let cond = Cmp(Rlt, term', Zero) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
-	      self#insert (If(cond, [instr], []));
-	      current_label <- Some (EndStmt stmt.sid);
-	      current_label <- Some (BegIter stmt.sid);
+	      self#insert (BegStmt stmt.sid) (If(cond, [instr], []));
 	      let inserts_1, term' = self#term term in
-	      List.iter self#insert inserts_1;
+	      List.iter (self#insert (BegIter stmt.sid)) inserts_1;
 	      let term' = self#ctype_fragment term' in
 	      let variant = self#fresh_ctype_var Cil.intType in
-	      self#insert (Decl_ctype_var variant);
-	      self#insert (Instru(Affect(variant, term')));
-	      current_label <- Some (EndIter stmt.sid);
+	      self#insert (BegIter stmt.sid) (Decl_ctype_var variant);
+	      self#insert (BegIter stmt.sid) (Instru(Affect(variant, term')));
 	      let inserts_2, term' = self#term term in
-	      List.iter self#insert inserts_2;
+	      List.iter (self#insert (EndIter stmt.sid)) inserts_2;
 	      let term' = self#ctype_fragment term' in
 	      let cond = Cmp(Rlt, variant, Zero) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
-	      self#insert (If(cond, [instr], []));
+	      self#insert (EndIter stmt.sid) (If(cond, [instr], []));
 	      let cond = Cmp(Rge, term', variant) in
 	      let instr = Instru(Pc_exn("Variant non decreasing", id)) in
-	      self#insert (If(cond, [instr], []));
-	      current_label <- None
+	      self#insert (EndIter stmt.sid) (If(cond, [instr], []))
 	  end;
 	  translated_properties <- prop :: translated_properties
       | _ -> ()
@@ -1078,10 +1037,8 @@ class gather_insertions props = object(self)
   method! vstmt_aux stmt =
     if List.mem stmt.sid stmts_to_reach then
       begin
-	current_label <- Some (BegStmt stmt.sid);
 	let str = Format.sprintf "@@FC:REACHABLE_STMT:%i" stmt.sid in
-	self#insert (Instru(Pc_to_framac str));
-	current_label <- None
+	self#insert (BegStmt stmt.sid) (Instru(Pc_to_framac str))
       end;
     let kf = Kernel_function.find_englobing_kf stmt in
     begin
