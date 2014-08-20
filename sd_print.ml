@@ -1,76 +1,83 @@
 
-open Sd_insertions
 open Cil_types
 
 
 let pp_label fmt = function
-  | BegStmt s -> Format.fprintf fmt "BegStmt %i" s
-  | EndStmt s -> Format.fprintf fmt "EndStmt %i" s
-  | BegFunc s -> Format.fprintf fmt "BegFunc %s" s
-  | EndFunc s -> Format.fprintf fmt "EndFunc %s" s
-  | BegIter s -> Format.fprintf fmt "BegIter %i" s
-  | EndIter s -> Format.fprintf fmt "EndIter %i" s
+  | Sd_insertions.BegStmt s -> Format.fprintf fmt "BegStmt %i" s
+  | Sd_insertions.EndStmt s -> Format.fprintf fmt "EndStmt %i" s
+  | Sd_insertions.BegFunc s -> Format.fprintf fmt "BegFunc %s" s
+  | Sd_insertions.EndFunc s -> Format.fprintf fmt "EndFunc %s" s
+  | Sd_insertions.BegIter s -> Format.fprintf fmt "BegIter %i" s
+  | Sd_insertions.EndIter s -> Format.fprintf fmt "EndIter %i" s
 
 let pp_fresh_gmp fmt = function
-  | Fresh_gmp_var id -> Format.fprintf fmt "__stady_gmp_%i" id
-  | My_gmp_var name -> Format.fprintf fmt "%s" name
+  | Sd_insertions.Fresh_gmp_var id -> Format.fprintf fmt "__stady_gmp_%i" id
+  | Sd_insertions.My_gmp_var name -> Format.fprintf fmt "%s" name
 
 let pp_decl_gmp fmt = function
-  | Declared_gmp_var v -> pp_fresh_gmp fmt v
+  | Sd_insertions.Declared_gmp_var v -> pp_fresh_gmp fmt v
 
 let pp_init_gmp fmt = function
-  | Initialized_gmp_var v -> pp_decl_gmp fmt v
+  | Sd_insertions.Initialized_gmp_var v -> pp_decl_gmp fmt v
 
 let pp_gexpr fmt = pp_init_gmp fmt
 
 let rec pp_cexpr fmt = function
-  | Fresh_ctype_var (id, _ty) -> Format.fprintf fmt "__stady_term_%i" id
-  | My_ctype_var (_, name) -> Format.fprintf fmt "%s" name
-  | Zero -> Format.fprintf fmt "0"
-  | One -> Format.fprintf fmt "1"
-  | Cst s -> Format.fprintf fmt "%s" s
-  | Gmp_get_ui g -> Format.fprintf fmt "__gmpz_get_ui(%a)" pp_gexpr g
-  | Gmp_get_si g -> Format.fprintf fmt "__gmpz_get_si(%a)" pp_gexpr g
-  | Unop (op, e) -> Format.fprintf fmt "%a(%a)" Printer.pp_unop op pp_cexpr e
-  | Binop (op,x,y) ->
+  | Sd_insertions.Fresh_ctype_var (id, _) ->
+    Format.fprintf fmt "__stady_term_%i" id
+  | Sd_insertions.My_ctype_var (_, name) -> Format.fprintf fmt "%s" name
+  | Sd_insertions.Zero -> Format.fprintf fmt "0"
+  | Sd_insertions.One -> Format.fprintf fmt "1"
+  | Sd_insertions.Cst s -> Format.fprintf fmt "%s" s
+  | Sd_insertions.Gmp_get_ui g ->
+    Format.fprintf fmt "__gmpz_get_ui(%a)" pp_gexpr g
+  | Sd_insertions.Gmp_get_si g ->
+    Format.fprintf fmt "__gmpz_get_si(%a)" pp_gexpr g
+  | Sd_insertions.Unop (op, e) ->
+    Format.fprintf fmt "%a(%a)" Printer.pp_unop op pp_cexpr e
+  | Sd_insertions.Binop (op,x,y) ->
     Format.fprintf fmt "(%a %a %a)" pp_cexpr x Printer.pp_binop op pp_cexpr y
-  | Pc_dim e -> Format.fprintf fmt "pathcrawler_dimension(%a)" pp_cexpr e
-  | Malloc e -> Format.fprintf fmt "malloc(%a)" pp_cexpr e
-  | Cast (t, e) -> Format.fprintf fmt "(%a)%a" Printer.pp_typ t pp_cexpr e
-  | Sizeof t -> Format.fprintf fmt "sizeof(%a)" Printer.pp_typ t
-  | Deref e -> Format.fprintf fmt "*%a" pp_cexpr e
+  | Sd_insertions.Pc_dim e ->
+    Format.fprintf fmt "pathcrawler_dimension(%a)" pp_cexpr e
+  | Sd_insertions.Malloc e -> Format.fprintf fmt "malloc(%a)" pp_cexpr e
+  | Sd_insertions.Cast (t, e) ->
+    Format.fprintf fmt "(%a)%a" Printer.pp_typ t pp_cexpr e
+  | Sd_insertions.Sizeof t -> Format.fprintf fmt "sizeof(%a)" Printer.pp_typ t
+  | Sd_insertions.Deref e -> Format.fprintf fmt "*%a" pp_cexpr e
   | Sd_insertions.Index (e, i) ->
     Format.fprintf fmt "%a[%a]" pp_cexpr e pp_cexpr i
   | Sd_insertions.Field (e, s) -> Format.fprintf fmt "%a.%s" pp_cexpr e s
-  | Of_pred p -> Format.fprintf fmt "%a" pp_pexpr p
+  | Sd_insertions.Of_pred p -> Format.fprintf fmt "%a" pp_pexpr p
 
 and pp_pexpr fmt = function
-  | Fresh_pred_var id -> Format.fprintf fmt "__stady_pred_%i" id
-  | True -> Format.fprintf fmt "1"
-  | False -> Format.fprintf fmt "0"
-  | Cmp (rel, e1, e2) ->
+  | Sd_insertions.Fresh_pred_var id -> Format.fprintf fmt "__stady_pred_%i" id
+  | Sd_insertions.True -> Format.fprintf fmt "1"
+  | Sd_insertions.False -> Format.fprintf fmt "0"
+  | Sd_insertions.Cmp (rel, e1, e2) ->
     Format.fprintf fmt "%a %a %a"pp_cexpr e1 Printer.pp_relation rel pp_cexpr e2
-  | Gmp_cmp (op, g1, g2) ->
+  | Sd_insertions.Gmp_cmp (op, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp(%a, %a) %a 0"
       pp_gexpr g1 pp_gexpr g2 Printer.pp_binop op
-  | Gmp_cmp_ui (op, g1, g2) ->
+  | Sd_insertions.Gmp_cmp_ui (op, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp_ui(%a, %a) %a 0"
       pp_gexpr g1 pp_cexpr g2 Printer.pp_binop op
-  | Gmp_cmp_si (op, g1, g2) ->
+  | Sd_insertions.Gmp_cmp_si (op, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp_si(%a, %a) %a 0"
       pp_gexpr g1 pp_cexpr g2 Printer.pp_binop op
-  | Gmp_cmpr (rel, g1, g2) ->
+  | Sd_insertions.Gmp_cmpr (rel, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp(%a, %a) %a 0"
       pp_gexpr g1 pp_gexpr g2 Printer.pp_relation rel
-  | Gmp_cmpr_ui (rel, g1, g2) ->
+  | Sd_insertions.Gmp_cmpr_ui (rel, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp_ui(%a, %a) %a 0"
       pp_gexpr g1 pp_cexpr g2 Printer.pp_relation rel
-  | Gmp_cmpr_si (rel, g1, g2) ->
+  | Sd_insertions.Gmp_cmpr_si (rel, g1, g2) ->
     Format.fprintf fmt "__gmpz_cmp_si(%a, %a) %a 0"
       pp_gexpr g1 pp_cexpr g2 Printer.pp_relation rel
-  | Lnot p -> Format.fprintf fmt "!(%a)" pp_pexpr p
-  | Land (p, p') -> Format.fprintf fmt "(%a && %a)" pp_pexpr p pp_pexpr p'
-  | Lor (p, p') -> Format.fprintf fmt "(%a || %a)" pp_pexpr p pp_pexpr p'
+  | Sd_insertions.Lnot p -> Format.fprintf fmt "!(%a)" pp_pexpr p
+  | Sd_insertions.Land (p, q) ->
+    Format.fprintf fmt "(%a && %a)" pp_pexpr p pp_pexpr q
+  | Sd_insertions.Lor (p, q) ->
+    Format.fprintf fmt "(%a || %a)" pp_pexpr p pp_pexpr q
 
 let pp_garith fmt = function
   | PlusA -> Format.fprintf fmt "add"
@@ -81,34 +88,40 @@ let pp_garith fmt = function
   | _ -> assert false (* not used by the translation *)
 
 let pp_instruction fmt = function
-  | Affect (x,y) -> Format.fprintf fmt "%a = %a" pp_cexpr x pp_cexpr y
-  | Affect_pred (x,y) -> Format.fprintf fmt "%a = %a" pp_pexpr x pp_pexpr y
-  | Free e -> Format.fprintf fmt "free(%a)" pp_cexpr e
-  | Pc_to_framac s -> Format.fprintf fmt "pathcrawler_to_framac(\"%s\")" s
-  | Pc_exn(s,i)->Format.fprintf fmt"pathcrawler_assert_exception(\"%s\",%i)" s i
-  | Ret e -> Format.fprintf fmt "return %a" pp_cexpr e
-  | Gmp_clear g -> Format.fprintf fmt "__gmpz_clear(%a)" pp_gexpr g
-  | Gmp_init g -> Format.fprintf fmt "__gmpz_init(%a)" pp_decl_gmp g
-  | Gmp_init_set (g,g') ->
+  | Sd_insertions.Affect (x,y) ->
+    Format.fprintf fmt "%a = %a" pp_cexpr x pp_cexpr y
+  | Sd_insertions.Affect_pred (x,y) ->
+    Format.fprintf fmt "%a = %a" pp_pexpr x pp_pexpr y
+  | Sd_insertions.Free e -> Format.fprintf fmt "free(%a)" pp_cexpr e
+  | Sd_insertions.Pc_to_framac s ->
+    Format.fprintf fmt "pathcrawler_to_framac(\"%s\")" s
+  | Sd_insertions.Pc_exn(s,i)->
+    Format.fprintf fmt"pathcrawler_assert_exception(\"%s\",%i)" s i
+  | Sd_insertions.Ret e -> Format.fprintf fmt "return %a" pp_cexpr e
+  | Sd_insertions.Gmp_clear g ->Format.fprintf fmt "__gmpz_clear(%a)" pp_gexpr g
+  | Sd_insertions.Gmp_init g->Format.fprintf fmt "__gmpz_init(%a)" pp_decl_gmp g
+  | Sd_insertions.Gmp_init_set (g,g') ->
     Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_decl_gmp g pp_gexpr g'
-  | Gmp_init_set_ui (g,c) ->
+  | Sd_insertions.Gmp_init_set_ui (g,c) ->
     Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_decl_gmp g pp_cexpr c
-  | Gmp_init_set_si (g,c) ->
+  | Sd_insertions.Gmp_init_set_si (g,c) ->
     Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_decl_gmp g pp_cexpr c
-  | Gmp_init_set_str (g,s) ->
+  | Sd_insertions.Gmp_init_set_str (g,s) ->
     Format.fprintf fmt "__gmpz_init_set_str(%a, \"%s\", 10)" pp_decl_gmp g s
-  | Gmp_set(g,h)-> Format.fprintf fmt "__gmpz_set(%a, %a)" pp_gexpr g pp_gexpr h
-  | Gmp_abs(g,h)-> Format.fprintf fmt "__gmpz_abs(%a, %a)" pp_gexpr g pp_gexpr h
-  | Gmp_ui_sub (r,a,b) ->
+  | Sd_insertions.Gmp_set(g,h)->
+    Format.fprintf fmt "__gmpz_set(%a, %a)" pp_gexpr g pp_gexpr h
+  | Sd_insertions.Gmp_abs(g,h)->
+    Format.fprintf fmt "__gmpz_abs(%a, %a)" pp_gexpr g pp_gexpr h
+  | Sd_insertions.Gmp_ui_sub (r,a,b) ->
     Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)"
       pp_gexpr r pp_cexpr a pp_gexpr b
-  | Gmp_binop (op,r,a,b) ->
+  | Sd_insertions.Gmp_binop (op,r,a,b) ->
     Format.fprintf fmt "__gmpz_%a(%a, %a, %a)"
       pp_garith op pp_gexpr r pp_gexpr a pp_gexpr b
-  | Gmp_binop_ui (op,r,a,b) ->
+  | Sd_insertions.Gmp_binop_ui (op,r,a,b) ->
     Format.fprintf fmt "__gmpz_%a_ui(%a, %a, %a)"
       pp_garith op pp_gexpr r pp_gexpr a pp_cexpr b
-  | Gmp_binop_si (op,r,a,b) ->
+  | Sd_insertions.Gmp_binop_si (op,r,a,b) ->
     Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
       pp_garith op pp_gexpr r pp_gexpr a pp_cexpr b
 
@@ -120,24 +133,25 @@ let rec pp_insertion ?(line_break = true) fmt ins =
   in
   begin
     match ins with
-    | Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
-    | Decl_gmp_var v -> Format.fprintf fmt "@[mpz_t %a;@]" pp_fresh_gmp v
-    | Decl_ctype_var ((Fresh_ctype_var (_id, ty)) as v) ->
+    | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
+    | Sd_insertions.Decl_gmp_var v ->
+      Format.fprintf fmt "@[mpz_t %a;@]" pp_fresh_gmp v
+    | Sd_insertions.Decl_ctype_var((Sd_insertions.Fresh_ctype_var(_,ty)) as v)->
       Format.fprintf fmt "@[%a %a;@]" Printer.pp_typ ty pp_cexpr v
-    | Decl_ctype_var (My_ctype_var (ty, name)) ->
+    | Sd_insertions.Decl_ctype_var (Sd_insertions.My_ctype_var (ty, name)) ->
       Format.fprintf fmt "@[%a %s;@]" Printer.pp_typ ty name
-    | Decl_ctype_var _ -> assert false
-    | Decl_pred_var p -> Format.fprintf fmt "@[int %a;@]" pp_pexpr p
+    | Sd_insertions.Decl_ctype_var _ -> assert false
+    | Sd_insertions.Decl_pred_var p->Format.fprintf fmt "@[int %a;@]" pp_pexpr p
     | Sd_insertions.If (cond,b1,b2) ->
       Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_pexpr cond aux b1;
       if b2 <> [] then
 	Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
-    | For(None, Some e, None, b) ->
+    | Sd_insertions.For(None, Some e, None, b) ->
       Format.fprintf fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" pp_pexpr e aux b
-    | For(Some i1, Some e, Some i2, b) ->
+    | Sd_insertions.For(Some i1, Some e, Some i2, b) ->
       Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n%a@]@\n}"
 	pp_instruction i1 pp_pexpr e pp_instruction i2 aux b
-    | For _ -> assert false (* not used by the translation *)
+    | Sd_insertions.For _ -> assert false (* not used by the translation *)
     | Sd_insertions.Block b ->
       if b <> [] then
 	Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
@@ -147,7 +161,14 @@ let rec pp_insertion ?(line_break = true) fmt ins =
 let pp_insertion_lb = pp_insertion ~line_break:true
 let pp_insertion_nlb = pp_insertion ~line_break:false
 
-class print_insertions insertions ~print_label () = object(self)
+
+let debug_builtins = Kernel.register_category "printer:builtins"
+
+let print_var v =
+  not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
+
+
+class print_insertions insertions () = object(self)
   inherit Printer.extensible_printer () as super
 
   val mutable current_function = None
@@ -155,16 +176,12 @@ class print_insertions insertions ~print_label () = object(self)
   method private insertions_at fmt label =
     try
       let q = Hashtbl.find insertions label in
-      Queue.iter
-	(fun s ->
-	  if print_label then Format.fprintf fmt "/* %a */ " pp_label label;
-	  Format.fprintf fmt "%a" pp_insertion_lb s) q
+      Queue.iter (pp_insertion_lb fmt) q
     with _ -> ()
 
   method private fundecl fmt f =
-    let was_ghost = is_ghost in
     let entry_point_name=Kernel_function.get_name(fst(Globals.entry_point())) in
-    let entering_ghost = f.svar.vghost && not was_ghost in
+    let entering_ghost = f.svar.vghost && not is_ghost in
     (* BEGIN precond (entry-point) *)
     if f.svar.vname = entry_point_name then
       begin
@@ -175,7 +192,7 @@ class print_insertions insertions ~print_label () = object(self)
 	Format.fprintf fmt "%a@ @[<hov 2>{@\n"
 	  (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" precond)))
 	  (TFun(Cil.intType,x,y,z));
-	Format.fprintf fmt "%a" self#insertions_at (BegFunc precond);
+        self#insertions_at fmt (Sd_insertions.BegFunc precond);
 	Format.fprintf fmt "@[return 1;@]";
 	Format.fprintf fmt "@]@\n}@\n@\n"
       end;
@@ -187,7 +204,7 @@ class print_insertions insertions ~print_label () = object(self)
     (* body. *)
     if entering_ghost then is_ghost <- true;
     Format.fprintf fmt "@[<hov 2>{@\n";
-    Format.fprintf fmt "%a" self#insertions_at (BegFunc f.svar.vname);
+    self#insertions_at fmt (Sd_insertions.BegFunc f.svar.vname);
     self#block ~braces:true fmt f.sbody;
     (* EndFunc not necessary here ? *)
     Format.fprintf fmt "@.}";
@@ -202,29 +219,31 @@ class print_insertions insertions ~print_label () = object(self)
     Format.pp_open_hvbox fmt 0;
     let kf = Kernel_function.find_englobing_kf stmt in
     let insert_something =
-      (try not (Queue.is_empty (Hashtbl.find insertions (BegStmt stmt.sid)))
+      (try not (Queue.is_empty
+		  (Hashtbl.find insertions (Sd_insertions.BegStmt stmt.sid)))
        with _ -> false)
-      || (try not (Queue.is_empty (Hashtbl.find insertions (EndStmt stmt.sid)))
+      || (try not (Queue.is_empty
+		     (Hashtbl.find insertions (Sd_insertions.EndStmt stmt.sid)))
 	with _ -> false)
     in
     if insert_something then Format.fprintf fmt "@[<hov 2>{@\n";
-    Format.fprintf fmt "%a" self#insertions_at (BegStmt stmt.sid);
+    self#insertions_at fmt (Sd_insertions.BegStmt stmt.sid);
     begin
       match stmt.skind with
       | Loop(_,b,l,_,_) ->
 	Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
 	  (fun fmt -> self#line_directive fmt) l;
-	Format.fprintf fmt "%a" self#insertions_at (BegIter stmt.sid);
+	self#insertions_at fmt (Sd_insertions.BegIter stmt.sid);
 	Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
-	Format.fprintf fmt "%a" self#insertions_at (EndIter stmt.sid);
+	self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
 	Format.fprintf fmt "}@\n @]"
       | Return _ ->
 	let f = Kernel_function.get_name kf in
-	Format.fprintf fmt "%a" self#insertions_at (EndFunc f);
+	self#insertions_at fmt (Sd_insertions.EndFunc f);
 	self#stmtkind next fmt stmt.skind
       | _ -> self#stmtkind next fmt stmt.skind
     end;
-    Format.fprintf fmt "%a" self#insertions_at (EndStmt stmt.sid);
+    self#insertions_at fmt (Sd_insertions.EndStmt stmt.sid);
     if insert_something then Format.fprintf fmt "@]@\n}";
     Format.pp_close_box fmt ();
     Format.pp_close_box fmt ()

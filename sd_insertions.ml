@@ -2,12 +2,6 @@
 open Cil_types
 
 
-let debug_builtins = Kernel.register_category "printer:builtins"
-
-let print_var v =
-  not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
-
-
 type label =
 | BegStmt of int
 | EndStmt of int

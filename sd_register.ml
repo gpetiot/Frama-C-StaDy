@@ -36,7 +36,7 @@ let second_pass filename props =
   ) insertions;
 
   let printer =
-    new Sd_print.print_insertions insertions ~print_label:false () in
+    new Sd_print.print_insertions insertions () in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
