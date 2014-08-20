@@ -920,7 +920,7 @@ class gather_insertions props = object(self)
       | h :: t ->
 	let ins, v = self#cond_of_assumes h in
 	aux (insertions @ ins) (Lor(ret, v)) t
-      in
+    in
     aux [] False pred_lists
 
   method private pc_assert_exception pred msg id prop =
@@ -928,6 +928,14 @@ class gather_insertions props = object(self)
     let insert_1 = If(Lnot var, [Instru(Pc_exn(msg, id))], []) in
     translated_properties <- prop :: translated_properties;
     inserts_0 @ [insert_1]
+
+  method private for_behaviors bhvs ins =
+    if bhvs <> [] then
+      let inserts_0, cond = self#cond_of_behaviors bhvs in
+      let insert_1 = If(cond, ins, []) in
+      let inserts = inserts_0 @ [insert_1] in
+      inserts
+    else ins
 
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
@@ -953,24 +961,17 @@ class gather_insertions props = object(self)
 
 	    let inserts' =
 	      self#pre ~pre_entry_point:false kf stmt_behaviors (Kstmt stmt) in
-	    if for_behaviors <> [] then
-	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
-	      let insert_1 = If(cond, inserts', []) in
-	      let inserts = inserts_0 @ [insert_1] in
-	      List.iter self#insert inserts
-	    else
-	      List.iter self#insert inserts';
+	    let inserts = self#for_behaviors for_behaviors inserts' in
+	    List.iter self#insert inserts;
 
 	    current_label <- Some (EndStmt stmt.sid);
 
 	    let inserts' = self#post kf stmt_behaviors (Kstmt stmt) in
-	    if for_behaviors <> [] then
-	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
-	      let insert_1 = If(cond, inserts', []) in
-	      let inserts = inserts_0 @ [insert_1] in
-	      List.iter self#insert inserts
-	    else
-	      self#insert (Block inserts');
+	    let inserts =
+	      if for_behaviors = [] then [Block inserts']
+	      else self#for_behaviors for_behaviors inserts'
+	    in
+	    List.iter self#insert inserts;
 
 	    current_label <- None
 	  end
@@ -983,17 +984,9 @@ class gather_insertions props = object(self)
 	if List.mem prop props then
 	  begin
 	    let id = Sd_utils.to_id prop in
-	    if for_behaviors <> [] then
-	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
-	      let inserts_then =
-		self#pc_assert_exception pred.content "Assert!" id prop in
-	      let insert_1 = If(cond, inserts_then, []) in
-	      let inserts = inserts_0 @ [insert_1] in
-	      List.iter self#insert inserts
-	    else
-	      let ins =
-		self#pc_assert_exception pred.content "Assert!" id prop in
-	      List.iter self#insert ins
+	    let ins = self#pc_assert_exception pred.content "Assert!" id prop in
+	    let inserts = self#for_behaviors for_behaviors ins in
+	    List.iter self#insert inserts
 	  end;
 
 	current_label <- None
@@ -1004,16 +997,9 @@ class gather_insertions props = object(self)
 	if List.mem prop props then
 	  let id = Sd_utils.to_id prop in
 	  let f msg =
-	    if for_behaviors <> [] then
-	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
-	      let inserts_then =
-		self#pc_assert_exception pred.content msg id prop in
-	      let insert_1 = If(cond, inserts_then, []) in
-	      let inserts = inserts_0 @ [insert_1] in
-	      List.iter self#insert inserts
-	    else
-	      let ins = self#pc_assert_exception pred.content msg id prop in
-	      List.iter self#insert ins
+	    let ins = self#pc_assert_exception pred.content msg id prop in
+	    let inserts = self#for_behaviors for_behaviors ins in
+	    List.iter self#insert inserts
 	  in
 	  current_label <- Some (BegStmt stmt.sid);
 	  f "Loop invariant not established!";
@@ -1326,8 +1312,7 @@ class gather_insertions props = object(self)
 	    let x = self#gmp_fragment term_var in
 	    Gmp_cmp_si(Ne, x, Zero), [Instru(Gmp_clear x)]
 	  | Lreal -> assert false (* unreachable *)
-	  | Ctype (TInt _) -> 
-	    Cmp(Rneq, self#ctype_fragment term_var, Zero), []
+	  | Ctype (TInt _) -> Cmp(Rneq, self#ctype_fragment term_var, Zero), []
 	  | Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
 	    Cmp(Rneq, self#ctype_fragment term_var, Zero), []
 	  | _ -> assert false (* unreachable *)
