@@ -659,6 +659,29 @@ class gather_insertions props = object(self)
     let in_bhv r b = r || List.fold_left (in_ensures b) false b.b_post_cond in
     List.fold_left in_bhv false behaviors
 
+  method private requires kf behaviors kloc =
+    let do_behavior b =
+      let pre = b.b_requires in
+      let to_prop = Property.ip_of_requires kf kloc b in
+      let pre = List.filter (fun p -> List.mem (to_prop p) props) pre in
+      let do_precond pred =
+	let prop = to_prop pred in
+	let id = Sd_utils.to_id prop in
+	self#pc_assert_exception pred.ip_content "Pre-condition!" id prop
+      in
+      if pre <> [] then
+	if b.b_assumes <> [] then
+	  let inserts_0, exp = self#cond_of_assumes b.b_assumes in
+	  let inserts_t = List.fold_left (@) [] (List.map do_precond pre) in
+	  let insert_1 = If(exp, inserts_t, []) in
+	  inserts_0 @ [insert_1]
+	else
+	  List.fold_left (@) [] (List.map do_precond pre)
+      else
+	[]
+    in
+    List.fold_left (@) [] (List.map do_behavior behaviors)
+
   method! vfunc f =
     let entry_point = Kernel_function.get_name (fst(Globals.entry_point())) in
     let kf = Globals.Functions.find_by_name f.svar.vname in
@@ -704,26 +727,8 @@ class gather_insertions props = object(self)
     else
       begin
 	current_label <- Some (BegFunc f.svar.vname);
-	List.iter (fun b ->
-	  let pre = b.b_requires in
-	  let to_prop = Property.ip_of_requires kf Kglobal b in
-	  let pre = List.filter (fun p -> List.mem (to_prop p) props) pre in
-	  let do_precond pred =
-	    let prop = to_prop pred in
-	    let id = Sd_utils.to_id prop in
-	    self#pc_assert_exception pred.ip_content "Pre-condition!" id prop
-	  in
-	  if pre <> [] then
-	    if b.b_assumes <> [] then
-	      let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-	      let inserts_t = List.fold_left (@) [] (List.map do_precond pre) in
-	      let insert_1 = If(exp, inserts_t, []) in
-	      let inserts = inserts_0 @ [insert_1] in
-	      List.iter self#insert inserts
-	    else
-	      let inserts = List.fold_left (@) [] (List.map do_precond pre) in
-	      List.iter self#insert inserts
-	) behaviors
+	let inserts = self#requires kf behaviors Kglobal in
+	List.iter self#insert inserts
       end;
     (* END precond (not entry-point) *)
 
@@ -957,28 +962,7 @@ class gather_insertions props = object(self)
 
 	    current_label <- Some (BegStmt stmt.sid);
 
-	    let do_behavior b =
-	      let pre = b.b_requires in
-	      let to_prop = Property.ip_of_requires kf (Kstmt stmt) b in
-	      let pre = List.filter (fun p -> List.mem (to_prop p) props) pre in
-	      let do_precond pred =
-		let prop = to_prop pred in
-		let id = Sd_utils.to_id prop in
-		self#pc_assert_exception pred.ip_content "Pre-condition" id prop
-	      in
-	      if pre <> [] then
-		if b.b_assumes <> [] then
-		  let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-		  let inserts_t =List.fold_left(@)[](List.map do_precond pre) in
-		  let insert_1 = If(exp, inserts_t, []) in
-		  inserts_0 @ [insert_1]
-		else
-		  List.fold_left (@)[](List.map do_precond pre)
-	      else
-		[]
-	    in
-	    let inserts' =
-	      List.fold_left (@) [] (List.map do_behavior stmt_behaviors) in
+	    let inserts' = self#requires kf stmt_behaviors (Kstmt stmt) in
 	    if for_behaviors <> [] then
 	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
 	      let insert_1 = If(cond, inserts', []) in
@@ -986,7 +970,6 @@ class gather_insertions props = object(self)
 	      List.iter self#insert inserts
 	    else
 	      List.iter self#insert inserts';
-	    
 
 	    current_label <- Some (EndStmt stmt.sid);
 
