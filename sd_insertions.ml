@@ -653,9 +653,9 @@ class gather_insertions props = object(self)
     in
     do_stmts fct.sallstmts
 
-  method private at_least_one_prop kf behaviors =
+  method private at_least_one_prop kf behaviors kloc =
     let in_ensures b r k =
-      r || (List.mem (Property.ip_of_ensures kf Kglobal b k) props) in
+      r || (List.mem (Property.ip_of_ensures kf kloc b k) props) in
     let in_bhv r b = r || List.fold_left (in_ensures b) false b.b_post_cond in
     List.fold_left in_bhv false behaviors
 
@@ -730,7 +730,7 @@ class gather_insertions props = object(self)
     current_label <- Some (EndFunc f.svar.vname);
 
     (* BEGIN postcond *)
-    if (self#at_least_one_prop kf behaviors)
+    if (self#at_least_one_prop kf behaviors Kglobal)
       || (Sd_options.Behavior_Reachability.get()) then
       begin
 	let do_behavior b =
@@ -945,92 +945,115 @@ class gather_insertions props = object(self)
     in
     let on_behavior s _ b ret = if b.b_name = s then b.b_assumes else ret in
     let on_behavior_name s = Annotations.fold_behaviors (on_behavior s) kf [] in
-    let behaviors = List.map on_behavior_name bhv_names in
+    let for_behaviors = List.map on_behavior_name bhv_names in
     begin
       match ca.annot_content with
       | AStmtSpec (_,bhvs) ->
-	
-	current_label <- Some (BegStmt stmt.sid);
 
-	let do_behavior b =
-	  let pre = b.b_requires in
-	  let to_prop = Property.ip_of_requires kf (Kstmt stmt) b in
-	  let pre = List.filter (fun p -> List.mem (to_prop p) props) pre in
-	  let do_precond pred =
-	    let prop = to_prop pred in
-	    let id = Sd_utils.to_id prop in
-	    self#pc_assert_exception
-	      pred.ip_content "Stmt Pre-condition!" id prop
-	  in
-	  if pre <> [] then
-	    if b.b_assumes <> [] then
-	      let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-	      let inserts_then =
-		List.fold_left (@) [] (List.map do_precond pre) in
-	      let insert_1 = If(exp, inserts_then, []) in
-	      inserts_0 @ [insert_1]
-	    else
-	      List.fold_left (@) [] (List.map do_precond pre)
-	  else
-	    []
-	in
-	if behaviors <> [] then
-	  let inserts_0, cond = self#cond_of_behaviors behaviors in
-	  let inserts_then =
-	    List.fold_left (@) [] (List.map do_behavior bhvs.spec_behavior) in
-	  let insert_1 = If(cond, inserts_then, []) in
-	  let inserts = inserts_0 @ [insert_1] in
-	  List.iter self#insert inserts
-	else
+	if (self#at_least_one_prop kf bhvs.spec_behavior (Kstmt stmt))
+	  || (Sd_options.Behavior_Reachability.get()) then
 	  begin
-	    let inserts =
-	      List.fold_left (@) [] (List.map do_behavior bhvs.spec_behavior) in
-	    List.iter self#insert inserts
-	  end;
-	  
-	current_label <- Some (EndStmt stmt.sid);
-	
-	if self#at_least_one_prop kf bhvs.spec_behavior then
-	  begin
+	    let stmt_behaviors = bhvs.spec_behavior in
+
+	    current_label <- Some (BegStmt stmt.sid);
+
 	    let do_behavior b =
-	      let post = b.b_post_cond in
-	      let to_prop = Property.ip_of_ensures kf (Kstmt stmt) b in
-	      let post =
-		List.filter (fun x -> List.mem (to_prop x) props) post in
-	      let do_postcond ((_,pred) as k) =
-		let prop = to_prop k in
+	      let pre = b.b_requires in
+	      let to_prop = Property.ip_of_requires kf (Kstmt stmt) b in
+	      let pre = List.filter (fun p -> List.mem (to_prop p) props) pre in
+	      let do_precond pred =
+		let prop = to_prop pred in
 		let id = Sd_utils.to_id prop in
-		self#pc_assert_exception pred.ip_content
-		  "Stmt Post-condition!" id prop
+		self#pc_assert_exception pred.ip_content "Pre-condition" id prop
 	      in
-	      if post <> [] then
+	      if pre <> [] then
 		if b.b_assumes <> [] then
 		  let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-		  let inserts_then =
-		    List.fold_left (@) [] (List.map do_postcond post) in
-		  let insert_1 = If(exp, inserts_then, []) in
+		  let inserts_t =List.fold_left(@)[](List.map do_precond pre) in
+		  let insert_1 = If(exp, inserts_t, []) in
 		  inserts_0 @ [insert_1]
 		else
-		  List.fold_left (@) [] (List.map do_postcond post)
+		  List.fold_left (@)[](List.map do_precond pre)
 	      else
 		[]
 	    in
-	    if behaviors <> [] then
-	      let inserts_0, cond = self#cond_of_behaviors behaviors in
-	      let inserts_then =
-		List.fold_left (@) [] (List.map do_behavior bhvs.spec_behavior)
-	      in
-	      let insert_1 = If(cond, inserts_then, []) in
+	    let inserts' =
+	      List.fold_left (@) [] (List.map do_behavior stmt_behaviors) in
+	    if for_behaviors <> [] then
+	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
+	      let insert_1 = If(cond, inserts', []) in
 	      let inserts = inserts_0 @ [insert_1] in
 	      List.iter self#insert inserts
 	    else
-	      let inserts =
-		List.fold_left (@) [] (List.map do_behavior bhvs.spec_behavior)
-	      in
-	      List.iter self#insert inserts
-	  end;
+	      List.iter self#insert inserts';
+	    
 
-	current_label <- None
+	    current_label <- Some (EndStmt stmt.sid);
+
+	    let do_behavior b =
+	      let post = b.b_post_cond in
+	      let to_prop = Property.ip_of_ensures kf (Kstmt stmt) b in
+	      let post = List.filter (fun x->List.mem (to_prop x) props) post in
+	      let do_postcond (tk,pred) =
+		let prop = to_prop (tk,pred) in
+		let id = Sd_utils.to_id prop in
+		self#pc_assert_exception pred.ip_content "Post-condition"id prop
+	      in
+	      let str = Format.sprintf"@@FC:REACHABLE_BHV:%i"bhv_to_reach_cpt in
+	      let add_reach_info =
+		not (Cil.is_default_behavior b)
+		&& (Sd_options.Behavior_Reachability.get())
+	      in
+	      if post <> [] || (Sd_options.Behavior_Reachability.get()) then
+		begin
+		  if b.b_assumes <> [] then
+		    let inserts_0, exp = self#cond_of_assumes b.b_assumes in
+		    let inserts_then_0 =
+		      if add_reach_info then
+			begin
+			  Sd_states.Behavior_Reachability.replace
+			    bhv_to_reach_cpt (kf, b, false);
+			  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
+			  [Instru(Pc_to_framac str)]
+			end
+		      else
+			[]
+		    in
+		    let inserts_then_1 =
+		      List.fold_left (@) [] (List.map do_postcond post) in
+		    let insert_1 = If(exp, inserts_then_0@inserts_then_1, []) in
+		    inserts_0 @ [insert_1]
+		  else
+		    let inserts_0 = 
+		      if add_reach_info then
+			begin
+			  Sd_states.Behavior_Reachability.replace
+			    bhv_to_reach_cpt (kf, b, false);
+			  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
+			  [Instru(Pc_to_framac str)]
+			end
+		      else
+			[]
+		    in
+		    let inserts_1 =
+		      List.fold_left (@) [] (List.map do_postcond post) in
+		    inserts_0 @ inserts_1
+		end
+	      else
+		[]
+	    in
+	    let inserts' =
+	      List.fold_left (@) [] (List.map do_behavior stmt_behaviors) in
+	    if for_behaviors <> [] then
+	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
+	      let insert_1 = If(cond, inserts', []) in
+	      let inserts = inserts_0 @ [insert_1] in
+	      List.iter self#insert inserts
+	    else
+	      self#insert (Block inserts');
+
+	    current_label <- None
+	  end
 
       | AAssert (_,pred) ->
 
@@ -1040,8 +1063,8 @@ class gather_insertions props = object(self)
 	if List.mem prop props then
 	  begin
 	    let id = Sd_utils.to_id prop in
-	    if behaviors <> [] then
-	      let inserts_0, cond = self#cond_of_behaviors behaviors in
+	    if for_behaviors <> [] then
+	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
 	      let inserts_then =
 		self#pc_assert_exception pred.content "Assert!" id prop in
 	      let insert_1 = If(cond, inserts_then, []) in
@@ -1061,8 +1084,8 @@ class gather_insertions props = object(self)
 	if List.mem prop props then
 	  let id = Sd_utils.to_id prop in
 	  let f msg =
-	    if behaviors <> [] then
-	      let inserts_0, cond = self#cond_of_behaviors behaviors in
+	    if for_behaviors <> [] then
+	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
 	      let inserts_then =
 		self#pc_assert_exception pred.content msg id prop in
 	      let insert_1 = If(cond, inserts_then, []) in

@@ -4,6 +4,7 @@ FRAMAC_LIBDIR	:=$(shell frama-c.byte -print-libpath)
 PLUGIN_NAME	:= StaDy
 
 PLUGIN_TESTS_DIRS := \
+	stmt_spec \
 	behaviors \
 	quantified \
 	binary_search \
