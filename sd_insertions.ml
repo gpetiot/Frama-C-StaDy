@@ -682,6 +682,61 @@ class gather_insertions props = object(self)
     in
     List.fold_left (@) [] (List.map do_behavior behaviors)
 
+  method private ensures kf behaviors kloc =
+    let do_behavior b =
+      let post = b.b_post_cond in
+      let to_prop = Property.ip_of_ensures kf kloc b in
+      let post = List.filter (fun x->List.mem (to_prop x) props) post in
+      let do_postcond (tk,pred) =
+	let prop = to_prop (tk,pred) in
+	let id = Sd_utils.to_id prop in
+	self#pc_assert_exception pred.ip_content "Post-condition!" id prop
+      in
+      let str = Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
+      let add_reach_info =
+	not (Cil.is_default_behavior b)
+	&& (Sd_options.Behavior_Reachability.get())
+      in
+      if post <> [] || (Sd_options.Behavior_Reachability.get()) then
+	begin
+	  if b.b_assumes <> [] then
+	    let inserts_0, exp = self#cond_of_assumes b.b_assumes in
+	    let inserts_then_0 =
+	      if add_reach_info then
+		begin
+		  Sd_states.Behavior_Reachability.replace
+		    bhv_to_reach_cpt (kf, b, false);
+		  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
+		  [Instru(Pc_to_framac str)]
+		end
+	      else
+		[]
+	    in
+	    let inserts_then_1 =
+	      List.fold_left (@) [] (List.map do_postcond post) in
+	    let insert_1 = If(exp, inserts_then_0 @ inserts_then_1, []) in
+	    inserts_0 @ [insert_1]
+	  else
+	    let inserts_0 = 
+	      if add_reach_info then
+		begin
+		  Sd_states.Behavior_Reachability.replace
+		    bhv_to_reach_cpt (kf, b, false);
+		  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
+		  [Instru(Pc_to_framac str)]
+		end
+	      else
+		[]
+	    in
+	    let inserts_1 =
+	      List.fold_left (@) [] (List.map do_postcond post) in
+	    inserts_0 @ inserts_1
+	end
+      else
+	[]
+    in
+    List.fold_left (@) [] (List.map do_behavior behaviors)
+
   method! vfunc f =
     let entry_point = Kernel_function.get_name (fst(Globals.entry_point())) in
     let kf = Globals.Functions.find_by_name f.svar.vname in
@@ -738,59 +793,7 @@ class gather_insertions props = object(self)
     if (self#at_least_one_prop kf behaviors Kglobal)
       || (Sd_options.Behavior_Reachability.get()) then
       begin
-	let do_behavior b =
-	  let post = b.b_post_cond in
-	  let to_prop = Property.ip_of_ensures kf Kglobal b in
-	  let post = List.filter (fun x -> List.mem (to_prop x) props) post in
-	  let do_postcond (tk,pred) =
-	    let prop = to_prop (tk,pred) in
-	    let id = Sd_utils.to_id prop in
-	    self#pc_assert_exception pred.ip_content "Post-condition!" id prop
-	  in
-	  let str = Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
-	  let add_reach_info =
-	    not (Cil.is_default_behavior b)
-	    && (Sd_options.Behavior_Reachability.get())
-	  in
-	  if post <> [] || (Sd_options.Behavior_Reachability.get()) then
-	    begin
-	      if b.b_assumes <> [] then
-		let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-		let inserts_then_0 =
-		  if add_reach_info then
-		    begin
-		      Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt
-			(kf, b, false);
-		      bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-		      [Instru(Pc_to_framac str)]
-		    end
-		  else
-		    []
-		in
-		let inserts_then_1 =
-		  List.fold_left (@) [] (List.map do_postcond post) in
-		let insert_1 = If(exp, inserts_then_0 @ inserts_then_1, []) in
-		inserts_0 @ [insert_1]
-	      else
-		let inserts_0 = 
-		  if add_reach_info then
-		    begin
-		      Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt
-			(kf, b, false);
-		      bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-		      [Instru(Pc_to_framac str)]
-		    end
-		  else
-		    []
-		in
-		let inserts_1 =
-		  List.fold_left (@) [] (List.map do_postcond post) in
-		inserts_0 @ inserts_1
-	    end
-	  else
-	    []
-	in
-	let inserts = List.fold_left (@) [] (List.map do_behavior behaviors) in
+	let inserts = self#ensures kf behaviors Kglobal in
 	self#insert (Block inserts)
       end;
     (* END postcond *)
@@ -973,60 +976,7 @@ class gather_insertions props = object(self)
 
 	    current_label <- Some (EndStmt stmt.sid);
 
-	    let do_behavior b =
-	      let post = b.b_post_cond in
-	      let to_prop = Property.ip_of_ensures kf (Kstmt stmt) b in
-	      let post = List.filter (fun x->List.mem (to_prop x) props) post in
-	      let do_postcond (tk,pred) =
-		let prop = to_prop (tk,pred) in
-		let id = Sd_utils.to_id prop in
-		self#pc_assert_exception pred.ip_content "Post-condition"id prop
-	      in
-	      let str = Format.sprintf"@@FC:REACHABLE_BHV:%i"bhv_to_reach_cpt in
-	      let add_reach_info =
-		not (Cil.is_default_behavior b)
-		&& (Sd_options.Behavior_Reachability.get())
-	      in
-	      if post <> [] || (Sd_options.Behavior_Reachability.get()) then
-		begin
-		  if b.b_assumes <> [] then
-		    let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-		    let inserts_then_0 =
-		      if add_reach_info then
-			begin
-			  Sd_states.Behavior_Reachability.replace
-			    bhv_to_reach_cpt (kf, b, false);
-			  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-			  [Instru(Pc_to_framac str)]
-			end
-		      else
-			[]
-		    in
-		    let inserts_then_1 =
-		      List.fold_left (@) [] (List.map do_postcond post) in
-		    let insert_1 = If(exp, inserts_then_0@inserts_then_1, []) in
-		    inserts_0 @ [insert_1]
-		  else
-		    let inserts_0 = 
-		      if add_reach_info then
-			begin
-			  Sd_states.Behavior_Reachability.replace
-			    bhv_to_reach_cpt (kf, b, false);
-			  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-			  [Instru(Pc_to_framac str)]
-			end
-		      else
-			[]
-		    in
-		    let inserts_1 =
-		      List.fold_left (@) [] (List.map do_postcond post) in
-		    inserts_0 @ inserts_1
-		end
-	      else
-		[]
-	    in
-	    let inserts' =
-	      List.fold_left (@) [] (List.map do_behavior stmt_behaviors) in
+	    let inserts' = self#ensures kf stmt_behaviors (Kstmt stmt) in
 	    if for_behaviors <> [] then
 	      let inserts_0, cond = self#cond_of_behaviors for_behaviors in
 	      let insert_1 = If(cond, inserts', []) in
