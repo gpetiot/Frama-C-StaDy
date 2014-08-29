@@ -159,7 +159,6 @@ let rec pp_insertion ?(line_break = true) fmt ins =
   if line_break then Format.fprintf fmt "@\n"
 
 let pp_insertion_lb = pp_insertion ~line_break:true
-let pp_insertion_nlb = pp_insertion ~line_break:false
 
 
 let debug_builtins = Kernel.register_category "printer:builtins"
