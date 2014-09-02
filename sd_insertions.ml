@@ -1077,11 +1077,9 @@ class gather_insertions props = object(self)
     if (List.length logic_vars) > 1 then
       failwith "quantification on many variables unsupported!";
     let var = self#fresh_pred_var() in
-    let guards, vars = Sd_utils.compute_guards [] logic_vars hyps in
-    if vars <> [] then
-      failwith "Unguarded variables in quantification!";
-    let t1,r1,lv,r2,t2 = List.hd guards in
-    let iter_name = lv.lv_name in
+    let lvar = List.hd logic_vars in
+    let t1,r1,r2,t2 = Sd_utils.extract_guards lvar hyps in
+    let iter_name = lvar.lv_name in
     let insert_0 = Decl_pred_var var in
     let insert_1 = Instru(Affect_pred(var, (if forall then True else False))) in
     let inserts_3 =

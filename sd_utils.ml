@@ -49,44 +49,39 @@ let to_prop = Sd_states.Id_To_Property.find
 open Cil_types
 
 
-(* generate guards for logic vars, e.g.:
-   [0 <= a <= 10; x <= b <= y]
-   TODO: what is the 2nd value of the returned tuple (logic_var list) ??? *)
-let rec compute_guards
-    : (term*relation*logic_var*relation*term)list ->
-  logic_var list ->
-  predicate named ->
-  ((term*relation*logic_var*relation*term)list * logic_var list) =
-  fun acc vars p ->
+(* extract guards for logic vars, e.g.: [0 <= a <= 10; x <= b <= y] *)
+let extract_guards var p =
+  let merge_term x y = match (x,y) with
+    | Some x, None | None, Some x -> Some x | None, None -> None
+    | _ -> assert false
+  in
+  let merge_rel x y = match (x,y) with
+    | Some x, None | None, Some x -> Some x | None, None -> None
+    | _ -> assert false
+  in
+  let rec is_var_to_guard t = match t.term_node with
+    | TLogic_coerce (_, t) -> is_var_to_guard t
+    | TLval(TVar x, TNoOffset) -> Cil_datatype.Logic_var.equal x var
+    | _ -> false
+  in
+  let rec aux p =
     match p.content with
-    | Pand({ content = Prel((Rlt | Rle) as r1, t11, t12) },
-	   { content = Prel((Rlt | Rle) as r2, t21, t22) }) ->
-      let rec terms t12 t21 = match t12.term_node, t21.term_node with
-	| TLval(TVar x1, TNoOffset), TLval(TVar x2, TNoOffset) -> 
-	  let v, vars = match vars with
-	    | [] -> assert false
-	    | v :: tl -> 
-	      match v.lv_type with
-	      | Ctype ty when Cil.isIntegralType ty -> v, tl
-	      | Linteger -> v, tl
-	      | Ltype _ as ty when Logic_const.is_boolean_type ty -> v, tl
-	      | Ctype _ | Ltype _ | Lvar _ | Lreal | Larrow _ -> assert false
-	  in
-	  if Cil_datatype.Logic_var.equal x1 x2
-	    && Cil_datatype.Logic_var.equal x1 v then
-	    (t11, r1, x1, r2, t22) :: acc, vars
-	  else
-	    assert false
-	| TLogic_coerce(_, t12), _ -> terms t12 t21 
-	| _, TLogic_coerce(_, t21) -> terms t12 t21
-	| TLval _, _ -> assert false
-	| _, _ -> assert false
-      in
-      terms t12 t21
     | Pand(p1, p2) ->
-      let acc, vars = compute_guards acc vars p1 in
-      compute_guards acc vars p2
-    | _ -> acc, vars
+      let a,b,c,d = aux p1 and e,f,g,h = aux p2 in
+      (merge_term a e), (merge_rel b f), (merge_rel c g), (merge_term d h)
+    | Prel((Rlt|Rle) as r, t1, t2) when is_var_to_guard t1 ->
+      None, None, Some r, Some t2
+    | Prel((Rlt|Rle) as r, t1, t2) when is_var_to_guard t2 ->
+      Some t1, Some r, None, None
+    | Prel(Rge, t1, t2) when is_var_to_guard t1 -> Some t2, Some Rle, None, None
+    | Prel(Rgt, t1, t2) when is_var_to_guard t1 -> Some t2, Some Rlt, None, None
+    | Prel(Rge, t1, t2) when is_var_to_guard t2 -> None, None, Some Rle, Some t1
+    | Prel(Rgt, t1, t2) when is_var_to_guard t2 -> None, None, Some Rlt, Some t1
+    | _ -> None, None, None, None
+  in
+  let a,b,c,d = aux p in
+  (Extlib.the a), (Extlib.the b), (Extlib.the c), (Extlib.the d)
+
 
 let error_term : term -> 'a =
   fun term ->
