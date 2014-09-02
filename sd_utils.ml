@@ -83,42 +83,8 @@ let extract_guards var p =
   (Extlib.the a), (Extlib.the b), (Extlib.the c), (Extlib.the d)
 
 
-let error_term : term -> 'a =
-  fun term ->
-    match term.term_node with
-    | TLogic_coerce _ -> failwith "TLogic_coerce"
-    | TBinOp _ -> failwith "TBinOp"
-    | Trange _ -> failwith "Trange"
-    | TConst _ -> failwith "TConst"
-    | TLval _ -> failwith "TLval"
-    | TSizeOf _ -> failwith "TSizeOf"
-    | TSizeOfE _ -> failwith "TSizeOfE"
-    | TSizeOfStr _ -> failwith "TSizeOfStr"
-    | TAlignOf _ -> failwith "TAlignOf"
-    | TAlignOfE _ -> failwith "TAlignOfE"
-    | TUnOp _ -> failwith "TUnOp"
-    | TCastE _ -> failwith "TCastE"
-    | TAddrOf _ -> failwith "TAddrOf"
-    | TStartOf _ -> failwith "TStartOf"
-    | Tapp _ -> failwith "Tapp"
-    | Tlambda _ -> failwith "Tlambda"
-    | TDataCons _ -> failwith "TDataCons"
-    | Tif _ -> failwith "Tif"
-    | Tat (_,LogicLabel(_,str)) -> Sd_options.Self.abort "Tat(_,%s)" str
-    | Tbase_addr _ -> failwith "Tbase_addr"
-    | Toffset _ -> failwith "Toffset"
-    | Tblock_length _ -> failwith "Tblock_length"
-    | TCoerce _ -> failwith "TCoerce"
-    | TCoerceE _ -> failwith "TCoerceE"
-    | TUpdate _ -> failwith "TUpdate"
-    | Ttypeof _ -> failwith "Ttypeof"
-    | Ttype _ -> failwith "Ttype"
-    | Tempty_set -> failwith "Tempty_set"
-    | Tunion _ -> failwith "Tunion"
-    | Tinter _ -> failwith "Tinter"
-    | Tcomprehension _ -> failwith "Tcomprehension"
-    | Tlet _ -> failwith "Tlet"
-    | _ -> Sd_options.Self.abort "term: %a" Printer.pp_term term
+let error_term t = Sd_options.Self.abort "term: %a" Sd_debug.pp_term t
+let error_pred p = Sd_options.Self.abort "pred: %a" Sd_debug.pp_pred p
 
 
 (* Extracts the varinfo of the variable and its inferred size as a term

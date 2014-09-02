@@ -33,6 +33,7 @@ PLUGIN_PTESTS_OPTS := -j 1
 
 PLUGIN_CMO	:= \
 	sd_options \
+	sd_debug \
 	sd_states \
 	sd_subst \
 	sd_utils \
