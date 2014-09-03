@@ -33,7 +33,7 @@ type pl_constraint =
 
 
 
-let in_dom : pl_domain -> bool =
+let in_dom =
   let rec aux = function
     | PLBinOp _ -> true
     | PLDim _ -> true
@@ -43,7 +43,7 @@ let in_dom : pl_domain -> bool =
   in
   function | PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> aux t
 
-let in_create_input_val : pl_domain -> bool =
+let in_create_input_val =
   let rec aux = function
     | PLBinOp (t1,_,t2) -> aux t1 && aux t2
     | PLDim t -> aux t
@@ -95,9 +95,7 @@ class pl_printer = object(self)
   method domain fmt = function
   | PLIntDom (t',a,b) ->
     Format.fprintf fmt "%a, int([%a..%a])"
-      self#term t'
-      self#integer_opt a
-      self#integer_opt b
+      self#term t' self#integer_opt a self#integer_opt b
   | PLFloatDom (t',str1,str2) ->
     Format.fprintf fmt "%a, float([(%s)..(%s)])"
       self#term t'
@@ -107,9 +105,7 @@ class pl_printer = object(self)
   method complex_domain fmt = function
   | PLIntDom (t',a,b) ->
     Format.fprintf fmt "%a, [], int([%a..%a])"
-      self#term t'
-      self#integer_opt a
-      self#integer_opt b
+      self#term t' self#integer_opt a self#integer_opt b
   | PLFloatDom (t',str1,str2) ->
     Format.fprintf fmt "%a, [], float([(%s)..(%s)])"
       self#term t'
@@ -124,13 +120,11 @@ class pl_printer = object(self)
   | Req -> Format.fprintf fmt "egal"
   | Rneq -> Format.fprintf fmt "diff"
 
-  method rel fmt (t1,r,t2) =
+  method rel fmt (x,r,y) =
     Format.fprintf fmt "cond(%a,%a,%a,pre)"
-      self#relation r
-      self#term t1
-      self#term t2
+      self#relation r self#term x self#term y
 
-  method quantif fmt (lvars, compo_rels, (t1,r,t2)) =
+  method quantif fmt (lvars, compo_rels, (x,r,y)) =
     Format.fprintf fmt "uq_cond(\n  [\n";
     let rec aux = function
       | [] -> ()
@@ -147,13 +141,11 @@ class pl_printer = object(self)
     in
     aux compo_rels;
     Format.fprintf fmt "  ],\n  %a,%a,%a)"
-      self#relation r
-      self#term t1
-      self#term t2
+      self#relation r self#term x self#term y
 end
 
 
-let prolog_header : string =
+let prolog_header =
   ":- module(test_parameters).\n"
   ^ ":- import create_input_val/3 from substitution.\n"
   ^ ":- export dom/4.\n"
@@ -165,215 +157,187 @@ let prolog_header : string =
   ^ "dom(0,0,0,0).\n"
 
 class to_pl = object(self)
-  method logic_var : logic_var -> pl_term =
-    fun lv ->
-      match lv.lv_origin with
-      | None -> PLLVar lv
-      | Some v -> PLCVar v
+  method logic_var lv =
+    match lv.lv_origin with
+    | None -> PLLVar lv
+    | Some v -> PLCVar v
 
-  method term_offset : pl_term list -> term_offset -> pl_term list =
-    fun ret offset ->
-      match offset with
-      | TNoOffset -> List.rev ret
-      | TField (fi, tof) ->
-	let i = PLConst (PLInt (Sd_utils.fieldinfo_to_int fi)) in
-	self#term_offset (i :: ret) tof
-      | TModel _ ->
-	Sd_options.Self.debug ~dkey:Sd_options.dkey_native_precond "TModel: %a"
-	  Printer.pp_term_offset offset;
-	assert false
-      | TIndex (t, tof) ->
-	let i = self#term t in
-	self#term_offset (i :: ret) tof
+  method term_offset ret = function
+  | TNoOffset -> List.rev ret
+  | TField (fi, tof) ->
+    let i = PLConst (PLInt (Sd_utils.fieldinfo_to_int fi)) in
+    self#term_offset (i :: ret) tof
+  | TModel _ as t -> Sd_utils.error_toffset t
+  | TIndex (t, tof) -> self#term_offset ((self#term t) :: ret) tof
 	  
-  method term_lhost : term_lhost -> pl_term =
-    function
-    | TVar v -> self#logic_var v
-    | TResult _ -> assert false
-    | TMem {term_node=TBinOp((PlusPI|IndexPI),x,y)} ->
-      PLCont (self#term x, self#term y)
-    | TMem m -> PLCont (self#term m, PLConst (PLInt Integer.zero))
+  method term_lhost = function
+  | TVar v -> self#logic_var v
+  | TResult _ -> assert false
+  | TMem{term_node=TBinOp((PlusPI|IndexPI),x,y)} ->
+    PLCont(self#term x,self#term y)
+  | TMem m -> PLCont (self#term m, PLConst (PLInt Integer.zero))
 
-  method term_lval : term_lval -> pl_term =
-    fun (tlhost, toffset) ->
-      let tlhost' = self#term_lhost tlhost in
-      let toffsets = self#term_offset [] toffset in
-      List.fold_left (fun t tof -> PLCont (t, tof)) tlhost' toffsets
+  method term_lval (tlhost, toffset) =
+    let tlhost' = self#term_lhost tlhost in
+    let toffsets = self#term_offset [] toffset in
+    List.fold_left (fun t tof -> PLCont (t, tof)) tlhost' toffsets
 
-  method term : term -> pl_term =
-    fun t ->
-      match t.term_node with
-      | TLogic_coerce (_, t') -> self#term t'
-      | TConst (LEnum {eival={enode=Const (CInt64 (ii,_,_))}})
-      | TConst (Integer (ii, _)) -> PLConst (PLInt ii)
-      | TConst (LEnum {eival={enode=Const (CReal (f,_,_))}})
-      | TConst (LReal {r_nearest=f}) -> PLConst (PLFloat f)
-      | TConst (LEnum {eival={enode=Const (CChr c)}})
-      | TConst (LChr c) -> PLConst (PLInt (Integer.of_int (int_of_char c)))
-      | TLval tl -> self#term_lval tl
-      | TBinOp(op,x,y)-> PLBinOp (self#term x, op, self#term y)
-      | TUnOp (Neg, term) ->
-	begin
-	  match (self#term term) with
-	  | PLConst (PLInt i) -> PLConst (PLInt (Integer.neg i))
-	  | _ ->
-	    Sd_options.Self.debug ~dkey:Sd_options.dkey_native_precond
-	      "term_to_compo_var: TUnOp";
-	    assert false
-	end
-      | Tat(t',LogicLabel(_,label)) when label = "Here" || label = "Old" ->
-	self#term t'
-      | _ -> Sd_utils.error_term t
+  method term t =
+    match t.term_node with
+    | TLogic_coerce (_, t') -> self#term t'
+    | TConst (LEnum {eival={enode=Const (CInt64 (ii,_,_))}})
+    | TConst (Integer (ii, _)) -> PLConst (PLInt ii)
+    | TConst (LEnum {eival={enode=Const (CReal (f,_,_))}})
+    | TConst (LReal {r_nearest=f}) -> PLConst (PLFloat f)
+    | TConst (LEnum {eival={enode=Const (CChr c)}})
+    | TConst (LChr c) -> PLConst (PLInt (Integer.of_int (int_of_char c)))
+    | TLval tl -> self#term_lval tl
+    | TBinOp(op,x,y)-> PLBinOp (self#term x, op, self#term y)
+    | TUnOp (Neg, term) ->
+      begin
+	match (self#term term) with
+	| PLConst (PLInt i) -> PLConst (PLInt (Integer.neg i))
+	| _ -> Sd_utils.error_term t
+      end
+    | Tat(t',LogicLabel(_,l)) when l = "Here" || l = "Old" -> self#term t'
+    | _ -> Sd_utils.error_term t
 end
 
-let term_to_pl : term -> pl_term =
-  let dkey = Sd_options.dkey_native_precond in
-  fun t ->
-    try (new to_pl)#term t
-    with _ ->
-      Sd_options.Self.debug ~dkey "term_to_pl: %a" Printer.pp_term t;
-      assert false
+let term_to_pl t = try (new to_pl)#term t with _ -> Sd_utils.error_term t
 
-let rec input_from_type :
-    pl_domain list -> typ -> pl_term -> pl_domain list =
-  fun domains ty t ->
-    let maxuint = Cil.max_unsigned_number (Sd_utils.machdep()) in
-    let maxint = Cil.max_signed_number (Sd_utils.machdep()) in
-    let minint = Cil.min_signed_number (Sd_utils.machdep()) in
-    let ibounds = function
-      | IBool -> Integer.zero, Integer.one
-      | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
-      | IUChar -> Integer.zero, Integer.of_int 255
-      | ik when Cil.isSigned ik -> minint, maxint
-      | _ -> Integer.zero, maxuint
+let rec input_from_type domains ty t =
+  let maxuint = Cil.max_unsigned_number (Sd_utils.machdep()) in
+  let maxint = Cil.max_signed_number (Sd_utils.machdep()) in
+  let minint = Cil.min_signed_number (Sd_utils.machdep()) in
+  let ibounds = function
+    | IBool -> Integer.zero, Integer.one
+    | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
+    | IUChar -> Integer.zero, Integer.of_int 255
+    | ik when Cil.isSigned ik -> minint, maxint
+    | _ -> Integer.zero, maxuint
+  in
+  let fbounds = function
+    | FFloat -> "-3.40282347e+38", "3.40282347e+38"
+    | FDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
+    | FLongDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
+  in
+  match (Cil.unrollType ty) with
+  | TVoid _ -> PLIntDom (t, Some minint, Some maxint) :: domains
+  | TEnum ({ekind=ik},_) | TInt (ik,_) ->
+    let b_min, b_max = ibounds ik in
+    PLIntDom (t, Some b_min, Some b_max) :: domains
+  | TFloat (fk,_) ->
+    let b_min, b_max = fbounds fk in
+    PLFloatDom (t, Some b_min, Some b_max) :: domains
+  | TComp (ci,_,_) ->
+    let rec aux doms i = function
+      | [] -> doms
+      | f :: fields ->
+	let d = input_from_type doms f.ftype (PLCont (t, PLConst(PLInt i))) in
+	aux d (Integer.succ i) fields
     in
-    let fbounds = function
-      | FFloat -> "-3.40282347e+38", "3.40282347e+38"
-      | FDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
-      | FLongDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
-    in
-    match (Cil.unrollType ty) with
-    | TVoid _ -> PLIntDom (t, Some minint, Some maxint) :: domains
-    | TEnum ({ekind=ik},_) | TInt (ik,_) ->
-      let b_min, b_max = ibounds ik in
-      PLIntDom (t, Some b_min, Some b_max) :: domains
-    | TFloat (fk,_) ->
-      let b_min, b_max = fbounds fk in
-      PLFloatDom (t, Some b_min, Some b_max) :: domains
-    | TComp (ci,_,_) ->
-      let rec aux doms i = function
-	| [] -> doms
-	| f :: fields ->
-	  let d = input_from_type doms f.ftype (PLCont (t, PLConst(PLInt i))) in
-	  aux d (Integer.succ i) fields
-      in
-      aux domains Integer.zero ci.cfields
-    | TPtr (ty',attr) | TArray (ty',_,_,attr) ->
-      let att = Cil.findAttribute "arraylen" attr in
-      if att <> [] then
-	let is_array_len = function AInt _ -> true | _ -> false in
-	if List.exists is_array_len att then
-	  match List.find is_array_len att with
-	  | AInt ii ->
-	    let d = PLIntDom (PLDim t, Some ii, Some ii) in
-	    input_from_type (d :: domains) ty' (PLContAll t)
-	  | _ -> assert false
-	else
-	  assert false
+    aux domains Integer.zero ci.cfields
+  | TPtr (ty',attr) | TArray (ty',_,_,attr) ->
+    let att = Cil.findAttribute "arraylen" attr in
+    if att <> [] then
+      let is_array_len = function AInt _ -> true | _ -> false in
+      if List.exists is_array_len att then
+	match List.find is_array_len att with
+	| AInt ii ->
+	  let d = PLIntDom (PLDim t, Some ii, Some ii) in
+	  input_from_type (d :: domains) ty' (PLContAll t)
+	| _ -> assert false
       else
-	let d = PLIntDom (PLDim t, Some Integer.zero, Some maxuint) in
-	input_from_type (d :: domains) ty' (PLContAll t)
-    | _ ->
-      Sd_options.Self.feedback "input_from_type (%a) (%a)"
-	Printer.pp_typ ty (new pl_printer)#term t;
-      assert false
+	assert false
+    else
+      let d = PLIntDom (PLDim t, Some Integer.zero, Some maxuint) in
+      input_from_type (d :: domains) ty' (PLContAll t)
+  | _ ->
+    Sd_options.Self.abort "input_from_type (%a) (%a)"
+      Printer.pp_typ ty (new pl_printer)#term t
 
-let rec valid_to_prolog : term -> pl_constraint list =
-  fun term ->
-    let maxuint = Cil.max_unsigned_number (Sd_utils.machdep()) in
-    match term.term_node with
-    | TLval _ ->
-      let t = term_to_pl term in
-      [ PLDomain (PLIntDom (PLDim t, Some (Integer.one), Some maxuint)) ]
-    | TBinOp (((PlusPI|IndexPI|MinusPI) as op),
-    	      ({term_node=TCastE((TPtr _) as ty,t)} as _operand1),
-    	      ({term_node=(Trange (_, Some _))} as operand2)) ->
-      valid_to_prolog
-    	{term with term_node=TBinOp(op, {t with term_type=Ctype ty}, operand2)}
-    | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
-      let t' = term_to_pl t in
-      let x' = term_to_pl x in
-      let one =  PLConst (PLInt(Integer.one)) in
-      begin
-	match x' with
-	| PLConst (PLInt i) ->
-	  let i' = Integer.add i Integer.one in
-	  [ PLDomain (PLIntDom (PLDim t', Some i', Some maxuint)) ]
-	| _ ->
-	  [ PLDomain (PLIntDom (PLDim t', Some (Integer.one), Some maxuint));
-	    PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
-      end
-    | _ -> Sd_utils.error_term term
+let rec valid_to_prolog term =
+  let maxuint = Cil.max_unsigned_number (Sd_utils.machdep()) in
+  match term.term_node with
+  | TLval _ ->
+    let t = term_to_pl term in
+    [ PLDomain (PLIntDom (PLDim t, Some (Integer.one), Some maxuint)) ]
+  | TBinOp (((PlusPI|IndexPI|MinusPI) as op),
+    	    ({term_node=TCastE((TPtr _) as ty,t)} as _operand1),
+    	    ({term_node=(Trange (_, Some _))} as operand2)) ->
+    valid_to_prolog
+      {term with term_node=TBinOp(op, {t with term_type=Ctype ty}, operand2)}
+  | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
+    let t' = term_to_pl t in
+    let x' = term_to_pl x in
+    let one =  PLConst (PLInt(Integer.one)) in
+    begin
+      match x' with
+      | PLConst (PLInt i) ->
+	let i' = Integer.add i Integer.one in
+	[ PLDomain (PLIntDom (PLDim t', Some i', Some maxuint)) ]
+      | _ ->
+	[ PLDomain (PLIntDom (PLDim t', Some (Integer.one), Some maxuint));
+	  PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
+    end
+  | _ -> Sd_utils.error_term term
 
-let rel_to_prolog : relation -> term -> term -> pl_constraint =
-  fun rel term1 term2 ->
-    let var1 = term_to_pl term1 in
-    let var2 = term_to_pl term2 in
-    let rec no_var = function
-      | PLBinOp (x,_,y) -> no_var x && no_var y
-      | PLConst _ -> true
-      | PLDim x -> no_var x
-      | PLContAll x -> no_var x
-      | PLCont (x,y) -> no_var x && no_var y
-      | PLLVar _ -> false
-      | PLCVar _ -> false
-    in
-    match var1 with
-    | PLConst (PLInt x) ->
-      begin
-	match var2 with
-	| PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
-	  begin
-	    match rel with
-	    | Rlt -> PLDomain (PLIntDom (var2, (Some (Integer.succ x)), None))
-	    | Rgt -> PLDomain (PLIntDom (var2, None, (Some (Integer.pred x))))
-	    | Rle -> PLDomain (PLIntDom (var2, (Some x), None))
-	    | Rge -> PLDomain (PLIntDom (var2, None, (Some x)))
-	    | Req -> PLDomain (PLIntDom (var2, (Some x), (Some x)))
-	    | Rneq -> PLUnquantif (var1, rel, var2)
-	  end
-	| _ -> PLUnquantif (var1, rel, var2)
-      end
-    | PLCont (_, off) when not (no_var off) -> PLUnquantif (var1, rel, var2)
-    | PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
-      begin
-	match var2 with
-	| PLConst (PLInt y) ->
-	  begin
-	    match rel with
-	    | Rlt -> PLDomain (PLIntDom (var1, None, (Some (Integer.pred y))))
-	    | Rgt -> PLDomain (PLIntDom (var1, (Some (Integer.succ y)), None))
-	    | Rle -> PLDomain (PLIntDom (var1, None, (Some y)))
-	    | Rge -> PLDomain (PLIntDom (var1, (Some y), None))
-	    | Req -> PLDomain (PLIntDom (var1, (Some y), (Some y)))
-	    | Rneq -> PLUnquantif (var1, rel, var2)
-	  end
-	| _ -> PLUnquantif (var1, rel, var2)
-      end
-    | _ -> PLUnquantif (var1, rel, var2)
+let rel_to_prolog rel term1 term2 =
+  let var1 = term_to_pl term1 in
+  let var2 = term_to_pl term2 in
+  let rec no_var = function
+    | PLBinOp (x,_,y) -> no_var x && no_var y
+    | PLConst _ -> true
+    | PLDim x -> no_var x
+    | PLContAll x -> no_var x
+    | PLCont (x,y) -> no_var x && no_var y
+    | PLLVar _ -> false
+    | PLCVar _ -> false
+  in
+  match var1 with
+  | PLConst (PLInt x) ->
+    begin
+      match var2 with
+      | PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
+	begin
+	  match rel with
+	  | Rlt -> PLDomain (PLIntDom (var2, (Some (Integer.succ x)), None))
+	  | Rgt -> PLDomain (PLIntDom (var2, None, (Some (Integer.pred x))))
+	  | Rle -> PLDomain (PLIntDom (var2, (Some x), None))
+	  | Rge -> PLDomain (PLIntDom (var2, None, (Some x)))
+	  | Req -> PLDomain (PLIntDom (var2, (Some x), (Some x)))
+	  | Rneq -> PLUnquantif (var1, rel, var2)
+	end
+      | _ -> PLUnquantif (var1, rel, var2)
+    end
+  | PLCont (_, off) when not (no_var off) -> PLUnquantif (var1, rel, var2)
+  | PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
+    begin
+      match var2 with
+      | PLConst (PLInt y) ->
+	begin
+	  match rel with
+	  | Rlt -> PLDomain (PLIntDom (var1, None, (Some (Integer.pred y))))
+	  | Rgt -> PLDomain (PLIntDom (var1, (Some (Integer.succ y)), None))
+	  | Rle -> PLDomain (PLIntDom (var1, None, (Some y)))
+	  | Rge -> PLDomain (PLIntDom (var1, (Some y), None))
+	  | Req -> PLDomain (PLIntDom (var1, (Some y), (Some y)))
+	  | Rneq -> PLUnquantif (var1, rel, var2)
+	end
+      | _ -> PLUnquantif (var1, rel, var2)
+    end
+  | _ -> PLUnquantif (var1, rel, var2)
 
 
-let rec requires_to_prolog :
-    pl_constraint list -> predicate named -> pl_constraint list =
-  fun constraints pred ->
-    match pred.content with
-    | Pand (p, q) -> requires_to_prolog (requires_to_prolog constraints p) q
-    | Ptrue -> constraints
-    | Pvalid(_,t) | Pvalid_read(_,t) ->
-      List.rev_append (List.rev (valid_to_prolog t)) constraints
-    | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
-    | Pat(p,LogicLabel(_,l)) when l = "Here" -> requires_to_prolog constraints p
-    | _ -> assert false
+let rec requires_to_prolog constraints pred =
+  match pred.content with
+  | Pand (p, q) -> requires_to_prolog (requires_to_prolog constraints p) q
+  | Ptrue -> constraints
+  | Pvalid(_,t) | Pvalid_read(_,t) ->
+    List.rev_append (List.rev (valid_to_prolog t)) constraints
+  | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
+  | Pat(p,LogicLabel(_,l)) when l = "Here" -> requires_to_prolog constraints p
+  | _ -> assert false
 
 
 let translate precond_file_name =
