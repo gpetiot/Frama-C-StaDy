@@ -372,8 +372,7 @@ let rec requires_to_prolog :
     | Pvalid(_,t) | Pvalid_read(_,t) ->
       List.rev_append (List.rev (valid_to_prolog t)) constraints
     | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
-    | Pat(p, LogicLabel(_,stringlabel)) when stringlabel = "Here" ->
-      requires_to_prolog constraints p
+    | Pat(p,LogicLabel(_,l)) when l = "Here" -> requires_to_prolog constraints p
     | _ -> assert false
 
 
@@ -389,8 +388,7 @@ let translate precond_file_name =
   let f constraints id_pred =
     let pnamed = Logic_const.pred_of_id_pred id_pred in
     let pnamed = subst pnamed in
-    try
-      requires_to_prolog constraints pnamed
+    try requires_to_prolog constraints pnamed
     with
     | _ ->
       Sd_options.Self.warning "Native Precondition:@\n%a unsupported"
@@ -439,12 +437,9 @@ let translate precond_file_name =
   let extract_ops t =
     let rec aux f = function
       | PLCVar _ as t -> t, f
-      | PLBinOp (t',PlusA,PLConst (PLInt t'')) ->
-	aux (fun x -> Integer.add x t'') t'
-      | PLBinOp (t',MinusA,PLConst (PLInt t'')) ->
-	aux (fun x -> Integer.sub x t'') t'
-      | PLBinOp (t',Mult,PLConst (PLInt t'')) ->
-	aux (fun x -> Integer.mul x t'') t'
+      | PLBinOp (a,PlusA,PLConst (PLInt b)) -> aux (fun x -> Integer.add x b) a
+      | PLBinOp (a,MinusA,PLConst (PLInt b)) -> aux (fun x -> Integer.sub x b) a
+      | PLBinOp (a,Mult,PLConst (PLInt b)) -> aux (fun x -> Integer.mul x b) a
       | _ -> assert false
     in
     aux (fun x -> x) t
