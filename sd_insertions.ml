@@ -102,7 +102,7 @@ class gather_insertions props = object(self)
   val mutable last_ctype_var_id = -1
   val mutable last_pred_var_id = -1
 
-  (* list of (stmtkind * stmt) used for testing reachibility of some stmts *)
+  (* list of stmt ids (sids) used for testing reachibility of some stmts *)
   val mutable stmts_to_reach = []
 
   (* we can only modify the property_status of the properties that have really
