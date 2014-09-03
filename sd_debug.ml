@@ -71,6 +71,23 @@ class debug_ast () = object(self)
     | Tlet(li,t) -> Format.fprintf fmt "Tlet(%a,%a)"
       self#logic_info li self#term t
 
+  method! term_lval fmt (tl, tof) =
+    match tl with
+    | TVar lv -> Format.fprintf fmt "TVar(%a),%a"
+      self#logic_var lv self#term_offset tof
+    | TResult _ -> Format.fprintf fmt "TResult,%a" self#term_offset tof
+    | TMem t -> Format.fprintf fmt "TMem(%a),%a"
+      self#term t self#term_offset tof
+
+  method! term_offset fmt = function
+  | TNoOffset -> Format.fprintf fmt "TNoOffset"
+  | TField (fi, tof) -> Format.fprintf fmt "TField(%a,%a)"
+    self#fieldinfo fi self#term_offset tof
+  | TModel (mi, tof) -> Format.fprintf fmt "TModel(%a,%a)"
+    self#model_info mi self#term_offset tof
+  | TIndex (t, tof) -> Format.fprintf fmt "TIndex(%a,%a)"
+    self#term t self#term_offset tof
+
   method! predicate fmt = function
   | Pfalse -> Format.fprintf fmt "Pfalse"
   | Ptrue -> Format.fprintf fmt "Ptrue"
