@@ -144,24 +144,11 @@ let rec extract_from_valid : term -> varinfo * term =
     let varinfo = Extlib.the v.lv_origin in
     let term = Cil.lone ~loc:t.term_loc () in
     varinfo, term
-  | TLval (TVar _, TField _) -> assert false
-  | TLval (TVar _, TModel _) -> assert false
-  | TLval (TVar _, TIndex _) -> assert false
   | TLval (TMem m, TNoOffset) ->
     let varinfo, _ = extract_from_valid m in
     let term = Cil.lone ~loc:t.term_loc () in
     varinfo, term
-  | TLval (TMem _, TField _) -> assert false
-  | TLval (TMem _, TModel _) -> assert false
-  | TLval (TMem _, TIndex _) -> assert false
-  | TStartOf _ -> Sd_options.Self.abort "TStartOf \\valid(%a)" Printer.pp_term t
-  | TAddrOf _ -> Sd_options.Self.abort "TAddrOf \\valid(%a)" Printer.pp_term t
-  | TCoerce _ -> Sd_options.Self.abort "TCoerce \\valid(%a)" Printer.pp_term t
-  | TCoerceE _ -> Sd_options.Self.abort "TCoerceE \\valid(%a)" Printer.pp_term t
-  | TLogic_coerce _ ->
-    Sd_options.Self.abort "TLogic_coerce \\valid(%a)" Printer.pp_term t
-  | TBinOp _ -> Sd_options.Self.abort "TBinOp \\valid(%a)" Printer.pp_term t
-  | _ -> Sd_options.Self.abort "\\valid(%a)" Printer.pp_term t
+  | _ -> Sd_options.Self.debug "\\valid(%a)" Sd_debug.pp_term t; assert false
 
 
 (* Computes and returns a hashtable such that :
