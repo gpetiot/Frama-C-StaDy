@@ -94,7 +94,6 @@ class gather_insertions props = object(self)
 
   val insertions : (label, insertion Queue.t) Hashtbl.t = Hashtbl.create 64
   val mutable result_varinfo = None
-  val mutable current_function = None
   val mutable in_old_term = false
   val mutable in_old_ptr = false
   val mutable bhv_to_reach_cpt = 0
@@ -110,8 +109,7 @@ class gather_insertions props = object(self)
      been translated into pathcrawler_assert_exception *)
   val mutable translated_properties = []
 
-  method get_insertions () =
-    insertions
+  method get_insertions () = insertions
 
   method private insert label str =
     try
@@ -151,22 +149,11 @@ class gather_insertions props = object(self)
     last_pred_var_id <- last_pred_var_id + 1;
     Fresh_pred_var last_pred_var_id
 
-  (* unmodified *)
-  method private in_current_function vi =
-    assert (current_function = None);
-    current_function <- Some vi
-
-  (* unmodified *)
-  method private out_current_function =
-    assert (current_function <> None);
-    current_function <- None
-
-  (* getter *)
   method translated_properties() = Sd_utils.no_repeat translated_properties
 
   method private logic_var v =
     let ret =
-      match current_function with
+      match self#current_func with
       | Some _ when in_old_term ->
 	let prefix =
 	  match v.lv_type with
@@ -189,8 +176,7 @@ class gather_insertions props = object(self)
     | Ctype ty -> Ctype_fragment (My_ctype_var (ty, ret))
     | _ -> assert false
 
-  method private term t : insertion list * fragment =
-    self#term_node t
+  method private term t : insertion list * fragment = self#term_node t
 
   method private gmp_fragment = function
   | Gmp_fragment x -> x
@@ -280,7 +266,7 @@ class gather_insertions props = object(self)
     | TSizeOfStr _
     | TAlignOf _
     | TAlignOfE _ ->
-      assert false (* TODO ? *)
+      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
 
     | TUnOp(op, t') ->
       begin
@@ -438,7 +424,7 @@ class gather_insertions props = object(self)
 
     | TAddrOf _
     | TStartOf _ ->
-      assert false (* TODO ? *)
+      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
 
     | Tapp (li, _ (* already substituted *), params) ->
       let builtin_name = li.l_var_info.lv_name in
@@ -472,7 +458,7 @@ class gather_insertions props = object(self)
       end
 
     | Tlambda _ -> assert false (* unreachable *)
-    | TDataCons _ -> Sd_options.Self.not_yet_implemented "TDataCons"
+    | TDataCons _ -> Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
     
     | Tif (cond, then_b, else_b) -> (* untested *)
       begin
@@ -505,9 +491,7 @@ class gather_insertions props = object(self)
       end
     
     | Tat(_, StmtLabel _) ->
-      if current_function <> None then
-	Sd_options.Self.warning "%a unsupported" Printer.pp_term t;
-      assert false (* TODO ? *)
+      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
 
     | Tat(term,LogicLabel(_,stringlabel)) ->
       if stringlabel = "Old" || stringlabel = "Pre" then
@@ -525,15 +509,12 @@ class gather_insertions props = object(self)
 	if stringlabel = "Post" || stringlabel = "Here" then
 	  self#term term
 	else
-	  begin
-	    if current_function <> None then
-	      Sd_options.Self.warning "%a unsupported" Printer.pp_term t;
-	    assert false (* TODO ? *)
-	  end
+	  Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
 
-    | Tbase_addr _ -> Sd_options.Self.not_yet_implemented "Tbase_addr"
-    | Toffset _ -> Sd_options.Self.not_yet_implemented "Toffset"
-    | Tblock_length _ -> Sd_options.Self.not_yet_implemented "Tblock_length"
+    | Tbase_addr _
+    | Toffset _
+    | Tblock_length _ ->
+      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
     | Tnull -> [], Ctype_fragment Zero
 
     (* C type -> logic type *)
@@ -1059,16 +1040,9 @@ class gather_insertions props = object(self)
     end;
     Cil.DoChildren
 
-  method! vglob_aux g =
-    begin
-      match g with
-      | GFun (fundec, _l) ->
-	self#in_current_function fundec.svar;
-	let after globs = self#out_current_function; globs in
-	Cil.ChangeDoChildrenPost ([g], after)
-      | GVar(vi,_,_) -> visited_globals <- vi::visited_globals; Cil.DoChildren
-      | _ -> Cil.DoChildren
-    end
+  method! vglob_aux = function
+  | GVar(vi,_,_) -> visited_globals <- vi::visited_globals; Cil.DoChildren
+  | _ -> Cil.DoChildren
 
   method private predicate_named pnamed : insertion list * pred_expr =
     self#predicate pnamed.content
@@ -1328,11 +1302,7 @@ class gather_insertions props = object(self)
       inserts_0 @ inserts_1 @ inserts @ clear_t1 @ clear_t2, ret
       
     | Pat(p, LogicLabel(_,l)) when l = "Here" -> self#predicate_named p
-    | Pat (p,_) ->
-      Sd_options.Self.warning "%a unsupported!" Printer.pp_predicate pred;
-      self#predicate_named p
-    | _ ->
-      Sd_options.Self.warning "%a unsupported" Printer.pp_predicate pred;
-      [], True
+    | p ->
+      Sd_options.Self.warning "%a unsupported" Printer.pp_predicate p; [], True
 (* end predicate *)
 end

@@ -95,7 +95,7 @@ class debug_ast () = object(self)
     self#logic_info li
     (pp_list (pp_pair self#logic_label self#logic_label)) ll
     (pp_list self#term) tl
-  | Pseparated(_tl) -> Format.fprintf fmt "Pseparated(_)"
+  | Pseparated(tl) -> Format.fprintf fmt "Pseparated(%a)" (pp_list self#term) tl
   | Prel(r,t1,t2) -> Format.fprintf fmt "Prel(%a,%a,%a)"
     self#relation r self#term t1 self#term t2
   | Pand(p1,p2) -> Format.fprintf fmt "Pand(%a,%a)"
