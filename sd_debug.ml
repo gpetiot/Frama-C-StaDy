@@ -136,4 +136,5 @@ class debug_ast () = object(self)
 end
 
 let pp_term fmt t = (new debug_ast())#term fmt t
+let pp_toffset fmt t = (new debug_ast())#term_offset fmt t
 let pp_pred fmt p = (new debug_ast())#predicate fmt p

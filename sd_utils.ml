@@ -84,6 +84,7 @@ let extract_guards var p =
 
 
 let error_term t = Sd_options.Self.abort "term: %a" Sd_debug.pp_term t
+let error_toffset t = Sd_options.Self.abort "toffset: %a" Sd_debug.pp_toffset t
 let error_pred p = Sd_options.Self.abort "pred: %a" Sd_debug.pp_pred p
 
 
