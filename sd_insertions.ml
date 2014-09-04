@@ -261,13 +261,6 @@ class gather_insertions props = object(self)
 	| _ -> self#tlval tlval
       end
 
-    | TSizeOf _
-    | TSizeOfE _
-    | TSizeOfStr _
-    | TAlignOf _
-    | TAlignOfE _ ->
-      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
-
     | TUnOp(op, t') ->
       begin
 	match ty with
@@ -422,10 +415,6 @@ class gather_insertions props = object(self)
 	| _ -> assert false (* unreachable *)
       end
 
-    | TAddrOf _
-    | TStartOf _ ->
-      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
-
     | Tapp (li, _ (* already substituted *), params) ->
       let builtin_name = li.l_var_info.lv_name in
       begin
@@ -456,9 +445,6 @@ class gather_insertions props = object(self)
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
       end
-
-    | Tlambda _ -> assert false (* unreachable *)
-    | TDataCons _ -> Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
     
     | Tif (cond, then_b, else_b) -> (* untested *)
       begin
@@ -489,9 +475,6 @@ class gather_insertions props = object(self)
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
       end
-    
-    | Tat(_, StmtLabel _) ->
-      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
 
     | Tat(term,LogicLabel(_,stringlabel)) ->
       if stringlabel = "Old" || stringlabel = "Pre" then
@@ -511,10 +494,6 @@ class gather_insertions props = object(self)
 	else
 	  Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
 
-    | Tbase_addr _
-    | Toffset _
-    | Tblock_length _ ->
-      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
     | Tnull -> [], Ctype_fragment Zero
 
     (* C type -> logic type *)
@@ -567,16 +546,14 @@ class gather_insertions props = object(self)
 	| _ -> assert false (* unreachable *)
       end
 
-    | TCoerceE _ -> Sd_options.Self.not_yet_implemented "TCoerceE"
-    | TUpdate _ -> Sd_options.Self.not_yet_implemented "TUpdate"
-    | Ttypeof _ -> Sd_options.Self.not_yet_implemented "Ttypeof"
-    | Ttype _ -> Sd_options.Self.not_yet_implemented "Ttype"
-    | Tempty_set -> Sd_options.Self.not_yet_implemented "Tempty_set"
-    | Tunion _ -> Sd_options.Self.not_yet_implemented "Tunion"
-    | Tinter _ -> Sd_options.Self.not_yet_implemented "Tinter"
-    | Tcomprehension _ -> Sd_options.Self.not_yet_implemented "Tcomprehension"
-    | Trange _ -> assert false (* unreachable *)
-    | Tlet _ -> assert false (* unreachable *)
+    | Tbase_addr _ | Toffset _ | Tblock_length _ | Tat(_, StmtLabel _)
+    | TCoerceE _ | TUpdate _ | Ttypeof _ | Ttype _ | Tempty_set | Tunion _
+    | Tinter _ | Tcomprehension _ | TDataCons _ | TAddrOf _ | TStartOf _ 
+    | TSizeOf _ | TSizeOfE _ | TSizeOfStr _ | TAlignOf _ | TAlignOfE _->
+      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
+
+    | Tlambda _ | Trange _ | Tlet _ ->
+      Sd_utils.error_term t (* unreachable *)
   (* end term *)
 
   method private tlval (tlhost, toffset) =
@@ -757,8 +734,7 @@ class gather_insertions props = object(self)
     let lengths = Sd_utils.lengths_from_requires kf in
     let do_varinfo v =
       let terms =
-	try Cil_datatype.Varinfo.Hashtbl.find lengths v
-	with Not_found -> []
+	try Cil_datatype.Varinfo.Hashtbl.find lengths v with Not_found -> []
       in
       let my_v = My_ctype_var(v.vtype, v.vname) in
       let my_old_v = My_ctype_var(v.vtype, "old_"^v.vname) in
@@ -816,8 +792,7 @@ class gather_insertions props = object(self)
       let lengths = Sd_utils.lengths_from_requires kf in
       let do_varinfo v =
 	let terms =
-	  try Cil_datatype.Varinfo.Hashtbl.find lengths v
-	  with Not_found -> []
+	  try Cil_datatype.Varinfo.Hashtbl.find lengths v with Not_found -> []
 	in
 	let rec dealloc_aux my_old_ptr = function
 	  | [] -> []
