@@ -99,6 +99,8 @@ class subst = object(self)
 			      self#subst_term t labels args quantifs)
     | Pinitialized (l,t) -> Pinitialized(self#subst_label l labels,
 					 self#subst_term t labels args quantifs)
+    | Pspecified (l,t) -> Pspecified(self#subst_label l labels,
+				     self#subst_term t labels args quantifs)
     | Pallocable (l,t) -> Pallocable (self#subst_label l labels,
 				      self#subst_term t labels args quantifs)
     | Pfreeable (l,t) -> Pfreeable (self#subst_label l labels,

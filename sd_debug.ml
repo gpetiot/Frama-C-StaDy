@@ -125,6 +125,8 @@ class debug_ast () = object(self)
     self#logic_label l self#term t
   | Pinitialized(l,t) -> Format.fprintf fmt "Pinitialized(%a,%a)"
     self#logic_label l self#term t
+  | Pspecified(l,t) -> Format.fprintf fmt "Pspecified(%a,%a)"
+    self#logic_label l self#term t
   | Pallocable(l,t) -> Format.fprintf fmt "Pallocable(%a,%a)"
     self#logic_label l self#term t
   | Pfreeable(l,t) -> Format.fprintf fmt "Pfreeable(%a,%a)"
