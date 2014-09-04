@@ -731,7 +731,6 @@ class gather_insertions props = object(self)
     let kf = Globals.Functions.find_by_name f.svar.vname in
     let behaviors = Annotations.behaviors kf in
     self#compute_result_varinfo f;
-
     let label_pre, inserts_pre =
       if f.svar.vname = entry_point then
 	BegFunc (f.svar.vname ^ "_precond"),
@@ -741,7 +740,6 @@ class gather_insertions props = object(self)
 	self#pre ~pre_entry_point:false kf behaviors Kglobal
     in
     List.iter (self#insert label_pre) inserts_pre;
-
     (* BEGIN postcond *)
     if (self#at_least_one_prop kf behaviors Kglobal)
       || (Sd_options.Behavior_Reachability.get()) then
@@ -750,7 +748,6 @@ class gather_insertions props = object(self)
 	self#insert (EndFunc f.svar.vname) (Block inserts)
       end;
     (* END postcond *)
-
     (* alloc variables for \at terms *)
     let dig_type = function
       | TPtr(ty,_) | TArray(ty,_,_,_) -> ty
@@ -814,7 +811,6 @@ class gather_insertions props = object(self)
     in
     List.iter do_varinfo visited_globals;
     List.iter do_varinfo (Kernel_function.get_formals kf);
-
     (* dealloc variables for \at terms *)
     begin
       let lengths = Sd_utils.lengths_from_requires kf in
@@ -858,7 +854,6 @@ class gather_insertions props = object(self)
       List.iter do_varinfo visited_globals;
       List.iter do_varinfo (Kernel_function.get_formals kf)
     end;
-
     Cil.DoChildren
   (* end vfunc *)
 
@@ -915,12 +910,10 @@ class gather_insertions props = object(self)
 	  || (Sd_options.Behavior_Reachability.get()) then
 	  begin
 	    let stmt_behaviors = bhvs.spec_behavior in
-
 	    let inserts' =
 	      self#pre ~pre_entry_point:false kf stmt_behaviors (Kstmt stmt) in
 	    let inserts = self#for_behaviors for_behaviors inserts' in
 	    List.iter (self#insert (BegStmt stmt.sid)) inserts;
-
 	    let inserts' = self#post kf stmt_behaviors (Kstmt stmt) in
 	    let inserts =
 	      if for_behaviors = [] then [Block inserts']
