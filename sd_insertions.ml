@@ -176,7 +176,7 @@ class gather_insertions props = object(self)
     | Ctype ty -> Ctype_fragment (My_ctype_var (ty, ret))
     | _ -> assert false
 
-  method private term t : insertion list * fragment = self#term_node t
+  method private term t = self#term_node t
 
   method private gmp_fragment = function
   | Gmp_fragment x -> x
@@ -1022,30 +1022,27 @@ class gather_insertions props = object(self)
 	self#insert (BegStmt stmt.sid) (Instru(Pc_to_framac str))
       end;
     let kf = Kernel_function.find_englobing_kf stmt in
-    begin
-      match stmt.skind with
-      | Cil_types.If(_exp,b1,b2,_loc) ->
-	let add_block_reachability b =
-	  match b.bstmts with
-	  | first_stmt :: _ ->
-      	    Sd_options.Self.debug ~dkey:Sd_options.dkey_reach
-	      "stmt %i to reach" first_stmt.sid;
-	    Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
-      	    stmts_to_reach <- first_stmt.sid :: stmts_to_reach
-      	  | _ -> ()
-	in
-	add_block_reachability b1;
-        add_block_reachability b2
-      | _ -> ()
-    end;
-    Cil.DoChildren
+    match stmt.skind with
+    | Cil_types.If(_exp,b1,b2,_loc) ->
+      let add_block_reachability b =
+	match b.bstmts with
+	| first_stmt :: _ ->
+      	  Sd_options.Self.debug ~dkey:Sd_options.dkey_reach
+	    "stmt %i to reach" first_stmt.sid;
+	  Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
+      	  stmts_to_reach <- first_stmt.sid :: stmts_to_reach
+      	| _ -> ()
+      in
+      add_block_reachability b1;
+      add_block_reachability b2;
+      Cil.DoChildren
+    | _ -> Cil.DoChildren
 
   method! vglob_aux = function
   | GVar(vi,_,_) -> visited_globals <- vi::visited_globals; Cil.DoChildren
   | _ -> Cil.DoChildren
 
-  method private predicate_named pnamed : insertion list * pred_expr =
-    self#predicate pnamed.content
+  method private predicate_named pnamed = self#predicate pnamed.content
 
   method private quantif_predicate ~forall logic_vars hyps goal =
     if (List.length logic_vars) > 1 then
@@ -1146,163 +1143,162 @@ class gather_insertions props = object(self)
     [insert_0; insert_1; insert_4], var
   (* end of quantif_predicate *)
 
-  method private predicate pred : insertion list * pred_expr =
-    match pred with
-    | Ptrue -> [], True
-    | Pfalse -> [], False
-    | Pvalid(_,term) | Pvalid_read(_,term) ->
-      let loc = term.term_loc in
-      let pointer, offset =
-	match term.term_node with
-	| TLval _ -> term, Cil.lzero ~loc ()
-	| TBinOp ((PlusPI|IndexPI),x,{term_node = Trange(_,Some y)}) -> x,y
-	| TBinOp ((PlusPI|IndexPI),x,y) -> x,y
-	| TBinOp (MinusPI,x,y) ->
-	  let einfo = {exp_type=y.term_type; exp_name=[]} in
-	  x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
-	| _ -> Sd_utils.error_term term
-      in
-      let inserts_0, x' = self#term pointer in
-      let x' = self#ctype_fragment x' in
-      let inserts_1, y' = self#term offset in
-      let inserts, ret =
-	match offset.term_type with
+  method private predicate = function
+  | Ptrue -> [], True
+  | Pfalse -> [], False
+  | Pvalid(_,term) | Pvalid_read(_,term) ->
+    let loc = term.term_loc in
+    let pointer, offset =
+      match term.term_node with
+      | TLval _ -> term, Cil.lzero ~loc ()
+      | TBinOp ((PlusPI|IndexPI),x,{term_node = Trange(_,Some y)}) -> x,y
+      | TBinOp ((PlusPI|IndexPI),x,y) -> x,y
+      | TBinOp (MinusPI,x,y) ->
+	let einfo = {exp_type=y.term_type; exp_name=[]} in
+	x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
+      | _ -> Sd_utils.error_term term
+    in
+    let inserts_0, x' = self#term pointer in
+    let x' = self#ctype_fragment x' in
+    let inserts_1, y' = self#term offset in
+    let inserts, ret =
+      match offset.term_type with
+      | Linteger ->
+	let y' = self#gmp_fragment y' in
+	let var = self#fresh_pred_var() in
+	let insert_2 = Decl_pred_var var in
+	let exp1 = Gmp_cmp_ui(Ge, y', Zero) in
+	let exp2 = Gmp_cmp_ui(Lt, y', Pc_dim(x')) in
+	let insert_3 = Instru(Affect_pred(var, Land(exp1, exp2))) in
+	let insert_4 = Instru(Gmp_clear y') in
+	[insert_2; insert_3; insert_4], var
+      | Ctype (TInt _) ->
+	let y' = self#ctype_fragment y' in
+	[], Land(Cmp(Rge, y', Zero), Cmp(Rgt, Pc_dim(x'), y'))
+      | _ -> assert false (* unreachable *)
+    in
+    inserts_0 @ inserts_1 @ inserts, ret
+  | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
+    self#quantif_predicate ~forall:true logic_vars hyps goal
+  | Pexists(logic_vars,{content=Pand(hyps,goal)}) ->
+    self#quantif_predicate ~forall:false logic_vars hyps goal
+  | Pforall _ -> failwith "\\forall not of the form \\forall ...; a ==> b;"
+  | Pexists _ -> failwith "\\exists not of the form \\exists ...; a && b;"
+  | Pnot(pred1) ->
+    let ins, pred1_var = self#predicate_named pred1 in
+    ins, Lnot pred1_var
+  | Pand(pred1,pred2) ->
+    let var = self#fresh_pred_var() in
+    let inserts_0, pred1_var = self#predicate_named pred1 in
+    let insert_1 = Decl_pred_var var in
+    let insert_2 = Instru(Affect_pred(var, pred1_var)) in
+    let inserts_b_0, pred2_var = self#predicate_named pred2 in
+    let insert_b_1 = Instru(Affect_pred(var, pred2_var)) in
+    let insert_3 = If(var, inserts_b_0 @ [insert_b_1], []) in
+    inserts_0 @ [insert_1; insert_2; insert_3], var
+  | Por(pred1,pred2) ->
+    let var = self#fresh_pred_var()  in
+    let inserts_0, pred1_var = self#predicate_named pred1 in
+    let insert_1 = Decl_pred_var var in
+    let insert_2 = Instru(Affect_pred(var, pred1_var)) in
+    let inserts_b_0, pred2_var = self#predicate_named pred2 in
+    let insert_b_1 = Instru(Affect_pred(var, pred2_var)) in
+    let insert_3 = If(var, [], inserts_b_0 @ [insert_b_1]) in
+    inserts_0 @ [insert_1; insert_2; insert_3], var
+  | Pimplies(pred1,pred2) ->
+    let var = self#fresh_pred_var() in
+    let insert_0 = Decl_pred_var var in
+    let insert_1 = Instru(Affect_pred(var, True)) in
+    let inserts_2, pred1_var = self#predicate_named pred1 in
+    let inserts_b_0, pred2_var = self#predicate_named pred2 in
+    let insert_b_1 = Instru(Affect_pred(var, pred2_var)) in
+    let insert_3 = If(pred1_var, inserts_b_0 @ [insert_b_1], []) in
+    [insert_0; insert_1] @ inserts_2 @ [insert_3], var
+  | Piff(pred1,pred2) ->
+    let inserts_0, pred1_var = self#predicate_named pred1 in
+    let inserts_1, pred2_var = self#predicate_named pred2 in
+    let exp1 = Lor(Lnot pred1_var, pred2_var) in
+    let exp2 = Lor(Lnot pred2_var, pred1_var) in
+    inserts_0 @ inserts_1, Land(exp1, exp2)
+  | Pif (t,pred1,pred2) -> (* untested *)
+    begin
+      let inserts_0, term_var = self#term t in
+      let res_var = self#fresh_pred_var() in
+      let insert_1 = Decl_pred_var res_var in
+      let cond, insert_3 =
+	match t.term_type with
 	| Linteger ->
-	  let y' = self#gmp_fragment y' in
-	  let var = self#fresh_pred_var() in
-	  let insert_2 = Decl_pred_var var in
-	  let exp1 = Gmp_cmp_ui(Ge, y', Zero) in
-	  let exp2 = Gmp_cmp_ui(Lt, y', Pc_dim(x')) in
-	  let insert_3 = Instru(Affect_pred(var, Land(exp1, exp2))) in
-	  let insert_4 = Instru(Gmp_clear y') in
-	  [insert_2; insert_3; insert_4], var
-	| Ctype (TInt _) ->
-	  let y' = self#ctype_fragment y' in
-	  [], Land(Cmp(Rge, y', Zero), Cmp(Rgt, Pc_dim(x'), y'))
+	  let x = self#gmp_fragment term_var in
+	  Gmp_cmp_si(Ne, x, Zero), [Instru(Gmp_clear x)]
+	| Lreal -> assert false (* unreachable *)
+	| Ctype (TInt _) -> Cmp(Rneq, self#ctype_fragment term_var, Zero), []
+	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
+	  Cmp(Rneq, self#ctype_fragment term_var, Zero), []
 	| _ -> assert false (* unreachable *)
       in
-      inserts_0 @ inserts_1 @ inserts, ret
-    | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
-      self#quantif_predicate ~forall:true logic_vars hyps goal
-    | Pexists(logic_vars,{content=Pand(hyps,goal)}) ->
-      self#quantif_predicate ~forall:false logic_vars hyps goal
-    | Pforall _ -> failwith "\\forall not of the form \\forall ...; a ==> b;"
-    | Pexists _ -> failwith "\\exists not of the form \\exists ...; a && b;"
-    | Pnot(pred1) ->
-      let ins, pred1_var = self#predicate_named pred1 in
-      ins, Lnot pred1_var
-    | Pand(pred1,pred2) ->
-      let var = self#fresh_pred_var() in
-      let inserts_0, pred1_var = self#predicate_named pred1 in
-      let insert_1 = Decl_pred_var var in
-      let insert_2 = Instru(Affect_pred(var, pred1_var)) in
-      let inserts_b_0, pred2_var = self#predicate_named pred2 in
-      let insert_b_1 = Instru(Affect_pred(var, pred2_var)) in
-      let insert_3 = If(var, inserts_b_0 @ [insert_b_1], []) in
-      inserts_0 @ [insert_1; insert_2; insert_3], var
-    | Por(pred1,pred2) ->
-      let var = self#fresh_pred_var()  in
-      let inserts_0, pred1_var = self#predicate_named pred1 in
-      let insert_1 = Decl_pred_var var in
-      let insert_2 = Instru(Affect_pred(var, pred1_var)) in
-      let inserts_b_0, pred2_var = self#predicate_named pred2 in
-      let insert_b_1 = Instru(Affect_pred(var, pred2_var)) in
-      let insert_3 = If(var, [], inserts_b_0 @ [insert_b_1]) in
-      inserts_0 @ [insert_1; insert_2; insert_3], var
-    | Pimplies(pred1,pred2) ->
-      let var = self#fresh_pred_var() in
-      let insert_0 = Decl_pred_var var in
-      let insert_1 = Instru(Affect_pred(var, True)) in
-      let inserts_2, pred1_var = self#predicate_named pred1 in
-      let inserts_b_0, pred2_var = self#predicate_named pred2 in
-      let insert_b_1 = Instru(Affect_pred(var, pred2_var)) in
-      let insert_3 = If(pred1_var, inserts_b_0 @ [insert_b_1], []) in
-      [insert_0; insert_1] @ inserts_2 @ [insert_3], var
-    | Piff(pred1,pred2) ->
-      let inserts_0, pred1_var = self#predicate_named pred1 in
-      let inserts_1, pred2_var = self#predicate_named pred2 in
-      let exp1 = Lor(Lnot pred1_var, pred2_var) in
-      let exp2 = Lor(Lnot pred2_var, pred1_var) in
-      inserts_0 @ inserts_1, Land(exp1, exp2)
-    | Pif (t,pred1,pred2) -> (* untested *)
-      begin
-	let inserts_0, term_var = self#term t in
-	let res_var = self#fresh_pred_var() in
-	let insert_1 = Decl_pred_var res_var in
-	let cond, insert_3 =
-	  match t.term_type with
-	  | Linteger ->
-	    let x = self#gmp_fragment term_var in
-	    Gmp_cmp_si(Ne, x, Zero), [Instru(Gmp_clear x)]
-	  | Lreal -> assert false (* unreachable *)
-	  | Ctype (TInt _) -> Cmp(Rneq, self#ctype_fragment term_var, Zero), []
-	  | Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
-	    Cmp(Rneq, self#ctype_fragment term_var, Zero), []
-	  | _ -> assert false (* unreachable *)
-	in
-	let inserts_then_0, pred1_var = self#predicate_named pred1 in
-	let insert_then_1 = Instru(Affect_pred(res_var, pred1_var)) in
-	let inserts_then = inserts_then_0 @ [insert_then_1] in
-	let inserts_else_0, pred2_var = self#predicate_named pred2 in
-	let insert_else_1 = Instru(Affect_pred(res_var, pred2_var)) in
-	let inserts_else = inserts_else_0 @ [insert_else_1] in
-	let insert_2 = If(cond, inserts_then, inserts_else) in
-	inserts_0 @ [insert_1; insert_2] @ insert_3, res_var
-      end
+      let inserts_then_0, pred1_var = self#predicate_named pred1 in
+      let insert_then_1 = Instru(Affect_pred(res_var, pred1_var)) in
+      let inserts_then = inserts_then_0 @ [insert_then_1] in
+      let inserts_else_0, pred2_var = self#predicate_named pred2 in
+      let insert_else_1 = Instru(Affect_pred(res_var, pred2_var)) in
+      let inserts_else = inserts_else_0 @ [insert_else_1] in
+      let insert_2 = If(cond, inserts_then, inserts_else) in
+      inserts_0 @ [insert_1; insert_2] @ insert_3, res_var
+    end
 
-    | Prel(rel,t1,t2) ->
-      let inserts_0, t1' = self#term t1 in
-      let inserts_1, t2' = self#term t2 in
-      let clear_t1 = match t1.term_type with
+  | Prel(rel,t1,t2) ->
+    let inserts_0, t1' = self#term t1 in
+    let inserts_1, t2' = self#term t2 in
+    let clear_t1 = match t1.term_type with
 	Linteger -> [Instru(Gmp_clear (self#gmp_fragment t1'))] | _ -> []
-      in
-      let clear_t2 = match t2.term_type with
+    in
+    let clear_t2 = match t2.term_type with
 	Linteger -> [Instru(Gmp_clear (self#gmp_fragment t2'))] | _ -> []
-      in
-      let inserts, ret =
-	match t1.term_type, t2.term_type with
-	| Linteger, Linteger ->
-	  let var = self#fresh_pred_var() in
-	  let t1' = self#gmp_fragment t1' in
-	  let t2' = self#gmp_fragment t2' in
-	  let insert_2 = Decl_pred_var var in
-	  let insert_3 = Instru(Affect_pred(var, Gmp_cmpr(rel, t1', t2'))) in
-	  [insert_2; insert_3], var
-	| Linteger, Ctype x ->
-	  let var = self#fresh_pred_var() in
-	  let t1' = self#gmp_fragment t1' in
-	  let t2' = self#ctype_fragment t2' in
-	  let insert_2 = Decl_pred_var var in
-	  let value =
-	    if Cil.isUnsignedInteger x then Gmp_cmpr_ui(rel, t1', t2')
-	    else if Cil.isSignedInteger x then Gmp_cmpr_si(rel, t1', t2')
-	    else assert false
-	  in
-	  let insert_3 = Instru(Affect_pred(var, value)) in
-	  [insert_2; insert_3], var
-	| Lreal, Lreal -> assert false (* TODO: reals *)
-	| Ctype x, Linteger ->
-	  let var = self#fresh_pred_var() in
-	  let t1' = self#ctype_fragment t1' in
-	  let t2' = self#gmp_fragment t2' in
-	  let fresh_var' = self#fresh_gmp_var() in
-	  let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
-	  let init_set =
-	    if Cil.isUnsignedInteger x then self#init_set_ui_gmp_var
-	    else if Cil.isSignedInteger x then self#init_set_si_gmp_var
-	    else assert false
-	  in
-	  let insert_3, init_var' = init_set decl_var' t1' in
-	  let insert_4 = Decl_pred_var var in
-	  let insert_5 = Instru(Affect_pred(var,Gmp_cmpr(rel,init_var',t2'))) in
-	  let insert_7 = Instru(Gmp_clear init_var') in
-	  [insert_2; insert_3; insert_4; insert_5; insert_7], var
-	| _ -> [], Cmp(rel, self#ctype_fragment t1', self#ctype_fragment t2')
-      in
-      inserts_0 @ inserts_1 @ inserts @ clear_t1 @ clear_t2, ret
+    in
+    let inserts, ret =
+      match t1.term_type, t2.term_type with
+      | Linteger, Linteger ->
+	let var = self#fresh_pred_var() in
+	let t1' = self#gmp_fragment t1' in
+	let t2' = self#gmp_fragment t2' in
+	let insert_2 = Decl_pred_var var in
+	let insert_3 = Instru(Affect_pred(var, Gmp_cmpr(rel, t1', t2'))) in
+	[insert_2; insert_3], var
+      | Linteger, Ctype x ->
+	let var = self#fresh_pred_var() in
+	let t1' = self#gmp_fragment t1' in
+	let t2' = self#ctype_fragment t2' in
+	let insert_2 = Decl_pred_var var in
+	let value =
+	  if Cil.isUnsignedInteger x then Gmp_cmpr_ui(rel, t1', t2')
+	  else if Cil.isSignedInteger x then Gmp_cmpr_si(rel, t1', t2')
+	  else assert false
+	in
+	let insert_3 = Instru(Affect_pred(var, value)) in
+	[insert_2; insert_3], var
+      | Lreal, Lreal -> assert false (* TODO: reals *)
+      | Ctype x, Linteger ->
+	let var = self#fresh_pred_var() in
+	let t1' = self#ctype_fragment t1' in
+	let t2' = self#gmp_fragment t2' in
+	let fresh_var' = self#fresh_gmp_var() in
+	let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
+	let init_set =
+	  if Cil.isUnsignedInteger x then self#init_set_ui_gmp_var
+	  else if Cil.isSignedInteger x then self#init_set_si_gmp_var
+	  else assert false
+	in
+	let insert_3, init_var' = init_set decl_var' t1' in
+	let insert_4 = Decl_pred_var var in
+	let insert_5 = Instru(Affect_pred(var,Gmp_cmpr(rel,init_var',t2'))) in
+	let insert_7 = Instru(Gmp_clear init_var') in
+	[insert_2; insert_3; insert_4; insert_5; insert_7], var
+      | _ -> [], Cmp(rel, self#ctype_fragment t1', self#ctype_fragment t2')
+    in
+    inserts_0 @ inserts_1 @ inserts @ clear_t1 @ clear_t2, ret
       
-    | Pat(p, LogicLabel(_,l)) when l = "Here" -> self#predicate_named p
-    | p ->
-      Sd_options.Self.warning "%a unsupported" Printer.pp_predicate p; [], True
+  | Pat(p, LogicLabel(_,l)) when l = "Here" -> self#predicate_named p
+  | p ->
+    Sd_options.Self.warning "%a unsupported" Printer.pp_predicate p; [], True
 (* end predicate *)
 end
