@@ -134,8 +134,7 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     | Sd_insertions.Decl_pred_var p->Format.fprintf fmt "@[int %a;@]" pp_pexpr p
     | Sd_insertions.If (cond,b1,b2) ->
       Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_pexpr cond aux b1;
-      if b2 <> [] then
-	Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
+      if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
     | Sd_insertions.For(None, Some e, None, b) ->
       Format.fprintf fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" pp_pexpr e aux b
     | Sd_insertions.For(Some i1, Some e, Some i2, b) ->
@@ -143,8 +142,7 @@ let rec pp_insertion ?(line_break = true) fmt ins =
 	pp_instruction i1 pp_pexpr e pp_instruction i2 aux b
     | Sd_insertions.For _ -> assert false (* not used by the translation *)
     | Sd_insertions.Block b ->
-      if b <> [] then
-	Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
+      if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
   end;
   if line_break then Format.fprintf fmt "@\n"
 
@@ -159,8 +157,6 @@ let print_var v =
 
 class print_insertions insertions () = object(self)
   inherit Printer.extensible_printer () as super
-
-  val mutable current_function = None
 
   method private insertions_at fmt label =
     try
@@ -195,7 +191,6 @@ class print_insertions insertions () = object(self)
     Format.fprintf fmt "@[<hov 2>{@\n";
     self#insertions_at fmt (Sd_insertions.BegFunc f.svar.vname);
     self#block ~braces:true fmt f.sbody;
-    (* EndFunc not necessary here ? *)
     Format.fprintf fmt "@.}";
     if entering_ghost then is_ghost <- false;
     Format.fprintf fmt "@]%t@]@."
@@ -249,47 +244,17 @@ class print_insertions insertions () = object(self)
     Cil.iterGlobals f (fun g -> self#global fmt g);
     Format.fprintf fmt "@]@."
 
-  (* unmodified *)
-  method private vdecl_complete fmt v =
-    let display_ghost = v.vghost && not is_ghost in
-    Format.fprintf fmt "@[<hov 0>%t%a;%t@]"
-      (if display_ghost then fun fmt -> Format.fprintf fmt "/*@@ ghost@ "
-       else ignore)
-      self#vdecl v
-      (if display_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
-  
-  (* unmodified *)
-  method private in_current_function vi =
-    assert (current_function = None);
-    current_function <- Some vi
-
-  (* unmodified *)
-  method private out_current_function =
-    assert (current_function <> None);
-    current_function <- None
-
   method! global fmt g =
     match g with
     | GFun (fundec, l) ->
       if print_var fundec.svar then
   	begin
-  	  self#in_current_function fundec.svar;
-  	  (* If the function has attributes then print a prototype because
-  	   * GCC cannot accept function attributes in a definition *)
   	  let oldattr = fundec.svar.vattr in
-  	  (* Always pring the file name before function declarations *)
-  	  (* Prototype first *)
-  	  if oldattr <> [] then
-  	    (self#line_directive fmt l;
-  	     Format.fprintf fmt "%a;@\n" self#vdecl_complete fundec.svar);
-  	  (* Temporarily remove the function attributes *)
   	  fundec.svar.vattr <- [];
-  	  (* Body now *)
   	  self#line_directive ~forcefile:true fmt l;
   	  self#fundecl fmt fundec;
   	  fundec.svar.vattr <- oldattr;
-  	  Format.fprintf fmt "@\n";
-  	  self#out_current_function
+  	  Format.fprintf fmt "@\n"
   	end
     | GVarDecl (_, vi, _) -> if print_var vi then super#global fmt g
     | _ -> super#global fmt g
