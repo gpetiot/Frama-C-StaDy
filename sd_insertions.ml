@@ -832,7 +832,7 @@ class gather_insertions props = object(self)
     Cil.DoChildren
   (* end vfunc *)
 
-  method private subst_pred p = (new Sd_subst.subst)#subst_pred p [] [] [] []
+  method private subst_pred p = (new Sd_subst.subst)#pred p [] [] [] []
 
   method private cond_of_assumes pred_list =
     let rec aux insertions ret = function
@@ -995,8 +995,8 @@ class gather_insertions props = object(self)
       let add_block_reachability b =
 	match b.bstmts with
 	| first_stmt :: _ ->
-      	  Sd_options.Self.debug ~dkey:Sd_options.dkey_reach
-	    "stmt %i to reach" first_stmt.sid;
+	  let dkey = Sd_options.dkey_reach in
+      	  Sd_options.Self.debug ~dkey "stmt %i to reach" first_stmt.sid;
 	  Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
       	  stmts_to_reach <- first_stmt.sid :: stmts_to_reach
       	| _ -> ()
