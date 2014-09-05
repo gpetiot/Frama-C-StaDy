@@ -10,25 +10,25 @@ type label =
 | BegIter of int
 | EndIter of int
 
-type fresh_gmp_var =
-| Fresh_gmp_var of int (* uid *)
-| My_gmp_var of string
+type fresh_Z_var =
+| Fresh_Z_var of int (* uid *)
+| My_Z_var of string
 
-type declared_gmp_var =
-| Declared_gmp_var of fresh_gmp_var
+type declared_Z_var =
+| Declared_Z_var of fresh_Z_var
 
-type initialized_gmp_var =
-| Initialized_gmp_var of declared_gmp_var
+type initialized_Z_var =
+| Initialized_Z_var of declared_Z_var
 
-and gmp_expr = initialized_gmp_var
+and z_expr = initialized_Z_var
 
 and ctype_expr = (* distinguer type pointeur/int *)
 | Fresh_ctype_var of int (* uid *) * typ
 | My_ctype_var of typ * string (* when its name is predefined *)
 | Zero | One
 | Cst of string
-| Gmp_get_ui of gmp_expr
-| Gmp_get_si of gmp_expr
+| Z_get_ui of z_expr
+| Z_get_si of z_expr
 | Unop of unop * ctype_expr
 | Binop of binop * ctype_expr * ctype_expr
 | Pc_dim of ctype_expr
@@ -44,18 +44,18 @@ and pred_expr =
 | Fresh_pred_var of int (* uid *)
 | True | False
 | Cmp of relation * ctype_expr * ctype_expr
-| Gmp_cmp of binop * gmp_expr * gmp_expr
-| Gmp_cmp_ui of binop * gmp_expr * ctype_expr
-| Gmp_cmp_si of binop * gmp_expr * ctype_expr
-| Gmp_cmpr of relation * gmp_expr * gmp_expr
-| Gmp_cmpr_ui of relation * gmp_expr * ctype_expr
-| Gmp_cmpr_si of relation * gmp_expr * ctype_expr
+| Z_cmp of binop * z_expr * z_expr
+| Z_cmp_ui of binop * z_expr * ctype_expr
+| Z_cmp_si of binop * z_expr * ctype_expr
+| Z_cmpr of relation * z_expr * z_expr
+| Z_cmpr_ui of relation * z_expr * ctype_expr
+| Z_cmpr_si of relation * z_expr * ctype_expr
 | Lnot of pred_expr
 | Land of pred_expr * pred_expr
 | Lor of pred_expr * pred_expr
 
 and fragment =
-| Gmp_fragment of gmp_expr
+| Z_fragment of z_expr
 | Ctype_fragment of ctype_expr
 
 and instruction =
@@ -65,22 +65,22 @@ and instruction =
 | Pc_to_framac of string
 | Pc_exn of string * int
 | Ret of ctype_expr
-| Gmp_clear of gmp_expr
-| Gmp_init of declared_gmp_var
-| Gmp_init_set of declared_gmp_var * gmp_expr
-| Gmp_init_set_ui of declared_gmp_var * ctype_expr
-| Gmp_init_set_si of declared_gmp_var * ctype_expr
-| Gmp_init_set_str of declared_gmp_var * string
-| Gmp_set of gmp_expr * gmp_expr
-| Gmp_abs of gmp_expr * gmp_expr
-| Gmp_ui_sub of gmp_expr * ctype_expr * gmp_expr
-| Gmp_binop of binop * gmp_expr * gmp_expr * gmp_expr
-| Gmp_binop_ui of binop * gmp_expr * gmp_expr * ctype_expr
-| Gmp_binop_si of binop * gmp_expr * gmp_expr * ctype_expr
+| Z_clear of z_expr
+| Z_init of declared_Z_var
+| Z_init_set of declared_Z_var * z_expr
+| Z_init_set_ui of declared_Z_var * ctype_expr
+| Z_init_set_si of declared_Z_var * ctype_expr
+| Z_init_set_str of declared_Z_var * string
+| Z_set of z_expr * z_expr
+| Z_abs of z_expr * z_expr
+| Z_ui_sub of z_expr * ctype_expr * z_expr
+| Z_binop of binop * z_expr * z_expr * z_expr
+| Z_binop_ui of binop * z_expr * z_expr * ctype_expr
+| Z_binop_si of binop * z_expr * z_expr * ctype_expr
 
 type insertion =
 | Instru of instruction
-| Decl_gmp_var of fresh_gmp_var
+| Decl_Z_var of fresh_Z_var
 | Decl_ctype_var of ctype_expr
 | Decl_pred_var of pred_expr
 | If of pred_expr * insertion list * insertion list
@@ -98,7 +98,7 @@ class gather_insertions props = object(self)
   val mutable in_old_ptr = false
   val mutable bhv_to_reach_cpt = 0
   val mutable visited_globals = []
-  val mutable last_gmp_var_id = -1
+  val mutable last_Z_var_id = -1
   val mutable last_ctype_var_id = -1
   val mutable last_pred_var_id = -1
 
@@ -119,27 +119,25 @@ class gather_insertions props = object(self)
       Queue.add str q;
       Hashtbl.add insertions label q
 
-  method private fresh_gmp_var() =
-    last_gmp_var_id <- last_gmp_var_id + 1;
-    Fresh_gmp_var last_gmp_var_id
+  method private fresh_Z_var() =
+    last_Z_var_id <- last_Z_var_id + 1;
+    Fresh_Z_var last_Z_var_id
 
-  method private decl_gmp_var var =
-    Decl_gmp_var var, Declared_gmp_var var
+  method private decl_Z_var var = Decl_Z_var var, Declared_Z_var var
 
-  method private init_gmp_var var =
-    Instru(Gmp_init var), Initialized_gmp_var var
+  method private init_Z_var var = Instru(Z_init var), Initialized_Z_var var
 
-  method private init_set_gmp_var var v =
-    Instru(Gmp_init_set (var, v)), Initialized_gmp_var var
+  method private init_set_Z_var var v =
+    Instru(Z_init_set (var, v)), Initialized_Z_var var
 
-  method private init_set_si_gmp_var var v =
-    Instru(Gmp_init_set_si (var, v)), Initialized_gmp_var var
+  method private init_set_si_Z_var var v =
+    Instru(Z_init_set_si (var, v)), Initialized_Z_var var
 
-  method private init_set_ui_gmp_var var v =
-    Instru(Gmp_init_set_ui (var, v)), Initialized_gmp_var var
+  method private init_set_ui_Z_var var v =
+    Instru(Z_init_set_ui (var, v)), Initialized_Z_var var
 
-  method private init_set_str_gmp_var var v =
-    Instru(Gmp_init_set_str (var, v)), Initialized_gmp_var var
+  method private init_set_str_Z_var var v =
+    Instru(Z_init_set_str (var, v)), Initialized_Z_var var
 
   method private fresh_ctype_var ty =
     last_ctype_var_id <- last_ctype_var_id + 1;
@@ -170,61 +168,60 @@ class gather_insertions props = object(self)
       | _ -> v.lv_name
     in
     match v.lv_type with
-    | Linteger ->
-      Gmp_fragment (Initialized_gmp_var(Declared_gmp_var(My_gmp_var ret)))
+    | Linteger -> Z_fragment (Initialized_Z_var (Declared_Z_var (My_Z_var ret)))
     | Lreal -> assert false (* TODO: reals *)
     | Ctype ty -> Ctype_fragment (My_ctype_var (ty, ret))
     | _ -> assert false
 
   method private term t = self#term_node t
 
-  method private gmp_fragment = function
-  | Gmp_fragment x -> x
+  method private z_fragment = function
+  | Z_fragment x -> x
   | Ctype_fragment _ -> assert false
 
   method private ctype_fragment = function
   | Ctype_fragment x -> x
-  | Gmp_fragment _ -> assert false
+  | Z_fragment _ -> assert false
 
   method private lambda li lower upper q t =
     assert(lower.term_type = Linteger && upper.term_type = Linteger);
     let name = li.l_var_info.lv_name in
     let init_val = if name = "\\sum" || name = "\\numof" then Zero else One in
-    let fresh_var = self#fresh_gmp_var() in
-    let i_0, decl_var = self#decl_gmp_var fresh_var in
-    let i_1, init_var = self#init_set_si_gmp_var decl_var init_val in
+    let fresh_var = self#fresh_Z_var() in
+    let i_0, decl_var = self#decl_Z_var fresh_var in
+    let i_1, init_var = self#init_set_si_Z_var decl_var init_val in
     let i_3, low = self#term lower in
     let i_4, up = self#term upper in
-    let low = self#gmp_fragment low in
-    let up = self#gmp_fragment up in
-    let fresh_iter = My_gmp_var q.lv_name in
-    let i_5, decl_iter = self#decl_gmp_var fresh_iter in
-    let i_6, init_iter = self#init_set_gmp_var decl_iter low in
+    let low = self#z_fragment low in
+    let up = self#z_fragment up in
+    let fresh_iter = My_Z_var q.lv_name in
+    let i_5, decl_iter = self#decl_Z_var fresh_iter in
+    let i_6, init_iter = self#init_set_Z_var decl_iter low in
     let ins_b_0, lambda_t = self#term t in
     let ins_b_1, clear_lambda =
       match name with
       | s when s = "\\sum" ->
-	Instru(Gmp_binop(PlusA,init_var,init_var, self#gmp_fragment lambda_t)),
-	[(Instru(Gmp_clear(self#gmp_fragment lambda_t)))]
+	Instru(Z_binop(PlusA,init_var,init_var, self#z_fragment lambda_t)),
+	[(Instru(Z_clear(self#z_fragment lambda_t)))]
       | s when s = "\\product" ->
-	Instru(Gmp_binop(Mult, init_var, init_var, self#gmp_fragment lambda_t)),
-	[(Instru(Gmp_clear(self#gmp_fragment lambda_t)))]
+	Instru(Z_binop(Mult, init_var, init_var, self#z_fragment lambda_t)),
+	[(Instru(Z_clear(self#z_fragment lambda_t)))]
       | s when s = "\\numof" ->
 	(* lambda_t of type: Ltype(lt,_) when lt.lt_name = Utf8_logic.boolean *)
 	let cond = Cmp(Rneq, self#ctype_fragment lambda_t, Zero) in
-	let instr = Instru(Gmp_binop_ui(PlusA, init_var, init_var, One)) in
+	let instr = Instru(Z_binop_ui(PlusA, init_var, init_var, One)) in
 	If(cond, [instr], []), []
       | _ -> assert false
     in
-    let ins_b_2 = Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One)) in
+    let ins_b_2 = Instru(Z_binop_ui(PlusA,init_iter,init_iter,One)) in
     let ins_b = ins_b_0 @ [ins_b_1; ins_b_2] @ clear_lambda in
-    let cond = Gmp_cmp(Le,init_iter,up) in
+    let cond = Z_cmp(Le,init_iter,up) in
     let i_7 = For(None, Some cond, None, ins_b) in
-    let i_8 = Instru(Gmp_clear init_iter) in
-    let i_9 = Instru(Gmp_clear low) in
-    let i_10 = Instru(Gmp_clear up) in
+    let i_8 = Instru(Z_clear init_iter) in
+    let i_9 = Instru(Z_clear low) in
+    let i_10 = Instru(Z_clear up) in
     let inserts_block = i_3 @ i_4 @ [i_5; i_6; i_7; i_8; i_9; i_10] in
-    [i_0; i_1; Block inserts_block], Gmp_fragment init_var
+    [i_0; i_1; Block inserts_block], Z_fragment init_var
 
   method private term_node t =
     let ty = match t.term_type with
@@ -237,11 +234,11 @@ class gather_insertions props = object(self)
       begin
 	match ty with
 	| Linteger ->
-	  let fresh_var = self#fresh_gmp_var() in
-	  let insert_0, decl_var = self#decl_gmp_var fresh_var in
+	  let fresh_var = self#fresh_Z_var() in
+	  let insert_0, decl_var = self#decl_Z_var fresh_var in
 	  let str = Pretty_utils.sfprintf "%a" Printer.pp_term t in
-	  let insert_1, init_var = self#init_set_str_gmp_var decl_var str in
-	  [insert_0; insert_1], Gmp_fragment init_var
+	  let insert_1, init_var = self#init_set_str_Z_var decl_var str in
+	  [insert_0; insert_1], Z_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ ->
 	  [], Ctype_fragment(Cst(Pretty_utils.sfprintf "%a" Printer.pp_term t))
@@ -251,12 +248,12 @@ class gather_insertions props = object(self)
       begin
 	match ty with
 	| Linteger ->
-	  let fresh_var = self#fresh_gmp_var() in
+	  let fresh_var = self#fresh_Z_var() in
 	  let inserts_0, t' = self#tlval tlval in
-	  let t' = self#gmp_fragment t' in
-	  let insert_1, decl_var = self#decl_gmp_var fresh_var in
-	  let insert_2, init_var = self#init_set_gmp_var decl_var t' in
-	  inserts_0 @ [insert_1; insert_2], Gmp_fragment init_var
+	  let t' = self#z_fragment t' in
+	  let insert_1, decl_var = self#decl_Z_var fresh_var in
+	  let insert_2, init_var = self#init_set_Z_var decl_var t' in
+	  inserts_0 @ [insert_1; insert_2], Z_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> self#tlval tlval
       end
@@ -267,30 +264,30 @@ class gather_insertions props = object(self)
 	| Linteger ->
 	  assert(op = Neg);
 	  let inserts_0, x = self#term t' in
-	  let fresh_var = self#fresh_gmp_var() in
-	  let insert_1, decl_var = self#decl_gmp_var fresh_var in
-	  let insert_2, init_var = self#init_gmp_var decl_var in
+	  let fresh_var = self#fresh_Z_var() in
+	  let insert_1, decl_var = self#decl_Z_var fresh_var in
+	  let insert_2, init_var = self#init_Z_var decl_var in
 	  let inserts_3 =
 	    match t'.term_type with
 	    | Linteger ->
-	      [Instru(Gmp_ui_sub(init_var,Zero,self#gmp_fragment x));
-	       Instru(Gmp_clear(self#gmp_fragment x))]
+	      [Instru(Z_ui_sub(init_var,Zero,self#z_fragment x));
+	       Instru(Z_clear(self#z_fragment x))]
 	    | Lreal -> assert false (* unreachable *)
 	    | Ctype ty' ->
-	      let fresh_var' = self#fresh_gmp_var() in
-	      let insert_0', decl_var' = self#decl_gmp_var fresh_var' in
+	      let fresh_var' = self#fresh_Z_var() in
+	      let insert_0', decl_var' = self#decl_Z_var fresh_var' in
 	      let f =
-		if Cil.isUnsignedInteger ty' then self#init_set_ui_gmp_var
-		else if Cil.isSignedInteger ty' then self#init_set_si_gmp_var
+		if Cil.isUnsignedInteger ty' then self#init_set_ui_Z_var
+		else if Cil.isSignedInteger ty' then self#init_set_si_Z_var
 		else assert false
 	      in
 	      let insert_1', init_var' = f decl_var' (self#ctype_fragment x) in
-	      let insert_2' = Instru(Gmp_ui_sub(init_var', Zero, init_var')) in
-	      let insert_3' = Instru(Gmp_clear init_var') in
+	      let insert_2' = Instru(Z_ui_sub(init_var', Zero, init_var')) in
+	      let insert_3' = Instru(Z_clear init_var') in
 	      [insert_0'; insert_1'; insert_2'; insert_3']
 	    | _ -> assert false (* unreachable *)
 	  in
-	  inserts_0 @ [insert_1; insert_2] @ inserts_3, Gmp_fragment init_var
+	  inserts_0 @ [insert_1; insert_2] @ inserts_3, Z_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ ->
 	  let inserts, x = self#term t' in
@@ -304,11 +301,11 @@ class gather_insertions props = object(self)
       let inserts, var =
 	match t2.term_type with
 	| Linteger ->
-	  let y = self#gmp_fragment y in
+	  let y = self#z_fragment y in
 	  let var = self#fresh_ctype_var Cil.intType in
 	  let insert_2 = Decl_ctype_var var in
-	  let insert_3 = Instru(Affect(var, Gmp_get_si y)) in
-	  let insert_4 = Instru(Gmp_clear y) in
+	  let insert_3 = Instru(Affect(var, Z_get_si y)) in
+	  let insert_4 = Instru(Z_clear y) in
 	  [insert_2; insert_3; insert_4], var
 	| Lreal -> assert false (* unreachable *)
 	| _ -> [], self#ctype_fragment y
@@ -321,56 +318,56 @@ class gather_insertions props = object(self)
       begin
 	match ty with
 	| Linteger ->
-	  let fresh_var = self#fresh_gmp_var() in
-	  let insert_2, decl_var = self#decl_gmp_var fresh_var in
-	  let insert_3, init_var = self#init_gmp_var decl_var in
+	  let fresh_var = self#fresh_Z_var() in
+	  let insert_2, decl_var = self#decl_Z_var fresh_var in
+	  let insert_3, init_var = self#init_Z_var decl_var in
 	  let clear_t1 = match t1.term_type with
-	    Linteger -> [Instru(Gmp_clear (self#gmp_fragment x))] | _ -> []
+	    Linteger -> [Instru(Z_clear (self#z_fragment x))] | _ -> []
 	  in
 	  let clear_t2 = match t2.term_type with
-	    Linteger -> [Instru(Gmp_clear (self#gmp_fragment y))] | _ -> []
+	    Linteger -> [Instru(Z_clear (self#z_fragment y))] | _ -> []
 	  in
 	  let inserts =
 	    match t1.term_type, t2.term_type with
 	    | Linteger, Linteger ->
-	      let x = self#gmp_fragment x and y = self#gmp_fragment y in
-	      [Instru(Gmp_binop(op, init_var, x, y))]
+	      let x = self#z_fragment x and y = self#z_fragment y in
+	      [Instru(Z_binop(op, init_var, x, y))]
 	    | Linteger, Ctype ty' when Cil.isUnsignedInteger ty' ->
-	      let x = self#gmp_fragment x and y = self#ctype_fragment y in
-	      [Instru(Gmp_binop_ui(op, init_var, x, y))]
+	      let x = self#z_fragment x and y = self#ctype_fragment y in
+	      [Instru(Z_binop_ui(op, init_var, x, y))]
 	    | Linteger, Ctype ty' when Cil.isSignedInteger ty' ->
-	      let x = self#gmp_fragment x and y = self#ctype_fragment y in
-	      [Instru(Gmp_binop_si(op, init_var, x, y))]
+	      let x = self#z_fragment x and y = self#ctype_fragment y in
+	      [Instru(Z_binop_si(op, init_var, x, y))]
 	    | Ctype ty', Linteger when Cil.isUnsignedInteger ty' ->
 	      if op = PlusA || op = Mult then
-		let x = self#ctype_fragment x and y = self#gmp_fragment y in
-	        [Instru(Gmp_binop_ui(op,init_var,y,x))]
+		let x = self#ctype_fragment x and y = self#z_fragment y in
+	        [Instru(Z_binop_ui(op,init_var,y,x))]
 	      else
 		assert false (* TODO *)
 	    | Ctype ty', Linteger when Cil.isSignedInteger ty' ->
 	      if op = PlusA || op = Mult then
-		let x = self#ctype_fragment x and y = self#gmp_fragment y in
-	        [Instru(Gmp_binop_si(op, init_var,y,x))]
+		let x = self#ctype_fragment x and y = self#z_fragment y in
+	        [Instru(Z_binop_si(op, init_var,y,x))]
 	      else
 		assert false (* TODO *)
 	    | Ctype(TInt _), Ctype(TInt _) ->
-	      let fresh_var1 = self#fresh_gmp_var() in
-	      let insert_4, decl_var1 = self#decl_gmp_var fresh_var1 in
-	      let fresh_var2 = self#fresh_gmp_var() in
-	      let insert_5, decl_var2 = self#decl_gmp_var fresh_var2 in
+	      let fresh_var1 = self#fresh_Z_var() in
+	      let insert_4, decl_var1 = self#decl_Z_var fresh_var1 in
+	      let fresh_var2 = self#fresh_Z_var() in
+	      let insert_5, decl_var2 = self#decl_Z_var fresh_var2 in
 	      let insert_6, init_var1 =
-		self#init_set_si_gmp_var decl_var1 (self#ctype_fragment x) in
+		self#init_set_si_Z_var decl_var1 (self#ctype_fragment x) in
 	      let insert_7, init_var2 =
-		self#init_set_si_gmp_var decl_var2 (self#ctype_fragment y) in
+		self#init_set_si_Z_var decl_var2 (self#ctype_fragment y) in
 	      [insert_4; insert_5; insert_6; insert_7;
-	       Instru(Gmp_binop(op,init_var,init_var1,init_var2));
-	       Instru(Gmp_clear init_var1);
-	       Instru(Gmp_clear init_var2)]
+	       Instru(Z_binop(op,init_var,init_var1,init_var2));
+	       Instru(Z_clear init_var1);
+	       Instru(Z_clear init_var2)]
 	    | _ -> assert false
 	  in
 	  inserts_0 @ inserts_1 @ [insert_2; insert_3] @ inserts
 	  @ clear_t1 @ clear_t2,
-	  Gmp_fragment init_var
+	  Z_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
 	  begin
@@ -378,10 +375,10 @@ class gather_insertions props = object(self)
 	    | Linteger, Linteger ->
 	      let var = self#fresh_ctype_var Cil.intType in
 	      let insert_2 = Decl_ctype_var var in
-	      let pred = Gmp_cmp(op, self#gmp_fragment x,self#gmp_fragment y) in
+	      let pred = Z_cmp(op, self#z_fragment x,self#z_fragment y) in
 	      let insert_3 = Instru(Affect(var, Of_pred pred)) in
-	      let insert_4 = Instru(Gmp_clear(self#gmp_fragment x)) in
-	      let insert_5 = Instru(Gmp_clear(self#gmp_fragment y)) in
+	      let insert_4 = Instru(Z_clear(self#z_fragment x)) in
+	      let insert_5 = Instru(Z_clear(self#z_fragment y)) in
 	      inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4; insert_5],
 	      Ctype_fragment var
 	    | _ ->
@@ -396,17 +393,17 @@ class gather_insertions props = object(self)
 	match t'.term_type with (* source type *)
 	| Linteger ->
 	  let inserts_0, v = self#term t' in
-	  let v = self#gmp_fragment v in
+	  let v = self#z_fragment v in
 	  let var = self#fresh_ctype_var ty' in
 	  let insert_1 = Decl_ctype_var var in
 	  let value =
 	    match ty with (* dest type *)
-	    | Ctype x when Cil.isUnsignedInteger x -> Gmp_get_ui v
-	    | Ctype x when Cil.isSignedInteger x -> Gmp_get_si v
+	    | Ctype x when Cil.isUnsignedInteger x -> Z_get_ui v
+	    | Ctype x when Cil.isSignedInteger x -> Z_get_si v
 	    | _ -> assert false (* unreachable *)
 	  in
 	  let insert_2 = Instru(Affect(var, value)) in
-	  let insert_3 = Instru(Gmp_clear v) in
+	  let insert_3 = Instru(Z_clear v) in
 	  inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
 	| Lreal -> assert false (* reals *)
 	| Ctype _ ->
@@ -416,32 +413,30 @@ class gather_insertions props = object(self)
       end
 
     | Tapp (li, _ (* already substituted *), params) ->
-      let builtin_name = li.l_var_info.lv_name in
+      let s = li.l_var_info.lv_name in
       begin
 	match ty with
 	| Linteger ->
-	  if builtin_name = "\\abs" then
+	  if s = "\\abs" then
 	    begin
 	      let param = List.hd params in
 	      assert (List.tl params = []);
 	      let inserts_0, x = self#term param in
-	      let x = self#gmp_fragment x in
-	      let fresh_var = self#fresh_gmp_var() in
-	      let insert_1, decl_var = self#decl_gmp_var fresh_var in
-	      let insert_2, init_var = self#init_gmp_var decl_var in
-	      let insert_3 = Instru(Gmp_abs(init_var, x)) in
-	      let insert_4 = Instru(Gmp_clear x) in
+	      let x = self#z_fragment x in
+	      let fresh_var = self#fresh_Z_var() in
+	      let insert_1, decl_var = self#decl_Z_var fresh_var in
+	      let insert_2, init_var = self#init_Z_var decl_var in
+	      let insert_3 = Instru(Z_abs(init_var, x)) in
+	      let insert_4 = Instru(Z_clear x) in
 	      inserts_0 @ [insert_1; insert_2; insert_3; insert_4],
-	      Gmp_fragment init_var
+	      Z_fragment init_var
 	    end
 	  else
-	    if builtin_name = "\\sum" || builtin_name = "\\product" ||
-	      builtin_name = "\\numof" then
+	    if s = "\\sum" || s = "\\product" || s = "\\numof" then
 	      match params with
 	      | [l;u;{term_node=Tlambda([q],t)}] -> self#lambda li l u q t
 	      | _ -> assert false
-	    else
-	      assert false
+	    else assert false
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
       end
@@ -450,28 +445,26 @@ class gather_insertions props = object(self)
       begin
 	match ty with
 	| Linteger ->
-	  let fresh_var = self#fresh_gmp_var() in
-	  let insert_0, decl_var = self#decl_gmp_var fresh_var in
-	  let insert_1, init_var = self#init_gmp_var decl_var in
+	  let fresh_var = self#fresh_Z_var() in
+	  let insert_0, decl_var = self#decl_Z_var fresh_var in
+	  let insert_1, init_var = self#init_Z_var decl_var in
 	  let inserts_2, cond' = self#term cond in
-	  let cond' = self#gmp_fragment cond' in
-	  let cond'' = Gmp_cmp_si(Ne, cond', Zero) in
-	  let inserts_then =
-	    let inserts_then_0, then_b' = self#term then_b in
-	    let then_b' = self#gmp_fragment then_b' in
-	    inserts_then_0
-	    @ [Instru(Gmp_set(init_var, then_b')); Instru(Gmp_clear then_b')]
+	  let cond' = self#z_fragment cond' in
+	  let cond'' = Z_cmp_si(Ne, cond', Zero) in
+	  let inserts_then_0, then_b' = self#term then_b in
+	  let then_b' = self#z_fragment then_b' in
+	  let inserts_then = inserts_then_0
+	    @ [Instru(Z_set(init_var, then_b')); Instru(Z_clear then_b')]
 	  in
-	  let inserts_else =
-	    let inserts_else_0, else_b' = self#term else_b in
-	    let else_b' = self#gmp_fragment else_b' in
-	    inserts_else_0
-	    @ [Instru(Gmp_set(init_var, else_b')); Instru(Gmp_clear else_b')]
+	  let inserts_else_0, else_b' = self#term else_b in
+	  let else_b' = self#z_fragment else_b' in
+	  let inserts_else = inserts_else_0
+	    @ [Instru(Z_set(init_var, else_b')); Instru(Z_clear else_b')]
 	  in
 	  let insert_3 = If(cond'', inserts_then, inserts_else) in
-	  let insert_4 = Instru(Gmp_clear cond') in
+	  let insert_4 = Instru(Z_clear cond') in
 	  [insert_0; insert_1] @ inserts_2 @ [insert_3; insert_4],
-	  Gmp_fragment init_var
+	  Z_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
       end
@@ -489,10 +482,8 @@ class gather_insertions props = object(self)
       else
 	(* label Post is only encoutered in post-conditions, and \at(t,Post)
 	   in a post-condition is t *)
-	if stringlabel = "Post" || stringlabel = "Here" then
-	  self#term term
-	else
-	  Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
+	if stringlabel = "Post" || stringlabel = "Here" then self#term term
+	else Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
 
     | Tnull -> [], Ctype_fragment Zero
 
@@ -509,16 +500,16 @@ class gather_insertions props = object(self)
 	  in
 	  let inserts_0, v = self#term t' in
 	  let v = self#ctype_fragment v in
-	  let fresh_var = self#fresh_gmp_var() in
-	  let insert_1, decl_var = self#decl_gmp_var fresh_var in
+	  let fresh_var = self#fresh_Z_var() in
+	  let insert_1, decl_var = self#decl_Z_var fresh_var in
 	  let init_set =
 	    match ty' with
-	    | Ctype x when Cil.isUnsignedInteger x -> self#init_set_ui_gmp_var
-	    | Ctype x when Cil.isSignedInteger x -> self#init_set_si_gmp_var
+	    | Ctype x when Cil.isUnsignedInteger x -> self#init_set_ui_Z_var
+	    | Ctype x when Cil.isSignedInteger x -> self#init_set_si_Z_var
 	    | _ -> assert false
 	  in
 	  let insert_2, init_var = init_set decl_var v in
-	  inserts_0 @ [insert_1; insert_2], Gmp_fragment init_var
+	  inserts_0 @ [insert_1; insert_2], Z_fragment init_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
       end
@@ -530,17 +521,17 @@ class gather_insertions props = object(self)
 	match t'.term_type with
 	| Linteger ->
 	  let inserts_0, v = self#term t' in
-	  let v = self#gmp_fragment v in
+	  let v = self#z_fragment v in
 	  let var = self#fresh_ctype_var ty' in
 	  let insert_1 = Decl_ctype_var var in
 	  let value =
 	    match ty' with
-	    | x when Cil.isUnsignedInteger x -> Gmp_get_ui v
-	    | x when Cil.isSignedInteger x -> Gmp_get_si v
+	    | x when Cil.isUnsignedInteger x -> Z_get_ui v
+	    | x when Cil.isSignedInteger x -> Z_get_si v
 	    | _ -> assert false
 	  in
 	  let insert_2 = Instru(Affect(var,value)) in
-	  let insert_3 = Instru(Gmp_clear v) in
+	  let insert_3 = Instru(Z_clear v) in
 	  inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
@@ -563,23 +554,22 @@ class gather_insertions props = object(self)
       [], Ctype_fragment (My_ctype_var(var.vtype, var.vname))
     | _ ->
       let inserts_0, lhost = self#tlhost tlhost in
-      let rec aux insertions ret = function
-	| TNoOffset -> insertions, ret
-	| TField (fi, tof) -> aux insertions (Field(ret, fi.fname)) tof
+      let rec aux ins ret = function
+	| TNoOffset -> ins, ret
+	| TField (fi, tof) -> aux ins (Field(ret, fi.fname)) tof
 	| TModel _ -> assert false (* TODO *)
 	| TIndex (t, tof) ->
 	  let inserts_1, t' = self#term t in
 	  begin
 	    match t.term_type with
 	    | Linteger ->
-	      aux (insertions @ inserts_1)
-		(Index(ret, Gmp_get_si(self#gmp_fragment t'))) tof
+	      aux (ins@inserts_1) (Index(ret, Z_get_si(self#z_fragment t'))) tof
 	    | Lreal -> assert false (* unreachable *)
-	    | _ -> aux insertions (Index(ret, self#ctype_fragment t')) tof
+	    | _ -> aux ins (Index(ret, self#ctype_fragment t')) tof
 	  end
       in
       match lhost with
-      | Gmp_fragment _ -> (* TODO *)
+      | Z_fragment _ -> (* TODO *)
 	assert (toffset = TNoOffset);
 	inserts_0, lhost
       | Ctype_fragment lhost' ->
@@ -749,17 +739,17 @@ class gather_insertions props = object(self)
 	  begin
 	    match h.term_type with
 	    | Linteger ->
-	      let h' = self#gmp_fragment h' in
-	      let malloc = Malloc(Binop(Mult,(Gmp_get_si h'), Sizeof ty)) in
+	      let h' = self#z_fragment h' in
+	      let malloc = Malloc(Binop(Mult,(Z_get_si h'), Sizeof ty)) in
 	      let insert_2 = Instru(Affect(my_old_ptr, malloc)) in
 	      let my_new_old_ptr = Index(my_old_ptr, my_iterator) in
 	      let my_new_ptr = Index(my_ptr, my_iterator) in
 	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	      let init = Affect(my_iterator, Zero) in
-	      let cond = Cmp(Rlt, my_iterator, Gmp_get_si h') in
+	      let cond = Cmp(Rlt, my_iterator, Z_get_si h') in
 	      let step = Affect(my_iterator, Binop(PlusA, my_iterator,One)) in
 	      let insert_3 = For(Some init,Some cond,Some step,inserts_block) in
-	      let insert_4 = Instru(Gmp_clear h') in
+	      let insert_4 = Instru(Z_clear h') in
 	      inserts_0 @ [insert_1; insert_2; insert_3; insert_4]
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
@@ -779,7 +769,7 @@ class gather_insertions props = object(self)
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
 	begin
-	  let my_old_ptr = My_ctype_var(v.vtype, "old_ptr_"^v.vname) in
+	  let my_old_ptr = My_ctype_var(v.vtype, "old_ptr_" ^ v.vname) in
 	  self#insert (BegFunc f.svar.vname) (Decl_ctype_var my_old_ptr);
 	  let inserts = alloc_aux my_old_ptr my_v v.vtype terms in
 	  List.iter (self#insert (BegFunc f.svar.vname)) inserts;
@@ -804,13 +794,13 @@ class gather_insertions props = object(self)
 	    let inserts' =
 	      match h.term_type with
 	      | Linteger ->
-		let h' = self#gmp_fragment h' in
+		let h' = self#z_fragment h' in
 		let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
 		let init = Affect(my_iterator, Zero) in
-		let cond = Cmp(Rlt, my_iterator, Gmp_get_si h') in
+		let cond = Cmp(Rlt, my_iterator, Z_get_si h') in
 		let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
 		let insert_2=For(Some init,Some cond,Some step,inserts_block) in
-		[insert_2; Instru(Gmp_clear h')]
+		[insert_2; Instru(Z_clear h')]
 	      | Lreal -> assert false (* TODO: reals *)
 	      | _ ->
 		let h' = self#ctype_fragment h' in
@@ -822,7 +812,7 @@ class gather_insertions props = object(self)
 	    in
 	    [insert_0] @ inserts_1 @ inserts' @ [Instru(Free(my_old_ptr))]
 	in
-	let my_old_ptr = My_ctype_var(Cil.voidPtrType, "old_ptr_"^v.vname) in
+	let my_old_ptr = My_ctype_var(Cil.voidPtrType, "old_ptr_" ^ v.vname) in
 	let insertions = dealloc_aux my_old_ptr terms in
 	List.iter (self#insert (EndFunc f.svar.vname)) insertions
       in
@@ -929,30 +919,30 @@ class gather_insertions props = object(self)
 	    | Linteger ->
 	      let inserts_0, term' = self#term term in
 	      List.iter (self#insert (BegStmt stmt.sid)) inserts_0;
-	      let term' = self#gmp_fragment term' in
-	      let cond = Gmp_cmp_ui(Lt, term', Zero) in
+	      let term' = self#z_fragment term' in
+	      let cond = Z_cmp_ui(Lt, term', Zero) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
 	      self#insert (BegStmt stmt.sid)(If (cond, [instr], []));
-	      self#insert (EndStmt stmt.sid) (Instru(Gmp_clear term'));
+	      self#insert (EndStmt stmt.sid) (Instru(Z_clear term'));
 	      let inserts_1, term' = self#term term in
 	      List.iter (self#insert (BegIter stmt.sid)) inserts_1;
-	      let term' = self#gmp_fragment term' in
-	      let fresh_variant = self#fresh_gmp_var() in
-	      let insert_2, decl_variant = self#decl_gmp_var fresh_variant in
+	      let term' = self#z_fragment term' in
+	      let fresh_variant = self#fresh_Z_var() in
+	      let insert_2, decl_variant = self#decl_Z_var fresh_variant in
 	      self#insert (BegIter stmt.sid) insert_2;
 	      let insert_3, init_variant =
-		self#init_set_gmp_var decl_variant term' in
+		self#init_set_Z_var decl_variant term' in
 	      self#insert (BegIter stmt.sid) insert_3;
 	      let inserts_4, term' = self#term term in
 	      List.iter (self#insert (EndIter stmt.sid)) inserts_4;
-	      let term' = self#gmp_fragment term' in
-	      let cond = Gmp_cmp_ui(Lt, init_variant, Zero) in
+	      let term' = self#z_fragment term' in
+	      let cond = Z_cmp_ui(Lt, init_variant, Zero) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
 	      self#insert (EndIter stmt.sid) (If(cond, [instr], []));
-	      let cond = Gmp_cmp(Ge, term', init_variant) in
+	      let cond = Z_cmp(Ge, term', init_variant) in
 	      let instr = Instru(Pc_exn("Variant non decreasing", id)) in
 	      self#insert (EndIter stmt.sid) (If(cond, [instr] ,[]));
-	      self#insert (EndIter stmt.sid) (Instru(Gmp_clear init_variant))
+	      self#insert (EndIter stmt.sid) (Instru(Z_clear init_variant))
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      let inserts_0, term' = self#term term in
@@ -1027,60 +1017,51 @@ class gather_insertions props = object(self)
 	begin
 	  match t2.term_type with
 	  | Linteger ->
-	    let fresh_iter = My_gmp_var iter_name in
-	    let insert_0, decl_iter = self#decl_gmp_var fresh_iter in
+	    let fresh_iter = My_Z_var iter_name in
+	    let insert_0, decl_iter = self#decl_Z_var fresh_iter in
 	    let inserts_1, t1' = self#term t1 in
-	    let t1' = self#gmp_fragment t1' in
+	    let t1' = self#z_fragment t1' in
 	    let inserts_2, t2' = self#term t2 in
-	    let t2' = self#gmp_fragment t2' in
-	    let insert_3, init_iter = self#init_set_gmp_var decl_iter t1' in
+	    let t2' = self#z_fragment t2' in
+	    let insert_3, init_iter = self#init_set_Z_var decl_iter t1' in
 	    let inserts_4 =
-	      if r1 = Rlt then
-		[Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One))]
+	      if r1=Rlt then [Instru(Z_binop_ui(PlusA,init_iter,init_iter,One))]
 	      else []
 	    in
-	    let exp1 = Gmp_cmpr(r2, init_iter, t2') in
+	    let exp1 = Z_cmpr(r2, init_iter, t2') in
 	    let exp2 = if forall then var else Lnot var in
-	    let inserts_block =
-	      let ins_b_0, goal_var = self#predicate_named goal in
-	      let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
-	      let ins_b_2 =
-		Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)) in
-	      ins_b_0 @ [ins_b_1; ins_b_2]
-	    in
-	    let insert_5 =
-	      For(None, Some(Land(exp1, exp2)), None, inserts_block) in
-	    let insert_6 = Instru(Gmp_clear init_iter) in
-	    let insert_7 = Instru(Gmp_clear t1') in
-	    let insert_8 = Instru(Gmp_clear t2') in
+	    let ins_b_0, goal_var = self#predicate_named goal in
+	    let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
+	    let ins_b_2 = Instru(Z_binop_ui(PlusA,init_iter,init_iter,One)) in
+	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2] in
+	    let insert_5 = For(None,Some(Land(exp1,exp2)),None,inserts_block) in
+	    let insert_6 = Instru(Z_clear init_iter) in
+	    let insert_7 = Instru(Z_clear t1') in
+	    let insert_8 = Instru(Z_clear t2') in
 	    [insert_0] @ inserts_1 @ inserts_2 @ [insert_3] @ inserts_4
 	    @ [insert_5; insert_6; insert_7; insert_8]
 	  | Lreal -> assert false (* TODO: reals *)
 	  | _ ->
-	    let fresh_iter = My_gmp_var iter_name in
-	    let insert_0, decl_iter = self#decl_gmp_var fresh_iter in
+	    let fresh_iter = My_Z_var iter_name in
+	    let insert_0, decl_iter = self#decl_Z_var fresh_iter in
 	    let inserts_1, t1' = self#term t1 in
-	    let t1' = self#gmp_fragment t1' in
+	    let t1' = self#z_fragment t1' in
 	    let inserts_2, t2' = self#term t2 in
 	    let t2' = self#ctype_fragment t2' in
-	    let insert_3, init_iter = self#init_set_gmp_var decl_iter t1' in
+	    let insert_3, init_iter = self#init_set_Z_var decl_iter t1' in
 	    let inserts_4 =
-	      if r1 = Rlt then
-		[Instru(Gmp_binop_ui(PlusA,init_iter,init_iter,One))]
+	      if r1=Rlt then [Instru(Z_binop_ui(PlusA,init_iter,init_iter,One))]
 	      else []
 	    in
-	    let exp1 = Gmp_cmpr_si(r2, init_iter, t2') in
+	    let exp1 = Z_cmpr_si(r2, init_iter, t2') in
 	    let exp2 = if forall then var else Lnot var in
-	    let inserts_block =
-	      let ins_b_0, goal_var = self#predicate_named goal in 
-	      let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
-	      let ins_b_2 =
-		Instru(Gmp_binop_ui(PlusA, init_iter, init_iter,One)) in
-	      ins_b_0 @ [ins_b_1; ins_b_2]
-	    in
+	    let ins_b_0, goal_var = self#predicate_named goal in 
+	    let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
+	    let ins_b_2 = Instru(Z_binop_ui(PlusA,init_iter,init_iter,One)) in
+	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2] in
 	    let insert_5 = For(None,Some(Land(exp1,exp2)),None,inserts_block) in
-	    let insert_6 = Instru(Gmp_clear init_iter) in
-	    let insert_7 = Instru(Gmp_clear t1') in
+	    let insert_6 = Instru(Z_clear init_iter) in
+	    let insert_7 = Instru(Z_clear t1') in
 	    [insert_0] @ inserts_1 @ inserts_2 @ [insert_3] @ inserts_4
 	    @ [insert_5; insert_6; insert_7]
 	end
@@ -1099,11 +1080,9 @@ class gather_insertions props = object(self)
 	in
 	let exp2 =Land((Cmp(r2,iter,t2')),(if forall then var else Lnot var)) in
 	let exp3 = Affect(iter,Binop(PlusA,iter,One)) in
-	let inserts_block =
-	  let ins_b_0, goal_var = self#predicate_named goal in
-	  let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
-	  ins_b_0 @ [ins_b_1]
-	in
+	let ins_b_0, goal_var = self#predicate_named goal in
+	let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
+	let inserts_block = ins_b_0 @ [ins_b_1]	in
 	let insert_3 = For(Some exp1, Some exp2, Some exp3, inserts_block) in
 	[insert_0] @ inserts_1 @ inserts_2 @ [insert_3]
     in
@@ -1132,13 +1111,13 @@ class gather_insertions props = object(self)
     let inserts, ret =
       match offset.term_type with
       | Linteger ->
-	let y' = self#gmp_fragment y' in
+	let y' = self#z_fragment y' in
 	let var = self#fresh_pred_var() in
 	let insert_2 = Decl_pred_var var in
-	let exp1 = Gmp_cmp_ui(Ge, y', Zero) in
-	let exp2 = Gmp_cmp_ui(Lt, y', Pc_dim(x')) in
+	let exp1 = Z_cmp_ui(Ge, y', Zero) in
+	let exp2 = Z_cmp_ui(Lt, y', Pc_dim(x')) in
 	let insert_3 = Instru(Affect_pred(var, Land(exp1, exp2))) in
-	let insert_4 = Instru(Gmp_clear y') in
+	let insert_4 = Instru(Z_clear y') in
 	[insert_2; insert_3; insert_4], var
       | Ctype (TInt _) ->
 	let y' = self#ctype_fragment y' in
@@ -1196,8 +1175,8 @@ class gather_insertions props = object(self)
       let cond, insert_3 =
 	match t.term_type with
 	| Linteger ->
-	  let x = self#gmp_fragment term_var in
-	  Gmp_cmp_si(Ne, x, Zero), [Instru(Gmp_clear x)]
+	  let x = self#z_fragment term_var in
+	  Z_cmp_si(Ne, x, Zero), [Instru(Z_clear x)]
 	| Lreal -> assert false (* unreachable *)
 	| Ctype (TInt _) -> Cmp(Rneq, self#ctype_fragment term_var, Zero), []
 	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
@@ -1218,28 +1197,28 @@ class gather_insertions props = object(self)
     let inserts_0, t1' = self#term t1 in
     let inserts_1, t2' = self#term t2 in
     let clear_t1 = match t1.term_type with
-	Linteger -> [Instru(Gmp_clear (self#gmp_fragment t1'))] | _ -> []
+	Linteger -> [Instru(Z_clear (self#z_fragment t1'))] | _ -> []
     in
     let clear_t2 = match t2.term_type with
-	Linteger -> [Instru(Gmp_clear (self#gmp_fragment t2'))] | _ -> []
+	Linteger -> [Instru(Z_clear (self#z_fragment t2'))] | _ -> []
     in
     let inserts, ret =
       match t1.term_type, t2.term_type with
       | Linteger, Linteger ->
 	let var = self#fresh_pred_var() in
-	let t1' = self#gmp_fragment t1' in
-	let t2' = self#gmp_fragment t2' in
+	let t1' = self#z_fragment t1' in
+	let t2' = self#z_fragment t2' in
 	let insert_2 = Decl_pred_var var in
-	let insert_3 = Instru(Affect_pred(var, Gmp_cmpr(rel, t1', t2'))) in
+	let insert_3 = Instru(Affect_pred(var, Z_cmpr(rel, t1', t2'))) in
 	[insert_2; insert_3], var
       | Linteger, Ctype x ->
 	let var = self#fresh_pred_var() in
-	let t1' = self#gmp_fragment t1' in
+	let t1' = self#z_fragment t1' in
 	let t2' = self#ctype_fragment t2' in
 	let insert_2 = Decl_pred_var var in
 	let value =
-	  if Cil.isUnsignedInteger x then Gmp_cmpr_ui(rel, t1', t2')
-	  else if Cil.isSignedInteger x then Gmp_cmpr_si(rel, t1', t2')
+	  if Cil.isUnsignedInteger x then Z_cmpr_ui(rel, t1', t2')
+	  else if Cil.isSignedInteger x then Z_cmpr_si(rel, t1', t2')
 	  else assert false
 	in
 	let insert_3 = Instru(Affect_pred(var, value)) in
@@ -1248,18 +1227,18 @@ class gather_insertions props = object(self)
       | Ctype x, Linteger ->
 	let var = self#fresh_pred_var() in
 	let t1' = self#ctype_fragment t1' in
-	let t2' = self#gmp_fragment t2' in
-	let fresh_var' = self#fresh_gmp_var() in
-	let insert_2, decl_var' = self#decl_gmp_var fresh_var' in
+	let t2' = self#z_fragment t2' in
+	let fresh_var' = self#fresh_Z_var() in
+	let insert_2, decl_var' = self#decl_Z_var fresh_var' in
 	let init_set =
-	  if Cil.isUnsignedInteger x then self#init_set_ui_gmp_var
-	  else if Cil.isSignedInteger x then self#init_set_si_gmp_var
+	  if Cil.isUnsignedInteger x then self#init_set_ui_Z_var
+	  else if Cil.isSignedInteger x then self#init_set_si_Z_var
 	  else assert false
 	in
 	let insert_3, init_var' = init_set decl_var' t1' in
 	let insert_4 = Decl_pred_var var in
-	let insert_5 = Instru(Affect_pred(var,Gmp_cmpr(rel,init_var',t2'))) in
-	let insert_7 = Instru(Gmp_clear init_var') in
+	let insert_5 = Instru(Affect_pred(var,Z_cmpr(rel,init_var',t2'))) in
+	let insert_7 = Instru(Z_clear init_var') in
 	[insert_2; insert_3; insert_4; insert_5; insert_7], var
       | _ -> [], Cmp(rel, self#ctype_fragment t1', self#ctype_fragment t2')
     in
