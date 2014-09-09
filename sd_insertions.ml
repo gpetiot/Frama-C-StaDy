@@ -483,7 +483,9 @@ class gather_insertions props = object(self)
 	(* label Post is only encoutered in post-conditions, and \at(t,Post)
 	   in a post-condition is t *)
 	if stringlabel = "Post" || stringlabel = "Here" then self#term term
-	else Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
+	else
+	  Sd_options.Self.not_yet_implemented
+	    "Sd_insertions.gather_insertions#term_node %a" Sd_debug.pp_term t
 
     | Tnull -> [], Ctype_fragment Zero
 
@@ -541,7 +543,8 @@ class gather_insertions props = object(self)
     | TCoerceE _ | TUpdate _ | Ttypeof _ | Ttype _ | Tempty_set | Tunion _
     | Tinter _ | Tcomprehension _ | TDataCons _ | TAddrOf _ | TStartOf _ 
     | TSizeOf _ | TSizeOfE _ | TSizeOfStr _ | TAlignOf _ | TAlignOfE _->
-      Sd_options.Self.not_yet_implemented "%a" Sd_debug.pp_term t
+      Sd_options.Self.not_yet_implemented
+	"Sd_insertions.gather_insertions#term_node %a" Sd_debug.pp_term t
 
     | Tlambda _ | Trange _ | Tlet _ ->
       Sd_utils.error_term t (* unreachable *)

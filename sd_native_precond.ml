@@ -364,8 +364,8 @@ let translate precond_file_name =
   in
   let constraints = List.fold_left f [] typically_preds in
   let constraints = List.fold_left f constraints requires_preds in
-  Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
-    "non-default behaviors ignored!";
+  let dkey = Sd_options.dkey_native_precond in
+  Sd_options.Self.feedback ~dkey "non-default behaviors ignored!";
   let is_domain = function PLDomain _ -> true | _ -> false in
   let domains, constraints = List.partition is_domain constraints in
   let unfold = function PLDomain d -> d | _ -> assert false in
