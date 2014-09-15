@@ -1,46 +1,38 @@
 
-(* Appends an element to the end of a list. *)
-let append_end : 'a list -> 'a -> 'a list =
-  fun l elt -> List.rev_append (List.rev l) [elt]
+let append_end l elt = List.rev_append (List.rev l) [elt]
 
-let no_repeat : 'a list -> 'a list =
-  fun l ->
-    let rec aux acc = function
-      | [] -> acc
-      | h :: t when List.mem h acc -> aux acc t
-      | h :: t -> aux (h :: acc) t
-    in
-    aux  [] l
+let no_repeat l =
+  let rec aux acc = function
+    | [] -> acc
+    | h :: t when List.mem h acc -> aux acc t
+    | h :: t -> aux (h :: acc) t
+  in
+  aux  [] l
 
-let fieldinfo_to_int : Cil_types.fieldinfo -> Integer.t =
-  fun fi ->
-    let rec aux cpt = function
-      | {Cil_types.forig_name=s}::_ when s = fi.Cil_types.forig_name ->
-	Integer.of_int cpt
-      | _::t -> aux (cpt+1) t
-      | _ -> assert false
-    in
-    aux 0 fi.Cil_types.fcomp.Cil_types.cfields
+let fieldinfo_to_int fi =
+  let rec aux cpt = function
+    | {Cil_types.forig_name=s}::_ when s = fi.Cil_types.forig_name ->
+      Integer.of_int cpt
+    | _::t -> aux (cpt+1) t
+    | _ -> assert false
+  in
+  aux 0 fi.Cil_types.fcomp.Cil_types.cfields
 
-let machdep : unit -> int =
-  fun () ->
-    match Kernel.Machdep.get() with
-    | "x86_64" -> 64
-    | "x86_32" | "ppc_32" -> 32
-    | "x86_16" -> 16
-    | _ -> 32
+let machdep () =
+  match Kernel.Machdep.get() with
+  | "x86_64" -> 64
+  | "x86_32" | "ppc_32" -> 32
+  | "x86_16" -> 16
+  | _ -> 32
 
-let default_behavior : Cil_types.kernel_function -> Cil_types.funbehavior =
-  fun kf ->
-    List.find Cil.is_default_behavior (Annotations.behaviors kf)
+let default_behavior kf =
+  List.find Cil.is_default_behavior (Annotations.behaviors kf)
 
-let typically_preds :
-    Cil_types.funbehavior -> Cil_types.identified_predicate list =
-  fun bhv ->
-    let typically = List.filter (fun (s,_,_) -> s = "typically")
-      bhv.Cil_types.b_extended in
-    let typically = List.map (fun (_,_,pred) -> pred) typically in
-    List.fold_left List.rev_append [] typically
+let typically_preds bhv =
+  let is_typically (s,_,_) = s = "typically" in
+  let typically = List.filter is_typically bhv.Cil_types.b_extended in
+  let typically = List.map (fun (_,_,pred) -> pred) typically in
+  List.fold_left List.rev_append [] typically
 
 let to_id = Sd_states.Property_To_Id.find
 let to_prop = Sd_states.Id_To_Property.find
@@ -90,8 +82,8 @@ let error_pred p = Sd_options.Self.abort "pred: %a" Sd_debug.pp_pred p
 
 (* Extracts the varinfo of the variable and its inferred size as a term
    from a term t as \valid(t). *)
-let rec extract_from_valid : term -> varinfo * term =
-  fun t -> match t.term_node with
+let rec extract_from_valid t =
+  match t.term_node with
   | TBinOp (((PlusPI|IndexPI|MinusPI) as op),
     	    ({term_node=TCastE((TPtr _) as ty,t)} as _operand1),
     	    ({term_node=(Trange (_, Some _))} as operand2)) ->
@@ -157,39 +149,36 @@ let rec extract_from_valid : term -> varinfo * term =
    -  var2 => inferred size for var2
    -  ...
    - var n => inferred size for varn *)
-let lengths_from_requires :
-    kernel_function -> term list Cil_datatype.Varinfo.Hashtbl.t =
-  fun kf ->
-    let vi = Kernel_function.get_vi kf in
-    let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
-    let o = object
-      inherit Visitor.frama_c_inplace
-      method! vpredicate p =
-	match p with
-	| Pvalid(_, t) | Pvalid_read(_, t) ->
-	  begin
-	    try
-	      let v, term = extract_from_valid t in
-	      let terms =
-		try Cil_datatype.Varinfo.Hashtbl.find kf_tbl v
-		with Not_found -> []
-	      in
-	      let terms = append_end terms term in
-	      Cil_datatype.Varinfo.Hashtbl.replace kf_tbl v terms;
-	      Cil.DoChildren
-	    with
-	    | _ -> Cil.DoChildren
-	  end
+let lengths_from_requires kf =
+  let vi = Kernel_function.get_vi kf in
+  let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
+  let o = object
+    inherit Visitor.frama_c_inplace
+    method! vpredicate = function
+    | Pvalid(_, t) | Pvalid_read(_, t) ->
+      begin
+	try
+	  let v, term = extract_from_valid t in
+	  let terms =
+	    try Cil_datatype.Varinfo.Hashtbl.find kf_tbl v
+	    with Not_found -> []
+	  in
+	  let terms = append_end terms term in
+	  Cil_datatype.Varinfo.Hashtbl.replace kf_tbl v terms;
+	  Cil.DoChildren
+	with
 	| _ -> Cil.DoChildren
-    end
-    in
-    let on_requires p =
-      let p' = (new Sd_subst.subst)#pred p.ip_content [][][][] in
-      ignore (Visitor.visitFramacPredicate o p')
-    in
-    let on_bhv _ bhv = List.iter on_requires bhv.b_requires in
-    if not (Cil.is_unused_builtin vi) then
-      (* TODO: handle arrays with constant size *)
-      (*Globals.Vars.iter (fun vi _ -> () );*)
-      Annotations.iter_behaviors on_bhv kf;
-    kf_tbl
+      end
+    | _ -> Cil.DoChildren
+  end
+  in
+  let on_requires p =
+    let p' = (new Sd_subst.subst)#pred p.ip_content [][][][] in
+    ignore (Visitor.visitFramacPredicate o p')
+  in
+  let on_bhv _ bhv = List.iter on_requires bhv.b_requires in
+  if not (Cil.is_unused_builtin vi) then
+    (* TODO: handle arrays with constant size *)
+    (*Globals.Vars.iter (fun vi _ -> () );*)
+    Annotations.iter_behaviors on_bhv kf;
+  kf_tbl
