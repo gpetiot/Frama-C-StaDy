@@ -1,16 +1,6 @@
 
-(* cut a string into 2 pieces *)
-let cut s n =
-  try (String.sub s 0 n), (String.sub s n ((String.length s)-n))
-  with _ -> Sd_options.Self.abort "socket:cut \"%s\" %i" s n
-
 let process_test_case s =
-  let cut_sep sep x =
-    let pos = String.index x sep in
-    let a,_ = cut x pos in
-    let _,b = cut x (pos+1) in
-    a,b
-  in
+  let cut_sep sep x = Extlib.string_split x (String.index x sep) in
   let str_tc, s = cut_sep '|' s in
   let _msg, s = cut_sep ':' s in
   let str_prop, s = try cut_sep '|' s with _ -> s, "" in
@@ -75,20 +65,19 @@ let process_reachable_bhv s =
    correspondante *)
 let process_string s =
   try
-    let s1, s2 = cut s 3 in
-    if s1 = "TC|" then process_test_case s2
+    let s1, s2 = Extlib.string_split s 2 in
+    if s1 = "TC" then process_test_case s2
     else
-      let s1, s2 = cut s 5 in
-      if s1 = "NbTC|" then process_nb_test_cases s2
+      let s1, s2 = Extlib.string_split s 4 in
+      if s1 = "NbTC" then process_nb_test_cases s2
       else
-	let s1, _s2 = cut s 14 in
-	if s1 = "FinalStatus|OK" then process_final_status ()
+	if s = "FinalStatus|OK" then process_final_status ()
 	else
-	  let s1, s2 = cut s 14 in
-	  if s1 = "REACHABLE_BHV:" then process_reachable_bhv s2
+	  let s1, s2 = Extlib.string_split s 13 in
+	  if s1 = "REACHABLE_BHV" then process_reachable_bhv s2
 	  else
-	    let s1, s2 = cut s 15 in
-	    if s1 = "REACHABLE_STMT:" then process_reachable_stmt s2
+	    let s1, s2 = Extlib.string_split s 14 in
+	    if s1 = "REACHABLE_STMT" then process_reachable_stmt s2
 	    else assert false
   with _ ->
     Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "'%s' not processed" s
@@ -103,8 +92,8 @@ let rec process_channel c =
       if str <> "" then
 	let dkey = Sd_options.dkey_socket in
 	Sd_options.Self.debug ~dkey "'%s' received" str;
-	let prefix, suffix = cut str 4 in
-	if prefix = "@FC:" then process_string suffix
+	let prefix, suffix = Extlib.string_split str 3 in
+	if prefix = "@FC" then process_string suffix
 	else Sd_options.Self.debug ~dkey "'%s' not processed" str
     end;
     process_channel c
