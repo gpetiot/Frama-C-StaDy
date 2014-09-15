@@ -406,7 +406,7 @@ let translate precond_file_name =
       | PLBinOp (a,Mult,PLConst (PLInt b)) -> aux (fun x -> Integer.mul x b) a
       | _ -> assert false
     in
-    aux (fun x -> x) t
+    aux Extlib.id t
   in
   let fixed_dims, unquantifs =
     let rec aux ret1 ret2 = function
