@@ -45,3 +45,6 @@ PLUGIN_CMO	:= \
 PLUGIN_GUI_CMO 	:= sd_register_gui 
 include $(FRAMAC_SHARE)/Makefile.dynamic
 
+clean::
+	$(RM) __sd_instru_*.c __sd_*.pl
+	$(RM) -r pathcrawler___sd_instru_* testcases___sd_instru_*
