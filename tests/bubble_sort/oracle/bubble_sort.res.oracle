@@ -69,7 +69,6 @@ void bubble_sort(int *A, int n)
     int j;
     int i;
     {
-      /*sequence*/
       i = 0;
       j = i;
     }

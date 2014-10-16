@@ -713,7 +713,6 @@ void BottomUpSort(int n, int *A, int *B)
                     int tmp;
                     int tmp_0;
                     {
-                      /*sequence*/
                       ;
                       tmp = min(i + 2 * width,n);
                       tmp_0 = min(i + width,n);

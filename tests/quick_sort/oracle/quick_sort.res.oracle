@@ -241,7 +241,6 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                   {
                     pathcrawler_to_framac("@FC:REACHABLE_STMT:33");
                     {
-                      /*sequence*/
                       tmp = L;
                       L ++;
                       *(arr + tmp) = *(arr + R);
@@ -319,7 +318,6 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                   {
                     pathcrawler_to_framac("@FC:REACHABLE_STMT:48");
                     {
-                      /*sequence*/
                       tmp_0 = R;
                       R --;
                       *(arr + tmp_0) = *(arr + L);
@@ -353,7 +351,6 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
           *(beg + (i + 1)) = L + 1;
           *(end + (i + 1)) = *(end + i);
           {
-            /*sequence*/
             tmp_1 = i;
             i ++;
             *(end + tmp_1) = L;

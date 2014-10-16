@@ -166,7 +166,8 @@ class print_insertions insertions () = object(self)
 
   method private fundecl fmt f =
     let entry_point_name=Kernel_function.get_name(fst(Globals.entry_point())) in
-    let entering_ghost = f.svar.vghost && not is_ghost in
+    let old_is_ghost = is_ghost in
+    is_ghost <- true;
     (* BEGIN precond (entry-point) *)
     if f.svar.vname = entry_point_name then
       begin
@@ -182,19 +183,14 @@ class print_insertions insertions () = object(self)
 	Format.fprintf fmt "@]@\n}@\n@\n"
       end;
     (* END precond (entry-point) *)
-    Format.fprintf fmt "@[%t%a@\n@[<v 2>"
-      (if entering_ghost then fun fmt -> Format.fprintf fmt "/*@@ ghost@ " 
-       else ignore)
-      self#vdecl f.svar;
+    Format.fprintf fmt "@[%t%a@\n@[<v 2>" ignore self#vdecl f.svar;
     (* body. *)
-    if entering_ghost then is_ghost <- true;
     Format.fprintf fmt "@[<hov 2>{@\n";
     self#insertions_at fmt (Sd_insertions.BegFunc f.svar.vname);
     self#block ~braces:true fmt f.sbody;
     Format.fprintf fmt "@.}";
-    if entering_ghost then is_ghost <- false;
-    Format.fprintf fmt "@]%t@]@."
-      (if entering_ghost then fun fmt -> Format.fprintf fmt "@ */" else ignore)
+    Format.fprintf fmt "@]%t@]@." ignore;
+    is_ghost <- old_is_ghost
   (* end of fundecl *)
 
   method! private annotated_stmt next fmt stmt =
@@ -257,6 +253,11 @@ class print_insertions insertions () = object(self)
   	  Format.fprintf fmt "@\n"
   	end
     | GVarDecl (_, vi, _) -> if print_var vi then super#global fmt g
+    | GVar (vi,_,_) ->
+      let old_vghost = vi.vghost in
+      vi.vghost <- false;
+      super#global fmt g;
+      vi.vghost <- old_vghost
     | _ -> super#global fmt g
   (* end of global *)
 end

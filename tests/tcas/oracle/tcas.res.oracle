@@ -266,7 +266,6 @@ int Non_Crossing_Biased_Climb(void)
     int result;
     int tmp;
     {
-      /*sequence*/
       tmp = Inhibit_Biased_Climb();
       upward_preferred = tmp > Down_Separation;
     }
@@ -276,7 +275,6 @@ int Non_Crossing_Biased_Climb(void)
       {
         pathcrawler_to_framac("@FC:REACHABLE_STMT:21");
         {
-          /*sequence*/
           tmp_0 = Own_Below_Threat();
           if (tmp_0) {
             int tmp_1;
@@ -289,7 +287,6 @@ int Non_Crossing_Biased_Climb(void)
               {
                 pathcrawler_to_framac("@FC:REACHABLE_STMT:27");
                 {
-                  /*sequence*/
                   tmp_2 = ALIM();
                   ;
                 }
@@ -322,7 +319,6 @@ int Non_Crossing_Biased_Climb(void)
       {
         pathcrawler_to_framac("@FC:REACHABLE_STMT:36");
         {
-          /*sequence*/
           tmp_4 = Own_Above_Threat();
           if (tmp_4) 
             {
@@ -332,7 +328,6 @@ int Non_Crossing_Biased_Climb(void)
                 {
                   pathcrawler_to_framac("@FC:REACHABLE_STMT:42");
                   {
-                    /*sequence*/
                     tmp_5 = ALIM();
                     ;
                   }
@@ -398,7 +393,6 @@ int Non_Crossing_Biased_Descend(void)
     int result;
     int tmp;
     {
-      /*sequence*/
       tmp = Inhibit_Biased_Climb();
       upward_preferred = tmp > Down_Separation;
     }
@@ -408,7 +402,6 @@ int Non_Crossing_Biased_Descend(void)
       {
         pathcrawler_to_framac("@FC:REACHABLE_STMT:59");
         {
-          /*sequence*/
           tmp_0 = Own_Below_Threat();
           if (tmp_0) 
             {
@@ -418,7 +411,6 @@ int Non_Crossing_Biased_Descend(void)
                 {
                   pathcrawler_to_framac("@FC:REACHABLE_STMT:65");
                   {
-                    /*sequence*/
                     tmp_1 = ALIM();
                     ;
                   }
@@ -451,7 +443,6 @@ int Non_Crossing_Biased_Descend(void)
       {
         pathcrawler_to_framac("@FC:REACHABLE_STMT:74");
         {
-          /*sequence*/
           tmp_3 = Own_Above_Threat();
           if (tmp_3) {
             int tmp_4;
@@ -464,7 +455,6 @@ int Non_Crossing_Biased_Descend(void)
               {
                 pathcrawler_to_framac("@FC:REACHABLE_STMT:80");
                 {
-                  /*sequence*/
                   tmp_5 = ALIM();
                   ;
                 }
@@ -556,7 +546,6 @@ int alt_sep_test(void)
     need_upward_RA = 0;
     need_downward_RA = 0;
     {
-      /*sequence*/
       if (High_Confidence) 
         {
           pathcrawler_to_framac("@FC:REACHABLE_STMT:99");
@@ -585,7 +574,6 @@ int alt_sep_test(void)
     }
     tcas_equipped = Other_Capability == 1;
     {
-      /*sequence*/
       if (Two_of_Three_Reports_Valid) 
         {
           pathcrawler_to_framac("@FC:REACHABLE_STMT:113");
@@ -635,7 +623,6 @@ int alt_sep_test(void)
                       int tmp_6;
                       int tmp_4;
                       {
-                        /*sequence*/
                         tmp_1 = Non_Crossing_Biased_Climb();
                         if (tmp_1) {
                           int tmp_2;
@@ -659,7 +646,6 @@ int alt_sep_test(void)
                         need_upward_RA = tmp_3;
                       }
                       {
-                        /*sequence*/
                         tmp_4 = Non_Crossing_Biased_Descend();
                         if (tmp_4) {
                           int tmp_5;
