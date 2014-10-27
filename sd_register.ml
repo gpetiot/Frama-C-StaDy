@@ -14,7 +14,7 @@ let typically_typer ~typing_context ~loc bhv = function
 let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
-let second_pass filename props =
+let translate filename props =
   Kernel.Unicode.set false;
   let gatherer = new Sd_insertions.gather_insertions props in
   Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
@@ -66,7 +66,7 @@ let compute_props props =
   Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
-  let translated_props = second_pass instru_fname props in
+  let translated_props = translate instru_fname props in
   let test_params =
     if native_precond_generated then
       Printf.sprintf "-pc-test-params %s" precond_fname
