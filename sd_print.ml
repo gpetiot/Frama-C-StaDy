@@ -88,6 +88,8 @@ let pp_instruction fmt = function
     Format.fprintf fmt "pathcrawler_to_framac(\"%s\")" s
   | Sd_insertions.Pc_exn(s,i)->
     Format.fprintf fmt"pathcrawler_assert_exception(\"%s\",%i)" s i
+  | Sd_insertions.Pc_assume p ->
+    Format.fprintf fmt "pathcrawler_assume(%a)" pp_pexpr p
   | Sd_insertions.Ret e -> Format.fprintf fmt "return %a" pp_cexpr e
   | Sd_insertions.Z_clear g ->Format.fprintf fmt "__gmpz_clear(%a)" pp_zexpr g
   | Sd_insertions.Z_init g->Format.fprintf fmt "__gmpz_init(%a)" pp_decl_Z g
@@ -192,6 +194,27 @@ class print_insertions insertions () = object(self)
     Format.fprintf fmt "@]%t@]@." ignore;
     is_ghost <- old_is_ghost
   (* end of fundecl *)
+
+  (* do not print calls to function that do not have a body *)
+  method! instr fmt i = match i with
+  | Call (_ret, fct_exp, _args, _loc) ->
+    begin
+      let fct_varinfo = match fct_exp.enode  with
+	| Lval(Var v,NoOffset) -> v
+	| _ -> assert false
+      in
+      let kf = Globals.Functions.get fct_varinfo in
+      let is_def = Kernel_function.is_definition kf in
+      if is_def then
+	super#instr fmt i
+      else
+	begin
+	  Sd_options.Self.warning ~once:true "function %s does not have a body"
+	    fct_varinfo.vname;
+	  Sd_options.Self.warning "%a has been discarded" Printer.pp_instr i
+	end
+    end
+  | _ -> super#instr fmt i
 
   method! private annotated_stmt next fmt stmt =
     Format.pp_open_hvbox fmt 2;

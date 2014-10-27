@@ -64,6 +64,7 @@ and instruction =
 | Free of ctype_expr
 | Pc_to_framac of string
 | Pc_exn of string * int
+| Pc_assume of pred_expr
 | Ret of ctype_expr
 | Z_clear of z_expr
 | Z_init of declared_Z_var
@@ -649,7 +650,7 @@ class gather_insertions props = object(self)
     let do_behavior b =
       let post = b.b_post_cond in
       let to_prop = Property.ip_of_ensures kf kloc b in
-      let post = List.filter (fun x->List.mem (to_prop x) props) post in
+      let post = List.filter (fun x -> List.mem (to_prop x) props) post in
       let do_postcond (tk,pred) =
 	let prop = to_prop (tk,pred) in
 	let id = Sd_utils.to_id prop in
