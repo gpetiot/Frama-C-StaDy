@@ -161,12 +161,13 @@ let compute_props props =
 	Property_status.emit emitter ~hyps prop ~distinct status
   in
   List.iter emit_status translated_props;
+  let dkey = Sd_options.dkey_reach in
   let add_assert_false sid (stmt, kf) =
-    Sd_options.Self.feedback "stmt %i unreachable" sid;
+    Sd_options.Self.feedback ~dkey "stmt %i unreachable" sid;
     Annotations.add_assert ~kf emitter stmt Logic_const.pfalse
   in
   let info_reachability _ (kf,bhv,is_reachable) =
-    Sd_options.Self.feedback "behavior '%s' of function '%s' %s"
+    Sd_options.Self.feedback ~dkey "behavior '%s' of function '%s' %s"
       bhv.b_name
       (Kernel_function.get_name kf)
       (if is_reachable then "reachable" else "not reachable")
