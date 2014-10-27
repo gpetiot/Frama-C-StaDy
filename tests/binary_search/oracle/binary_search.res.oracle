@@ -100,8 +100,8 @@ int binary_search_precond(int *arr, int length, int query)
 int binary_search(int *arr, int length, int query)
 {
   int * old_arr;
-  old_arr = arr;
   int * old_ptr_arr;
+  old_arr = arr;
   mpz_t __stady_gmp_20;
   __gmpz_init_set_si(__stady_gmp_20, length);
   int __stady_term_4;

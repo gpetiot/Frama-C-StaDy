@@ -53,8 +53,8 @@ int firstSubset_precond(int *s, int n)
 void firstSubset(int *s, int n)
 {
   int * old_s;
-  old_s = s;
   int * old_ptr_s;
+  old_s = s;
   mpz_t __stady_gmp_8;
   __gmpz_init_set_si(__stady_gmp_8, n);
   int __stady_term_2;

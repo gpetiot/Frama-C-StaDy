@@ -55,8 +55,8 @@ int num_of(int n, int *t)
   int old_n;
   old_n = n;
   int * old_t;
-  old_t = t;
   int * old_ptr_t;
+  old_t = t;
   mpz_t __stady_gmp_9;
   __gmpz_init_set_si(__stady_gmp_9, n);
   int __stady_term_2;

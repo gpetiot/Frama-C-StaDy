@@ -120,8 +120,8 @@ int nextSubset_precond(int *s, int n)
 int nextSubset(int *s, int n)
 {
   int * old_s;
-  old_s = s;
   int * old_ptr_s;
+  old_s = s;
   mpz_t __stady_gmp_38;
   __gmpz_init_set_si(__stady_gmp_38, n);
   int __stady_term_10;

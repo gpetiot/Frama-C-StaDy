@@ -110,8 +110,8 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
     pathcrawler_assert_exception("Pre-condition!",13);
   }
   char * old_str;
-  old_str = str;
   char * old_ptr_str;
+  old_str = str;
   mpz_t __stady_gmp_37;
   __gmpz_init_set_si(__stady_gmp_37, strlen);
   int __stady_term_6;
@@ -123,8 +123,8 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
   int old_strlen;
   old_strlen = strlen;
   char * old_substr;
-  old_substr = substr;
   char * old_ptr_substr;
+  old_substr = substr;
   mpz_t __stady_gmp_38;
   __gmpz_init_set_si(__stady_gmp_38, sublen);
   int __stady_term_7;
@@ -746,8 +746,8 @@ int delete_substr_precond(char *str, int strlen, char *substr, int sublen,
 int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 {
   char * old_str;
-  old_str = str;
   char * old_ptr_str;
+  old_str = str;
   mpz_t __stady_gmp_149;
   __gmpz_init_set_si(__stady_gmp_149, strlen);
   int __stady_term_24;
@@ -759,8 +759,8 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
   int old_strlen;
   old_strlen = strlen;
   char * old_substr;
-  old_substr = substr;
   char * old_ptr_substr;
+  old_substr = substr;
   mpz_t __stady_gmp_150;
   __gmpz_init_set_si(__stady_gmp_150, sublen);
   int __stady_term_25;
@@ -772,8 +772,8 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
   int old_sublen;
   old_sublen = sublen;
   char * old_dest;
-  old_dest = dest;
   char * old_ptr_dest;
+  old_dest = dest;
   mpz_t __stady_gmp_151;
   __gmpz_init_set_si(__stady_gmp_151, strlen);
   int __stady_term_26;

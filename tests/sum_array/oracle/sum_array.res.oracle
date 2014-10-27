@@ -16,8 +16,8 @@ int sum_array_precond(int *t, int n)
 int sum_array(int *t, int n)
 {
   int * old_t;
-  old_t = t;
   int * old_ptr_t;
+  old_t = t;
   mpz_t __stady_gmp_8;
   __gmpz_init_set_si(__stady_gmp_8, n);
   int __stady_term_1;

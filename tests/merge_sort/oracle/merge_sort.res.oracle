@@ -85,8 +85,8 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
     pathcrawler_assert_exception("Pre-condition!",26);
   }
   int * old_A;
-  old_A = A;
   int * old_ptr_A;
+  old_A = A;
   mpz_t __stady_gmp_6;
   __gmpz_init_set_si(__stady_gmp_6, iRight);
   int __stady_term_0;
@@ -102,8 +102,8 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   int old_iEnd;
   old_iEnd = iEnd;
   int * old_B;
-  old_B = B;
   int * old_ptr_B;
+  old_B = B;
   mpz_t __stady_gmp_7;
   __gmpz_init_set_si(__stady_gmp_7, iEnd);
   int __stady_term_1;
@@ -368,8 +368,8 @@ void CopyArray(int *A, int *B, int n)
     pathcrawler_assert_exception("Pre-condition!",13);
   }
   int * old_A;
-  old_A = A;
   int * old_ptr_A;
+  old_A = A;
   mpz_t __stady_gmp_44;
   __gmpz_init_set_si(__stady_gmp_44, n);
   int __stady_term_2;
@@ -379,8 +379,8 @@ void CopyArray(int *A, int *B, int n)
   }
   __gmpz_clear(__stady_gmp_44);
   int * old_B;
-  old_B = B;
   int * old_ptr_B;
+  old_B = B;
   mpz_t __stady_gmp_45;
   __gmpz_init_set_si(__stady_gmp_45, n);
   int __stady_term_3;
@@ -539,8 +539,8 @@ void BottomUpSort(int n, int *A, int *B)
   int old_n;
   old_n = n;
   int * old_A;
-  old_A = A;
   int * old_ptr_A;
+  old_A = A;
   mpz_t __stady_gmp_66;
   __gmpz_init_set_si(__stady_gmp_66, n);
   int __stady_term_4;
@@ -550,8 +550,8 @@ void BottomUpSort(int n, int *A, int *B)
   }
   __gmpz_clear(__stady_gmp_66);
   int * old_B;
-  old_B = B;
   int * old_ptr_B;
+  old_B = B;
   mpz_t __stady_gmp_67;
   __gmpz_init_set_si(__stady_gmp_67, n);
   int __stady_term_5;
@@ -862,8 +862,8 @@ int merge_sort_precond(int *table, int l, int *ret)
 void merge_sort(int *table, int l, int *ret)
 {
   int * old_table;
-  old_table = table;
   int * old_ptr_table;
+  old_table = table;
   mpz_t __stady_gmp_132;
   __gmpz_init_set_si(__stady_gmp_132, l);
   int __stady_term_8;
@@ -875,8 +875,8 @@ void merge_sort(int *table, int l, int *ret)
   int old_l;
   old_l = l;
   int * old_ret;
-  old_ret = ret;
   int * old_ptr_ret;
+  old_ret = ret;
   mpz_t __stady_gmp_133;
   __gmpz_init_set_si(__stady_gmp_133, l);
   int __stady_term_9;

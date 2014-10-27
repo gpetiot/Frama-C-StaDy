@@ -697,43 +697,23 @@ class gather_insertions props = object(self)
     in
     List.fold_left (@) [] (List.map do_behavior behaviors)
 
-  method! vfunc f =
-    let entry_point = Kernel_function.get_name (fst(Globals.entry_point())) in
-    let kf = Globals.Functions.find_by_name f.svar.vname in
-    let behaviors = Annotations.behaviors kf in
-    self#compute_result_varinfo f;
-    let label_pre, inserts_pre =
-      if f.svar.vname = entry_point then
-	BegFunc (f.svar.vname ^ "_precond"),
-	self#pre ~pre_entry_point:true kf behaviors Kglobal
-      else
-	BegFunc f.svar.vname,
-	self#pre ~pre_entry_point:false kf behaviors Kglobal
-    in
-    List.iter (self#insert label_pre) inserts_pre;
-    (* BEGIN postcond *)
-    if (self#at_least_one_prop kf behaviors Kglobal)
-      || (Sd_options.Behavior_Reachability.get()) then
-      begin
-	let inserts = self#post kf behaviors Kglobal in
-	self#insert (EndFunc f.svar.vname) (Block inserts)
-      end;
-    (* END postcond *)
-    (* alloc variables for \at terms *)
+  (* alloc and dealloc variables for \at terms *)
+  method private save_varinfo kf varinfo =
     let dig_type = function
       | TPtr(ty,_) | TArray(ty,_,_,_) -> ty
       | ty -> Sd_options.Self.abort "dig_type %a" Printer.pp_typ ty
     in
     let dig_type x = dig_type (Cil.unrollTypeDeep x) in
     let lengths = Sd_utils.lengths_from_requires kf in
+    let terms =
+      try Cil_datatype.Varinfo.Hashtbl.find lengths varinfo with Not_found -> []
+    in
     let do_varinfo v =
-      let terms =
-	try Cil_datatype.Varinfo.Hashtbl.find lengths v with Not_found -> []
-      in
       let my_v = My_ctype_var(v.vtype, v.vname) in
       let my_old_v = My_ctype_var(v.vtype, "old_"^v.vname) in
-      self#insert (BegFunc f.svar.vname) (Decl_ctype_var my_old_v);
-      self#insert (BegFunc f.svar.vname) (Instru(Affect(my_old_v, my_v)));
+      let insert_decl, insert_before =
+	Decl_ctype_var my_old_v, Instru(Affect(my_old_v, my_v))
+      in
       let rec alloc_aux my_old_ptr my_ptr ty = function
 	| h :: t ->
 	  let ty = dig_type ty in
@@ -772,67 +752,88 @@ class gather_insertions props = object(self)
 	| [] -> [Instru(Affect(my_old_ptr, my_ptr))]
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
-	begin
-	  let my_old_ptr = My_ctype_var(v.vtype, "old_ptr_" ^ v.vname) in
-	  self#insert (BegFunc f.svar.vname) (Decl_ctype_var my_old_ptr);
-	  let inserts = alloc_aux my_old_ptr my_v v.vtype terms in
-	  List.iter (self#insert (BegFunc f.svar.vname)) inserts;
-	end
+	let my_old_ptr = My_ctype_var(v.vtype, "old_ptr_" ^ v.vname) in
+	let insert_0 = Decl_ctype_var my_old_ptr in
+	let inserts_decl = [insert_decl; insert_0] in
+	let inserts = alloc_aux my_old_ptr my_v v.vtype terms in
+	let inserts_before = insert_before :: inserts in
+	inserts_decl, inserts_before
+      else [insert_decl], [insert_before]
+    in
+    let inserts_decl, inserts_before = do_varinfo varinfo in
+    let do_varinfo v =
+      let rec dealloc_aux my_old_ptr = function
+	| [] -> []
+	| _ :: [] -> [Instru(Free my_old_ptr)]
+	| h :: t ->
+	  let my_iterator = self#fresh_ctype_var Cil.intType in
+	  let insert_0 = Decl_ctype_var my_iterator in
+	  let inserts_1, h' = self#term h in
+	  let inserts' =
+	    match h.term_type with
+	    | Linteger ->
+	      let h' = self#z_fragment h' in
+	      let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
+	      let init = Affect(my_iterator, Zero) in
+	      let cond = Cmp(Rlt, my_iterator, Z_get_si h') in
+	      let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
+	      let insert_2=For(Some init,Some cond,Some step,inserts_block) in
+	      [insert_2; Instru(Z_clear h')]
+	    | Lreal -> assert false (* TODO: reals *)
+	    | _ ->
+	      let h' = self#ctype_fragment h' in
+	      let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
+	      let init = Affect(my_iterator, Zero) in
+	      let cond = Cmp(Rlt, my_iterator, h') in
+	      let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
+	      [For(Some init,Some cond,Some step,inserts_block)]
+	  in
+	  [insert_0] @ inserts_1 @ inserts' @ [Instru(Free(my_old_ptr))]
+      in
+      let my_old_ptr = My_ctype_var(Cil.voidPtrType, "old_ptr_" ^ v.vname) in
+      dealloc_aux my_old_ptr terms
+    in
+    let inserts_after = do_varinfo varinfo in
+    inserts_decl, inserts_before, inserts_after
+
+  method! vfunc f =
+    let entry_point = Kernel_function.get_name (fst(Globals.entry_point())) in
+    let kf = Globals.Functions.find_by_name f.svar.vname in
+    let behaviors = Annotations.behaviors kf in
+    self#compute_result_varinfo f;
+    let label_pre, inserts_pre =
+      if f.svar.vname = entry_point then
+	BegFunc (f.svar.vname ^ "_precond"),
+	self#pre ~pre_entry_point:true kf behaviors Kglobal
+      else
+	BegFunc f.svar.vname,
+	self#pre ~pre_entry_point:false kf behaviors Kglobal
+    in
+    List.iter (self#insert label_pre) inserts_pre;
+    if (self#at_least_one_prop kf behaviors Kglobal)
+      || (Sd_options.Behavior_Reachability.get()) then
+      begin
+	let inserts = self#post kf behaviors Kglobal in
+	self#insert (EndFunc f.svar.vname) (Block inserts)
+      end;
+    let do_varinfo v =
+      let inserts_decl,inserts_before,inserts_after = self#save_varinfo kf v in
+      List.iter (self#insert (BegFunc f.svar.vname)) inserts_decl;
+      List.iter (self#insert (BegFunc f.svar.vname)) inserts_before;
+      List.iter (self#insert (EndFunc f.svar.vname)) inserts_after
     in
     List.iter do_varinfo visited_globals;
     List.iter do_varinfo (Kernel_function.get_formals kf);
-    (* dealloc variables for \at terms *)
-    begin
-      let lengths = Sd_utils.lengths_from_requires kf in
-      let do_varinfo v =
-	let terms =
-	  try Cil_datatype.Varinfo.Hashtbl.find lengths v with Not_found -> []
-	in
-	let rec dealloc_aux my_old_ptr = function
-	  | [] -> []
-	  | _ :: [] -> [Instru(Free my_old_ptr)]
-	  | h :: t ->
-	    let my_iterator = self#fresh_ctype_var Cil.intType in
-	    let insert_0 = Decl_ctype_var my_iterator in
-	    let inserts_1, h' = self#term h in
-	    let inserts' =
-	      match h.term_type with
-	      | Linteger ->
-		let h' = self#z_fragment h' in
-		let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
-		let init = Affect(my_iterator, Zero) in
-		let cond = Cmp(Rlt, my_iterator, Z_get_si h') in
-		let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
-		let insert_2=For(Some init,Some cond,Some step,inserts_block) in
-		[insert_2; Instru(Z_clear h')]
-	      | Lreal -> assert false (* TODO: reals *)
-	      | _ ->
-		let h' = self#ctype_fragment h' in
-		let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
-		let init = Affect(my_iterator, Zero) in
-		let cond = Cmp(Rlt, my_iterator, h') in
-		let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
-		[For(Some init,Some cond,Some step,inserts_block)]
-	    in
-	    [insert_0] @ inserts_1 @ inserts' @ [Instru(Free(my_old_ptr))]
-	in
-	let my_old_ptr = My_ctype_var(Cil.voidPtrType, "old_ptr_" ^ v.vname) in
-	let insertions = dealloc_aux my_old_ptr terms in
-	List.iter (self#insert (EndFunc f.svar.vname)) insertions
-      in
-      List.iter do_varinfo visited_globals;
-      List.iter do_varinfo (Kernel_function.get_formals kf)
-    end;
     Cil.DoChildren
   (* end vfunc *)
 
   method private subst_pred p = (new Sd_subst.subst)#pred p [] [] [] []
 
-  method private cond_of_assumes pred_list =
+  method private cond_of_assumes ?(subst_pred=self#subst_pred) pred_list =
     let rec aux insertions ret = function
       | [] -> insertions, ret
       | h :: t ->
-	let ins, v = self#predicate (self#subst_pred h.ip_content) in
+	let ins, v = self#predicate (subst_pred h.ip_content) in
 	aux (insertions @ ins) (Land(ret, v)) t
     in
     aux [] True pred_list

@@ -59,8 +59,8 @@ int quick_sort_precond(int *arr, int elements, int *beg, int *end)
 int quick_sort(int *arr, int elements, int *beg, int *end)
 {
   int * old_arr;
-  old_arr = arr;
   int * old_ptr_arr;
+  old_arr = arr;
   mpz_t __stady_gmp_10;
   __gmpz_init_set_si(__stady_gmp_10, elements);
   int __stady_term_2;
@@ -72,8 +72,8 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   int old_elements;
   old_elements = elements;
   int * old_beg;
-  old_beg = beg;
   int * old_ptr_beg;
+  old_beg = beg;
   mpz_t __stady_gmp_11;
   __gmpz_init_set_str(__stady_gmp_11, "99", 10);
   mpz_t __stady_gmp_12;
@@ -90,8 +90,8 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   }
   __gmpz_clear(__stady_gmp_13);
   int * old_end;
-  old_end = end;
   int * old_ptr_end;
+  old_end = end;
   mpz_t __stady_gmp_14;
   __gmpz_init_set_str(__stady_gmp_14, "99", 10);
   mpz_t __stady_gmp_15;

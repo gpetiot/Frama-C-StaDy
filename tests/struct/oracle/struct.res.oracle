@@ -69,8 +69,8 @@ int f_precond(struct S *s, struct S *s2, int n)
 int f(struct S *s, struct S *s2, int n)
 {
   struct S * old_s;
-  old_s = s;
   struct S * old_ptr_s;
+  old_s = s;
   mpz_t __stady_gmp_0;
   __gmpz_init_set_str(__stady_gmp_0, "1", 10);
   int __stady_term_0;
@@ -80,8 +80,8 @@ int f(struct S *s, struct S *s2, int n)
   }
   __gmpz_clear(__stady_gmp_0);
   struct S * old_s2;
-  old_s2 = s2;
   struct S * old_ptr_s2;
+  old_s2 = s2;
   mpz_t __stady_gmp_1;
   __gmpz_init_set_str(__stady_gmp_1, "1", 10);
   int __stady_term_1;

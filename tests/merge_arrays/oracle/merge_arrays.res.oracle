@@ -154,8 +154,8 @@ int merge_arrays_precond(int *t1, int *t2, int *t3, int l1, int l2)
 void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
 {
   int * old_t1;
-  old_t1 = t1;
   int * old_ptr_t1;
+  old_t1 = t1;
   mpz_t __stady_gmp_26;
   __gmpz_init_set_si(__stady_gmp_26, l1);
   int __stady_term_6;
@@ -165,8 +165,8 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
   }
   __gmpz_clear(__stady_gmp_26);
   int * old_t2;
-  old_t2 = t2;
   int * old_ptr_t2;
+  old_t2 = t2;
   mpz_t __stady_gmp_27;
   __gmpz_init_set_si(__stady_gmp_27, l2);
   int __stady_term_7;
@@ -176,8 +176,8 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
   }
   __gmpz_clear(__stady_gmp_27);
   int * old_t3;
-  old_t3 = t3;
   int * old_ptr_t3;
+  old_t3 = t3;
   mpz_t __stady_gmp_28;
   __gmpz_init_set_si(__stady_gmp_28, l1);
   mpz_t __stady_gmp_29;
