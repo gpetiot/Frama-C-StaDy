@@ -9,6 +9,7 @@ type label =
 | EndFunc of string
 | BegIter of int
 | EndIter of int
+| Glob
 
 type fresh_Z_var =
 | Fresh_Z_var of int (* uid *)

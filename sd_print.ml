@@ -9,6 +9,7 @@ let pp_label fmt = function
   | Sd_insertions.EndFunc s -> Format.fprintf fmt "EndFunc %s" s
   | Sd_insertions.BegIter s -> Format.fprintf fmt "BegIter %i" s
   | Sd_insertions.EndIter s -> Format.fprintf fmt "EndIter %i" s
+  | Sd_insertions.Glob -> Format.fprintf fmt "Global"
 
 let pp_fresh_Z fmt = function
   | Sd_insertions.Fresh_Z_var id -> Format.fprintf fmt "__stady_gmp_%i" id
@@ -260,6 +261,7 @@ class print_insertions insertions () = object(self)
     Format.fprintf fmt "extern void pathcrawler_to_framac(char*);@\n";
     Format.fprintf fmt "extern void* malloc(unsigned);@\n";
     Format.fprintf fmt "extern void free(void*);@\n";
+    self#insertions_at fmt (Sd_insertions.Glob);
     Cil.iterGlobals f (fun g -> self#global fmt g);
     Format.fprintf fmt "@]@."
 
