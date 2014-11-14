@@ -25,19 +25,11 @@ class subst = object(self)
 	let new_args = aux [] (li.l_profile, params) in
 	begin
 	  match li.l_body with
-	  | LBnone ->
-	    Sd_options.Self.not_yet_implemented
-	      "Sd_subst.subst#pred Papp LBnone"
-	  | LBreads _ ->
-	    Sd_options.Self.not_yet_implemented
-	      "Sd_subst.subst#pred Papp LBreads"
-	  | LBterm _ ->
-	    Sd_options.Self.not_yet_implemented
-	      "Sd_subst.subst#pred Papp LBterm"
+	  | LBnone -> pred (* TODO *)
+	  | LBreads _ -> pred (* TODO *)
+	  | LBterm _ -> assert false (* unreachable *)
 	  | LBpred {content=p} -> self#pred p new_labels new_args vp vv
-	  | LBinductive _ ->
-	    Sd_options.Self.not_yet_implemented
-	      "Sd_subst.subst#pred Papp LBinductive"
+	  | LBinductive _ -> pred (* TODO *)
 	end
     | Pseparated t -> Pseparated t
     | Prel(rel,t1,t2) -> Prel(rel, self#term t1 ll vt vv, self#term t2 ll vt vv)
@@ -54,18 +46,12 @@ class subst = object(self)
       let lv = li.l_var_info in
       begin
 	match li.l_body with
-	| LBnone ->
-	  Sd_options.Self.not_yet_implemented
-	    "Sd_subst.subst#pred Plet LBnone"
-	| LBreads _ ->
-	  Sd_options.Self.not_yet_implemented
-	    "Sd_subst.subst#pred Plet LBreads"
+	| LBnone -> pred (* TODO *)
+	| LBreads _ -> pred (* TODO *)
 	| LBterm t' -> self#pred p ll ((lv,(self#term t' ll vt vv))::vt) vp vv
 	| LBpred {content=p'} ->
 	  self#pred p ll vt ((lv,(self#pred p' ll vt vp vv))::vp) vv
-	| LBinductive _ ->
-	  Sd_options.Self.not_yet_implemented
-	    "Sd_subst.subst#pred Plet LBinductive"
+	| LBinductive _ -> pred (* TODO *)
       end
     | Pforall (q,p) ->
       let prefix v = {v with lv_name = "__q_" ^ v.lv_name} in
@@ -120,10 +106,8 @@ class subst = object(self)
     | TUnOp (u,t) -> TUnOp (u, self#term t ll vt vv)
     | TBinOp(b,t1,t2) -> TBinOp(b, self#term t1 ll vt vv, self#term t2 ll vt vv)
     | TCastE (ty,t) -> TCastE (ty, self#term t ll vt vv)
-    | TAddrOf _ ->
-      Sd_options.Self.not_yet_implemented "Sd_subst.subst#tnode TAddrOf"
-    | TStartOf _ ->
-      Sd_options.Self.not_yet_implemented "Sd_subst.subst#tnode TStartOf"
+    | TAddrOf _ -> term (* TODO *)
+    | TStartOf _ -> term (* TODO *)
     | Tapp (li,[],[lower;upper;({term_node=Tlambda([_],_)} as lambda)]) ->
       let s = li.l_var_info.lv_name in
       if s = "\\sum" || s = "\\product" || s = "\\numof" then
@@ -149,23 +133,14 @@ class subst = object(self)
 	  let s = li.l_var_info.lv_name in
 	  if s = "\\cos" || s = "\\abs" || s = "\\sqrt" || s = "\\pow" then
 	    Tapp(li,new_labels,new_terms)
-	  else
-	    Sd_options.Self.not_yet_implemented
-	      "Sd_subst.subst#tnode Tapp LBnone"
-	| LBreads _ ->
-	  Sd_options.Self.not_yet_implemented
-	    "Sd_subst.subst#tnode Tapp LBreads"
-	| LBterm{term_node=t} -> self#tnode t new_labels new_args vv
-	| LBpred _ ->
-	  Sd_options.Self.not_yet_implemented
-	    "Sd_subst.subst#tnode Tapp LBpred"
-	| LBinductive _ ->
-	  Sd_options.Self.not_yet_implemented
-	    "Sd_subst.subst#tnode Tapp LBinductive"
+	  else term (* TODO *)
+	| LBreads _ -> term (* TODO *)
+	| LBterm {term_node = t} -> self#tnode t new_labels new_args vv
+	| LBpred _ -> assert false (* unreachable *)
+	| LBinductive _ -> term (* TODO *)
       end
     | Tlambda (q,t) -> Tlambda (q, self#term t ll vt vv)
-    | TDataCons _ ->
-      Sd_options.Self.not_yet_implemented "Sd_susbt.subst#tnode TDataCons"
+    | TDataCons _ -> term (* TODO *)
     | Tif(t1,t2,t3) -> Tif(self#term t1 ll vt vv, self#term t2 ll vt vv,
 			   self#term t3 ll vt vv)
     | Tat (t,l) -> Tat (self#term t ll vt vv, self#label l ll)
@@ -184,8 +159,7 @@ class subst = object(self)
     | Tunion l -> Tunion (List.map (fun x -> self#term x ll vt vv) l)
     | Tinter l -> Tinter (List.map (fun x -> self#term x ll vt vv) l)
     | Tcomprehension (t,q,None) -> Tcomprehension(self#term t ll vt vv, q, None)
-    | Tcomprehension _ ->
-      Sd_options.Self.not_yet_implemented "Sd_subst.subst#tnode Tcomprehension"
+    | Tcomprehension _ -> term (* TODO *)
     | Trange(None, None) -> Trange(None, None)
     | Trange(None,Some t)-> Trange(None, Some(self#term t ll vt vv))
     | Trange(Some t,None)-> Trange(Some(self#term t ll vt vv), None)
@@ -195,17 +169,11 @@ class subst = object(self)
       let lv = li.l_var_info in
       begin
 	match li.l_body with
-	| LBnone ->
-	  Sd_options.Self.not_yet_implemented "Sd_subst.subst#tnode Tlet LBnone"
-	| LBreads _ ->
-	  Sd_options.Self.not_yet_implemented
-	    "Sd_subst.subst#tnode Tlet LBreads"
+	| LBnone -> term (* TODO *)
+	| LBreads _ -> term (* TODO *)
 	| LBterm t' -> self#tnode t ll ((lv, (self#term t' ll vt vv))::vt) vv
-	| LBpred _ ->
-	  Sd_options.Self.not_yet_implemented "Sd_subst.subst#tnode Tlet LBpred"
-	| LBinductive _ ->
-	  Sd_options.Self.not_yet_implemented
-	    "Sd_subst.subst#tnode Tlet LBinductive"
+	| LBpred _ -> assert false (* unreachable *)
+	| LBinductive _ -> term (* TODO *)
       end
 
   method toffset offset ll vt vv =
