@@ -1,7 +1,7 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/quantified/quantified.c"
-[stady] warning: Native Precondition:
+tests/quantified/quantified.c:13:[stady] warning: Native Precondition:
                  ∀ ℤ __q_i; 0 ≤ __q_i < n ⇒ \valid(*(t+__q_i)+(0 .. n-1)) unsupported
-[stady] warning: Native Precondition:
+tests/quantified/quantified.c:13:[stady] warning: Native Precondition:
                  ∀ ℤ __q_i;
                    0 ≤ __q_i < n ⇒
                    (∃ ℤ __q_j;

@@ -1252,6 +1252,8 @@ class gather_insertions props = object(self)
       
   | Pat(p, LogicLabel(_,l)) when l = "Here" -> self#predicate_named p
   | p ->
-    Sd_options.Self.warning "%a unsupported" Printer.pp_predicate p; [], True
+    Sd_options.Self.warning ~current:true "%a unsupported"
+      Printer.pp_predicate p;
+    [], True
 (* end predicate *)
 end

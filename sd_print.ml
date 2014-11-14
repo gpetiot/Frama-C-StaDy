@@ -210,9 +210,11 @@ class print_insertions insertions () = object(self)
 	super#instr fmt i
       else
 	begin
-	  Sd_options.Self.warning ~once:true "function %s does not have a body"
+	  Sd_options.Self.warning ~current:true ~once:true
+	    "function %s does not have a body"
 	    fct_varinfo.vname;
-	  Sd_options.Self.warning "%a has been discarded" Printer.pp_instr i
+	  Sd_options.Self.warning ~current:true "%a has been discarded"
+	    Printer.pp_instr i
 	end
     end
   | _ -> super#instr fmt i

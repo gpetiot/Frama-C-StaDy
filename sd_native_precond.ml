@@ -355,7 +355,8 @@ let translate precond_file_name =
     try requires_to_prolog constraints pnamed
     with
     | _ ->
-      Sd_options.Self.warning "Native Precondition:@\n%a unsupported"
+      Sd_options.Self.warning ~current:true
+	"Native Precondition:@\n%a unsupported"
 	Printer.pp_predicate_named pnamed;
       (* this predicate has not been translated in Prolog, we must translate it
 	 in C. *)
