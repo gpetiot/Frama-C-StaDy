@@ -11,15 +11,9 @@ let pp_label fmt = function
   | Sd_insertions.EndIter s -> Format.fprintf fmt "EndIter %i" s
   | Sd_insertions.Glob -> Format.fprintf fmt "Global"
 
-let pp_fresh_Z fmt = function
+let pp_zexpr fmt = function
   | Sd_insertions.Fresh_Z_var id -> Format.fprintf fmt "__stady_gmp_%i" id
   | Sd_insertions.My_Z_var name -> Format.fprintf fmt "%s" name
-
-let pp_decl_Z fmt (Sd_insertions.Declared_Z_var v) = pp_fresh_Z fmt v
-
-let pp_init_Z fmt (Sd_insertions.Initialized_Z_var v) = pp_decl_Z fmt v
-
-let pp_zexpr fmt = pp_init_Z fmt
 
 let rec pp_cexpr fmt = function
   | Sd_insertions.Fresh_ctype_var(id,_)->Format.fprintf fmt "__stady_term_%i" id
@@ -93,15 +87,15 @@ let pp_instruction fmt = function
     Format.fprintf fmt "pathcrawler_assume(%a)" pp_pexpr p
   | Sd_insertions.Ret e -> Format.fprintf fmt "return %a" pp_cexpr e
   | Sd_insertions.Z_clear g ->Format.fprintf fmt "__gmpz_clear(%a)" pp_zexpr g
-  | Sd_insertions.Z_init g->Format.fprintf fmt "__gmpz_init(%a)" pp_decl_Z g
+  | Sd_insertions.Z_init g->Format.fprintf fmt "__gmpz_init(%a)" pp_zexpr g
   | Sd_insertions.Z_init_set (g,g') ->
-    Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_decl_Z g pp_zexpr g'
+    Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_zexpr g pp_zexpr g'
   | Sd_insertions.Z_init_set_ui (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_decl_Z g pp_cexpr c
+    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_zexpr g pp_cexpr c
   | Sd_insertions.Z_init_set_si (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_decl_Z g pp_cexpr c
+    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_zexpr g pp_cexpr c
   | Sd_insertions.Z_init_set_str (g,s) ->
-    Format.fprintf fmt "__gmpz_init_set_str(%a, \"%s\", 10)" pp_decl_Z g s
+    Format.fprintf fmt "__gmpz_init_set_str(%a, \"%s\", 10)" pp_zexpr g s
   | Sd_insertions.Z_set(g,h)->
     Format.fprintf fmt "__gmpz_set(%a, %a)" pp_zexpr g pp_zexpr h
   | Sd_insertions.Z_abs(g,h)->
@@ -128,7 +122,7 @@ let rec pp_insertion ?(line_break = true) fmt ins =
   begin
     match ins with
     | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
-    | Sd_insertions.Decl_Z_var v->Format.fprintf fmt"@[mpz_t %a;@]" pp_fresh_Z v
+    | Sd_insertions.Decl_Z_var v->Format.fprintf fmt"@[mpz_t %a;@]" pp_zexpr v
 
     | Sd_insertions.Decl_ctype_var v ->
       let varname, ty = match v with
