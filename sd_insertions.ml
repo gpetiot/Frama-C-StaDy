@@ -20,12 +20,8 @@ type ctype_expr = (* distinguer type pointeur/int *)
 | My_ctype_var of typ * string (* when its name is predefined *)
 | Zero | One
 | Cst of string
-| Z_get_ui of z_expr
-| Z_get_si of z_expr
 | Unop of unop * ctype_expr
 | Binop of binop * ctype_expr * ctype_expr
-| Pc_dim of ctype_expr
-| Malloc of ctype_expr
 | Cast of typ * ctype_expr
 | Sizeof of typ
 | Deref of ctype_expr
@@ -71,6 +67,10 @@ type instruction =
 | Z_binop of binop * z_expr * z_expr * z_expr
 | Z_binop_ui of binop * z_expr * z_expr * ctype_expr
 | Z_binop_si of binop * z_expr * z_expr * ctype_expr
+| Z_get_ui of ctype_expr * z_expr
+| Z_get_si of ctype_expr * z_expr
+| Pc_dim of ctype_expr * ctype_expr
+| Malloc of ctype_expr * ctype_expr
 
 type insertion =
 | Instru of instruction
@@ -289,7 +289,7 @@ class gather_insertions props = object(self)
 	  let y = self#z_fragment y in
 	  let var = self#fresh_ctype_var Cil.intType in
 	  let insert_2 = Decl_ctype_var var in
-	  let insert_3 = Instru(Affect(var, Z_get_si y)) in
+	  let insert_3 = Instru(Z_get_si (var, y)) in
 	  let insert_4 = Instru(Z_clear y) in
 	  [insert_2; insert_3; insert_4], var
 	| Lreal -> assert false (* unreachable *)
@@ -381,13 +381,12 @@ class gather_insertions props = object(self)
 	  let v = self#z_fragment v in
 	  let var = self#fresh_ctype_var ty' in
 	  let insert_1 = Decl_ctype_var var in
-	  let value =
+	  let insert_2 =
 	    match ty with (* dest type *)
-	    | Ctype x when Cil.isUnsignedInteger x -> Z_get_ui v
-	    | Ctype x when Cil.isSignedInteger x -> Z_get_si v
+	    | Ctype x when Cil.isUnsignedInteger x -> Instru(Z_get_ui (var,v))
+	    | Ctype x when Cil.isSignedInteger x -> Instru(Z_get_si (var,v))
 	    | _ -> assert false (* unreachable *)
 	  in
-	  let insert_2 = Instru(Affect(var, value)) in
 	  let insert_3 = Instru(Z_clear v) in
 	  inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
 	| Lreal -> assert false (* reals *)
@@ -511,13 +510,12 @@ class gather_insertions props = object(self)
 	  let v = self#z_fragment v in
 	  let var = self#fresh_ctype_var ty' in
 	  let insert_1 = Decl_ctype_var var in
-	  let value =
+	  let insert_2 =
 	    match ty' with
-	    | x when Cil.isUnsignedInteger x -> Z_get_ui v
-	    | x when Cil.isSignedInteger x -> Z_get_si v
+	    | x when Cil.isUnsignedInteger x -> Instru(Z_get_ui (var,v))
+	    | x when Cil.isSignedInteger x -> Instru(Z_get_si (var,v))
 	    | _ -> assert false
 	  in
-	  let insert_2 = Instru(Affect(var,value)) in
 	  let insert_3 = Instru(Z_clear v) in
 	  inserts_0 @ [insert_1; insert_2; insert_3], Ctype_fragment var
 	| Lreal -> assert false (* TODO: reals *)
@@ -551,7 +549,10 @@ class gather_insertions props = object(self)
 	  begin
 	    match t.term_type with
 	    | Linteger ->
-	      aux (ins@inserts_1) (Index(ret, Z_get_si(self#z_fragment t'))) tof
+	      let tmp = self#fresh_ctype_var Cil.intType in
+	      let i_1 = Decl_ctype_var tmp in
+	      let i_2 = Instru(Z_get_si(tmp, self#z_fragment t')) in
+	      aux (ins@inserts_1@[i_1;i_2]) (Index(ret, tmp)) tof
 	    | Lreal -> assert false (* unreachable *)
 	    | _ -> aux ins (Index(ret, self#ctype_fragment t')) tof
 	  end
@@ -708,22 +709,26 @@ class gather_insertions props = object(self)
 	    match h.term_type with
 	    | Linteger ->
 	      let h' = self#z_fragment h' in
-	      let malloc = Malloc(Binop(Mult,(Z_get_si h'), Sizeof ty)) in
-	      let insert_2 = Instru(Affect(my_old_ptr, malloc)) in
+	      let tmp = self#fresh_ctype_var Cil.ulongType in
+	      let i_1 = Decl_ctype_var tmp in
+	      let i_2 = Instru(Z_get_si (tmp, h')) in
+	      let insert_2 =
+		Instru(Malloc(my_old_ptr,Binop(Mult,tmp, Sizeof ty))) in
 	      let my_new_old_ptr = Index(my_old_ptr, my_iterator) in
 	      let my_new_ptr = Index(my_ptr, my_iterator) in
 	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	      let init = Affect(my_iterator, Zero) in
-	      let cond = Cmp(Rlt, my_iterator, Z_get_si h') in
+	      let i_3 = Instru(Z_get_si (tmp,h')) in
+	      let cond = Cmp(Rlt, my_iterator, tmp) in
 	      let step = Affect(my_iterator, Binop(PlusA, my_iterator,One)) in
 	      let insert_3 = For(Some init,Some cond,Some step,inserts_block) in
 	      let insert_4 = Instru(Z_clear h') in
-	      inserts_0 @ [insert_1; insert_2; insert_3; insert_4]
+	      inserts_0 @ [insert_1; i_1;i_2; insert_2; i_3; insert_3; insert_4]
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      let h' = self#ctype_fragment h' in
 	      let insert_2 =
-		Instru(Affect(my_old_ptr, Malloc(Binop(Mult,h', Sizeof ty)))) in
+		Instru(Malloc(my_old_ptr, Binop(Mult,h', Sizeof ty))) in
 	      let my_new_old_ptr = Index(my_old_ptr, my_iterator) in
 	      let my_new_ptr = Index(my_ptr, my_iterator) in
 	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
@@ -759,10 +764,13 @@ class gather_insertions props = object(self)
 	      let h' = self#z_fragment h' in
 	      let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
 	      let init = Affect(my_iterator, Zero) in
-	      let cond = Cmp(Rlt, my_iterator, Z_get_si h') in
+	      let tmp = self#fresh_ctype_var Cil.intType in
+	      let i_1 = Decl_ctype_var tmp in
+	      let i_2 = Instru(Z_get_si (tmp,h')) in
+	      let cond = Cmp(Rlt, my_iterator, tmp) in
 	      let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
 	      let insert_2=For(Some init,Some cond,Some step,inserts_block) in
-	      [insert_2; Instru(Z_clear h')]
+	      [i_1; i_2; insert_2; Instru(Z_clear h')]
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      let h' = self#ctype_fragment h' in
@@ -1105,13 +1113,19 @@ class gather_insertions props = object(self)
 	let var = self#fresh_pred_var() in
 	let insert_2 = Decl_pred_var var in
 	let exp1 = Z_cmp_ui(Ge, y', Zero) in
-	let exp2 = Z_cmp_ui(Lt, y', Pc_dim(x')) in
+	let tmp = self#fresh_ctype_var Cil.intType in
+	let i_1 = Decl_ctype_var tmp in
+	let i_2 = Instru(Pc_dim (tmp, x')) in
+	let exp2 = Z_cmp_ui(Lt, y', tmp) in
 	let insert_3 = Instru(Affect_pred(var, Land(exp1, exp2))) in
 	let insert_4 = Instru(Z_clear y') in
-	[insert_2; insert_3; insert_4], var
+	[insert_2; i_1; i_2; insert_3; insert_4], var
       | Ctype (TInt _) ->
 	let y' = self#ctype_fragment y' in
-	[], Land(Cmp(Rge, y', Zero), Cmp(Rgt, Pc_dim(x'), y'))
+	let tmp = self#fresh_ctype_var Cil.intType in
+	let i_1 = Decl_ctype_var tmp in
+	let i_2 = Instru (Pc_dim (tmp, x')) in
+	[i_1; i_2], Land(Cmp(Rge, y', Zero), Cmp(Rgt, tmp, y'))
       | _ -> assert false (* unreachable *)
     in
     inserts_0 @ inserts_1 @ inserts, ret

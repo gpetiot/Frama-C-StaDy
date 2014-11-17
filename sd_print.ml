@@ -21,15 +21,10 @@ let rec pp_cexpr fmt = function
   | Sd_insertions.Zero -> Format.fprintf fmt "0"
   | Sd_insertions.One -> Format.fprintf fmt "1"
   | Sd_insertions.Cst s -> Format.fprintf fmt "%s" s
-  | Sd_insertions.Z_get_ui g ->Format.fprintf fmt "__gmpz_get_ui(%a)" pp_zexpr g
-  | Sd_insertions.Z_get_si g ->Format.fprintf fmt "__gmpz_get_si(%a)" pp_zexpr g
   | Sd_insertions.Unop(op,e) ->
     Format.fprintf fmt "%a(%a)" Printer.pp_unop op pp_cexpr e
   | Sd_insertions.Binop (op,x,y) ->
     Format.fprintf fmt "(%a %a %a)" pp_cexpr x Printer.pp_binop op pp_cexpr y
-  | Sd_insertions.Pc_dim e ->
-    Format.fprintf fmt "pathcrawler_dimension(%a)" pp_cexpr e
-  | Sd_insertions.Malloc e -> Format.fprintf fmt "malloc(%a)" pp_cexpr e
   | Sd_insertions.Cast (t, e) ->
     Format.fprintf fmt "(%a)%a" Printer.pp_typ t pp_cexpr e
   | Sd_insertions.Sizeof t -> Format.fprintf fmt "sizeof(%a)" Printer.pp_typ t
@@ -112,6 +107,14 @@ let pp_instruction fmt = function
   | Sd_insertions.Z_binop_si (op,r,a,b) ->
     Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
       pp_garith op pp_zexpr r pp_zexpr a pp_cexpr b
+  | Sd_insertions.Z_get_ui (c,z) ->
+    Format.fprintf fmt "%a = __gmpz_get_ui(%a)" pp_cexpr c pp_zexpr z
+  | Sd_insertions.Z_get_si (c,z) ->
+    Format.fprintf fmt "%a = __gmpz_get_si(%a)" pp_cexpr c pp_zexpr z
+  | Sd_insertions.Pc_dim (a,b) ->
+    Format.fprintf fmt "%a = pathcrawler_dimension(%a)" pp_cexpr a pp_cexpr b
+  | Sd_insertions.Malloc (a,b) ->
+    Format.fprintf fmt "%a = malloc(%a)" pp_cexpr a pp_cexpr b
 
 let rec pp_insertion ?(line_break = true) fmt ins =
   let rec aux fmt = function
@@ -309,12 +312,8 @@ class print_insertions insertions () = object(self)
   | Sd_insertions.My_ctype_var _ -> ()
   | Sd_insertions.Zero | Sd_insertions.One -> ()
   | Sd_insertions.Cst _ -> ()
-  | Sd_insertions.Z_get_ui e -> gmpz_get_ui <- true; self#zexpr e
-  | Sd_insertions.Z_get_si e -> gmpz_get_si <- true; self#zexpr e
   | Sd_insertions.Unop (_,e) -> self#cexpr e
   | Sd_insertions.Binop (_,a,b) -> self#cexpr a; self#cexpr b
-  | Sd_insertions.Pc_dim e -> pc_dim <- true; self#cexpr e
-  | Sd_insertions.Malloc e -> malloc <- true; self#cexpr e
   | Sd_insertions.Cast (_,e) -> self#cexpr e
   | Sd_insertions.Sizeof _ -> ()
   | Sd_insertions.Deref e -> self#cexpr e
@@ -384,6 +383,12 @@ class print_insertions insertions () = object(self)
   | Sd_insertions.Z_binop_si (Mult,a,b,c) ->
     gmpz_mul_si <- true; self#zexpr a; self#zexpr b; self#cexpr c
   | Sd_insertions.Z_binop_si _ -> ()
+  | Sd_insertions.Z_get_ui (a,b) ->
+    gmpz_get_ui <- true; self#cexpr a; self#zexpr b
+  | Sd_insertions.Z_get_si (a,b) ->
+    gmpz_get_si <- true; self#cexpr a; self#zexpr b
+  | Sd_insertions.Pc_dim (a,b) -> pc_dim <- true; self#cexpr a; self#cexpr b
+  | Sd_insertions.Malloc (a,b) -> malloc <- true; self#cexpr a; self#cexpr b
 
   method private insertion = function
   | Sd_insertions.Instru i -> self#instru i
