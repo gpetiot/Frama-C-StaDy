@@ -245,6 +245,26 @@ let run() =
   if Sd_options.Enabled.get() then
     begin
       setup_props_bijection();
+      let p' = Project.create "__stady_tmp_gmp"  in
+      let mpz_t = Project.on p' (fun () ->
+	let mpz_t_file = File.from_filename "gmp.c" in
+	File.init_from_c_files [mpz_t_file];
+	let tmp_mpz_t = ref None in
+	let set_mpzt = object
+	  inherit Cil.nopCilVisitor
+	  method !vglob = function
+	  | GType({ torig_name = s } as info, _) when s = "mpz_t" ->
+	    tmp_mpz_t := Some info;
+	    Cil.SkipChildren
+	  | _ ->
+	    Cil.SkipChildren
+	end in
+	Cil.visitCilFileSameGlobals set_mpzt (Ast.get ());
+	!tmp_mpz_t
+      ) () in
+      Project.remove ~project:p' ();
+      Sd_options.mpz_t := mpz_t;
+      
       let properties = Sd_options.Properties.get () in
       let behaviors = Sd_options.Behaviors.get () in
       let functions = Sd_options.Functions.get () in
@@ -276,7 +296,8 @@ let run() =
       Sd_states.Id_To_Property.clear();
       Sd_states.Property_To_Id.clear();
       Sd_states.Not_Translated_Predicates.clear();
-      Sd_states.Behavior_Reachability.clear()
+      Sd_states.Behavior_Reachability.clear();
+      Sd_options.mpz_t := None;
     end
 
 

@@ -183,6 +183,13 @@ let lengths_from_requires kf =
     Annotations.iter_behaviors on_bhv kf;
   kf_tbl
 
+let mpz_t() =
+  let ty = Sd_options.mpz_t in
+  let ty = !ty in
+  let ty = Extlib.the ty in
+  let ty = ty.ttype in
+  ty
+
 
 (* unused: interpreting string as precondition predicates *)
 (* let type_str_precond kf pred_as_string = *)

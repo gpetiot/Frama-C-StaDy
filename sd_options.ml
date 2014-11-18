@@ -59,3 +59,6 @@ let dkey_generated_c = Self.register_category "generated-c"
 let dkey_properties = Self.register_category "properties"
 let dkey_reach = Self.register_category "reach"
 let dkey_insertions = Self.register_category "insertions"
+
+(* mpz_t type for GMP *)
+let mpz_t = ref (None:Cil_types.typeinfo option)
