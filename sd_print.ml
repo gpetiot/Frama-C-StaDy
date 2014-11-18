@@ -39,24 +39,6 @@ and pp_pexpr fmt = function
   | Sd_insertions.False -> Format.fprintf fmt "0"
   | Sd_insertions.Cmp (rel, e1, e2) ->
     Format.fprintf fmt "%a %a %a"pp_cexpr e1 Printer.pp_relation rel pp_cexpr e2
-  | Sd_insertions.Z_cmp (op, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp(%a, %a) %a 0"
-      pp_zexpr g1 pp_zexpr g2 Printer.pp_binop op
-  | Sd_insertions.Z_cmp_ui (op, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp_ui(%a, %a) %a 0"
-      pp_zexpr g1 pp_cexpr g2 Printer.pp_binop op
-  | Sd_insertions.Z_cmp_si (op, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp_si(%a, %a) %a 0"
-      pp_zexpr g1 pp_cexpr g2 Printer.pp_binop op
-  | Sd_insertions.Z_cmpr (rel, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp(%a, %a) %a 0"
-      pp_zexpr g1 pp_zexpr g2 Printer.pp_relation rel
-  | Sd_insertions.Z_cmpr_ui (rel, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp_ui(%a, %a) %a 0"
-      pp_zexpr g1 pp_cexpr g2 Printer.pp_relation rel
-  | Sd_insertions.Z_cmpr_si (rel, g1, g2) ->
-    Format.fprintf fmt "__gmpz_cmp_si(%a, %a) %a 0"
-      pp_zexpr g1 pp_cexpr g2 Printer.pp_relation rel
   | Sd_insertions.Lnot p -> Format.fprintf fmt "!(%a)" pp_pexpr p
   | Sd_insertions.Land(p,q)->Format.fprintf fmt"(%a && %a)"pp_pexpr p pp_pexpr q
   | Sd_insertions.Lor(p,q)->Format.fprintf fmt"(%a || %a)" pp_pexpr p pp_pexpr q
@@ -115,6 +97,15 @@ let pp_instruction fmt = function
     Format.fprintf fmt "%a = pathcrawler_dimension(%a)" pp_cexpr a pp_cexpr b
   | Sd_insertions.Malloc (a,b) ->
     Format.fprintf fmt "%a = malloc(%a)" pp_cexpr a pp_cexpr b
+  | Sd_insertions.Z_cmp (a, g1, g2) ->
+    Format.fprintf fmt "%a = __gmpz_cmp(%a, %a)"
+      pp_cexpr a pp_zexpr g1 pp_zexpr g2
+  | Sd_insertions.Z_cmp_ui (a, g1, g2) ->
+    Format.fprintf fmt "%a = __gmpz_cmp_ui(%a, %a)"
+      pp_cexpr a pp_zexpr g1 pp_cexpr g2
+  | Sd_insertions.Z_cmp_si (a, g1, g2) ->
+    Format.fprintf fmt "%a = __gmpz_cmp_si(%a, %a)"
+      pp_cexpr a pp_zexpr g1 pp_cexpr g2
 
 let rec pp_insertion ?(line_break = true) fmt ins =
   let rec aux fmt = function
@@ -325,17 +316,6 @@ class print_insertions insertions () = object(self)
   | Sd_insertions.Fresh_pred_var _ -> ()
   | Sd_insertions.True | Sd_insertions.False -> ()
   | Sd_insertions.Cmp (_,a,b) -> self#cexpr a; self#cexpr b
-  | Sd_insertions.Z_cmp (_,a,b) -> gmpz_cmp <- true; self#zexpr a; self#zexpr b
-  | Sd_insertions.Z_cmp_ui (_,a,b) ->
-    gmpz_cmp_ui <- true; self#zexpr a; self#cexpr b
-  | Sd_insertions.Z_cmp_si (_,a,b) ->
-    gmpz_cmp_si <- true; self#zexpr a; self#cexpr b
-  | Sd_insertions.Z_cmpr (_,a,b) ->
-    gmpz_cmp <- true; self#zexpr a; self#zexpr b
-  | Sd_insertions.Z_cmpr_ui (_,a,b) ->
-    gmpz_cmp_ui <- true; self#zexpr a; self#cexpr b
-  | Sd_insertions.Z_cmpr_si (_,a,b) ->
-    gmpz_cmp_si <- true; self#zexpr a; self#cexpr b
   | Sd_insertions.Lnot p -> self#pexpr p
   | Sd_insertions.Land (p,q) -> self#pexpr p; self#pexpr q
   | Sd_insertions.Lor (p,q) -> self#pexpr p; self#pexpr q
@@ -389,6 +369,11 @@ class print_insertions insertions () = object(self)
     gmpz_get_si <- true; self#cexpr a; self#zexpr b
   | Sd_insertions.Pc_dim (a,b) -> pc_dim <- true; self#cexpr a; self#cexpr b
   | Sd_insertions.Malloc (a,b) -> malloc <- true; self#cexpr a; self#cexpr b
+  | Sd_insertions.Z_cmp (_,a,b) -> gmpz_cmp <- true; self#zexpr a; self#zexpr b
+  | Sd_insertions.Z_cmp_ui (_,a,b) ->
+    gmpz_cmp_ui <- true; self#zexpr a; self#cexpr b
+  | Sd_insertions.Z_cmp_si (_,a,b) ->
+    gmpz_cmp_si <- true; self#zexpr a; self#cexpr b
 
   method private insertion = function
   | Sd_insertions.Instru i -> self#instru i

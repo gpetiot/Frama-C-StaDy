@@ -33,12 +33,6 @@ and pred_expr =
 | Fresh_pred_var of int (* uid *)
 | True | False
 | Cmp of relation * ctype_expr * ctype_expr
-| Z_cmp of binop * z_expr * z_expr
-| Z_cmp_ui of binop * z_expr * ctype_expr
-| Z_cmp_si of binop * z_expr * ctype_expr
-| Z_cmpr of relation * z_expr * z_expr
-| Z_cmpr_ui of relation * z_expr * ctype_expr
-| Z_cmpr_si of relation * z_expr * ctype_expr
 | Lnot of pred_expr
 | Land of pred_expr * pred_expr
 | Lor of pred_expr * pred_expr
@@ -71,6 +65,9 @@ type instruction =
 | Z_get_si of ctype_expr * z_expr
 | Pc_dim of ctype_expr * ctype_expr
 | Malloc of ctype_expr * ctype_expr
+| Z_cmp of ctype_expr * z_expr * z_expr
+| Z_cmp_ui of ctype_expr * z_expr * ctype_expr
+| Z_cmp_si of ctype_expr * z_expr * ctype_expr
 
 type insertion =
 | Instru of instruction
@@ -82,6 +79,14 @@ type insertion =
     insertion list
 | Block of insertion list
 
+let binop_to_relation = function
+  | Lt -> Rlt
+  | Gt -> Rgt
+  | Le -> Rle
+  | Ge -> Rge
+  | Eq -> Req
+  | Ne -> Rneq
+  | _ -> assert false
 
 class gather_insertions props = object(self)
   inherit Visitor.frama_c_inplace as super
@@ -199,13 +204,17 @@ class gather_insertions props = object(self)
       | _ -> assert false
     in
     let ins_b_2 = Instru(Z_binop_ui(PlusA,fresh_iter,fresh_iter,One)) in
-    let ins_b = ins_b_0 @ [ins_b_1; ins_b_2] @ clear_lambda in
-    let cond = Z_cmp(Le,fresh_iter,up) in
-    let i_7 = For(None, Some cond, None, ins_b) in
+    let tmp = self#fresh_ctype_var Cil.intType in
+    let ii_1 = Decl_ctype_var tmp in
+    let ii_2 = Instru(Z_cmp(tmp,fresh_iter,up)) in
+    let ii_3 = Instru(Z_cmp(tmp,fresh_iter,up)) in
+    let ins_b = ins_b_0 @ [ins_b_1; ins_b_2; ii_3] @ clear_lambda in
+    let i_7 = For(None, Some (Cmp(Rle,tmp,Zero)), None, ins_b) in
     let i_8 = Instru(Z_clear fresh_iter) in
     let i_9 = Instru(Z_clear low) in
     let i_10 = Instru(Z_clear up) in
-    let inserts_block = i_3 @ i_4 @ [i_5; i_6; i_7; i_8; i_9; i_10] in
+    let inserts_block =
+      i_3 @ i_4 @ [i_5; i_6; ii_1; ii_2; i_7; i_8; i_9; i_10] in
     [i_0; i_1; Block inserts_block], Z_fragment fresh_var
 
   method private term_node t =
@@ -360,11 +369,16 @@ class gather_insertions props = object(self)
 	    | Linteger, Linteger ->
 	      let var = self#fresh_ctype_var Cil.intType in
 	      let insert_2 = Decl_ctype_var var in
-	      let pred = Z_cmp(op, self#z_fragment x,self#z_fragment y) in
-	      let insert_3 = Instru(Affect(var, Of_pred pred)) in
+	      let tmp = self#fresh_ctype_var Cil.intType in
+	      let i_1 = Decl_ctype_var tmp in
+	      let i_2 =
+		Instru(Z_cmp(tmp, self#z_fragment x,self#z_fragment y)) in
+	      let op = binop_to_relation op in
+	      let insert_3 = Instru(Affect(var, Of_pred(Cmp(op,tmp,Zero)))) in
 	      let insert_4 = Instru(Z_clear(self#z_fragment x)) in
 	      let insert_5 = Instru(Z_clear(self#z_fragment y)) in
-	      inserts_0 @ inserts_1 @ [insert_2; insert_3; insert_4; insert_5],
+	      inserts_0 @ inserts_1
+	      @ [insert_2; i_1; i_2; insert_3; insert_4; insert_5],
 	      Ctype_fragment var
 	    | _ ->
 	      let x = self#ctype_fragment x and y = self#ctype_fragment y in
@@ -434,7 +448,9 @@ class gather_insertions props = object(self)
 	  let insert_1 = self#init_Z_var fresh_var in
 	  let inserts_2, cond' = self#term cond in
 	  let cond' = self#z_fragment cond' in
-	  let cond'' = Z_cmp_si(Ne, cond', Zero) in
+	  let tmp = self#fresh_ctype_var Cil.intType in
+	  let i_1 = Decl_ctype_var tmp in
+	  let i_2 = Instru(Z_cmp_si(tmp, cond', Zero)) in
 	  let inserts_then_0, then_b' = self#term then_b in
 	  let then_b' = self#z_fragment then_b' in
 	  let inserts_then = inserts_then_0
@@ -445,9 +461,9 @@ class gather_insertions props = object(self)
 	  let inserts_else = inserts_else_0
 	    @ [Instru(Z_set(fresh_var, else_b')); Instru(Z_clear else_b')]
 	  in
-	  let insert_3 = If(cond'', inserts_then, inserts_else) in
+	  let insert_3 = If(Cmp(Rneq,tmp,Zero), inserts_then, inserts_else) in
 	  let insert_4 = Instru(Z_clear cond') in
-	  [insert_0; insert_1] @ inserts_2 @ [insert_3; insert_4],
+	  [insert_0; insert_1] @ inserts_2 @ [i_1; i_2; insert_3; insert_4],
 	  Z_fragment fresh_var
 	| Lreal -> assert false (* TODO: reals *)
 	| _ -> assert false (* unreachable *)
@@ -917,9 +933,14 @@ class gather_insertions props = object(self)
 	      let inserts_0, term' = self#term term in
 	      List.iter (self#insert (BegStmt stmt.sid)) inserts_0;
 	      let term' = self#z_fragment term' in
-	      let cond = Z_cmp_ui(Lt, term', Zero) in
+	      let tmp = self#fresh_ctype_var Cil.intType in
+	      let i_1 = Decl_ctype_var tmp in
+	      let i_2 = Instru(Z_cmp_ui(tmp, term', Zero)) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
-	      self#insert (BegStmt stmt.sid)(If (cond, [instr], []));
+	      self#insert (BegStmt stmt.sid) i_1;
+	      self#insert (BegStmt stmt.sid) i_2;
+	      self#insert (BegStmt stmt.sid)
+		(If (Cmp(Rlt,tmp,Zero), [instr], []));
 	      self#insert (EndStmt stmt.sid) (Instru(Z_clear term'));
 	      let inserts_1, term' = self#term term in
 	      List.iter (self#insert (BegIter stmt.sid)) inserts_1;
@@ -932,12 +953,16 @@ class gather_insertions props = object(self)
 	      let inserts_4, term' = self#term term in
 	      List.iter (self#insert (EndIter stmt.sid)) inserts_4;
 	      let term' = self#z_fragment term' in
-	      let cond = Z_cmp_ui(Lt, fresh_variant, Zero) in
+	      let i_3 = Instru(Z_cmp_ui(tmp, fresh_variant, Zero)) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
-	      self#insert (EndIter stmt.sid) (If(cond, [instr], []));
-	      let cond = Z_cmp(Ge, term', fresh_variant) in
+	      self#insert (EndIter stmt.sid) i_3;
+	      self#insert (EndIter stmt.sid)
+		(If(Cmp(Rlt,tmp,Zero), [instr], []));
+	      let i_4 = Instru(Z_cmp(tmp, term', fresh_variant)) in
 	      let instr = Instru(Pc_exn("Variant non decreasing", id)) in
-	      self#insert (EndIter stmt.sid) (If(cond, [instr] ,[]));
+	      self#insert (EndIter stmt.sid) i_4;
+	      self#insert (EndIter stmt.sid)
+		(If(Cmp(Rge,tmp,Zero), [instr] ,[]));
 	      self#insert (EndIter stmt.sid) (Instru(Z_clear fresh_variant))
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
@@ -1025,18 +1050,22 @@ class gather_insertions props = object(self)
 		[Instru(Z_binop_ui(PlusA,fresh_iter,fresh_iter,One))]
 	      else []
 	    in
-	    let exp1 = Z_cmpr(r2, fresh_iter, t2') in
+	    let tmp = self#fresh_ctype_var Cil.intType in
+	    let i_1 = Decl_ctype_var tmp in
+	    let i_2 = Instru(Z_cmp(tmp, fresh_iter, t2')) in
 	    let exp2 = if forall then var else Lnot var in
 	    let ins_b_0, goal_var = self#predicate_named goal in
 	    let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
 	    let ins_b_2 = Instru(Z_binop_ui(PlusA,fresh_iter,fresh_iter,One)) in
-	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2] in
-	    let insert_5 = For(None,Some(Land(exp1,exp2)),None,inserts_block) in
+	    let i_3 = Instru(Z_cmp(tmp, fresh_iter, t2')) in
+	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
+	    let insert_5 =
+	      For(None,Some(Land(Cmp(r2,tmp,Zero),exp2)),None,inserts_block) in
 	    let insert_6 = Instru(Z_clear fresh_iter) in
 	    let insert_7 = Instru(Z_clear t1') in
 	    let insert_8 = Instru(Z_clear t2') in
 	    [insert_0] @ inserts_1 @ inserts_2 @ [insert_3] @ inserts_4
-	    @ [insert_5; insert_6; insert_7; insert_8]
+	    @ [i_1; i_2; insert_5; insert_6; insert_7; insert_8]
 	  | Lreal -> assert false (* TODO: reals *)
 	  | _ ->
 	    let fresh_iter = My_Z_var iter_name in
@@ -1051,17 +1080,21 @@ class gather_insertions props = object(self)
 		[Instru(Z_binop_ui(PlusA,fresh_iter,fresh_iter,One))]
 	      else []
 	    in
-	    let exp1 = Z_cmpr_si(r2, fresh_iter, t2') in
+	    let tmp = self#fresh_ctype_var Cil.intType in
+	    let i_1 = Decl_ctype_var tmp in
+	    let i_2 = Instru(Z_cmp_si(tmp, fresh_iter, t2')) in
 	    let exp2 = if forall then var else Lnot var in
 	    let ins_b_0, goal_var = self#predicate_named goal in 
 	    let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
 	    let ins_b_2 = Instru(Z_binop_ui(PlusA,fresh_iter,fresh_iter,One)) in
-	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2] in
-	    let insert_5 = For(None,Some(Land(exp1,exp2)),None,inserts_block) in
+	    let i_3 = Instru(Z_cmp_si(tmp, fresh_iter, t2')) in
+	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
+	    let insert_5 =
+	      For(None,Some(Land(Cmp(r2,tmp,Zero),exp2)),None,inserts_block) in
 	    let insert_6 = Instru(Z_clear fresh_iter) in
 	    let insert_7 = Instru(Z_clear t1') in
 	    [insert_0] @ inserts_1 @ inserts_2 @ [insert_3] @ inserts_4
-	    @ [insert_5; insert_6; insert_7]
+	    @ [i_1; i_2; insert_5; insert_6; insert_7]
 	end
       | Lreal -> assert false (* TODO: reals *)
       | _ ->
@@ -1112,14 +1145,20 @@ class gather_insertions props = object(self)
 	let y' = self#z_fragment y' in
 	let var = self#fresh_pred_var() in
 	let insert_2 = Decl_pred_var var in
-	let exp1 = Z_cmp_ui(Ge, y', Zero) in
+	let tmp' = self#fresh_ctype_var Cil.intType in
+	let ii_1 = Decl_ctype_var tmp' in
+	let ii_2 = Instru(Z_cmp_ui(tmp', y', Zero)) in
 	let tmp = self#fresh_ctype_var Cil.intType in
 	let i_1 = Decl_ctype_var tmp in
 	let i_2 = Instru(Pc_dim (tmp, x')) in
-	let exp2 = Z_cmp_ui(Lt, y', tmp) in
-	let insert_3 = Instru(Affect_pred(var, Land(exp1, exp2))) in
+	let tmp'' = self#fresh_ctype_var Cil.intType in
+	let ii_3 = Decl_ctype_var tmp'' in
+	let ii_4 = Instru(Z_cmp_ui(tmp'', y', tmp)) in
+	let insert_3 =
+	  Instru(Affect_pred(var, Land(Cmp(Rge,tmp',Zero),
+				       Cmp(Rlt,tmp'',Zero)))) in
 	let insert_4 = Instru(Z_clear y') in
-	[insert_2; i_1; i_2; insert_3; insert_4], var
+	[insert_2; ii_1; ii_2; i_1; i_2; ii_3; ii_4; insert_3; insert_4], var
       | Ctype (TInt _) ->
 	let y' = self#ctype_fragment y' in
 	let tmp = self#fresh_ctype_var Cil.intType in
@@ -1176,15 +1215,19 @@ class gather_insertions props = object(self)
       let inserts_0, term_var = self#term t in
       let res_var = self#fresh_pred_var() in
       let insert_1 = Decl_pred_var res_var in
-      let cond, insert_3 =
+      let cond, ii, insert_3 =
 	match t.term_type with
 	| Linteger ->
 	  let x = self#z_fragment term_var in
-	  Z_cmp_si(Ne, x, Zero), [Instru(Z_clear x)]
+	  let tmp = self#fresh_ctype_var Cil.intType in
+	  let i_1 = Decl_ctype_var tmp in
+	  let i_2 = Instru(Z_cmp_si(tmp, x, Zero)) in
+	  Cmp(Rneq, tmp, Zero), [i_1; i_2], [Instru(Z_clear x)]
 	| Lreal -> assert false (* unreachable *)
-	| Ctype (TInt _) -> Cmp(Rneq, self#ctype_fragment term_var, Zero), []
+	| Ctype (TInt _) ->
+	  Cmp(Rneq, self#ctype_fragment term_var, Zero), [], []
 	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
-	  Cmp(Rneq, self#ctype_fragment term_var, Zero), []
+	  Cmp(Rneq, self#ctype_fragment term_var, Zero), [], []
 	| _ -> assert false (* unreachable *)
       in
       let inserts_then_0, pred1_var = self#predicate_named pred1 in
@@ -1194,7 +1237,7 @@ class gather_insertions props = object(self)
       let insert_else_1 = Instru(Affect_pred(res_var, pred2_var)) in
       let inserts_else = inserts_else_0 @ [insert_else_1] in
       let insert_2 = If(cond, inserts_then, inserts_else) in
-      inserts_0 @ [insert_1; insert_2] @ insert_3, res_var
+      inserts_0 @ ii @ [insert_1; insert_2] @ insert_3, res_var
     end
 
   | Prel(rel,t1,t2) ->
@@ -1209,27 +1252,26 @@ class gather_insertions props = object(self)
     let inserts, ret =
       match t1.term_type, t2.term_type with
       | Linteger, Linteger ->
-	let var = self#fresh_pred_var() in
+	let var = self#fresh_ctype_var Cil.intType in
 	let t1' = self#z_fragment t1' in
 	let t2' = self#z_fragment t2' in
-	let insert_2 = Decl_pred_var var in
-	let insert_3 = Instru(Affect_pred(var, Z_cmpr(rel, t1', t2'))) in
-	[insert_2; insert_3], var
+	let insert_2 = Decl_ctype_var var in
+	let insert_3 = Instru(Z_cmp(var, t1', t2')) in
+	[insert_2; insert_3], Cmp(rel, var, Zero)
       | Linteger, Ctype x ->
-	let var = self#fresh_pred_var() in
+	let var = self#fresh_ctype_var Cil.intType in
 	let t1' = self#z_fragment t1' in
 	let t2' = self#ctype_fragment t2' in
-	let insert_2 = Decl_pred_var var in
-	let value =
-	  if Cil.isUnsignedInteger x then Z_cmpr_ui(rel, t1', t2')
-	  else if Cil.isSignedInteger x then Z_cmpr_si(rel, t1', t2')
+	let insert_2 = Decl_ctype_var var in
+	let insert_3 =
+	  if Cil.isUnsignedInteger x then Instru(Z_cmp_ui(var, t1', t2'))
+	  else if Cil.isSignedInteger x then Instru(Z_cmp_si(var, t1',t2'))
 	  else assert false
 	in
-	let insert_3 = Instru(Affect_pred(var, value)) in
-	[insert_2; insert_3], var
+	[insert_2; insert_3], Cmp(rel, var, Zero)
       | Lreal, Lreal -> assert false (* TODO: reals *)
       | Ctype x, Linteger ->
-	let var = self#fresh_pred_var() in
+	let var = self#fresh_ctype_var Cil.intType in
 	let t1' = self#ctype_fragment t1' in
 	let t2' = self#z_fragment t2' in
 	let fresh_var' = self#fresh_Z_var() in
@@ -1240,10 +1282,10 @@ class gather_insertions props = object(self)
 	  else assert false
 	in
 	let insert_3 = init_set fresh_var' t1' in
-	let insert_4 = Decl_pred_var var in
-	let insert_5 = Instru(Affect_pred(var,Z_cmpr(rel,fresh_var',t2'))) in
+	let insert_4 = Decl_ctype_var var in
+	let insert_5 = Instru(Z_cmp(var, fresh_var',t2')) in
 	let insert_7 = Instru(Z_clear fresh_var') in
-	[insert_2; insert_3; insert_4; insert_5; insert_7], var
+	[insert_2; insert_3; insert_4; insert_5; insert_7], Cmp(rel, var, Zero)
       | _ -> [], Cmp(rel, self#ctype_fragment t1', self#ctype_fragment t2')
     in
     inserts_0 @ inserts_1 @ inserts @ clear_t1 @ clear_t2, ret
