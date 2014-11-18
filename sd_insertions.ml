@@ -42,6 +42,7 @@ type fragment =
 | Ctype_fragment of ctype_expr
 
 type instruction =
+| Skip
 | Affect of ctype_expr * ctype_expr
 | Affect_pred of pred_expr * pred_expr
 | Free of ctype_expr
@@ -75,8 +76,7 @@ type insertion =
 | Decl_ctype_var of ctype_expr
 | Decl_pred_var of pred_expr
 | If of pred_expr * insertion list * insertion list
-| For of instruction option * pred_expr option * instruction option *
-    insertion list
+| For of instruction * pred_expr * instruction * insertion list
 | Block of insertion list
 
 let binop_to_relation = function
@@ -209,7 +209,7 @@ class gather_insertions props = object(self)
     let ii_2 = Instru(Z_cmp(tmp,fresh_iter,up)) in
     let ii_3 = Instru(Z_cmp(tmp,fresh_iter,up)) in
     let ins_b = ins_b_0 @ [ins_b_1; ins_b_2; ii_3] @ clear_lambda in
-    let i_7 = For(None, Some (Cmp(Rle,tmp,Zero)), None, ins_b) in
+    let i_7 = For(Skip, Cmp(Rle,tmp,Zero), Skip, ins_b) in
     let i_8 = Instru(Z_clear fresh_iter) in
     let i_9 = Instru(Z_clear low) in
     let i_10 = Instru(Z_clear up) in
@@ -737,7 +737,7 @@ class gather_insertions props = object(self)
 	      let i_3 = Instru(Z_get_si (tmp,h')) in
 	      let cond = Cmp(Rlt, my_iterator, tmp) in
 	      let step = Affect(my_iterator, Binop(PlusA, my_iterator,One)) in
-	      let insert_3 = For(Some init,Some cond,Some step,inserts_block) in
+	      let insert_3 = For(init, cond, step, inserts_block) in
 	      let insert_4 = Instru(Z_clear h') in
 	      inserts_0 @ [insert_1; i_1;i_2; insert_2; i_3; insert_3; insert_4]
 	    | Lreal -> assert false (* TODO: reals *)
@@ -751,7 +751,7 @@ class gather_insertions props = object(self)
 	      let init = Affect(my_iterator, Zero) in
 	      let cond = Cmp(Rlt, my_iterator, h') in
 	      let step = Affect(my_iterator, Binop(PlusA, my_iterator,One)) in
-	      let insert_3 = For(Some init,Some cond,Some step,inserts_block) in
+	      let insert_3 = For(init, cond, step, inserts_block) in
 	      inserts_0 @ [insert_1; insert_2; insert_3]
 	  end
 	| [] -> [Instru(Affect(my_old_ptr, my_ptr))]
@@ -785,7 +785,7 @@ class gather_insertions props = object(self)
 	      let i_2 = Instru(Z_get_si (tmp,h')) in
 	      let cond = Cmp(Rlt, my_iterator, tmp) in
 	      let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
-	      let insert_2=For(Some init,Some cond,Some step,inserts_block) in
+	      let insert_2=For(init, cond, step, inserts_block) in
 	      [i_1; i_2; insert_2; Instru(Z_clear h')]
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
@@ -794,7 +794,7 @@ class gather_insertions props = object(self)
 	      let init = Affect(my_iterator, Zero) in
 	      let cond = Cmp(Rlt, my_iterator, h') in
 	      let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
-	      [For(Some init,Some cond,Some step,inserts_block)]
+	      [For(init, cond, step, inserts_block)]
 	  in
 	  [insert_0] @ inserts_1 @ inserts' @ [Instru(Free(my_old_ptr))]
       in
@@ -1060,7 +1060,7 @@ class gather_insertions props = object(self)
 	    let i_3 = Instru(Z_cmp(tmp, fresh_iter, t2')) in
 	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
 	    let insert_5 =
-	      For(None,Some(Land(Cmp(r2,tmp,Zero),exp2)),None,inserts_block) in
+	      For(Skip, Land(Cmp(r2,tmp,Zero),exp2), Skip, inserts_block) in
 	    let insert_6 = Instru(Z_clear fresh_iter) in
 	    let insert_7 = Instru(Z_clear t1') in
 	    let insert_8 = Instru(Z_clear t2') in
@@ -1090,7 +1090,7 @@ class gather_insertions props = object(self)
 	    let i_3 = Instru(Z_cmp_si(tmp, fresh_iter, t2')) in
 	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
 	    let insert_5 =
-	      For(None,Some(Land(Cmp(r2,tmp,Zero),exp2)),None,inserts_block) in
+	      For(Skip, Land(Cmp(r2,tmp,Zero),exp2), Skip, inserts_block) in
 	    let insert_6 = Instru(Z_clear fresh_iter) in
 	    let insert_7 = Instru(Z_clear t1') in
 	    [insert_0] @ inserts_1 @ inserts_2 @ [insert_3] @ inserts_4
@@ -1114,7 +1114,7 @@ class gather_insertions props = object(self)
 	let ins_b_0, goal_var = self#predicate_named goal in
 	let ins_b_1 = Instru(Affect_pred(var, goal_var)) in
 	let inserts_block = ins_b_0 @ [ins_b_1]	in
-	let insert_3 = For(Some exp1, Some exp2, Some exp3, inserts_block) in
+	let insert_3 = For(exp1, exp2, exp3, inserts_block) in
 	[insert_0] @ inserts_1 @ inserts_2 @ [insert_3]
     in
     let insert_4 = Block inserts_3 in

@@ -52,6 +52,7 @@ let pp_garith fmt = function
   | _ -> assert false (* not used by the translation *)
 
 let pp_instruction fmt = function
+  | Sd_insertions.Skip -> ()
   | Sd_insertions.Affect(x,y)->Format.fprintf fmt"%a = %a" pp_cexpr x pp_cexpr y
   | Sd_insertions.Affect_pred (x,y) ->
     Format.fprintf fmt "%a = %a" pp_pexpr x pp_pexpr y
@@ -139,12 +140,9 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     | Sd_insertions.If (cond,b1,b2) ->
       Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_pexpr cond aux b1;
       if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
-    | Sd_insertions.For(None, Some e, None, b) ->
-      Format.fprintf fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" pp_pexpr e aux b
-    | Sd_insertions.For(Some i1, Some e, Some i2, b) ->
+    | Sd_insertions.For(i1, e, i2, b) ->
       Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n%a@]@\n}"
 	pp_instruction i1 pp_pexpr e pp_instruction i2 aux b
-    | Sd_insertions.For _ -> assert false (* not used by the translation *)
     | Sd_insertions.Block b ->
       if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
   end;
@@ -321,6 +319,7 @@ class print_insertions insertions () = object(self)
   | Sd_insertions.Lor (p,q) -> self#pexpr p; self#pexpr q
 
   method private instru = function
+  | Sd_insertions.Skip -> ()
   | Sd_insertions.Affect (a,b) -> self#cexpr a; self#cexpr b
   | Sd_insertions.Affect_pred (a,b) -> self#pexpr a; self#pexpr b
   | Sd_insertions.Free e -> free <- true; self#cexpr e
@@ -385,10 +384,7 @@ class print_insertions insertions () = object(self)
     List.iter self#insertion i1;
     List.iter self#insertion i2
   | Sd_insertions.For (i1, p, i2, i3) ->
-    (match i1 with Some x -> self#instru x | None -> ());
-    (match p with Some x -> self#pexpr x | None -> ());
-    (match i2 with Some x -> self#instru x | None -> ());
-    List.iter self#insertion i3
+    self#instru i1; self#pexpr p; self#instru i2; List.iter self#insertion i3
   | Sd_insertions.Block i -> List.iter self#insertion i   
 
   method private headers fmt =
