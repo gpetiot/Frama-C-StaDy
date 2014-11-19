@@ -86,12 +86,12 @@ type instruction =
 | Z_cmp_ui of ctype_expr * z_expr * ctype_expr
 | Z_cmp_si of ctype_expr * z_expr * ctype_expr
 
-| IAffect of varinfo * exp
+| IAffect of lval * exp
 | IFree of exp
 | IRet of exp
-| IPc_dim of varinfo * exp
+| IPc_dim of lval * exp
 | IPc_assume of exp
-| IMalloc of varinfo * exp
+| IMalloc of lval * exp
 | IZ_clear of exp
 | IZ_init of varinfo
 | IZ_init_set of varinfo * exp
@@ -367,8 +367,9 @@ class gather_insertions props = object(self)
 	      let i_1 = Ins.decl_varinfo tmp in
 	      let i_2 =	Instru(Ins.instru_Z_cmp tmp x y) in
 	      let op = binop_to_relation op in
+	      let lvar = Cil.var var in
 	      let insert_3 =
-		Instru(Ins.instru_affect var (Ins.cmp op e_tmp Ins.zero)) in
+		Instru(Ins.instru_affect lvar (Ins.cmp op e_tmp Ins.zero)) in
 	      let insert_4 = Instru(Ins.instru_Z_clear x) in
 	      let insert_5 = Instru(Ins.instru_Z_clear y) in
 	      inserts_0 @ inserts_1
@@ -661,9 +662,10 @@ class gather_insertions props = object(self)
     let var = self#fresh_pred_varinfo() in
     let inserts_0, pred1_var = self#translate_pnamed p in
     let insert_1 = Ins.decl_varinfo var in
-    let insert_2 = Instru(Ins.instru_affect var pred1_var) in
+    let lvar = Cil.var var in
+    let insert_2 = Instru(Ins.instru_affect lvar pred1_var) in
     let inserts_b_0, pred2_var = self#translate_pnamed q in
-    let insert_b_1 = Instru(Ins.instru_affect var pred2_var) in
+    let insert_b_1 = Instru(Ins.instru_affect lvar pred2_var) in
     let e_var = Cil.evar var in
     let insert_3 = Ins.ins_if e_var (inserts_b_0 @ [insert_b_1]) [] in
     inserts_0 @ [insert_1; insert_2; insert_3], e_var
@@ -672,9 +674,10 @@ class gather_insertions props = object(self)
     let var = self#fresh_pred_varinfo()  in
     let inserts_0, pred1_var = self#translate_pnamed p in
     let insert_1 = Ins.decl_varinfo var in
-    let insert_2 = Instru(Ins.instru_affect var pred1_var) in
+    let lvar = Cil.var var in
+    let insert_2 = Instru(Ins.instru_affect lvar pred1_var) in
     let inserts_b_0, pred2_var = self#translate_pnamed q in
-    let insert_b_1 = Instru(Ins.instru_affect var pred2_var) in
+    let insert_b_1 = Instru(Ins.instru_affect lvar pred2_var) in
     let e_var = Cil.evar var in
     let insert_3 = Ins.ins_if e_var [] (inserts_b_0 @ [insert_b_1]) in
     inserts_0 @ [insert_1; insert_2; insert_3], e_var
@@ -682,10 +685,11 @@ class gather_insertions props = object(self)
   method private translate_implies p q =
     let var = self#fresh_pred_varinfo() in
     let insert_0 = Ins.decl_varinfo var in
-    let insert_1 = Instru(Ins.instru_affect var Ins.one) in
+    let lvar = Cil.var var in
+    let insert_1 = Instru(Ins.instru_affect lvar Ins.one) in
     let inserts_2, pred1_var = self#translate_pnamed p in
     let inserts_b_0, pred2_var = self#translate_pnamed q in
-    let insert_b_1 = Instru(Ins.instru_affect var pred2_var) in
+    let insert_b_1 = Instru(Ins.instru_affect lvar pred2_var) in
     let insert_3 = Ins.ins_if pred1_var (inserts_b_0 @ [insert_b_1]) [] in
     [insert_0; insert_1] @ inserts_2 @ [insert_3], Cil.evar var
 
@@ -724,10 +728,11 @@ class gather_insertions props = object(self)
       | _ -> assert false (* unreachable *)
     in
     let inserts_then_0, pred1_var = self#translate_pnamed p in
-    let insert_then_1 = Instru(Ins.instru_affect res_var pred1_var) in
+    let lres_var = Cil.var res_var in
+    let insert_then_1 = Instru(Ins.instru_affect lres_var pred1_var) in
     let inserts_then = inserts_then_0 @ [insert_then_1] in
     let inserts_else_0, pred2_var = self#translate_pnamed q in
-    let insert_else_1 = Instru(Ins.instru_affect res_var pred2_var) in
+    let insert_else_1 = Instru(Ins.instru_affect lres_var pred2_var) in
     let inserts_else = inserts_else_0 @ [insert_else_1] in
     let insert_2 = Ins.ins_if cond inserts_then inserts_else in
     inserts_0 @ ii @ [insert_1; insert_2] @ insert_3, Cil.evar res_var
@@ -761,21 +766,24 @@ class gather_insertions props = object(self)
 	let ii_2 = Instru(Ins.instru_Z_cmp_ui tmp' y' Ins.zero) in
 	let tmp = self#fresh_ctype_varinfo Cil.intType in
 	let i_1 = Ins.decl_varinfo tmp in
-	let i_2 = Instru(Ins.instru_pc_dim tmp x') in
+	let ltmp = Cil.var tmp in
+	let i_2 = Instru(Ins.instru_pc_dim ltmp x') in
 	let tmp'' = self#fresh_ctype_varinfo Cil.intType in
 	let ii_3 = Ins.decl_varinfo tmp'' in
 	let ii_4 = Instru(Ins.instru_Z_cmp_ui tmp'' y' (Cil.evar tmp)) in
 	let e1 = Ins.cmp Rge (Cil.evar tmp') Ins.zero in
 	let e2 = Ins.cmp Rlt (Cil.evar tmp'') Ins.zero in
 	let e3 = Cil.mkBinOp ~loc:Cil.builtinLoc LAnd e1 e2 in
-	let insert_3 = Instru(Ins.instru_affect var e3) in
+	let lvar = Cil.var var in
+	let insert_3 = Instru(Ins.instru_affect lvar e3) in
 	let insert_4 = Instru(Ins.instru_Z_clear y') in
 	[insert_2; ii_1; ii_2; i_1; i_2; ii_3; ii_4; insert_3; insert_4],
 	(Cil.evar var)
       | Ctype (TInt _) ->
 	let tmp = self#fresh_ctype_varinfo Cil.intType in
 	let i_1 = Ins.decl_varinfo tmp in
-	let i_2 = Instru(Ins.instru_pc_dim tmp x') in
+	let ltmp = Cil.var tmp in
+	let i_2 = Instru(Ins.instru_pc_dim ltmp x') in
 	let e1 = Ins.cmp Rge y' Ins.zero in
 	let e2 = Ins.cmp Rgt (Cil.evar tmp) y' in
 	[i_1; i_2], Cil.mkBinOp ~loc:Cil.builtinLoc LAnd e1 e2
@@ -792,7 +800,8 @@ class gather_insertions props = object(self)
     let iter_name = lvar.lv_name in
     let insert_0 = Ins.decl_varinfo var in
     let init_val = if forall then Ins.one else Ins.zero in
-    let insert_1 = Instru(Ins.instru_affect var init_val) in
+    let lvar = Cil.var var in
+    let insert_1 = Instru(Ins.instru_affect lvar init_val) in
     let inserts_3 =
       match t1.term_type with
       | Linteger ->
@@ -822,7 +831,7 @@ class gather_insertions props = object(self)
 		Cil.new_exp ~loc:Cil.builtinLoc (UnOp(LNot,e_var,Cil.intType))
 	    in
 	    let ins_b_0, goal_var = self#translate_pnamed goal in
-	    let ins_b_1 = Instru(Ins.instru_affect var goal_var) in
+	    let ins_b_1 = Instru(Ins.instru_affect lvar goal_var) in
 	    let ins_b_2 =
 	      Instru
 		(Ins.instru_Z_binop_ui PlusA fresh_iter e_fresh_iter Ins.one) in
@@ -860,7 +869,7 @@ class gather_insertions props = object(self)
 		Cil.new_exp ~loc:Cil.builtinLoc (UnOp(LNot,e_var,Cil.intType))
 	    in
 	    let ins_b_0, goal_var = self#translate_pnamed goal in 
-	    let ins_b_1 = Instru(Ins.instru_affect var goal_var) in
+	    let ins_b_1 = Instru(Ins.instru_affect lvar goal_var) in
 	    let ins_b_2 =
 	      Instru(Ins.instru_Z_binop_ui
 		       PlusA fresh_iter e_fresh_iter Ins.one) in
@@ -880,7 +889,8 @@ class gather_insertions props = object(self)
 	let insert_0 = Ins.decl_varinfo iter in
 	let inserts_1, t1' = self#translate_term t1 in
 	let inserts_2, t2' = self#translate_term t2 in
-	let init = Ins.instru_affect iter (match r1 with
+	let liter = Cil.var iter in
+	let init = Ins.instru_affect liter (match r1 with
 	  | Rlt -> Cil.mkBinOp ~loc:Cil.builtinLoc PlusA t1' Ins.one
 	  | Rle -> t1'
 	  | _ -> assert false)
@@ -894,9 +904,9 @@ class gather_insertions props = object(self)
 	in
 	let exp2 = Cil.mkBinOp ~loc:Cil.builtinLoc LAnd e1 e2 in
 	let e3 = Cil.mkBinOp ~loc:Cil.builtinLoc PlusA e_iter Ins.one in
-	let next = Ins.instru_affect iter e3 in
+	let next = Ins.instru_affect liter e3 in
 	let ins_b_0, goal_var = self#translate_pnamed goal in
-	let ins_b_1 = Instru(Ins.instru_affect var goal_var) in
+	let ins_b_1 = Instru(Ins.instru_affect lvar goal_var) in
 	let inserts_block = ins_b_0 @ [ins_b_1]	in
 	let insert_3 = Ins.ins_for init exp2 next inserts_block in
 	[insert_0] @ inserts_1 @ inserts_2 @ [insert_3]

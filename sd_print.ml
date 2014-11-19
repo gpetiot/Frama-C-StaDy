@@ -16,6 +16,7 @@ let pp_zexpr fmt = function
   | Sd_insertions.My_Z_var name -> Format.fprintf fmt "%s" name
 
 let pp_var = Printer.pp_varinfo
+let pp_lval = Printer.pp_lval
 let pp_exp = Printer.pp_exp
 
 let rec pp_cexpr fmt = function
@@ -111,15 +112,15 @@ let pp_instruction fmt = function
     Format.fprintf fmt "%a = __gmpz_cmp_si(%a, %a)"
       pp_cexpr a pp_zexpr g1 pp_cexpr g2
 
-  | Sd_insertions.IAffect(v,e) -> Format.fprintf fmt "%a = %a" pp_var v pp_exp e
+  | Sd_insertions.IAffect(v,e)-> Format.fprintf fmt "%a = %a" pp_lval v pp_exp e
   | Sd_insertions.IFree e -> Format.fprintf fmt "free(%a)" pp_exp e
   | Sd_insertions.IRet e -> Format.fprintf fmt "return %a" pp_exp e
   | Sd_insertions.IPc_dim (v,e) ->
-    Format.fprintf fmt "%a = pathcrawler_dimension(%a)" pp_var v pp_exp e
+    Format.fprintf fmt "%a = pathcrawler_dimension(%a)" pp_lval v pp_exp e
   | Sd_insertions.IPc_assume e ->
     Format.fprintf fmt "pathcrawler_assume(%a)" pp_exp e
   | Sd_insertions.IMalloc (v,e) ->
-    Format.fprintf fmt "%a = malloc(%a)" pp_var v pp_exp e
+    Format.fprintf fmt "%a = malloc(%a)" pp_lval v pp_exp e
   | Sd_insertions.IZ_clear e -> Format.fprintf fmt "__gmpz_clear(%a)" pp_exp e
   | Sd_insertions.IZ_init v -> Format.fprintf fmt "__gmpz_init(%a)" pp_var v
   | Sd_insertions.IZ_init_set (v,e) ->
