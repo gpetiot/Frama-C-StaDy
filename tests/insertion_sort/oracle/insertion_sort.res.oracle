@@ -1,4 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/insertion_sort/insertion_sort.c"
+[kernel] preprocessing with "gcc -C -E -I.  gmp.c"
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -67,10 +68,13 @@ void insertion_sort(int *t, int n)
   old_t = t;
   mpz_t __stady_gmp_8;
   __gmpz_init_set_si(__stady_gmp_8, n);
-  int __stady_term_2;
-  old_ptr_t = malloc((__gmpz_get_si(__stady_gmp_8) * sizeof(int)));
-  for(__stady_term_2 = 0; __stady_term_2 < __gmpz_get_si(__stady_gmp_8); __stady_term_2 = (__stady_term_2 + 1)) {
-    old_ptr_t[__stady_term_2] = t[__stady_term_2];
+  int __stady_term_3;
+  unsigned long __stady_term_4;
+  __stady_term_4 = __gmpz_get_si(__stady_gmp_8);
+  old_ptr_t = malloc((__stady_term_4 * sizeof(int)));
+  __stady_term_4 = __gmpz_get_si(__stady_gmp_8);
+  for(__stady_term_3 = 0; __stady_term_3 < __stady_term_4; __stady_term_3 = (__stady_term_3 + 1)) {
+    old_ptr_t[__stady_term_3] = t[__stady_term_3];
   }
   __gmpz_clear(__stady_gmp_8);
   int old_n;
@@ -85,20 +89,20 @@ void insertion_sort(int *t, int n)
       __gmpz_init_set_str(__stady_gmp_19, "1", 10);
       mpz_t __stady_gmp_20;
       __gmpz_init_set_si(__stady_gmp_20, i);
-      int __stady_pred_8;
-      __stady_pred_8 = __gmpz_cmp(__stady_gmp_19, __stady_gmp_20) <= 0;
+      int __stady_term_12;
+      __stady_term_12 = __gmpz_cmp(__stady_gmp_19, __stady_gmp_20);
       __gmpz_clear(__stady_gmp_19);
       __gmpz_clear(__stady_gmp_20);
-      int __stady_pred_7;
-      __stady_pred_7 = __stady_pred_8;
-      if(__stady_pred_7) {
-        __stady_pred_7 = i <= n;
+      int __stady_pred_5;
+      __stady_pred_5 = __stady_term_12 <= 0;
+      if(__stady_pred_5) {
+        __stady_pred_5 = i <= n;
       }
-      if(!(__stady_pred_7)) {
+      if(!(__stady_pred_5)) {
         pathcrawler_assert_exception("Loop invariant not established!",6);
       }
-      int __stady_pred_11;
-      __stady_pred_11 = 1;
+      int __stady_pred_7;
+      __stady_pred_7 = 1;
       {
         mpz_t __q_x;
         mpz_t __stady_gmp_23;
@@ -113,11 +117,13 @@ void insertion_sort(int *t, int n)
         __gmpz_clear(__stady_gmp_24);
         __gmpz_clear(__stady_gmp_25);
         __gmpz_init_set(__q_x, __stady_gmp_23);
-        while((__gmpz_cmp(__q_x, __stady_gmp_26) < 0 && __stady_pred_11)) {
+        int __stady_term_14;
+        __stady_term_14 = __gmpz_cmp(__q_x, __stady_gmp_26);
+        for(; (__stady_term_14 < 0 && __stady_pred_7); ) {
           mpz_t __stady_gmp_27;
           __gmpz_init_set(__stady_gmp_27, __q_x);
-          int __stady_term_6;
-          __stady_term_6 = __gmpz_get_si(__stady_gmp_27);
+          int __stady_term_15;
+          __stady_term_15 = __gmpz_get_si(__stady_gmp_27);
           __gmpz_clear(__stady_gmp_27);
           mpz_t __stady_gmp_28;
           __gmpz_init_set(__stady_gmp_28, __q_x);
@@ -128,17 +134,18 @@ void insertion_sort(int *t, int n)
           __gmpz_add(__stady_gmp_30, __stady_gmp_28, __stady_gmp_29);
           __gmpz_clear(__stady_gmp_28);
           __gmpz_clear(__stady_gmp_29);
-          int __stady_term_7;
-          __stady_term_7 = __gmpz_get_si(__stady_gmp_30);
+          int __stady_term_16;
+          __stady_term_16 = __gmpz_get_si(__stady_gmp_30);
           __gmpz_clear(__stady_gmp_30);
-          __stady_pred_11 = *(t + __stady_term_6) <= *(t + __stady_term_7);
+          __stady_pred_7 = *(t + __stady_term_15) <= *(t + __stady_term_16);
           __gmpz_add_ui(__q_x, __q_x, 1);
+          __stady_term_14 = __gmpz_cmp(__q_x, __stady_gmp_26);
         }
         __gmpz_clear(__q_x);
         __gmpz_clear(__stady_gmp_23);
         __gmpz_clear(__stady_gmp_26);
       }
-      if(!(__stady_pred_11)) {
+      if(!(__stady_pred_7)) {
         pathcrawler_assert_exception("Loop invariant not established!",9);
       }
       mpz_t __stady_gmp_39;
@@ -150,7 +157,9 @@ void insertion_sort(int *t, int n)
       __gmpz_sub(__stady_gmp_41, __stady_gmp_39, __stady_gmp_40);
       __gmpz_clear(__stady_gmp_39);
       __gmpz_clear(__stady_gmp_40);
-      if(__gmpz_cmp_ui(__stady_gmp_41, 0) < 0) {
+      int __stady_term_20;
+      __stady_term_20 = __gmpz_cmp_ui(__stady_gmp_41, 0);
+      if(__stady_term_20 < 0) {
         pathcrawler_assert_exception("Variant non positive",0);
       }
       while (1) {
@@ -177,20 +186,20 @@ void insertion_sort(int *t, int n)
             __gmpz_init_set_str(__stady_gmp_9, "0", 10);
             mpz_t __stady_gmp_10;
             __gmpz_init_set_si(__stady_gmp_10, j);
-            int __stady_pred_2;
-            __stady_pred_2 = __gmpz_cmp(__stady_gmp_9, __stady_gmp_10) <= 0;
+            int __stady_term_5;
+            __stady_term_5 = __gmpz_cmp(__stady_gmp_9, __stady_gmp_10);
             __gmpz_clear(__stady_gmp_9);
             __gmpz_clear(__stady_gmp_10);
             int __stady_pred_1;
-            __stady_pred_1 = __stady_pred_2;
+            __stady_pred_1 = __stady_term_5 <= 0;
             if(__stady_pred_1) {
               __stady_pred_1 = j <= i;
             }
             if(!(__stady_pred_1)) {
               pathcrawler_assert_exception("Loop invariant not established!",8);
             }
-            int __stady_pred_5;
-            __stady_pred_5 = 1;
+            int __stady_pred_3;
+            __stady_pred_3 = 1;
             {
               mpz_t __q_k;
               mpz_t __stady_gmp_13;
@@ -198,28 +207,31 @@ void insertion_sort(int *t, int n)
               mpz_t __stady_gmp_14;
               __gmpz_init_set_si(__stady_gmp_14, i);
               __gmpz_init_set(__q_k, __stady_gmp_13);
-              while((__gmpz_cmp(__q_k, __stady_gmp_14) < 0 && __stady_pred_5)) {
+              int __stady_term_7;
+              __stady_term_7 = __gmpz_cmp(__q_k, __stady_gmp_14);
+              for(; (__stady_term_7 < 0 && __stady_pred_3); ) {
                 mpz_t __stady_gmp_15;
                 __gmpz_init_set(__stady_gmp_15, __q_k);
-                int __stady_term_3;
-                __stady_term_3 = __gmpz_get_si(__stady_gmp_15);
+                int __stady_term_8;
+                __stady_term_8 = __gmpz_get_si(__stady_gmp_15);
                 __gmpz_clear(__stady_gmp_15);
-                __stady_pred_5 = *(t + __stady_term_3) > mv;
+                __stady_pred_3 = *(t + __stady_term_8) > mv;
                 __gmpz_add_ui(__q_k, __q_k, 1);
+                __stady_term_7 = __gmpz_cmp(__q_k, __stady_gmp_14);
               }
               __gmpz_clear(__q_k);
               __gmpz_clear(__stady_gmp_13);
               __gmpz_clear(__stady_gmp_14);
             }
-            if(!(__stady_pred_5)) {
+            if(!(__stady_pred_3)) {
               pathcrawler_assert_exception("Loop invariant not established!",11);
             }
             if(j < 0) {
               pathcrawler_assert_exception("Variant non positive",3);
             }
             while (1) {
-              int __stady_term_5;
-              __stady_term_5 = j;
+              int __stady_term_11;
+              __stady_term_11 = j;
               {
                 if (! (j > 0)) {
                                  pathcrawler_to_framac("@FC:REACHABLE_STMT:12");
@@ -235,20 +247,20 @@ void insertion_sort(int *t, int n)
               __gmpz_init_set_str(__stady_gmp_11, "0", 10);
               mpz_t __stady_gmp_12;
               __gmpz_init_set_si(__stady_gmp_12, j);
-              int __stady_pred_4;
-              __stady_pred_4 = __gmpz_cmp(__stady_gmp_11, __stady_gmp_12) <= 0;
+              int __stady_term_6;
+              __stady_term_6 = __gmpz_cmp(__stady_gmp_11, __stady_gmp_12);
               __gmpz_clear(__stady_gmp_11);
               __gmpz_clear(__stady_gmp_12);
-              int __stady_pred_3;
-              __stady_pred_3 = __stady_pred_4;
-              if(__stady_pred_3) {
-                __stady_pred_3 = j <= i;
+              int __stady_pred_2;
+              __stady_pred_2 = __stady_term_6 <= 0;
+              if(__stady_pred_2) {
+                __stady_pred_2 = j <= i;
               }
-              if(!(__stady_pred_3)) {
+              if(!(__stady_pred_2)) {
                 pathcrawler_assert_exception("Loop invariant not preserved!",8);
               }
-              int __stady_pred_6;
-              __stady_pred_6 = 1;
+              int __stady_pred_4;
+              __stady_pred_4 = 1;
               {
                 mpz_t __q_k;
                 mpz_t __stady_gmp_16;
@@ -256,26 +268,29 @@ void insertion_sort(int *t, int n)
                 mpz_t __stady_gmp_17;
                 __gmpz_init_set_si(__stady_gmp_17, i);
                 __gmpz_init_set(__q_k, __stady_gmp_16);
-                while((__gmpz_cmp(__q_k, __stady_gmp_17) < 0 && __stady_pred_6)) {
+                int __stady_term_9;
+                __stady_term_9 = __gmpz_cmp(__q_k, __stady_gmp_17);
+                for(; (__stady_term_9 < 0 && __stady_pred_4); ) {
                   mpz_t __stady_gmp_18;
                   __gmpz_init_set(__stady_gmp_18, __q_k);
-                  int __stady_term_4;
-                  __stady_term_4 = __gmpz_get_si(__stady_gmp_18);
+                  int __stady_term_10;
+                  __stady_term_10 = __gmpz_get_si(__stady_gmp_18);
                   __gmpz_clear(__stady_gmp_18);
-                  __stady_pred_6 = *(t + __stady_term_4) > mv;
+                  __stady_pred_4 = *(t + __stady_term_10) > mv;
                   __gmpz_add_ui(__q_k, __q_k, 1);
+                  __stady_term_9 = __gmpz_cmp(__q_k, __stady_gmp_17);
                 }
                 __gmpz_clear(__q_k);
                 __gmpz_clear(__stady_gmp_16);
                 __gmpz_clear(__stady_gmp_17);
               }
-              if(!(__stady_pred_6)) {
+              if(!(__stady_pred_4)) {
                 pathcrawler_assert_exception("Loop invariant not preserved!",11);
               }
-              if(__stady_term_5 < 0) {
+              if(__stady_term_11 < 0) {
                 pathcrawler_assert_exception("Variant non positive",3);
               }
-              if(j >= __stady_term_5) {
+              if(j >= __stady_term_11) {
                 pathcrawler_assert_exception("Variant non decreasing",3);
               }
               }
@@ -287,20 +302,20 @@ void insertion_sort(int *t, int n)
         __gmpz_init_set_str(__stady_gmp_21, "1", 10);
         mpz_t __stady_gmp_22;
         __gmpz_init_set_si(__stady_gmp_22, i);
-        int __stady_pred_10;
-        __stady_pred_10 = __gmpz_cmp(__stady_gmp_21, __stady_gmp_22) <= 0;
+        int __stady_term_13;
+        __stady_term_13 = __gmpz_cmp(__stady_gmp_21, __stady_gmp_22);
         __gmpz_clear(__stady_gmp_21);
         __gmpz_clear(__stady_gmp_22);
-        int __stady_pred_9;
-        __stady_pred_9 = __stady_pred_10;
-        if(__stady_pred_9) {
-          __stady_pred_9 = i <= n;
+        int __stady_pred_6;
+        __stady_pred_6 = __stady_term_13 <= 0;
+        if(__stady_pred_6) {
+          __stady_pred_6 = i <= n;
         }
-        if(!(__stady_pred_9)) {
+        if(!(__stady_pred_6)) {
           pathcrawler_assert_exception("Loop invariant not preserved!",6);
         }
-        int __stady_pred_12;
-        __stady_pred_12 = 1;
+        int __stady_pred_8;
+        __stady_pred_8 = 1;
         {
           mpz_t __q_x;
           mpz_t __stady_gmp_31;
@@ -315,11 +330,13 @@ void insertion_sort(int *t, int n)
           __gmpz_clear(__stady_gmp_32);
           __gmpz_clear(__stady_gmp_33);
           __gmpz_init_set(__q_x, __stady_gmp_31);
-          while((__gmpz_cmp(__q_x, __stady_gmp_34) < 0 && __stady_pred_12)) {
+          int __stady_term_17;
+          __stady_term_17 = __gmpz_cmp(__q_x, __stady_gmp_34);
+          for(; (__stady_term_17 < 0 && __stady_pred_8); ) {
             mpz_t __stady_gmp_35;
             __gmpz_init_set(__stady_gmp_35, __q_x);
-            int __stady_term_8;
-            __stady_term_8 = __gmpz_get_si(__stady_gmp_35);
+            int __stady_term_18;
+            __stady_term_18 = __gmpz_get_si(__stady_gmp_35);
             __gmpz_clear(__stady_gmp_35);
             mpz_t __stady_gmp_36;
             __gmpz_init_set(__stady_gmp_36, __q_x);
@@ -330,17 +347,18 @@ void insertion_sort(int *t, int n)
             __gmpz_add(__stady_gmp_38, __stady_gmp_36, __stady_gmp_37);
             __gmpz_clear(__stady_gmp_36);
             __gmpz_clear(__stady_gmp_37);
-            int __stady_term_9;
-            __stady_term_9 = __gmpz_get_si(__stady_gmp_38);
+            int __stady_term_19;
+            __stady_term_19 = __gmpz_get_si(__stady_gmp_38);
             __gmpz_clear(__stady_gmp_38);
-            __stady_pred_12 = *(t + __stady_term_8) <= *(t + __stady_term_9);
+            __stady_pred_8 = *(t + __stady_term_18) <= *(t + __stady_term_19);
             __gmpz_add_ui(__q_x, __q_x, 1);
+            __stady_term_17 = __gmpz_cmp(__q_x, __stady_gmp_34);
           }
           __gmpz_clear(__q_x);
           __gmpz_clear(__stady_gmp_31);
           __gmpz_clear(__stady_gmp_34);
         }
-        if(!(__stady_pred_12)) {
+        if(!(__stady_pred_8)) {
           pathcrawler_assert_exception("Loop invariant not preserved!",9);
         }
         mpz_t __stady_gmp_46;
@@ -352,10 +370,12 @@ void insertion_sort(int *t, int n)
         __gmpz_sub(__stady_gmp_48, __stady_gmp_46, __stady_gmp_47);
         __gmpz_clear(__stady_gmp_46);
         __gmpz_clear(__stady_gmp_47);
-        if(__gmpz_cmp_ui(__stady_gmp_45, 0) < 0) {
+        __stady_term_20 = __gmpz_cmp_ui(__stady_gmp_45, 0);
+        if(__stady_term_20 < 0) {
           pathcrawler_assert_exception("Variant non positive",0);
         }
-        if(__gmpz_cmp(__stady_gmp_48, __stady_gmp_45) >= 0) {
+        __stady_term_20 = __gmpz_cmp(__stady_gmp_48, __stady_gmp_45);
+        if(__stady_term_20 >= 0) {
           pathcrawler_assert_exception("Variant non decreasing",0);
         }
         __gmpz_clear(__stady_gmp_45);
@@ -380,11 +400,13 @@ void insertion_sort(int *t, int n)
         __gmpz_clear(__stady_gmp_1);
         __gmpz_clear(__stady_gmp_2);
         __gmpz_init_set(__q_x, __stady_gmp_0);
-        while((__gmpz_cmp(__q_x, __stady_gmp_3) < 0 && __stady_pred_0)) {
+        int __stady_term_0;
+        __stady_term_0 = __gmpz_cmp(__q_x, __stady_gmp_3);
+        for(; (__stady_term_0 < 0 && __stady_pred_0); ) {
           mpz_t __stady_gmp_4;
           __gmpz_init_set(__stady_gmp_4, __q_x);
-          int __stady_term_0;
-          __stady_term_0 = __gmpz_get_si(__stady_gmp_4);
+          int __stady_term_1;
+          __stady_term_1 = __gmpz_get_si(__stady_gmp_4);
           __gmpz_clear(__stady_gmp_4);
           mpz_t __stady_gmp_5;
           __gmpz_init_set(__stady_gmp_5, __q_x);
@@ -395,11 +417,12 @@ void insertion_sort(int *t, int n)
           __gmpz_add(__stady_gmp_7, __stady_gmp_5, __stady_gmp_6);
           __gmpz_clear(__stady_gmp_5);
           __gmpz_clear(__stady_gmp_6);
-          int __stady_term_1;
-          __stady_term_1 = __gmpz_get_si(__stady_gmp_7);
+          int __stady_term_2;
+          __stady_term_2 = __gmpz_get_si(__stady_gmp_7);
           __gmpz_clear(__stady_gmp_7);
-          __stady_pred_0 = *(old_t + __stady_term_0) <= *(old_t + __stady_term_1);
+          __stady_pred_0 = *(old_t + __stady_term_1) <= *(old_t + __stady_term_2);
           __gmpz_add_ui(__q_x, __q_x, 1);
+          __stady_term_0 = __gmpz_cmp(__q_x, __stady_gmp_3);
         }
         __gmpz_clear(__q_x);
         __gmpz_clear(__stady_gmp_0);

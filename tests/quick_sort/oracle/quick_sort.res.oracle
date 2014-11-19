@@ -1,4 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  -dD tests/quick_sort/quick_sort.c"
+[kernel] preprocessing with "gcc -C -E -I.  gmp.c"
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -73,10 +74,13 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   old_arr = arr;
   mpz_t __stady_gmp_10;
   __gmpz_init_set_si(__stady_gmp_10, elements);
-  int __stady_term_2;
-  old_ptr_arr = malloc((__gmpz_get_si(__stady_gmp_10) * sizeof(int)));
-  for(__stady_term_2 = 0; __stady_term_2 < __gmpz_get_si(__stady_gmp_10); __stady_term_2 = (__stady_term_2 + 1)) {
-    old_ptr_arr[__stady_term_2] = arr[__stady_term_2];
+  int __stady_term_4;
+  unsigned long __stady_term_5;
+  __stady_term_5 = __gmpz_get_si(__stady_gmp_10);
+  old_ptr_arr = malloc((__stady_term_5 * sizeof(int)));
+  __stady_term_5 = __gmpz_get_si(__stady_gmp_10);
+  for(__stady_term_4 = 0; __stady_term_4 < __stady_term_5; __stady_term_4 = (__stady_term_4 + 1)) {
+    old_ptr_arr[__stady_term_4] = arr[__stady_term_4];
   }
   __gmpz_clear(__stady_gmp_10);
   int old_elements;
@@ -93,10 +97,13 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   __gmpz_add(__stady_gmp_13, __stady_gmp_11, __stady_gmp_12);
   __gmpz_clear(__stady_gmp_11);
   __gmpz_clear(__stady_gmp_12);
-  int __stady_term_3;
-  old_ptr_beg = malloc((__gmpz_get_si(__stady_gmp_13) * sizeof(int)));
-  for(__stady_term_3 = 0; __stady_term_3 < __gmpz_get_si(__stady_gmp_13); __stady_term_3 = (__stady_term_3 + 1)) {
-    old_ptr_beg[__stady_term_3] = beg[__stady_term_3];
+  int __stady_term_6;
+  unsigned long __stady_term_7;
+  __stady_term_7 = __gmpz_get_si(__stady_gmp_13);
+  old_ptr_beg = malloc((__stady_term_7 * sizeof(int)));
+  __stady_term_7 = __gmpz_get_si(__stady_gmp_13);
+  for(__stady_term_6 = 0; __stady_term_6 < __stady_term_7; __stady_term_6 = (__stady_term_6 + 1)) {
+    old_ptr_beg[__stady_term_6] = beg[__stady_term_6];
   }
   __gmpz_clear(__stady_gmp_13);
   int *old_end;
@@ -111,10 +118,13 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   __gmpz_add(__stady_gmp_16, __stady_gmp_14, __stady_gmp_15);
   __gmpz_clear(__stady_gmp_14);
   __gmpz_clear(__stady_gmp_15);
-  int __stady_term_4;
-  old_ptr_end = malloc((__gmpz_get_si(__stady_gmp_16) * sizeof(int)));
-  for(__stady_term_4 = 0; __stady_term_4 < __gmpz_get_si(__stady_gmp_16); __stady_term_4 = (__stady_term_4 + 1)) {
-    old_ptr_end[__stady_term_4] = end[__stady_term_4];
+  int __stady_term_8;
+  unsigned long __stady_term_9;
+  __stady_term_9 = __gmpz_get_si(__stady_gmp_16);
+  old_ptr_end = malloc((__stady_term_9 * sizeof(int)));
+  __stady_term_9 = __gmpz_get_si(__stady_gmp_16);
+  for(__stady_term_8 = 0; __stady_term_8 < __stady_term_9; __stady_term_8 = (__stady_term_8 + 1)) {
+    old_ptr_end[__stady_term_8] = end[__stady_term_8];
   }
   __gmpz_clear(__stady_gmp_16);
   {
@@ -160,7 +170,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
             __gmpz_sub(__stady_gmp_39, __stady_gmp_37, __stady_gmp_38);
             __gmpz_clear(__stady_gmp_37);
             __gmpz_clear(__stady_gmp_38);
-            if(__gmpz_cmp_ui(__stady_gmp_39, 0) < 0) {
+            int __stady_term_12;
+            __stady_term_12 = __gmpz_cmp_ui(__stady_gmp_39, 0);
+            if(__stady_term_12 < 0) {
               pathcrawler_assert_exception("Variant non positive",7);
             }
             while (1) {
@@ -193,7 +205,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                   __gmpz_sub(__stady_gmp_19, __stady_gmp_17, __stady_gmp_18);
                   __gmpz_clear(__stady_gmp_17);
                   __gmpz_clear(__stady_gmp_18);
-                  if(__gmpz_cmp_ui(__stady_gmp_19, 0) < 0) {
+                  int __stady_term_10;
+                  __stady_term_10 = __gmpz_cmp_ui(__stady_gmp_19, 0);
+                  if(__stady_term_10 < 0) {
                     pathcrawler_assert_exception("Variant non positive",3);
                   }
                   while (1) {
@@ -235,10 +249,12 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                     __gmpz_sub(__stady_gmp_26, __stady_gmp_24, __stady_gmp_25);
                     __gmpz_clear(__stady_gmp_24);
                     __gmpz_clear(__stady_gmp_25);
-                    if(__gmpz_cmp_ui(__stady_gmp_23, 0) < 0) {
+                    __stady_term_10 = __gmpz_cmp_ui(__stady_gmp_23, 0);
+                    if(__stady_term_10 < 0) {
                       pathcrawler_assert_exception("Variant non positive",3);
                     }
-                    if(__gmpz_cmp(__stady_gmp_26, __stady_gmp_23) >= 0) {
+                    __stady_term_10 = __gmpz_cmp(__stady_gmp_26, __stady_gmp_23);
+                    if(__stady_term_10 >= 0) {
                       pathcrawler_assert_exception("Variant non decreasing",3);
                     }
                     __gmpz_clear(__stady_gmp_23);
@@ -270,7 +286,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                   __gmpz_sub(__stady_gmp_29, __stady_gmp_27, __stady_gmp_28);
                   __gmpz_clear(__stady_gmp_27);
                   __gmpz_clear(__stady_gmp_28);
-                  if(__gmpz_cmp_ui(__stady_gmp_29, 0) < 0) {
+                  int __stady_term_11;
+                  __stady_term_11 = __gmpz_cmp_ui(__stady_gmp_29, 0);
+                  if(__stady_term_11 < 0) {
                     pathcrawler_assert_exception("Variant non positive",8);
                   }
                   while (1) {
@@ -312,10 +330,12 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                     __gmpz_sub(__stady_gmp_36, __stady_gmp_34, __stady_gmp_35);
                     __gmpz_clear(__stady_gmp_34);
                     __gmpz_clear(__stady_gmp_35);
-                    if(__gmpz_cmp_ui(__stady_gmp_33, 0) < 0) {
+                    __stady_term_11 = __gmpz_cmp_ui(__stady_gmp_33, 0);
+                    if(__stady_term_11 < 0) {
                       pathcrawler_assert_exception("Variant non positive",8);
                     }
-                    if(__gmpz_cmp(__stady_gmp_36, __stady_gmp_33) >= 0) {
+                    __stady_term_11 = __gmpz_cmp(__stady_gmp_36, __stady_gmp_33);
+                    if(__stady_term_11 >= 0) {
                       pathcrawler_assert_exception("Variant non decreasing",8);
                     }
                     __gmpz_clear(__stady_gmp_33);
@@ -346,10 +366,12 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
               __gmpz_sub(__stady_gmp_46, __stady_gmp_44, __stady_gmp_45);
               __gmpz_clear(__stady_gmp_44);
               __gmpz_clear(__stady_gmp_45);
-              if(__gmpz_cmp_ui(__stady_gmp_43, 0) < 0) {
+              __stady_term_12 = __gmpz_cmp_ui(__stady_gmp_43, 0);
+              if(__stady_term_12 < 0) {
                 pathcrawler_assert_exception("Variant non positive",7);
               }
-              if(__gmpz_cmp(__stady_gmp_46, __stady_gmp_43) >= 0) {
+              __stady_term_12 = __gmpz_cmp(__stady_gmp_46, __stady_gmp_43);
+              if(__stady_term_12 >= 0) {
                 pathcrawler_assert_exception("Variant non decreasing",7);
               }
               __gmpz_clear(__stady_gmp_43);
@@ -391,11 +413,13 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
           __gmpz_clear(__stady_gmp_1);
           __gmpz_clear(__stady_gmp_2);
           __gmpz_init_set(__q_i, __stady_gmp_0);
-          while((__gmpz_cmp(__q_i, __stady_gmp_3) < 0 && __stady_pred_0)) {
+          int __stady_term_0;
+          __stady_term_0 = __gmpz_cmp(__q_i, __stady_gmp_3);
+          for(; (__stady_term_0 < 0 && __stady_pred_0); ) {
             mpz_t __stady_gmp_4;
             __gmpz_init_set(__stady_gmp_4, __q_i);
-            int __stady_term_0;
-            __stady_term_0 = __gmpz_get_si(__stady_gmp_4);
+            int __stady_term_1;
+            __stady_term_1 = __gmpz_get_si(__stady_gmp_4);
             __gmpz_clear(__stady_gmp_4);
             mpz_t __stady_gmp_5;
             __gmpz_init_set(__stady_gmp_5, __q_i);
@@ -406,11 +430,12 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
             __gmpz_add(__stady_gmp_7, __stady_gmp_5, __stady_gmp_6);
             __gmpz_clear(__stady_gmp_5);
             __gmpz_clear(__stady_gmp_6);
-            int __stady_term_1;
-            __stady_term_1 = __gmpz_get_si(__stady_gmp_7);
+            int __stady_term_2;
+            __stady_term_2 = __gmpz_get_si(__stady_gmp_7);
             __gmpz_clear(__stady_gmp_7);
-            __stady_pred_0 = *(old_arr + __stady_term_0) <= *(old_arr + __stady_term_1);
+            __stady_pred_0 = *(old_arr + __stady_term_1) <= *(old_arr + __stady_term_2);
             __gmpz_add_ui(__q_i, __q_i, 1);
+            __stady_term_0 = __gmpz_cmp(__q_i, __stady_gmp_3);
           }
           __gmpz_clear(__q_i);
           __gmpz_clear(__stady_gmp_0);
@@ -423,11 +448,11 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
         __gmpz_init_set_si(__stady_gmp_8, __retres);
         mpz_t __stady_gmp_9;
         __gmpz_init_set_str(__stady_gmp_9, "0", 10);
-        int __stady_pred_1;
-        __stady_pred_1 = __gmpz_cmp(__stady_gmp_8, __stady_gmp_9) == 0;
+        int __stady_term_3;
+        __stady_term_3 = __gmpz_cmp(__stady_gmp_8, __stady_gmp_9);
         __gmpz_clear(__stady_gmp_8);
         __gmpz_clear(__stady_gmp_9);
-        if(!(__stady_pred_1)) {
+        if(!(__stady_term_3 == 0)) {
           pathcrawler_assert_exception("Post-condition!",12);
         }
       }
@@ -449,7 +474,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
 [pc] Starting lanceur_pathcrawler__quick_sort_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 903 test cases
+[stady] 894 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
