@@ -1,4 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/struct/struct.c"
+[kernel] preprocessing with "gcc -C -E -I.  gmp.c"
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -75,8 +76,11 @@ int f(struct S *s, struct S *s2, int n)
   mpz_t __stady_gmp_0;
   __gmpz_init_set_str(__stady_gmp_0, "1", 10);
   int __stady_term_0;
-  old_ptr_s = malloc((__gmpz_get_si(__stady_gmp_0) * sizeof(struct S)));
-  for(__stady_term_0 = 0; __stady_term_0 < __gmpz_get_si(__stady_gmp_0); __stady_term_0 = (__stady_term_0 + 1)) {
+  unsigned long __stady_term_1;
+  __stady_term_1 = __gmpz_get_si(__stady_gmp_0);
+  old_ptr_s = malloc((__stady_term_1 * sizeof(struct S)));
+  __stady_term_1 = __gmpz_get_si(__stady_gmp_0);
+  for(__stady_term_0 = 0; __stady_term_0 < __stady_term_1; __stady_term_0 = (__stady_term_0 + 1)) {
     old_ptr_s[__stady_term_0] = s[__stady_term_0];
   }
   __gmpz_clear(__stady_gmp_0);
@@ -85,10 +89,13 @@ int f(struct S *s, struct S *s2, int n)
   old_s2 = s2;
   mpz_t __stady_gmp_1;
   __gmpz_init_set_str(__stady_gmp_1, "1", 10);
-  int __stady_term_1;
-  old_ptr_s2 = malloc((__gmpz_get_si(__stady_gmp_1) * sizeof(struct S)));
-  for(__stady_term_1 = 0; __stady_term_1 < __gmpz_get_si(__stady_gmp_1); __stady_term_1 = (__stady_term_1 + 1)) {
-    old_ptr_s2[__stady_term_1] = s2[__stady_term_1];
+  int __stady_term_2;
+  unsigned long __stady_term_3;
+  __stady_term_3 = __gmpz_get_si(__stady_gmp_1);
+  old_ptr_s2 = malloc((__stady_term_3 * sizeof(struct S)));
+  __stady_term_3 = __gmpz_get_si(__stady_gmp_1);
+  for(__stady_term_2 = 0; __stady_term_2 < __stady_term_3; __stady_term_2 = (__stady_term_2 + 1)) {
+    old_ptr_s2[__stady_term_2] = s2[__stady_term_2];
   }
   __gmpz_clear(__stady_gmp_1);
   int old_n;
