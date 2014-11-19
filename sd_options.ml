@@ -61,4 +61,4 @@ let dkey_reach = Self.register_category "reach"
 let dkey_insertions = Self.register_category "insertions"
 
 (* mpz_t type for GMP *)
-let mpz_t = ref (None:Cil_types.typeinfo option)
+let mpz_t = ref (None:Cil_types.typ option)

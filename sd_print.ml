@@ -11,41 +11,41 @@ let pp_label fmt = function
   | Sd_insertions.EndIter s -> Format.fprintf fmt "EndIter %i" s
   | Sd_insertions.Glob -> Format.fprintf fmt "Global"
 
-let pp_zexpr fmt = function
-  | Sd_insertions.Fresh_Z_var id -> Format.fprintf fmt "__stady_gmp_%i" id
-  | Sd_insertions.My_Z_var name -> Format.fprintf fmt "%s" name
+(* let pp_zexpr fmt = function *)
+(*   | Sd_insertions.Fresh_Z_var id -> Format.fprintf fmt "__stady_gmp_%i" id *)
+(*   | Sd_insertions.My_Z_var name -> Format.fprintf fmt "%s" name *)
 
 let pp_var = Printer.pp_varinfo
 let pp_lval = Printer.pp_lval
 let pp_exp = Printer.pp_exp
 
-let rec pp_cexpr fmt = function
-  | Sd_insertions.Fresh_ctype_var(id,_)->Format.fprintf fmt "__stady_term_%i" id
-  | Sd_insertions.My_ctype_var (_, name) -> Format.fprintf fmt "%s" name
-  | Sd_insertions.Zero -> Format.fprintf fmt "0"
-  | Sd_insertions.One -> Format.fprintf fmt "1"
-  | Sd_insertions.Cst s -> Format.fprintf fmt "%s" s
-  | Sd_insertions.Unop(op,e) ->
-    Format.fprintf fmt "%a(%a)" Printer.pp_unop op pp_cexpr e
-  | Sd_insertions.Binop (op,x,y) ->
-    Format.fprintf fmt "(%a %a %a)" pp_cexpr x Printer.pp_binop op pp_cexpr y
-  | Sd_insertions.Cast (t, e) ->
-    Format.fprintf fmt "(%a)%a" Printer.pp_typ t pp_cexpr e
-  | Sd_insertions.Sizeof t -> Format.fprintf fmt "sizeof(%a)" Printer.pp_typ t
-  | Sd_insertions.Deref e -> Format.fprintf fmt "*%a" pp_cexpr e
-  | Sd_insertions.CIndex(e,i)->Format.fprintf fmt "%a[%a]" pp_cexpr e pp_cexpr i
-  | Sd_insertions.CField (e, s) -> Format.fprintf fmt "%a.%s" pp_cexpr e s
-  | Sd_insertions.Of_pred p -> Format.fprintf fmt "%a" pp_pexpr p
+(* let rec pp_cexpr fmt = function *)
+(*   | Sd_insertions.Fresh_ctype_var(id,_)->Format.fprintf fmt "__stady_term_%i" id *)
+(*   | Sd_insertions.My_ctype_var (_, name) -> Format.fprintf fmt "%s" name *)
+(*   | Sd_insertions.Zero -> Format.fprintf fmt "0" *)
+(*   | Sd_insertions.One -> Format.fprintf fmt "1" *)
+(*   | Sd_insertions.Cst s -> Format.fprintf fmt "%s" s *)
+(*   | Sd_insertions.Unop(op,e) -> *)
+(*     Format.fprintf fmt "%a(%a)" Printer.pp_unop op pp_cexpr e *)
+(*   | Sd_insertions.Binop (op,x,y) -> *)
+(*     Format.fprintf fmt "(%a %a %a)" pp_cexpr x Printer.pp_binop op pp_cexpr y *)
+(*   | Sd_insertions.Cast (t, e) -> *)
+(*     Format.fprintf fmt "(%a)%a" Printer.pp_typ t pp_cexpr e *)
+(*   | Sd_insertions.Sizeof t -> Format.fprintf fmt "sizeof(%a)" Printer.pp_typ t *)
+(*   | Sd_insertions.Deref e -> Format.fprintf fmt "*%a" pp_cexpr e *)
+(*   | Sd_insertions.CIndex(e,i)->Format.fprintf fmt "%a[%a]" pp_cexpr e pp_cexpr i *)
+(*   | Sd_insertions.CField (e, s) -> Format.fprintf fmt "%a.%s" pp_cexpr e s *)
+(*   | Sd_insertions.Of_pred p -> Format.fprintf fmt "%a" pp_pexpr p *)
 
-and pp_pexpr fmt = function
-  | Sd_insertions.Fresh_pred_var id -> Format.fprintf fmt "__stady_pred_%i" id
-  | Sd_insertions.True -> Format.fprintf fmt "1"
-  | Sd_insertions.False -> Format.fprintf fmt "0"
-  | Sd_insertions.Cmp (rel, e1, e2) ->
-    Format.fprintf fmt "%a %a %a"pp_cexpr e1 Printer.pp_relation rel pp_cexpr e2
-  | Sd_insertions.Lnot p -> Format.fprintf fmt "!(%a)" pp_pexpr p
-  | Sd_insertions.Land(p,q)->Format.fprintf fmt"(%a && %a)"pp_pexpr p pp_pexpr q
-  | Sd_insertions.Lor(p,q)->Format.fprintf fmt"(%a || %a)" pp_pexpr p pp_pexpr q
+(* and pp_pexpr fmt = function *)
+(*   | Sd_insertions.Fresh_pred_var id -> Format.fprintf fmt "__stady_pred_%i" id *)
+(*   | Sd_insertions.True -> Format.fprintf fmt "1" *)
+(*   | Sd_insertions.False -> Format.fprintf fmt "0" *)
+(*   | Sd_insertions.Cmp (rel, e1, e2) -> *)
+(*     Format.fprintf fmt "%a %a %a"pp_cexpr e1 Printer.pp_relation rel pp_cexpr e2 *)
+(*   | Sd_insertions.Lnot p -> Format.fprintf fmt "!(%a)" pp_pexpr p *)
+(*   | Sd_insertions.Land(p,q)->Format.fprintf fmt"(%a && %a)"pp_pexpr p pp_pexpr q *)
+(*   | Sd_insertions.Lor(p,q)->Format.fprintf fmt"(%a || %a)" pp_pexpr p pp_pexpr q *)
 
 let pp_garith fmt = function
   | PlusA -> Format.fprintf fmt "add"
@@ -57,61 +57,60 @@ let pp_garith fmt = function
 
 let pp_instruction fmt = function
   | Sd_insertions.Skip -> ()
-  | Sd_insertions.Affect(x,y)->Format.fprintf fmt"%a = %a" pp_cexpr x pp_cexpr y
-  | Sd_insertions.Affect_pred (x,y) ->
-    Format.fprintf fmt "%a = %a" pp_pexpr x pp_pexpr y
-  | Sd_insertions.Free e -> Format.fprintf fmt "free(%a)" pp_cexpr e
+  (* | Sd_insertions.Affect(x,y)->Format.fprintf fmt"%a = %a" pp_cexpr x pp_cexpr y *)
+  (* | Sd_insertions.Affect_pred (x,y) -> *)
+  (*   Format.fprintf fmt "%a = %a" pp_pexpr x pp_pexpr y *)
+  (* | Sd_insertions.Free e -> Format.fprintf fmt "free(%a)" pp_cexpr e *)
   | Sd_insertions.Pc_to_framac s ->
     Format.fprintf fmt "pathcrawler_to_framac(\"%s\")" s
   | Sd_insertions.Pc_exn(s,i)->
     Format.fprintf fmt"pathcrawler_assert_exception(\"%s\",%i)" s i
-  | Sd_insertions.Pc_assume p ->
-    Format.fprintf fmt "pathcrawler_assume(%a)" pp_pexpr p
-  | Sd_insertions.Ret e -> Format.fprintf fmt "return %a" pp_cexpr e
-  | Sd_insertions.Z_clear g ->Format.fprintf fmt "__gmpz_clear(%a)" pp_zexpr g
-  | Sd_insertions.Z_init g->Format.fprintf fmt "__gmpz_init(%a)" pp_zexpr g
-  | Sd_insertions.Z_init_set (g,g') ->
-    Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_zexpr g pp_zexpr g'
-  | Sd_insertions.Z_init_set_ui (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_zexpr g pp_cexpr c
-  | Sd_insertions.Z_init_set_si (g,c) ->
-    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_zexpr g pp_cexpr c
-  | Sd_insertions.Z_init_set_str (g,s) ->
-    Format.fprintf fmt "__gmpz_init_set_str(%a, \"%s\", 10)" pp_zexpr g s
-  | Sd_insertions.Z_set(g,h)->
-    Format.fprintf fmt "__gmpz_set(%a, %a)" pp_zexpr g pp_zexpr h
-  | Sd_insertions.Z_abs(g,h)->
-    Format.fprintf fmt "__gmpz_abs(%a, %a)" pp_zexpr g pp_zexpr h
-  | Sd_insertions.Z_ui_sub (r,a,b) ->
-    Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)"
-      pp_zexpr r pp_cexpr a pp_zexpr b
-  | Sd_insertions.Z_binop (op,r,a,b) ->
-    Format.fprintf fmt "__gmpz_%a(%a, %a, %a)"
-      pp_garith op pp_zexpr r pp_zexpr a pp_zexpr b
-  | Sd_insertions.Z_binop_ui (op,r,a,b) ->
-    Format.fprintf fmt "__gmpz_%a_ui(%a, %a, %a)"
-      pp_garith op pp_zexpr r pp_zexpr a pp_cexpr b
-  | Sd_insertions.Z_binop_si (op,r,a,b) ->
-    Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
-      pp_garith op pp_zexpr r pp_zexpr a pp_cexpr b
-  | Sd_insertions.Z_get_ui (c,z) ->
-    Format.fprintf fmt "%a = __gmpz_get_ui(%a)" pp_cexpr c pp_zexpr z
-  | Sd_insertions.Z_get_si (c,z) ->
-    Format.fprintf fmt "%a = __gmpz_get_si(%a)" pp_cexpr c pp_zexpr z
-  | Sd_insertions.Pc_dim (a,b) ->
-    Format.fprintf fmt "%a = pathcrawler_dimension(%a)" pp_cexpr a pp_cexpr b
-  | Sd_insertions.Malloc (a,b) ->
-    Format.fprintf fmt "%a = malloc(%a)" pp_cexpr a pp_cexpr b
-  | Sd_insertions.Z_cmp (a, g1, g2) ->
-    Format.fprintf fmt "%a = __gmpz_cmp(%a, %a)"
-      pp_cexpr a pp_zexpr g1 pp_zexpr g2
-  | Sd_insertions.Z_cmp_ui (a, g1, g2) ->
-    Format.fprintf fmt "%a = __gmpz_cmp_ui(%a, %a)"
-      pp_cexpr a pp_zexpr g1 pp_cexpr g2
-  | Sd_insertions.Z_cmp_si (a, g1, g2) ->
-    Format.fprintf fmt "%a = __gmpz_cmp_si(%a, %a)"
-      pp_cexpr a pp_zexpr g1 pp_cexpr g2
-
+  (* | Sd_insertions.Pc_assume p -> *)
+  (*   Format.fprintf fmt "pathcrawler_assume(%a)" pp_pexpr p *)
+  (* | Sd_insertions.Ret e -> Format.fprintf fmt "return %a" pp_cexpr e *)
+  (* | Sd_insertions.Z_clear g ->Format.fprintf fmt "__gmpz_clear(%a)" pp_zexpr g *)
+  (* | Sd_insertions.Z_init g->Format.fprintf fmt "__gmpz_init(%a)" pp_zexpr g *)
+  (* | Sd_insertions.Z_init_set (g,g') -> *)
+  (*   Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_zexpr g pp_zexpr g' *)
+  (* | Sd_insertions.Z_init_set_ui (g,c) -> *)
+  (*   Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_zexpr g pp_cexpr c *)
+  (* | Sd_insertions.Z_init_set_si (g,c) -> *)
+  (*   Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_zexpr g pp_cexpr c *)
+  (* | Sd_insertions.Z_init_set_str (g,s) -> *)
+  (*   Format.fprintf fmt "__gmpz_init_set_str(%a, \"%s\", 10)" pp_zexpr g s *)
+  (* | Sd_insertions.Z_set(g,h)-> *)
+  (*   Format.fprintf fmt "__gmpz_set(%a, %a)" pp_zexpr g pp_zexpr h *)
+  (* | Sd_insertions.Z_abs(g,h)-> *)
+  (*   Format.fprintf fmt "__gmpz_abs(%a, %a)" pp_zexpr g pp_zexpr h *)
+  (* | Sd_insertions.Z_ui_sub (r,a,b) -> *)
+  (*   Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)" *)
+  (*     pp_zexpr r pp_cexpr a pp_zexpr b *)
+  (* | Sd_insertions.Z_binop (op,r,a,b) -> *)
+  (*   Format.fprintf fmt "__gmpz_%a(%a, %a, %a)" *)
+  (*     pp_garith op pp_zexpr r pp_zexpr a pp_zexpr b *)
+  (* | Sd_insertions.Z_binop_ui (op,r,a,b) -> *)
+  (*   Format.fprintf fmt "__gmpz_%a_ui(%a, %a, %a)" *)
+  (*     pp_garith op pp_zexpr r pp_zexpr a pp_cexpr b *)
+  (* | Sd_insertions.Z_binop_si (op,r,a,b) -> *)
+  (*   Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)" *)
+  (*     pp_garith op pp_zexpr r pp_zexpr a pp_cexpr b *)
+  (* | Sd_insertions.Z_get_ui (c,z) -> *)
+  (*   Format.fprintf fmt "%a = __gmpz_get_ui(%a)" pp_cexpr c pp_zexpr z *)
+  (* | Sd_insertions.Z_get_si (c,z) -> *)
+  (*   Format.fprintf fmt "%a = __gmpz_get_si(%a)" pp_cexpr c pp_zexpr z *)
+  (* | Sd_insertions.Pc_dim (a,b) -> *)
+  (*   Format.fprintf fmt "%a = pathcrawler_dimension(%a)" pp_cexpr a pp_cexpr b *)
+  (* | Sd_insertions.Malloc (a,b) -> *)
+  (*   Format.fprintf fmt "%a = malloc(%a)" pp_cexpr a pp_cexpr b *)
+  (* | Sd_insertions.Z_cmp (a, g1, g2) -> *)
+  (*   Format.fprintf fmt "%a = __gmpz_cmp(%a, %a)" *)
+  (*     pp_cexpr a pp_zexpr g1 pp_zexpr g2 *)
+  (* | Sd_insertions.Z_cmp_ui (a, g1, g2) -> *)
+  (*   Format.fprintf fmt "%a = __gmpz_cmp_ui(%a, %a)" *)
+  (*     pp_cexpr a pp_zexpr g1 pp_cexpr g2 *)
+  (* | Sd_insertions.Z_cmp_si (a, g1, g2) -> *)
+  (*   Format.fprintf fmt "%a = __gmpz_cmp_si(%a, %a)" *)
+  (*     pp_cexpr a pp_zexpr g1 pp_cexpr g2 *)
   | Sd_insertions.IAffect(v,e)-> Format.fprintf fmt "%a = %a" pp_lval v pp_exp e
   | Sd_insertions.IFree e -> Format.fprintf fmt "free(%a)" pp_exp e
   | Sd_insertions.IRet e -> Format.fprintf fmt "return %a" pp_exp e
@@ -124,27 +123,27 @@ let pp_instruction fmt = function
   | Sd_insertions.IZ_clear e -> Format.fprintf fmt "__gmpz_clear(%a)" pp_exp e
   | Sd_insertions.IZ_init v -> Format.fprintf fmt "__gmpz_init(%a)" pp_var v
   | Sd_insertions.IZ_init_set (v,e) ->
-    Format.fprintf fmt "__gmpz_init_set(%a,%a)" pp_var v pp_exp e
+    Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_var v pp_exp e
   | Sd_insertions.IZ_init_set_ui (v,e) ->
-    Format.fprintf fmt "__gmpz_init_set_ui(%a,%a)" pp_var v pp_exp e
+    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_var v pp_exp e
   | Sd_insertions.IZ_init_set_si (v,e) ->
-    Format.fprintf fmt "__gmpz_init_set_si(%a,%a)" pp_var v pp_exp e
+    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_var v pp_exp e
   | Sd_insertions.IZ_init_set_str (v,e) ->
-    Format.fprintf fmt "__gmpz_init_set_str(%a,%a)" pp_var v pp_exp e
+    Format.fprintf fmt "__gmpz_init_set_str(%a, %a, 10)" pp_var v pp_exp e
   | Sd_insertions.IZ_set (v,e) ->
-    Format.fprintf fmt "__gmpz_set(%a,%a)" pp_var v pp_exp e
+    Format.fprintf fmt "__gmpz_set(%a, %a)" pp_var v pp_exp e
   | Sd_insertions.IZ_abs (v,e) ->
     Format.fprintf fmt "%a = __gmpz_set(%a)" pp_var v pp_exp e
   | Sd_insertions.IZ_ui_sub (v,e,e') ->
-    Format.fprintf fmt "__gmpz_ui_sub(%a,%a,%a)" pp_var v pp_exp e pp_exp e'
+    Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)" pp_var v pp_exp e pp_exp e'
   | Sd_insertions.IZ_binop (o,v,e,e') ->
-    Format.fprintf fmt " __gmpz_%a(%a,%a,%a)"
+    Format.fprintf fmt " __gmpz_%a(%a, %a, %a)"
       pp_garith o pp_var v pp_exp e pp_exp e'
   | Sd_insertions.IZ_binop_ui (o,v,e,e') ->
-    Format.fprintf fmt "__gmpz_%a_ui(%a,%a,%a)"
+    Format.fprintf fmt "__gmpz_%a_ui(%a, %a, %a)"
       pp_garith o pp_var v pp_exp e pp_exp e'
   | Sd_insertions.IZ_binop_si (o,v,e,e') ->
-    Format.fprintf fmt "__gmpz_%a_si(%a,%a,%a)"
+    Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
       pp_garith o pp_var v pp_exp e pp_exp e'
   | Sd_insertions.IZ_get_ui (v,e) ->
     Format.fprintf fmt "%a = __gmpz_get_ui(%a)" pp_var v pp_exp e
@@ -167,36 +166,35 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     match ins with
     | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
     | Sd_insertions.Decl v ->
-      Format.fprintf fmt "%a" (new Printer.extensible_printer())#vdecl v
-    | Sd_insertions.Decl_Z_var v->Format.fprintf fmt"@[mpz_t %a;@]" pp_zexpr v
+      Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v
+    (* | Sd_insertions.Decl_Z_var v->Format.fprintf fmt"@[mpz_t %a;@]" pp_zexpr v *)
 
-    | Sd_insertions.Decl_ctype_var v ->
-      let varname, ty = match v with
-	| Sd_insertions.Fresh_ctype_var(i,ty) ->
-	  "__stady_term_" ^ (string_of_int i), ty
-	| Sd_insertions.My_ctype_var (ty, name) -> name, ty
-	| _ -> assert false
-      in
-      let ty = Cil.stripConstLocalType ty in
-      let rec array_to_ptr = function
-	| TArray (t, _, _, a) -> TPtr (t, a)
-	| t -> t
-      in
-      let ty = array_to_ptr ty in
-      let pp_vdecl = (new Printer.extensible_printer ())#vdecl in
-      let varinfo = Cil.makeVarinfo false false varname ty  in
-      Format.fprintf fmt "@[%a;@]" pp_vdecl varinfo
+    (* | Sd_insertions.Decl_ctype_var v -> *)
+    (*   let varname, ty = match v with *)
+    (* 	| Sd_insertions.Fresh_ctype_var(i,ty) -> *)
+    (* 	  "__stady_term_" ^ (string_of_int i), ty *)
+    (* 	| Sd_insertions.My_ctype_var (ty, name) -> name, ty *)
+    (* 	| _ -> assert false *)
+    (*   in *)
+    (*   let ty = Cil.stripConstLocalType ty in *)
+    (*   let rec array_to_ptr = function *)
+    (* 	| TArray (t, _, _, a) -> TPtr (t, a) *)
+    (* 	| t -> t *)
+    (*   in *)
+    (*   let ty = array_to_ptr ty in *)
+    (*   let pp_vdecl = (new Printer.extensible_printer ())#vdecl in *)
+    (*   let varinfo = Cil.makeVarinfo false false varname ty  in *)
+    (*   Format.fprintf fmt "@[%a;@]" pp_vdecl varinfo *)
 
-    | Sd_insertions.Decl_pred_var p->Format.fprintf fmt "@[int %a;@]" pp_pexpr p
-    | Sd_insertions.If (cond,b1,b2) ->
-      Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_pexpr cond aux b1;
-      if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
-    | Sd_insertions.For(i1, e, i2, b) ->
-      Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n%a@]@\n}"
-	pp_instruction i1 pp_pexpr e pp_instruction i2 aux b
+    (* | Sd_insertions.Decl_pred_var p->Format.fprintf fmt "@[int %a;@]" pp_pexpr p *)
+    (* | Sd_insertions.If (cond,b1,b2) -> *)
+    (*   Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_pexpr cond aux b1; *)
+    (*   if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2 *)
+    (* | Sd_insertions.For(i1, e, i2, b) -> *)
+    (*   Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n%a@]@\n}" *)
+    (* 	pp_instruction i1 pp_pexpr e pp_instruction i2 aux b *)
     | Sd_insertions.Block b ->
       if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
-
     | Sd_insertions.IIf (e,b1,b2) ->
       Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_exp e aux b1;
       if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
@@ -355,35 +353,35 @@ class print_insertions insertions () = object(self)
   method private instru = function
   | Sd_insertions.Skip -> ()
   | Sd_insertions.IAffect _
-  | Sd_insertions.Affect _ -> ()
-  | Sd_insertions.Affect_pred _ -> ()
+  (* | Sd_insertions.Affect _  *)-> ()
+  (* | Sd_insertions.Affect_pred _ -> () *)
   | Sd_insertions.IFree _
-  | Sd_insertions.Free _ -> free <- true
+  (* | Sd_insertions.Free _ *) -> free <- true
   | Sd_insertions.Pc_to_framac _ -> pc_to_fc <- true
   | Sd_insertions.Pc_exn _ -> pc_assert_exc <- true
-  | Sd_insertions.Pc_assume _ -> pc_assume <- true
+  (* | Sd_insertions.Pc_assume _ -> pc_assume <- true *)
   | Sd_insertions.IRet _
-  | Sd_insertions.Ret _ -> ()
+  (* | Sd_insertions.Ret _ *) -> ()
   | Sd_insertions.IZ_clear _
-  | Sd_insertions.Z_clear _ -> gmpz_clear <- true
+  (* | Sd_insertions.Z_clear _ *) -> gmpz_clear <- true
   | Sd_insertions.IZ_init _
-  | Sd_insertions.Z_init _ -> gmpz_init <- true; gmp <- true
+  (* | Sd_insertions.Z_init _ *) -> gmpz_init <- true; gmp <- true
   | Sd_insertions.IZ_init_set _
-  | Sd_insertions.Z_init_set _ -> gmpz_init_set <- true
+  (* | Sd_insertions.Z_init_set _ *) -> gmpz_init_set <- true
   | Sd_insertions.IZ_init_set_ui _
-  | Sd_insertions.Z_init_set_ui _ -> gmpz_init_set_ui <- true
+  (* | Sd_insertions.Z_init_set_ui _ *) -> gmpz_init_set_ui <- true
   | Sd_insertions.IZ_init_set_si _
-  | Sd_insertions.Z_init_set_si _ -> gmpz_init_set_si <- true
+  (* | Sd_insertions.Z_init_set_si _ *) -> gmpz_init_set_si <- true
   | Sd_insertions.IZ_init_set_str _
-  | Sd_insertions.Z_init_set_str _ -> gmpz_init_set_str <- true
+  (* | Sd_insertions.Z_init_set_str _ *) -> gmpz_init_set_str <- true
   | Sd_insertions.IZ_set _
-  | Sd_insertions.Z_set _ -> gmpz_set <- true
+  (* | Sd_insertions.Z_set _ *) -> gmpz_set <- true
   | Sd_insertions.IZ_abs _
-  | Sd_insertions.Z_abs _ -> gmpz_abs <- true
+  (* | Sd_insertions.Z_abs _ *) -> gmpz_abs <- true
   | Sd_insertions.IZ_ui_sub _
-  | Sd_insertions.Z_ui_sub _ -> gmpz_ui_sub <- true
+  (* | Sd_insertions.Z_ui_sub _ *) -> gmpz_ui_sub <- true
   | Sd_insertions.IZ_binop (binop,_,_,_)
-  | Sd_insertions.Z_binop (binop,_,_,_) ->
+  (* | Sd_insertions.Z_binop (binop,_,_,_) *) ->
     begin
       match binop with
       | PlusA -> gmpz_add <- true
@@ -394,7 +392,7 @@ class print_insertions insertions () = object(self)
       | _ -> ()
     end
   | Sd_insertions.IZ_binop_ui (binop,_,_,_)
-  | Sd_insertions.Z_binop_ui (binop,_,_,_) ->
+  (* | Sd_insertions.Z_binop_ui (binop,_,_,_) *) ->
     begin
       match binop with
       | PlusA -> gmpz_add_ui <- true
@@ -405,37 +403,36 @@ class print_insertions insertions () = object(self)
       | _ -> ()
     end
   | Sd_insertions.IZ_binop_si (Mult,_,_,_)
-  | Sd_insertions.Z_binop_si (Mult,_,_,_) -> gmpz_mul_si <- true
+  (* | Sd_insertions.Z_binop_si (Mult,_,_,_) *) -> gmpz_mul_si <- true
   | Sd_insertions.IZ_binop_si _
-  | Sd_insertions.Z_binop_si _ -> ()
+  (* | Sd_insertions.Z_binop_si _ *) -> ()
   | Sd_insertions.IZ_get_ui _
-  | Sd_insertions.Z_get_ui _ -> gmpz_get_ui <- true
+  (* | Sd_insertions.Z_get_ui _ *) -> gmpz_get_ui <- true
   | Sd_insertions.IZ_get_si _
-  | Sd_insertions.Z_get_si _ -> gmpz_get_si <- true
+  (* | Sd_insertions.Z_get_si _ *) -> gmpz_get_si <- true
   | Sd_insertions.IPc_dim _
-  | Sd_insertions.Pc_dim _ -> pc_dim <- true
+  (* | Sd_insertions.Pc_dim _ *) -> pc_dim <- true
   | Sd_insertions.IPc_assume _ -> pc_assume <- true
   | Sd_insertions.IMalloc _
-  | Sd_insertions.Malloc _ -> malloc <- true
+  (* | Sd_insertions.Malloc _ *) -> malloc <- true
   | Sd_insertions.IZ_cmp _
-  | Sd_insertions.Z_cmp _ -> gmpz_cmp <- true
+  (* | Sd_insertions.Z_cmp _ *) -> gmpz_cmp <- true
   | Sd_insertions.IZ_cmp_ui _
-  | Sd_insertions.Z_cmp_ui _ -> gmpz_cmp_ui <- true
+  (* | Sd_insertions.Z_cmp_ui _ *) -> gmpz_cmp_ui <- true
   | Sd_insertions.IZ_cmp_si _
-  | Sd_insertions.Z_cmp_si _ -> gmpz_cmp_si <- true
+  (* | Sd_insertions.Z_cmp_si _ *) -> gmpz_cmp_si <- true
 
   method private insertion = function
   | Sd_insertions.Instru i -> self#instru i
   | Sd_insertions.Decl _ -> ()
-  | Sd_insertions.Decl_Z_var _ -> gmp <- true
-  | Sd_insertions.Decl_ctype_var _ -> ()
-  | Sd_insertions.Decl_pred_var _ -> ()
-  | Sd_insertions.If (_, i1, i2) ->
-    List.iter self#insertion i1; List.iter self#insertion i2
-  | Sd_insertions.For (i1, _, i2, i3) ->
-    self#instru i1; self#instru i2; List.iter self#insertion i3
+  (* | Sd_insertions.Decl_Z_var _ -> gmp <- true *)
+  (* | Sd_insertions.Decl_ctype_var _ -> () *)
+  (* | Sd_insertions.Decl_pred_var _ -> () *)
+  (* | Sd_insertions.If (_, i1, i2) -> *)
+  (*   List.iter self#insertion i1; List.iter self#insertion i2 *)
+  (* | Sd_insertions.For (i1, _, i2, i3) -> *)
+  (*   self#instru i1; self#instru i2; List.iter self#insertion i3 *)
   | Sd_insertions.Block i -> List.iter self#insertion i
-
   | Sd_insertions.IIf(_,i1,i2) ->
     List.iter self#insertion i1; List.iter self#insertion i2
   | Sd_insertions.IFor(i1,_,i2,i3) ->
@@ -450,7 +447,7 @@ class print_insertions insertions () = object(self)
    unsigned long *_mp_d ;\
 };\
 typedef struct __anonstruct___mpz_struct_1 __mpz_struct;\
-typedef __mpz_struct ( __attribute__((__FC_BUILTIN__)) mpz_t)[1];";
+typedef __mpz_struct mpz_t[1];";
       gmpz_get_ui, "extern unsigned int __gmpz_get_ui(mpz_t);";
       gmpz_get_si, "extern signed int __gmpz_get_si(mpz_t);";
       gmpz_cmp_ui, "extern int __gmpz_cmp_ui(mpz_t, unsigned long int);";
@@ -491,7 +488,7 @@ typedef __mpz_struct ( __attribute__((__FC_BUILTIN__)) mpz_t)[1];";
       pc_dim, "extern int pathcrawler_dimension(void*);";
       pc_to_fc, "extern void pathcrawler_to_framac(char*);";
       pc_assume, "extern void pathcrawler_assume(int);";
-      malloc, "extern void* malloc(unsigned);";
+      malloc, "extern void* malloc(unsigned long);";
       free, "extern void free(void*);";
     ] in
     List.iter (fun (must_print, str) ->

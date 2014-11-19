@@ -254,7 +254,7 @@ let run() =
 	  inherit Cil.nopCilVisitor
 	  method !vglob = function
 	  | GType({ torig_name = s } as info, _) when s = "mpz_t" ->
-	    tmp_mpz_t := Some info;
+	    tmp_mpz_t := Some (TNamed(info,[]));
 	    Cil.SkipChildren
 	  | _ ->
 	    Cil.SkipChildren
