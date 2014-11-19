@@ -15,6 +15,22 @@ type z_expr =
 | Fresh_Z_var of int (* uid *)
 | My_Z_var of string
 
+let translate_constant = function
+  | Integer (i, str_opt) ->
+    let unsigned = false in
+    let ikind =
+      if Cil.fitsInInt IInt i then IInt else Cil.intKindForValue i unsigned in
+    CInt64 (i, ikind, str_opt)
+  | LStr str -> CStr str
+  | LWStr i64_l -> CWStr i64_l
+  | LChr c -> CChr c
+  | LReal {r_literal=s; r_nearest=f; r_lower=l; r_upper=u} ->
+    if l <> u then
+      Sd_options.Self.warning ~current:true ~once:true
+	"approximating a real number by a float";
+    CReal (f, FLongDouble, Some s)
+  | LEnum e -> CEnum e
+
 type ctype_expr = (* distinguer type pointeur/int *)
 | Fresh_ctype_var of int (* uid *) * typ
 | My_ctype_var of typ * string (* when its name is predefined *)
@@ -25,8 +41,8 @@ type ctype_expr = (* distinguer type pointeur/int *)
 | Cast of typ * ctype_expr
 | Sizeof of typ
 | Deref of ctype_expr
-| Index of ctype_expr * ctype_expr
-| Field of ctype_expr * string
+| CIndex of ctype_expr * ctype_expr
+| CField of ctype_expr * string
 | Of_pred of pred_expr
 
 and pred_expr =
@@ -70,14 +86,42 @@ type instruction =
 | Z_cmp_ui of ctype_expr * z_expr * ctype_expr
 | Z_cmp_si of ctype_expr * z_expr * ctype_expr
 
+| IAffect of varinfo * exp
+| IFree of exp
+| IRet of exp
+| IPc_dim of varinfo * exp
+| IPc_assume of exp
+| IMalloc of varinfo * exp
+| IZ_clear of exp
+| IZ_init of varinfo
+| IZ_init_set of varinfo * exp
+| IZ_init_set_ui of varinfo * exp
+| IZ_init_set_si of varinfo * exp
+| IZ_init_set_str of varinfo * exp
+| IZ_set of varinfo * exp
+| IZ_abs of varinfo * exp
+| IZ_ui_sub of varinfo * exp * exp
+| IZ_binop of binop * varinfo * exp * exp
+| IZ_binop_ui of binop * varinfo * exp  * exp
+| IZ_binop_si of binop * varinfo * exp * exp
+| IZ_get_ui of varinfo * exp
+| IZ_get_si of varinfo * exp
+| IZ_cmp of varinfo * exp * exp
+| IZ_cmp_ui of varinfo * exp * exp
+| IZ_cmp_si of varinfo * exp * exp
+
 type insertion =
 | Instru of instruction
+| Decl of varinfo
 | Decl_Z_var of z_expr
 | Decl_ctype_var of ctype_expr
 | Decl_pred_var of pred_expr
 | If of pred_expr * insertion list * insertion list
 | For of instruction * pred_expr * instruction * insertion list
 | Block of insertion list
+
+| IIf of exp * insertion list * insertion list
+| IFor of instruction * exp * instruction * insertion list
 
 let binop_to_relation = function
   | Lt -> Rlt
@@ -87,6 +131,58 @@ let binop_to_relation = function
   | Eq -> Req
   | Ne -> Rneq
   | _ -> assert false
+
+let relation_to_binop = function
+  | Rlt -> Lt
+  | Rgt -> Gt
+  | Rle -> Le
+  | Rge -> Ge
+  | Req -> Eq
+  | Rneq -> Ne
+
+module Ins = struct
+
+  (* varinfos *)
+  let my_varinfo ty varname = Cil.makeVarinfo false false varname ty
+  let my_Z_varinfo s = Cil.makeVarinfo false false s (Sd_utils.mpz_t())
+
+  (* pred_expr: replace by exp later *)
+
+  (* expressions *)
+  let zero = Cil.zero ~loc:Cil.builtinLoc
+  let one = Cil.one ~loc:Cil.builtinLoc
+  let cmp rel e1 e2 =
+    Cil.mkBinOp ~loc:Cil.builtinLoc (relation_to_binop rel) e1 e2
+
+  (* instructions *)
+  let instru_affect a b = IAffect(a,b)
+  let instru_free a = IFree a
+  let instru_ret a = IRet a
+  let instru_pc_dim a b = IPc_dim(a,b)
+  let instru_malloc a b = IMalloc(a,b)
+  let instru_Z_clear a = IZ_clear a
+  let instru_Z_init a = IZ_init a
+  let instru_Z_init_set a b = IZ_init_set(a,b)
+  let instru_Z_init_set_ui a b = IZ_init_set_ui(a,b)
+  let instru_Z_init_set_si a b = IZ_init_set_si(a,b)
+  let instru_Z_init_set_str a b = IZ_init_set_str(a,b)
+  let instru_Z_set a b = IZ_set(a,b)
+  let instru_Z_abs a b = IZ_abs(a,b)
+  let instru_Z_ui_sub a b c = IZ_ui_sub(a,b,c)
+  let instru_Z_binop a b c d = IZ_binop(a,b,c,d)
+  let instru_Z_binop_ui a b c d = IZ_binop_ui(a,b,c,d)
+  let instru_Z_binop_si a b c d = IZ_binop_si(a,b,c,d)
+  let instru_Z_get_ui a b = IZ_get_ui(a,b)
+  let instru_Z_get_si a b = IZ_get_si(a,b)
+  let instru_Z_cmp a b c = IZ_cmp(a,b,c)
+  let instru_Z_cmp_ui a b c = IZ_cmp_ui(a,b,c)
+  let instru_Z_cmp_si a b c = IZ_cmp_si(a,b,c)
+
+  (* insertions *)
+  let decl_varinfo v = Decl v
+  let ins_if  a b c = IIf(a,b,c)
+  let ins_for a b c d = IFor(a,b,c,d)
+end
 
 class gather_insertions props = object(self)
   inherit Visitor.frama_c_inplace as super
@@ -122,6 +218,11 @@ class gather_insertions props = object(self)
     last_Z_var_id <- last_Z_var_id + 1;
     Fresh_Z_var last_Z_var_id
 
+  method private fresh_Z_varinfo() =
+    last_Z_var_id <- last_Z_var_id + 1;
+    let varname = "__stady_gmp_" ^ (string_of_int last_Z_var_id) in
+    Ins.my_Z_varinfo varname
+
   method private decl_Z_var var = Decl_Z_var var
   method private init_Z_var var = Instru(Z_init var)
   method private init_set_Z_var var v = Instru(Z_init_set (var, v))
@@ -133,11 +234,373 @@ class gather_insertions props = object(self)
     last_ctype_var_id <- last_ctype_var_id + 1;
     Fresh_ctype_var (last_ctype_var_id, ty)
 
+  method private fresh_ctype_varinfo ty =
+    last_ctype_var_id <- last_ctype_var_id + 1;
+    let varname = "__stady_term_" ^ (string_of_int last_ctype_var_id) in
+    Ins.my_varinfo ty varname
+
   method private fresh_pred_var() =
     last_pred_var_id <- last_pred_var_id + 1;
     Fresh_pred_var last_pred_var_id
 
   method translated_properties() = Sd_utils.no_repeat translated_properties
+
+  method private translate_var lv =
+    let varname =
+      match self#current_func with
+      | Some _ when in_old_term ->
+	let prefix =
+	  match lv.lv_type with
+	  | Ctype ty
+	      when (Cil.isPointerType ty || Cil.isArrayType ty) && in_old_ptr ->
+	    "old_ptr"
+	  | _ -> "old"
+	in
+	begin
+	  match lv.lv_origin with
+	  | Some _ -> prefix ^ "_" ^ lv.lv_name
+	  | None -> lv.lv_name
+	end
+      | _ -> lv.lv_name
+    in
+    match lv.lv_type with
+    | Linteger -> Ins.my_Z_varinfo varname
+    | Lreal -> assert false (* TODO: reals *)
+    | Ctype ty -> Ins.my_varinfo ty varname
+    | _ -> assert false
+
+  method private translate_unop op t =
+    match t.term_type with
+    | Linteger ->
+      assert(op = Neg);
+      let i_0, e = self#translate_term t in
+      let ret = self#fresh_Z_varinfo() in
+      let i_1 = Ins.decl_varinfo ret in
+      let i_2 = Instru(Ins.instru_Z_init ret) in
+      let i_3 = Instru(Ins.instru_Z_ui_sub ret Ins.zero e) in
+      let i_4 = Instru(Ins.instru_Z_clear e) in
+      i_0 @ [i_1; i_2; i_3; i_4], e.enode
+    | Lreal -> assert false (* TODO: reals *)
+    | _ -> let ins, e = self#translate_term t in ins, UnOp(op,e,(Cil.typeOf e))
+      
+  method private translate_binop ty op a b =
+    if op = IndexPI || op = PlusPI || op = MinusPI then
+      let i_0, a' = self#translate_term a in
+      let i_1, b' = self#translate_term b in
+      let i_2, e =
+	match ty with
+	| Linteger ->
+	  let v = self#fresh_ctype_varinfo Cil.intType in
+	  let ii_0 = Ins.decl_varinfo v in
+	  let ii_1 = Instru(Ins.instru_Z_get_si v b') in
+	  let ii_2 = Instru(Ins.instru_Z_clear b') in
+	  [ii_0; ii_1; ii_2], Cil.evar v
+	| _ -> [], b'
+      in
+      i_0 @ i_1 @ i_2, (Cil.mkBinOp ~loc:Cil.builtinLoc op a' e).enode
+    else
+      let inserts_0, x = self#translate_term a in
+      let inserts_1, y = self#translate_term b in
+      begin
+	match ty with
+	| Linteger ->
+	  let fresh_var = self#fresh_Z_varinfo() in
+	  let insert_2 = Ins.decl_varinfo fresh_var in
+	  let insert_3 = Instru(Ins.instru_Z_init fresh_var) in
+	  let clear_t1 = match a.term_type with
+	    Linteger -> [Instru(Ins.instru_Z_clear x)] | _ -> []
+	  in
+	  let clear_t2 = match b.term_type with
+	    Linteger -> [Instru(Ins.instru_Z_clear y)] | _ -> []
+	  in
+	  let inserts =
+	    match a.term_type, b.term_type with
+	    | Linteger, Linteger ->
+	      [Instru(Ins.instru_Z_binop op fresh_var x y)]
+	    | Linteger, Ctype ty' when Cil.isUnsignedInteger ty' ->
+	      [Instru(Ins.instru_Z_binop_ui op fresh_var x y)]
+	    | Linteger, Ctype ty' when Cil.isSignedInteger ty' ->
+	      [Instru(Ins.instru_Z_binop_si op fresh_var x y)]
+	    | Ctype ty', Linteger when Cil.isUnsignedInteger ty' ->
+	      if op = PlusA || op = Mult then
+	        [Instru(Ins.instru_Z_binop_ui op fresh_var y x)]
+	      else
+		assert false (* TODO *)
+	    | Ctype ty', Linteger when Cil.isSignedInteger ty' ->
+	      if op = PlusA || op = Mult then
+	        [Instru(Ins.instru_Z_binop_si op fresh_var y x)]
+	      else
+		assert false (* TODO *)
+	    | Ctype(TInt _), Ctype(TInt _) ->
+	      let fresh_var1 = self#fresh_Z_varinfo() in
+	      let insert_4 = Ins.decl_varinfo fresh_var1 in
+	      let fresh_var2 = self#fresh_Z_varinfo() in
+	      let insert_5 = Ins.decl_varinfo fresh_var2 in
+	      let insert_6 = Instru(Ins.instru_Z_init_set_si fresh_var1 x) in
+	      let insert_7 = Instru(Ins.instru_Z_init_set_si fresh_var2 y) in
+	      let fresh_var1 = Cil.evar fresh_var1
+	      and fresh_var2 = Cil.evar fresh_var2 in
+	      [insert_4; insert_5; insert_6; insert_7;
+	       Instru(Ins.instru_Z_binop op fresh_var fresh_var1 fresh_var2);
+	       Instru(Ins.instru_Z_clear fresh_var1);
+	       Instru(Ins.instru_Z_clear fresh_var2)]
+	    | _ -> assert false
+	  in
+	  inserts_0 @ inserts_1 @ [insert_2; insert_3] @ inserts
+	  @ clear_t1 @ clear_t2,
+	  (Cil.evar fresh_var).enode
+	| Lreal -> assert false (* TODO: reals *)
+	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
+	  begin
+	    match a.term_type, b.term_type with
+	    | Linteger, Linteger ->
+	      let var = self#fresh_ctype_varinfo Cil.intType in
+	      let insert_2 = Ins.decl_varinfo var in
+	      let tmp = self#fresh_ctype_varinfo Cil.intType in
+	      let e_tmp = Cil.evar tmp in
+	      let i_1 = Ins.decl_varinfo tmp in
+	      let i_2 =	Instru(Ins.instru_Z_cmp tmp x y) in
+	      let op = binop_to_relation op in
+	      let insert_3 =
+		Instru(Ins.instru_affect var (Ins.cmp op e_tmp Ins.zero)) in
+	      let insert_4 = Instru(Ins.instru_Z_clear x) in
+	      let insert_5 = Instru(Ins.instru_Z_clear y) in
+	      inserts_0 @ inserts_1
+	      @ [insert_2; i_1; i_2; insert_3; insert_4; insert_5],
+	      (Cil.evar var).enode
+	    | _ ->
+	      inserts_0 @ inserts_1,
+	      (Cil.mkBinOp ~loc:Cil.builtinLoc op x y).enode
+	  end
+	| _ -> assert false (* unreachable ? *)
+      end
+
+  method private translate_if cond then_b else_b =
+    match then_b.term_type with
+    | Linteger ->
+      let fresh_var = self#fresh_Z_varinfo() in
+      let insert_0 = Ins.decl_varinfo fresh_var in
+      let insert_1 = Instru(Ins.instru_Z_init fresh_var) in
+      let inserts_2, cond' = self#translate_term cond in
+      let tmp = self#fresh_ctype_varinfo Cil.intType in
+      let e_tmp = Cil.evar tmp in
+      let i_1 = Ins.decl_varinfo tmp in
+      let i_2 = Instru(Ins.instru_Z_cmp_si tmp cond' Ins.zero) in
+      let inserts_then_0, then_b' = self#translate_term then_b in
+      let inserts_then = inserts_then_0
+	@ [Instru(Ins.instru_Z_set fresh_var then_b');
+	   Instru(Ins.instru_Z_clear then_b')]
+      in
+      let inserts_else_0, else_b' = self#translate_term else_b in
+      let inserts_else = inserts_else_0
+	@ [Instru(Ins.instru_Z_set fresh_var else_b');
+	   Instru(Ins.instru_Z_clear else_b')]
+      in
+      let insert_3 =
+	Ins.ins_if (Ins.cmp Rneq e_tmp Ins.zero) inserts_then inserts_else in
+      let insert_4 = Instru(Ins.instru_Z_clear cond') in
+      [insert_0; insert_1] @ inserts_2 @ [i_1; i_2; insert_3; insert_4],
+      (Cil.evar fresh_var).enode
+    | Lreal -> assert false (* TODO: reals *)
+    | _ -> assert false (* unreachable *)
+
+  method private translate_at t = function
+  | LogicLabel(_,stringlabel) ->
+    if stringlabel = "Old" || stringlabel = "Pre" then
+      let is_ptr = match t.term_node with TLval(TMem _,_) -> true | _-> false in
+      if is_ptr then in_old_ptr <- true;
+      in_old_term <- true;
+      let ins, v = self#translate_term t in
+      if is_ptr then in_old_ptr <- false;
+      in_old_term <- false;
+      ins, v.enode
+    else
+      (* label Post is only encoutered in post-conditions, and \at(t,Post)
+	 in a post-condition is t *)
+      if stringlabel = "Post" || stringlabel = "Here" then
+	let ins, v = self#translate_term t in
+	ins, v.enode
+      else
+	Sd_options.Self.not_yet_implemented
+	  "Sd_insertions.gather_insertions#term_node \\at(%a,%s)"
+	  Sd_debug.pp_term t stringlabel
+  | _ -> assert false
+
+  (* C type -> logic type *)
+  method private translate_logic_coerce lt t = match lt with
+  | Linteger ->
+    let ty =
+      match t.term_type with
+      | Ctype x -> Ctype (Cil.unrollType x)
+      | x -> x
+    in
+    let inserts_0, v = self#translate_term t in
+    let fresh_var = self#fresh_Z_varinfo() in
+    let insert_1 = Ins.decl_varinfo fresh_var in
+    let init_set =
+      match ty with
+      | Ctype x when Cil.isUnsignedInteger x -> Ins.instru_Z_init_set_ui
+      | Ctype x when Cil.isSignedInteger x -> Ins.instru_Z_init_set_si
+      | _ -> assert false
+    in
+    let insert_2 = Instru(init_set fresh_var v) in
+    inserts_0 @ [insert_1; insert_2], (Cil.evar fresh_var).enode
+  | Lreal -> assert false (* TODO: reals *)
+  | _ -> assert false (* unreachable *)
+
+  (* logic type -> C type *)
+  method private translate_coerce t ty = match t.term_type with
+  | Linteger ->
+    let inserts_0, v = self#translate_term t in
+    let var = self#fresh_ctype_varinfo ty in
+    let insert_1 = Ins.decl_varinfo var in
+    let insert_2 =
+      match ty with
+      | x when Cil.isUnsignedInteger x -> Instru(Ins.instru_Z_get_ui var v)
+      | x when Cil.isSignedInteger x -> Instru(Ins.instru_Z_get_si var v)
+      | _ -> assert false
+    in
+    let insert_3 = Instru(Ins.instru_Z_clear v) in
+    inserts_0 @ [insert_1; insert_2; insert_3], (Cil.evar var).enode
+  | Lreal -> assert false (* TODO: reals *)
+  | _ -> assert false (* unreachable *)
+
+  method private translate_lambda li lower upper q t =
+    assert(lower.term_type = Linteger && upper.term_type = Linteger);
+    let name = li.l_var_info.lv_name in
+    let init_val =
+      if name = "\\sum" || name = "\\numof" then Ins.zero else Ins.one in
+    let fresh_var = self#fresh_Z_varinfo() in
+    let i_0 = Ins.decl_varinfo fresh_var in
+    let i_1 = Instru(Ins.instru_Z_init_set_si fresh_var init_val) in
+    let i_3, low = self#translate_term lower in
+    let i_4, up = self#translate_term upper in
+    let fresh_iter = Ins.my_Z_varinfo q.lv_name in
+    let i_5 = Ins.decl_varinfo fresh_iter in
+    let i_6 = Instru(Ins.instru_Z_init_set fresh_iter low) in
+    let ins_b_0, lambda_t = self#translate_term t in
+    let e_fresh_var = Cil.evar fresh_var in
+    let ins_b_1, clear_lambda =
+      match name with
+      | s when s = "\\sum" ->
+	Instru(Ins.instru_Z_binop PlusA fresh_var e_fresh_var lambda_t),
+	[Instru(Ins.instru_Z_clear lambda_t)]
+      | s when s = "\\product" ->
+	Instru(Ins.instru_Z_binop Mult fresh_var e_fresh_var lambda_t),
+	[Instru(Ins.instru_Z_clear lambda_t)]
+      | s when s = "\\numof" ->
+	(* lambda_t of type: Ltype(lt,_) when lt.lt_name = Utf8_logic.boolean *)
+	let cond = Ins.cmp Rneq lambda_t Ins.zero in
+	let instr =
+	  Instru(Ins.instru_Z_binop_ui PlusA fresh_var e_fresh_var Ins.one) in
+	IIf(cond, [instr], []), []
+      | _ -> assert false
+    in
+    let e_fresh_iter = Cil.evar fresh_iter in
+    let ins_b_2 =
+      Instru(Ins.instru_Z_binop_ui PlusA fresh_iter e_fresh_iter Ins.one) in
+    let tmp = self#fresh_ctype_varinfo Cil.intType in
+    let e_tmp = Cil.evar tmp in
+    let ii_1 = Ins.decl_varinfo tmp in
+    let ii_2 = Instru(Ins.instru_Z_cmp tmp e_fresh_iter up) in
+    let ii_3 = Instru(Ins.instru_Z_cmp tmp e_fresh_iter up) in
+    let ins_b = ins_b_0 @ [ins_b_1; ins_b_2; ii_3] @ clear_lambda in
+    let i_7 = IFor(Skip, Ins.cmp Rle e_tmp Ins.zero, Skip, ins_b) in
+    let e_fresh_iter = Cil.evar fresh_iter in
+    let i_8 = Instru(Ins.instru_Z_clear e_fresh_iter) in
+    let i_9 = Instru(Ins.instru_Z_clear low) in
+    let i_10 = Instru(Ins.instru_Z_clear up) in
+    let inserts_block =
+      i_3 @ i_4 @ [i_5; i_6; ii_1; ii_2; i_7; i_8; i_9; i_10] in
+    [i_0; i_1; Block inserts_block], e_fresh_var.enode
+
+  method private translate_app li _ params =
+    let s = li.l_var_info.lv_name in
+    let ty = Extlib.the li.l_type in
+    match ty with
+    | Linteger ->
+      if s = "\\abs" then
+	begin
+	  let param = List.hd params in
+	  assert (List.tl params = []);
+	  let inserts_0, x = self#translate_term param in
+	  let fresh_var = self#fresh_Z_varinfo() in
+	  let insert_1 = Ins.decl_varinfo fresh_var in
+	  let insert_2 = Instru(Ins.instru_Z_init fresh_var) in
+	  let insert_3 = Instru(Ins.instru_Z_abs fresh_var x) in
+	  let insert_4 = Instru(Ins.instru_Z_clear x) in
+	  inserts_0 @ [insert_1; insert_2; insert_3; insert_4],
+	  (Cil.evar fresh_var).enode
+	end
+      else
+	if s = "\\sum" || s = "\\product" || s = "\\numof" then
+	  match params with
+	  | [l;u;{term_node=Tlambda([q],t)}] -> self#translate_lambda li l u q t
+	  | _ -> assert false
+	else assert false
+    | Lreal -> assert false (* TODO: reals *)
+    | _ -> assert false (* unreachable *)
+
+  method private translate_term_node t = match t.term_node with
+  | TConst c -> [], Const (translate_constant c)
+  | TLval tl -> let ins, lv = self#translate_lval tl in ins, Lval lv
+  | TSizeOf ty -> [], SizeOf ty
+  | TSizeOfE t -> let ins, e = self#translate_term t in ins, SizeOfE e
+  | TSizeOfStr str -> [], SizeOfStr str
+  | TAlignOf ty -> [], AlignOf ty
+  | TAlignOfE t -> let ins, e = self#translate_term t in ins, AlignOfE e
+  | TUnOp (op,t) -> self#translate_unop op t
+  | TBinOp (op,a,b) -> self#translate_binop t.term_type op a b
+  | TCastE (ty,t) -> let ins, e = self#translate_term t in ins, CastE(ty, e)
+  | TAddrOf tl -> let ins, lv = self#translate_lval tl in ins, AddrOf lv
+  | TStartOf tl -> let ins, lv = self#translate_lval tl in ins, StartOf lv
+  | Tapp (li,ll,params) -> self#translate_app li ll params
+  | Tlambda _ -> assert false
+  | TDataCons _ -> assert false
+  | Tif (x,y,z) -> self#translate_if x y z
+  | Tat (t,l) -> self#translate_at t l
+  | Tbase_addr _ -> assert false
+  | Toffset _ -> assert false
+  | Tblock_length _ -> assert false
+  | Tnull -> [], (Cil.zero ~loc:Cil.builtinLoc).enode
+  | TLogic_coerce (lt,t) -> self#translate_logic_coerce lt t
+  | TCoerce (t,ty) -> self#translate_coerce t ty
+  | TCoerceE (t, {term_type=(Linteger|Lreal) as lt}) ->
+    self#translate_logic_coerce lt t
+  | TCoerceE (t, {term_type=Ctype ty}) -> self#translate_coerce t ty
+  | TCoerceE _ -> assert false
+  | TUpdate _ -> assert false
+  | Ttypeof _ -> assert false
+  | Ttype _ -> assert false
+  | Tempty_set -> assert false
+  | Tunion _ -> assert false
+  | Tinter _ -> assert false
+  | Tcomprehension _ -> assert false
+  | Trange _ -> assert false
+  | Tlet _ -> assert false
+
+  method private translate_term t =
+    let ins, enode = self#translate_term_node t in
+    ins, Cil.new_exp ~loc:Cil.builtinLoc enode
+
+  method private translate_lhost = function
+  | TVar lv -> [], Var(self#translate_var lv)
+  | TResult _ -> [], Var (Extlib.the result_varinfo)
+  | TMem t -> let ins, t = self#translate_term t in ins, Mem t
+
+  method private translate_offset = function
+  | TNoOffset -> [], NoOffset
+  | TField (fi,o) -> let ins, o' = self#translate_offset o in ins, Field(fi,o')
+  | TModel _ -> assert false (* TODO *)
+  | TIndex(t,o) ->
+    let ins, e = self#translate_term t in
+    let ins', o' = self#translate_offset o in
+    ins @ ins', Index(e,o')
+
+  method private translate_lval (a,b) =
+    let ins, a' = self#translate_lhost a in
+    let ins', b' = self#translate_offset b in
+    ins @ ins', (a',b')
 
   method private logic_var v =
     let ret =
@@ -267,18 +730,18 @@ class gather_insertions props = object(self)
 	      [Instru(Z_ui_sub(fresh_var,Zero,self#z_fragment x));
 	       Instru(Z_clear(self#z_fragment x))]
 	    | Lreal -> assert false (* unreachable *)
-	    | Ctype ty' ->
-	      let fresh_var' = self#fresh_Z_var() in
-	      let insert_0' = self#decl_Z_var fresh_var' in
-	      let f =
-		if Cil.isUnsignedInteger ty' then self#init_set_ui_Z_var
-		else if Cil.isSignedInteger ty' then self#init_set_si_Z_var
-		else assert false
-	      in
-	      let insert_1' = f fresh_var' (self#ctype_fragment x) in
-	      let insert_2' = Instru(Z_ui_sub(fresh_var', Zero, fresh_var')) in
-	      let insert_3' = Instru(Z_clear fresh_var') in
-	      [insert_0'; insert_1'; insert_2'; insert_3']
+	    (* | Ctype ty' -> *)
+	    (*   let fresh_var' = self#fresh_Z_var() in *)
+	    (*   let insert_0' = self#decl_Z_var fresh_var' in *)
+	    (*   let f = *)
+	    (* 	if Cil.isUnsignedInteger ty' then self#init_set_ui_Z_var *)
+	    (* 	else if Cil.isSignedInteger ty' then self#init_set_si_Z_var *)
+	    (* 	else assert false *)
+	    (*   in *)
+	    (*   let insert_1' = f fresh_var' (self#ctype_fragment x) in *)
+	    (*   let insert_2' = Instru(Z_ui_sub(fresh_var', Zero, fresh_var')) in *)
+	    (*   let insert_3' = Instru(Z_clear fresh_var') in *)
+	    (*   [insert_0'; insert_1'; insert_2'; insert_3'] *)
 	    | _ -> assert false (* unreachable *)
 	  in
 	  inserts_0 @ [insert_1; insert_2] @ inserts_3, Z_fragment fresh_var
@@ -558,7 +1021,7 @@ class gather_insertions props = object(self)
       let inserts_0, lhost = self#tlhost tlhost in
       let rec aux ins ret = function
 	| TNoOffset -> ins, ret
-	| TField (fi, tof) -> aux ins (Field(ret, fi.fname)) tof
+	| TField (fi, tof) -> aux ins (CField(ret, fi.fname)) tof
 	| TModel _ -> assert false (* TODO *)
 	| TIndex (t, tof) ->
 	  let inserts_1, t' = self#term t in
@@ -568,9 +1031,9 @@ class gather_insertions props = object(self)
 	      let tmp = self#fresh_ctype_var Cil.intType in
 	      let i_1 = Decl_ctype_var tmp in
 	      let i_2 = Instru(Z_get_si(tmp, self#z_fragment t')) in
-	      aux (ins@inserts_1@[i_1;i_2]) (Index(ret, tmp)) tof
+	      aux (ins@inserts_1@[i_1;i_2]) (CIndex(ret, tmp)) tof
 	    | Lreal -> assert false (* unreachable *)
-	    | _ -> aux ins (Index(ret, self#ctype_fragment t')) tof
+	    | _ -> aux ins (CIndex(ret, self#ctype_fragment t')) tof
 	  end
       in
       match lhost with
@@ -730,8 +1193,8 @@ class gather_insertions props = object(self)
 	      let i_2 = Instru(Z_get_si (tmp, h')) in
 	      let insert_2 =
 		Instru(Malloc(my_old_ptr,Binop(Mult,tmp, Sizeof ty))) in
-	      let my_new_old_ptr = Index(my_old_ptr, my_iterator) in
-	      let my_new_ptr = Index(my_ptr, my_iterator) in
+	      let my_new_old_ptr = CIndex(my_old_ptr, my_iterator) in
+	      let my_new_ptr = CIndex(my_ptr, my_iterator) in
 	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	      let init = Affect(my_iterator, Zero) in
 	      let i_3 = Instru(Z_get_si (tmp,h')) in
@@ -745,8 +1208,8 @@ class gather_insertions props = object(self)
 	      let h' = self#ctype_fragment h' in
 	      let insert_2 =
 		Instru(Malloc(my_old_ptr, Binop(Mult,h', Sizeof ty))) in
-	      let my_new_old_ptr = Index(my_old_ptr, my_iterator) in
-	      let my_new_ptr = Index(my_ptr, my_iterator) in
+	      let my_new_old_ptr = CIndex(my_old_ptr, my_iterator) in
+	      let my_new_ptr = CIndex(my_ptr, my_iterator) in
 	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	      let init = Affect(my_iterator, Zero) in
 	      let cond = Cmp(Rlt, my_iterator, h') in
@@ -778,7 +1241,7 @@ class gather_insertions props = object(self)
 	    match h.term_type with
 	    | Linteger ->
 	      let h' = self#z_fragment h' in
-	      let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
+	      let inserts_block=dealloc_aux(CIndex(my_old_ptr,my_iterator))t in
 	      let init = Affect(my_iterator, Zero) in
 	      let tmp = self#fresh_ctype_var Cil.intType in
 	      let i_1 = Decl_ctype_var tmp in
@@ -790,7 +1253,7 @@ class gather_insertions props = object(self)
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      let h' = self#ctype_fragment h' in
-	      let inserts_block=dealloc_aux(Index(my_old_ptr,my_iterator))t in
+	      let inserts_block=dealloc_aux(CIndex(my_old_ptr,my_iterator))t in
 	      let init = Affect(my_iterator, Zero) in
 	      let cond = Cmp(Rlt, my_iterator, h') in
 	      let step = Affect(my_iterator, Binop(PlusA,my_iterator,One)) in
