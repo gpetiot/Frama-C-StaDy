@@ -22,17 +22,17 @@ type instruction =
 | IPc_assume of exp
 | IMalloc of lval * exp
 | IZ_clear of exp
-| IZ_init of varinfo
-| IZ_init_set of varinfo * exp
-| IZ_init_set_ui of varinfo * exp
-| IZ_init_set_si of varinfo * exp
-| IZ_init_set_str of varinfo * exp
-| IZ_set of varinfo * exp
-| IZ_abs of varinfo * exp
-| IZ_ui_sub of varinfo * exp * exp
-| IZ_binop of binop * varinfo * exp * exp
-| IZ_binop_ui of binop * varinfo * exp  * exp
-| IZ_binop_si of binop * varinfo * exp * exp
+| IZ_init of exp
+| IZ_init_set of exp * exp
+| IZ_init_set_ui of exp * exp
+| IZ_init_set_si of exp * exp
+| IZ_init_set_str of exp * exp
+| IZ_set of exp * exp
+| IZ_abs of exp * exp
+| IZ_ui_sub of exp * exp * exp
+| IZ_binop of binop * exp * exp * exp
+| IZ_binop_ui of binop * exp * exp  * exp
+| IZ_binop_si of binop * exp * exp * exp
 | IZ_get_ui of varinfo * exp
 | IZ_get_si of varinfo * exp
 | IZ_cmp of varinfo * exp * exp
@@ -163,7 +163,8 @@ class gather_insertions props = object(self)
 	  let insert_0 = Ins.decl_varinfo fresh_var in
 	  let str = try Extlib.the str_opt with _ -> Integer.to_string i in
 	  let str = Cil.mkString ~loc:Ins.loc str in
-	  let insert_1 = Instru(Ins.instru_Z_init_set_str fresh_var str) in
+	  let e_fresh_var = Cil.evar fresh_var in
+	  let insert_1 = Instru(Ins.instru_Z_init_set_str e_fresh_var str) in
 	  [insert_0; insert_1], Cil.evar fresh_var
 	| Ctype (TInt(ikind,_)) ->
 	  [], Cil.new_exp ~loc:Ins.loc (Const(CInt64(i,ikind,str_opt)))
@@ -210,8 +211,9 @@ class gather_insertions props = object(self)
       let i_0, e = self#translate_term t in
       let ret = self#fresh_Z_varinfo() in
       let i_1 = Ins.decl_varinfo ret in
-      let i_2 = Instru(Ins.instru_Z_init ret) in
-      let i_3 = Instru(Ins.instru_Z_ui_sub ret Ins.zero e) in
+      let e_ret = Cil.evar ret in
+      let i_2 = Instru(Ins.instru_Z_init e_ret) in
+      let i_3 = Instru(Ins.instru_Z_ui_sub e_ret Ins.zero e) in
       let i_4 = Instru(Ins.instru_Z_clear e) in
       i_0 @ [i_1; i_2; i_3; i_4], Lval(Cil.var ret)
     | Lreal -> assert false (* TODO: reals *)
@@ -241,7 +243,8 @@ class gather_insertions props = object(self)
 	| Linteger ->
 	  let fresh_var = self#fresh_Z_varinfo() in
 	  let insert_2 = Ins.decl_varinfo fresh_var in
-	  let insert_3 = Instru(Ins.instru_Z_init fresh_var) in
+	  let e_fresh_var = Cil.evar fresh_var in
+	  let insert_3 = Instru(Ins.instru_Z_init e_fresh_var) in
 	  let clear_t1 = match a.term_type with
 	    Linteger -> [Instru(Ins.instru_Z_clear x)] | _ -> []
 	  in
@@ -251,19 +254,19 @@ class gather_insertions props = object(self)
 	  let inserts =
 	    match a.term_type, b.term_type with
 	    | Linteger, Linteger ->
-	      [Instru(Ins.instru_Z_binop op fresh_var x y)]
+	      [Instru(Ins.instru_Z_binop op e_fresh_var x y)]
 	    | Linteger, Ctype ty' when Cil.isUnsignedInteger ty' ->
-	      [Instru(Ins.instru_Z_binop_ui op fresh_var x y)]
+	      [Instru(Ins.instru_Z_binop_ui op e_fresh_var x y)]
 	    | Linteger, Ctype ty' when Cil.isSignedInteger ty' ->
-	      [Instru(Ins.instru_Z_binop_si op fresh_var x y)]
+	      [Instru(Ins.instru_Z_binop_si op e_fresh_var x y)]
 	    | Ctype ty', Linteger when Cil.isUnsignedInteger ty' ->
 	      if op = PlusA || op = Mult then
-	        [Instru(Ins.instru_Z_binop_ui op fresh_var y x)]
+	        [Instru(Ins.instru_Z_binop_ui op e_fresh_var y x)]
 	      else
 		assert false (* TODO *)
 	    | Ctype ty', Linteger when Cil.isSignedInteger ty' ->
 	      if op = PlusA || op = Mult then
-	        [Instru(Ins.instru_Z_binop_si op fresh_var y x)]
+	        [Instru(Ins.instru_Z_binop_si op e_fresh_var y x)]
 	      else
 		assert false (* TODO *)
 	    | Ctype(TInt _), Ctype(TInt _) ->
@@ -271,19 +274,20 @@ class gather_insertions props = object(self)
 	      let insert_4 = Ins.decl_varinfo fresh_var1 in
 	      let fresh_var2 = self#fresh_Z_varinfo() in
 	      let insert_5 = Ins.decl_varinfo fresh_var2 in
-	      let insert_6 = Instru(Ins.instru_Z_init_set_si fresh_var1 x) in
-	      let insert_7 = Instru(Ins.instru_Z_init_set_si fresh_var2 y) in
-	      let fresh_var1 = Cil.evar fresh_var1
-	      and fresh_var2 = Cil.evar fresh_var2 in
+	      let e_fresh_var1 = Cil.evar fresh_var1 in
+	      let e_fresh_var2 = Cil.evar fresh_var2 in
+	      let insert_6 = Instru(Ins.instru_Z_init_set_si e_fresh_var1 x) in
+	      let insert_7 = Instru(Ins.instru_Z_init_set_si e_fresh_var2 y) in
 	      [insert_4; insert_5; insert_6; insert_7;
-	       Instru(Ins.instru_Z_binop op fresh_var fresh_var1 fresh_var2);
-	       Instru(Ins.instru_Z_clear fresh_var1);
-	       Instru(Ins.instru_Z_clear fresh_var2)]
+	       Instru(Ins.instru_Z_binop
+			op e_fresh_var e_fresh_var1 e_fresh_var2);
+	       Instru(Ins.instru_Z_clear e_fresh_var1);
+	       Instru(Ins.instru_Z_clear e_fresh_var2)]
 	    | _ -> assert false
 	  in
 	  inserts_0 @ inserts_1 @ [insert_2; insert_3] @ inserts
 	  @ clear_t1 @ clear_t2,
-	  (Cil.evar fresh_var).enode
+	  e_fresh_var.enode
 	| Lreal -> assert false (* TODO: reals *)
 	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
 	  begin
@@ -316,7 +320,8 @@ class gather_insertions props = object(self)
     | Linteger ->
       let fresh_var = self#fresh_Z_varinfo() in
       let insert_0 = Ins.decl_varinfo fresh_var in
-      let insert_1 = Instru(Ins.instru_Z_init fresh_var) in
+      let e_fresh_var= Cil.evar fresh_var in
+      let insert_1 = Instru(Ins.instru_Z_init e_fresh_var) in
       let inserts_2, cond' = self#translate_term cond in
       let tmp = self#fresh_ctype_varinfo Cil.intType in
       let e_tmp = Cil.evar tmp in
@@ -324,19 +329,19 @@ class gather_insertions props = object(self)
       let i_2 = Instru(Ins.instru_Z_cmp_si tmp cond' Ins.zero) in
       let inserts_then_0, then_b' = self#translate_term then_b in
       let inserts_then = inserts_then_0
-	@ [Instru(Ins.instru_Z_set fresh_var then_b');
+	@ [Instru(Ins.instru_Z_set e_fresh_var then_b');
 	   Instru(Ins.instru_Z_clear then_b')]
       in
       let inserts_else_0, else_b' = self#translate_term else_b in
       let inserts_else = inserts_else_0
-	@ [Instru(Ins.instru_Z_set fresh_var else_b');
+	@ [Instru(Ins.instru_Z_set e_fresh_var else_b');
 	   Instru(Ins.instru_Z_clear else_b')]
       in
       let insert_3 =
 	Ins.ins_if (Ins.cmp Rneq e_tmp Ins.zero) inserts_then inserts_else in
       let insert_4 = Instru(Ins.instru_Z_clear cond') in
       [insert_0; insert_1] @ inserts_2 @ [i_1; i_2; insert_3; insert_4],
-      (Cil.evar fresh_var).enode
+      e_fresh_var.enode
     | Lreal -> assert false (* TODO: reals *)
     | _ -> assert false (* unreachable *)
 
@@ -379,8 +384,9 @@ class gather_insertions props = object(self)
       | Ctype x when Cil.isSignedInteger x -> Ins.instru_Z_init_set_si
       | _ -> assert false
     in
-    let insert_2 = Instru(init_set fresh_var v) in
-    inserts_0 @ [insert_1; insert_2], (Cil.evar fresh_var).enode
+    let e_fresh_var = Cil.evar fresh_var in
+    let insert_2 = Instru(init_set e_fresh_var v) in
+    inserts_0 @ [insert_1; insert_2], e_fresh_var.enode
   | Lreal -> assert false (* TODO: reals *)
   | _ -> assert false (* unreachable *)
 
@@ -408,33 +414,33 @@ class gather_insertions props = object(self)
       if name = "\\sum" || name = "\\numof" then Ins.zero else Ins.one in
     let fresh_var = self#fresh_Z_varinfo() in
     let i_0 = Ins.decl_varinfo fresh_var in
-    let i_1 = Instru(Ins.instru_Z_init_set_si fresh_var init_val) in
+    let e_fresh_var = Cil.evar fresh_var in
+    let i_1 = Instru(Ins.instru_Z_init_set_si e_fresh_var init_val) in
     let i_3, low = self#translate_term lower in
     let i_4, up = self#translate_term upper in
     let fresh_iter = Ins.my_Z_varinfo q.lv_name in
     let i_5 = Ins.decl_varinfo fresh_iter in
-    let i_6 = Instru(Ins.instru_Z_init_set fresh_iter low) in
+    let e_fresh_iter = Cil.evar fresh_iter in
+    let i_6 = Instru(Ins.instru_Z_init_set e_fresh_iter low) in
     let ins_b_0, lambda_t = self#translate_term t in
-    let e_fresh_var = Cil.evar fresh_var in
     let ins_b_1, clear_lambda =
       match name with
       | s when s = "\\sum" ->
-	Instru(Ins.instru_Z_binop PlusA fresh_var e_fresh_var lambda_t),
+	Instru(Ins.instru_Z_binop PlusA e_fresh_var e_fresh_var lambda_t),
 	[Instru(Ins.instru_Z_clear lambda_t)]
       | s when s = "\\product" ->
-	Instru(Ins.instru_Z_binop Mult fresh_var e_fresh_var lambda_t),
+	Instru(Ins.instru_Z_binop Mult e_fresh_var e_fresh_var lambda_t),
 	[Instru(Ins.instru_Z_clear lambda_t)]
       | s when s = "\\numof" ->
 	(* lambda_t of type: Ltype(lt,_) when lt.lt_name = Utf8_logic.boolean *)
 	let cond = Ins.cmp Rneq lambda_t Ins.zero in
 	let instr =
-	  Instru(Ins.instru_Z_binop_ui PlusA fresh_var e_fresh_var Ins.one) in
+	  Instru(Ins.instru_Z_binop_ui PlusA e_fresh_var e_fresh_var Ins.one) in
 	Ins.ins_if cond [instr] [], []
       | _ -> assert false
     in
-    let e_fresh_iter = Cil.evar fresh_iter in
     let ins_b_2 =
-      Instru(Ins.instru_Z_binop_ui PlusA fresh_iter e_fresh_iter Ins.one) in
+      Instru(Ins.instru_Z_binop_ui PlusA e_fresh_iter e_fresh_iter Ins.one) in
     let tmp = self#fresh_ctype_varinfo Cil.intType in
     let e_tmp = Cil.evar tmp in
     let ii_1 = Ins.decl_varinfo tmp in
@@ -462,11 +468,12 @@ class gather_insertions props = object(self)
 	  let inserts_0, x = self#translate_term param in
 	  let fresh_var = self#fresh_Z_varinfo() in
 	  let insert_1 = Ins.decl_varinfo fresh_var in
-	  let insert_2 = Instru(Ins.instru_Z_init fresh_var) in
-	  let insert_3 = Instru(Ins.instru_Z_abs fresh_var x) in
+	  let e_fresh_var = Cil.evar fresh_var in
+	  let insert_2 = Instru(Ins.instru_Z_init e_fresh_var) in
+	  let insert_3 = Instru(Ins.instru_Z_abs e_fresh_var x) in
 	  let insert_4 = Instru(Ins.instru_Z_clear x) in
 	  inserts_0 @ [insert_1; insert_2; insert_3; insert_4],
-	  (Cil.evar fresh_var).enode
+	  e_fresh_var.enode
 	end
       else
 	if s = "\\sum" || s = "\\product" || s = "\\numof" then
@@ -577,7 +584,8 @@ class gather_insertions props = object(self)
       let ins_0, t' = aux() in
       let ins_1 = Ins.decl_varinfo fresh_var in
       let e_t' = Cil.new_exp ~loc:Ins.loc (Lval t') in
-      let ins_2 = Instru(Ins.instru_Z_init_set fresh_var e_t') in
+      let e_fresh_var = Cil.evar fresh_var in
+      let ins_2 = Instru(Ins.instru_Z_init_set e_fresh_var e_t') in
       ins_0 @ [ins_1; ins_2], Cil.var fresh_var
     | Lreal -> assert false (* TODO *)
     | _ -> aux()
@@ -621,9 +629,9 @@ class gather_insertions props = object(self)
 	  else if Cil.isSignedInteger x then Ins.instru_Z_init_set_si
 	  else assert false
 	in
-	let insert_3 = Instru(init_set fresh_var' t1') in
-	let insert_4 = Ins.decl_varinfo var in
 	let e_fresh_var = Cil.evar fresh_var' in
+	let insert_3 = Instru(init_set e_fresh_var t1') in
+	let insert_4 = Ins.decl_varinfo var in
 	let insert_5 = Instru(Ins.instru_Z_cmp var e_fresh_var t2') in
 	let insert_7 = Instru(Ins.instru_Z_clear e_fresh_var) in
 	[insert_2; insert_3; insert_4; insert_5; insert_7],
@@ -786,17 +794,16 @@ class gather_insertions props = object(self)
 	    let insert_0 = Ins.decl_varinfo fresh_iter in
 	    let inserts_1, t1' = self#translate_term t1 in
 	    let inserts_2, t2' = self#translate_term t2 in
-	    let insert_3 = Instru(Ins.instru_Z_init_set fresh_iter t1') in
 	    let e_fresh_iter = Cil.evar fresh_iter in
+	    let insert_3 = Instru(Ins.instru_Z_init_set e_fresh_iter t1') in
 	    let inserts_4 =
 	      if r1=Rlt then
 		[Instru(Ins.instru_Z_binop_ui
-			  PlusA fresh_iter e_fresh_iter Ins.one)]
+			  PlusA e_fresh_iter e_fresh_iter Ins.one)]
 	      else []
 	    in
 	    let tmp = self#fresh_ctype_varinfo Cil.intType in
 	    let i_1 = Ins.decl_varinfo tmp in
-	    let e_fresh_iter = Cil.evar fresh_iter in
 	    let i_2 = Instru(Ins.instru_Z_cmp tmp e_fresh_iter t2') in
 	    let e_var = Cil.evar var in
 	    let exp2 =
@@ -806,8 +813,8 @@ class gather_insertions props = object(self)
 	    let ins_b_0, goal_var = self#translate_pnamed goal in
 	    let ins_b_1 = Instru(Ins.instru_affect lvar goal_var) in
 	    let ins_b_2 =
-	      Instru
-		(Ins.instru_Z_binop_ui PlusA fresh_iter e_fresh_iter Ins.one) in
+	      Instru(Ins.instru_Z_binop_ui
+		   PlusA e_fresh_iter e_fresh_iter Ins.one) in
 	    let i_3 = Instru(Ins.instru_Z_cmp tmp e_fresh_iter t2') in
 	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
 	    let e1 = Ins.cmp r2 (Cil.evar tmp) Ins.zero in
@@ -824,12 +831,12 @@ class gather_insertions props = object(self)
 	    let insert_0 = Ins.decl_varinfo fresh_iter in
 	    let inserts_1, t1' = self#translate_term t1 in
 	    let inserts_2, t2' = self#translate_term t2 in
-	    let insert_3 = Instru(Ins.instru_Z_init_set fresh_iter t1') in
 	    let e_fresh_iter = Cil.evar fresh_iter in
+	    let insert_3 = Instru(Ins.instru_Z_init_set e_fresh_iter t1') in
 	    let inserts_4 =
 	      if r1=Rlt then
 		[Instru(Ins.instru_Z_binop_ui
-			  PlusA fresh_iter e_fresh_iter Ins.one)]
+			  PlusA e_fresh_iter e_fresh_iter Ins.one)]
 	      else []
 	    in
 	    let tmp = self#fresh_ctype_varinfo Cil.intType in
@@ -844,7 +851,7 @@ class gather_insertions props = object(self)
 	    let ins_b_1 = Instru(Ins.instru_affect lvar goal_var) in
 	    let ins_b_2 =
 	      Instru(Ins.instru_Z_binop_ui
-		       PlusA fresh_iter e_fresh_iter Ins.one) in
+		       PlusA e_fresh_iter e_fresh_iter Ins.one) in
 	    let i_3 = Instru(Ins.instru_Z_cmp_si tmp e_fresh_iter t2') in
 	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
 	    let e1 = Ins.cmp r2 (Cil.evar tmp) Ins.zero in
@@ -1317,11 +1324,11 @@ class gather_insertions props = object(self)
 	      let fresh_variant = self#fresh_Z_varinfo() in
 	      let insert_2 = Ins.decl_varinfo fresh_variant in
 	      self#insert (BegIter stmt.sid) insert_2;
-	      let insert_3 = Instru(Ins.instru_Z_init_set fresh_variant term')in
+	      let e_variant  = Cil.evar fresh_variant in
+	      let insert_3 = Instru(Ins.instru_Z_init_set e_variant term')in
 	      self#insert (BegIter stmt.sid) insert_3;
 	      let inserts_4, term' = self#translate_term term in
 	      List.iter (self#insert (EndIter stmt.sid)) inserts_4;
-	      let e_variant  = Cil.evar fresh_variant in
 	      let i_3 = Instru(Ins.instru_Z_cmp_ui tmp e_variant Ins.zero) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
 	      self#insert (EndIter stmt.sid) i_3;

@@ -39,30 +39,30 @@ let pp_instruction fmt = function
   | Sd_insertions.IMalloc (v,e) ->
     Format.fprintf fmt "%a = malloc(%a)" pp_lval v pp_exp e
   | Sd_insertions.IZ_clear e -> Format.fprintf fmt "__gmpz_clear(%a)" pp_exp e
-  | Sd_insertions.IZ_init v -> Format.fprintf fmt "__gmpz_init(%a)" pp_var v
-  | Sd_insertions.IZ_init_set (v,e) ->
-    Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_var v pp_exp e
-  | Sd_insertions.IZ_init_set_ui (v,e) ->
-    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_var v pp_exp e
-  | Sd_insertions.IZ_init_set_si (v,e) ->
-    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_var v pp_exp e
-  | Sd_insertions.IZ_init_set_str (v,e) ->
-    Format.fprintf fmt "__gmpz_init_set_str(%a, %a, 10)" pp_var v pp_exp e
-  | Sd_insertions.IZ_set (v,e) ->
-    Format.fprintf fmt "__gmpz_set(%a, %a)" pp_var v pp_exp e
-  | Sd_insertions.IZ_abs (v,e) ->
-    Format.fprintf fmt "%a = __gmpz_set(%a)" pp_var v pp_exp e
-  | Sd_insertions.IZ_ui_sub (v,e,e') ->
-    Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)" pp_var v pp_exp e pp_exp e'
-  | Sd_insertions.IZ_binop (o,v,e,e') ->
+  | Sd_insertions.IZ_init e -> Format.fprintf fmt "__gmpz_init(%a)" pp_exp e
+  | Sd_insertions.IZ_init_set (e,e') ->
+    Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_exp e pp_exp e'
+  | Sd_insertions.IZ_init_set_ui (e,e') ->
+    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_exp e pp_exp e'
+  | Sd_insertions.IZ_init_set_si (e,e') ->
+    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_exp e pp_exp e'
+  | Sd_insertions.IZ_init_set_str (e,e') ->
+    Format.fprintf fmt "__gmpz_init_set_str(%a, %a, 10)" pp_exp e pp_exp e'
+  | Sd_insertions.IZ_set (e,e') ->
+    Format.fprintf fmt "__gmpz_set(%a, %a)" pp_exp e pp_exp e'
+  | Sd_insertions.IZ_abs (e,e') ->
+    Format.fprintf fmt "%a = __gmpz_set(%a)" pp_exp e pp_exp e'
+  | Sd_insertions.IZ_ui_sub (e,e',e'') ->
+    Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)" pp_exp e pp_exp e' pp_exp e''
+  | Sd_insertions.IZ_binop (o,e,e',e'') ->
     Format.fprintf fmt "__gmpz_%a(%a, %a, %a)"
-      pp_garith o pp_var v pp_exp e pp_exp e'
-  | Sd_insertions.IZ_binop_ui (o,v,e,e') ->
+      pp_garith o pp_exp e pp_exp e' pp_exp e''
+  | Sd_insertions.IZ_binop_ui (o,e,e',e'') ->
     Format.fprintf fmt "__gmpz_%a_ui(%a, %a, %a)"
-      pp_garith o pp_var v pp_exp e pp_exp e'
-  | Sd_insertions.IZ_binop_si (o,v,e,e') ->
+      pp_garith o pp_exp e pp_exp e' pp_exp e''
+  | Sd_insertions.IZ_binop_si (o,e,e',e'') ->
     Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
-      pp_garith o pp_var v pp_exp e pp_exp e'
+      pp_garith o pp_exp e pp_exp e' pp_exp e''
   | Sd_insertions.IZ_get_ui (v,e) ->
     Format.fprintf fmt "%a = __gmpz_get_ui(%a)" pp_var v pp_exp e
   | Sd_insertions.IZ_get_si (v,e) ->
