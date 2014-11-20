@@ -124,18 +124,19 @@ let relation_to_binop = function
 
 module Ins = struct
 
+  let loc = Cil_datatype.Location.unknown
+
   (* varinfos *)
   let my_varinfo ty varname = Cil.makeVarinfo false false varname ty
-  let my_Z_varinfo s = Cil.makeVarinfo false false s (Sd_utils.mpz_t())
-  let my_pred_varinfo s = Cil.makeVarinfo false false s Cil.intType
+  let my_Z_varinfo s = my_varinfo (Sd_utils.mpz_t()) s
+  let my_pred_varinfo s = my_varinfo Cil.intType s
 
   (* pred_expr: replace by exp later *)
 
   (* expressions *)
-  let zero = Cil.zero ~loc:Cil.builtinLoc
-  let one = Cil.one ~loc:Cil.builtinLoc
-  let cmp rel e1 e2 =
-    Cil.mkBinOp ~loc:Cil.builtinLoc (relation_to_binop rel) e1 e2
+  let zero = Cil.zero ~loc
+  let one = Cil.one ~loc
+  let cmp rel e1 e2 = Cil.mkBinOp ~loc (relation_to_binop rel) e1 e2
 
   (* instructions *)
   let instru_affect a b = IAffect(a,b)
@@ -241,18 +242,18 @@ class gather_insertions props = object(self)
     (* CInt64 (i, ikind, str_opt) *)
       let fresh_var = self#fresh_Z_varinfo() in
       let insert_0 = Ins.decl_varinfo fresh_var in
-      let str = Cil.mkString ~loc:Cil.builtinLoc (Extlib.the str_opt) in
+      let str = Cil.mkString ~loc:Ins.loc (Extlib.the str_opt) in
       let insert_1 = Instru(Ins.instru_Z_init_set_str fresh_var str) in
       [insert_0; insert_1], Cil.evar fresh_var
-    | LStr str -> [], Cil.new_exp ~loc:Cil.builtinLoc (Const(CStr str))
-    | LWStr i64_l -> [], Cil.new_exp ~loc:Cil.builtinLoc (Const(CWStr i64_l))
-    | LChr c -> [], Cil.new_exp ~loc:Cil.builtinLoc (Const(CChr c))
+    | LStr str -> [], Cil.new_exp ~loc:Ins.loc (Const(CStr str))
+    | LWStr i64_l -> [], Cil.new_exp ~loc:Ins.loc (Const(CWStr i64_l))
+    | LChr c -> [], Cil.new_exp ~loc:Ins.loc (Const(CChr c))
     | LReal {r_literal=s; r_nearest=f; r_lower=l; r_upper=u} ->
       if l <> u then
 	Sd_options.Self.warning ~current:true ~once:true
 	  "approximating a real number by a float";
-      [], Cil.new_exp ~loc:Cil.builtinLoc (Const(CReal(f, FLongDouble, Some s)))
-    | LEnum e -> [], Cil.new_exp ~loc:Cil.builtinLoc (Const(CEnum e))
+      [], Cil.new_exp ~loc:Ins.loc (Const(CReal(f, FLongDouble, Some s)))
+    | LEnum e -> [], Cil.new_exp ~loc:Ins.loc (Const(CEnum e))
 
   method private translate_var lv =
     let varname =
@@ -306,8 +307,7 @@ class gather_insertions props = object(self)
 	  [ii_0; ii_1; ii_2], Cil.evar v
 	| _ -> [], b'
       in
-      let loc = Cil.builtinLoc in
-      let e' = Cil.new_exp ~loc (BinOp(op,a',e,(Cil.typeOf a'))) in
+      let e' = Cil.new_exp ~loc:Ins.loc (BinOp(op,a',e,(Cil.typeOf a'))) in
       i_0 @ i_1 @ i_2, e'.enode
     else
       let inserts_0, x = self#translate_term a in
@@ -382,7 +382,7 @@ class gather_insertions props = object(self)
 	      (Cil.evar var).enode
 	    | _ ->
 	      inserts_0 @ inserts_1,
-	      (Cil.mkBinOp ~loc:Cil.builtinLoc op x y).enode
+	      (Cil.mkBinOp ~loc:Ins.loc op x y).enode
 	  end
 	| _ -> assert false (* unreachable ? *)
       end
@@ -595,7 +595,7 @@ class gather_insertions props = object(self)
   | Tbase_addr _ -> assert false
   | Toffset _ -> assert false
   | Tblock_length _ -> assert false
-  | Tnull -> [], (Cil.zero ~loc:Cil.builtinLoc).enode
+  | Tnull -> [], Ins.zero.enode
   | TLogic_coerce (lt,t) -> self#translate_logic_coerce lt t
   | TCoerce (t,ty) -> self#translate_coerce t ty
   | TCoerceE (t, {term_type=(Linteger|Lreal) as lt}) ->
@@ -614,7 +614,7 @@ class gather_insertions props = object(self)
 
   method private translate_term t =
     let ins, enode = self#translate_term_node t in
-    ins, Cil.new_exp ~loc:Cil.builtinLoc enode
+    ins, Cil.new_exp ~loc:Ins.loc enode
 
   method private translate_lhost = function
   | TVar lv -> [], Var(self#translate_var lv)
@@ -651,7 +651,7 @@ class gather_insertions props = object(self)
       let fresh_var = self#fresh_Z_varinfo() in
       let ins_0, t' = aux() in
       let ins_1 = Ins.decl_varinfo fresh_var in
-      let e_t' = Cil.new_exp ~loc:Cil.builtinLoc (Lval t') in
+      let e_t' = Cil.new_exp ~loc:Ins.loc (Lval t') in
       let ins_2 = Instru(Ins.instru_Z_init_set fresh_var e_t') in
       ins_0 @ [ins_1; ins_2], Cil.var fresh_var
     | Lreal -> assert false (* TODO *)
@@ -745,7 +745,7 @@ class gather_insertions props = object(self)
   method private translate_equiv p q =
     let inserts_0, pred1_var = self#translate_pnamed p in
     let inserts_1, pred2_var = self#translate_pnamed q in
-    let loc = Cil.builtinLoc in
+    let loc = Ins.loc in
     let not_pred1_var = Cil.new_exp ~loc (UnOp(LNot, pred1_var, Cil.intType)) in
     let not_pred2_var = Cil.new_exp ~loc (UnOp(LNot, pred2_var, Cil.intType)) in
     let exp1 = Cil.mkBinOp ~loc LOr not_pred1_var pred2_var in
@@ -754,7 +754,7 @@ class gather_insertions props = object(self)
 
   method private translate_not p =
     let ins, p' = self#translate_pnamed p in
-    ins, Cil.new_exp ~loc:Cil.builtinLoc (UnOp(LNot, p', Cil.intType))
+    ins, Cil.new_exp ~loc:Ins.loc (UnOp(LNot, p', Cil.intType))
 
   method private translate_pif t p q =
     let inserts_0, term_var = self#translate_term t in
@@ -822,7 +822,7 @@ class gather_insertions props = object(self)
 	let ii_4 = Instru(Ins.instru_Z_cmp_ui tmp'' y' (Cil.evar tmp)) in
 	let e1 = Ins.cmp Rge (Cil.evar tmp') Ins.zero in
 	let e2 = Ins.cmp Rlt (Cil.evar tmp'') Ins.zero in
-	let e3 = Cil.mkBinOp ~loc:Cil.builtinLoc LAnd e1 e2 in
+	let e3 = Cil.mkBinOp ~loc:Ins.loc LAnd e1 e2 in
 	let lvar = Cil.var var in
 	let insert_3 = Instru(Ins.instru_affect lvar e3) in
 	let insert_4 = Instru(Ins.instru_Z_clear y') in
@@ -835,7 +835,7 @@ class gather_insertions props = object(self)
 	let i_2 = Instru(Ins.instru_pc_dim ltmp x') in
 	let e1 = Ins.cmp Rge y' Ins.zero in
 	let e2 = Ins.cmp Rgt (Cil.evar tmp) y' in
-	[i_1; i_2], Cil.mkBinOp ~loc:Cil.builtinLoc LAnd e1 e2
+	[i_1; i_2], Cil.mkBinOp ~loc:Ins.loc LAnd e1 e2
       | _ -> assert false (* unreachable *)
     in
     inserts_0 @ inserts_1 @ inserts, ret
@@ -876,8 +876,7 @@ class gather_insertions props = object(self)
 	    let e_var = Cil.evar var in
 	    let exp2 =
 	      if forall then e_var
-	      else
-		Cil.new_exp ~loc:Cil.builtinLoc (UnOp(LNot,e_var,Cil.intType))
+	      else Cil.new_exp ~loc:Ins.loc (UnOp(LNot,e_var,Cil.intType))
 	    in
 	    let ins_b_0, goal_var = self#translate_pnamed goal in
 	    let ins_b_1 = Instru(Ins.instru_affect lvar goal_var) in
@@ -887,7 +886,7 @@ class gather_insertions props = object(self)
 	    let i_3 = Instru(Ins.instru_Z_cmp tmp e_fresh_iter t2') in
 	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
 	    let e1 = Ins.cmp r2 (Cil.evar tmp) Ins.zero in
-	    let e2 = Cil.mkBinOp ~loc:Cil.builtinLoc LAnd e1 exp2 in
+	    let e2 = Cil.mkBinOp ~loc:Ins.loc LAnd e1 exp2 in
 	    let insert_5 = Ins.ins_for Skip e2 Skip inserts_block in
 	    let insert_6 = Instru(Ins.instru_Z_clear e_fresh_iter) in
 	    let insert_7 = Instru(Ins.instru_Z_clear t1') in
@@ -914,8 +913,7 @@ class gather_insertions props = object(self)
 	    let e_var = Cil.evar var in
 	    let exp2 =
 	      if forall then e_var
-	      else
-		Cil.new_exp ~loc:Cil.builtinLoc (UnOp(LNot,e_var,Cil.intType))
+	      else Cil.new_exp ~loc:Ins.loc (UnOp(LNot,e_var,Cil.intType))
 	    in
 	    let ins_b_0, goal_var = self#translate_pnamed goal in 
 	    let ins_b_1 = Instru(Ins.instru_affect lvar goal_var) in
@@ -925,7 +923,7 @@ class gather_insertions props = object(self)
 	    let i_3 = Instru(Ins.instru_Z_cmp_si tmp e_fresh_iter t2') in
 	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
 	    let e1 = Ins.cmp r2 (Cil.evar tmp) Ins.zero in
-	    let e2 = Cil.mkBinOp ~loc:Cil.builtinLoc LAnd e1 exp2 in
+	    let e2 = Cil.mkBinOp ~loc:Ins.loc LAnd e1 exp2 in
 	    let insert_5 = Ins.ins_for Skip e2 Skip inserts_block in
 	    let insert_6 = Instru(Ins.instru_Z_clear e_fresh_iter) in
 	    let insert_7 = Instru(Ins.instru_Z_clear t1') in
@@ -940,7 +938,7 @@ class gather_insertions props = object(self)
 	let inserts_2, t2' = self#translate_term t2 in
 	let liter = Cil.var iter in
 	let init = Ins.instru_affect liter (match r1 with
-	  | Rlt -> Cil.mkBinOp ~loc:Cil.builtinLoc PlusA t1' Ins.one
+	  | Rlt -> Cil.mkBinOp ~loc:Ins.loc PlusA t1' Ins.one
 	  | Rle -> t1'
 	  | _ -> assert false)
 	in
@@ -949,10 +947,10 @@ class gather_insertions props = object(self)
 	let e1 = Ins.cmp r2 e_iter t2' in
 	let e2 =
 	  if forall then e_var
-	  else Cil.new_exp ~loc:Cil.builtinLoc (UnOp(LNot,e_var,Cil.intType))
+	  else Cil.new_exp ~loc:Ins.loc (UnOp(LNot,e_var,Cil.intType))
 	in
-	let exp2 = Cil.mkBinOp ~loc:Cil.builtinLoc LAnd e1 e2 in
-	let e3 = Cil.mkBinOp ~loc:Cil.builtinLoc PlusA e_iter Ins.one in
+	let exp2 = Cil.mkBinOp ~loc:Ins.loc LAnd e1 e2 in
+	let e3 = Cil.mkBinOp ~loc:Ins.loc PlusA e_iter Ins.one in
 	let next = Ins.instru_affect liter e3 in
 	let ins_b_0, goal_var = self#translate_pnamed goal in
 	let ins_b_1 = Instru(Ins.instru_affect lvar goal_var) in
@@ -1483,7 +1481,7 @@ class gather_insertions props = object(self)
       let ins, v = self#translate_predicate(self#subst_pred pred.ip_content) in
       (* untreated predicates are translated as True *)
       if v <> Ins.one then
-	let e = Cil.new_exp ~loc:Cil.builtinLoc (UnOp (LNot, v, Cil.intType)) in
+	let e = Cil.new_exp ~loc:Ins.loc (UnOp (LNot, v, Cil.intType)) in
 	ins @ [Ins.ins_if e [Instru(Ins.instru_ret Ins.zero)] []]
       else ins
     in
@@ -1598,7 +1596,7 @@ class gather_insertions props = object(self)
 	      let tmp = self#fresh_ctype_varinfo Cil.ulongType in
 	      let i_1 = Ins.decl_varinfo tmp in
 	      let i_2 = Instru(Ins.instru_Z_get_si tmp h') in
-	      let loc = Cil.builtinLoc in
+	      let loc = Ins.loc in
 	      let e_tmp = Cil.evar tmp in
 	      let e1 = Cil.new_exp ~loc (SizeOf ty) in
 	      let e2 = Cil.mkBinOp ~loc Mult e_tmp e1 in
@@ -1619,7 +1617,7 @@ class gather_insertions props = object(self)
 	      inserts_0 @ [insert_1; i_1;i_2; insert_2; i_3; insert_3; insert_4]
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
-	      let loc = Cil.builtinLoc in
+	      let loc = Ins.loc in
 	      let e1 = Cil.new_exp ~loc (SizeOf ty) in
 	      let e2 = Cil.mkBinOp ~loc Mult h' e1 in
 	      let insert_2 = Instru(Ins.instru_malloc my_old_ptr e2) in
@@ -1637,7 +1635,7 @@ class gather_insertions props = object(self)
 	      inserts_0 @ [insert_1; insert_2; insert_3]
 	  end
 	| [] ->
-	  let e = Cil.new_exp ~loc:Cil.builtinLoc (Lval my_ptr) in
+	  let e = Cil.new_exp ~loc:Ins.loc (Lval my_ptr) in
 	  [Instru(Ins.instru_affect my_old_ptr e)]
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
@@ -1651,7 +1649,7 @@ class gather_insertions props = object(self)
     in
     let inserts_decl, inserts_before = do_varinfo varinfo in
     let do_varinfo v =
-      let loc = Cil.builtinLoc in
+      let loc = Ins.loc in
       let rec dealloc_aux my_old_ptr = function
 	| [] -> []
 	| _ :: [] ->
@@ -1739,7 +1737,7 @@ class gather_insertions props = object(self)
       | [] -> insertions, ret
       | h :: t ->
 	let ins, v = self#translate_predicate (subst_pred h.ip_content) in
-	let e = Cil.mkBinOp ~loc:Cil.builtinLoc LAnd ret v in
+	let e = Cil.mkBinOp ~loc:Ins.loc LAnd ret v in
 	aux (insertions @ ins) e t
     in
     aux [] Ins.one pred_list
@@ -1749,14 +1747,14 @@ class gather_insertions props = object(self)
       | [] -> insertions, ret
       | h :: t ->
 	let ins, v = self#cond_of_assumes h in
-	let e = Cil.mkBinOp ~loc:Cil.builtinLoc LOr ret v in
+	let e = Cil.mkBinOp ~loc:Ins.loc LOr ret v in
 	aux (insertions @ ins) e t
     in
     aux [] Ins.zero pred_lists
 
   method private pc_assert_exception pred msg id prop =
     let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
-    let e = Cil.new_exp ~loc:Cil.builtinLoc (UnOp(LNot, var, Cil.intType)) in
+    let e = Cil.new_exp ~loc:Ins.loc (UnOp(LNot, var, Cil.intType)) in
     let insert_1 = Ins.ins_if e [Instru(Pc_exn(msg, id))] [] in
     translated_properties <- prop :: translated_properties;
     inserts_0 @ [insert_1]
