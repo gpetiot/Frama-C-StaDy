@@ -236,10 +236,6 @@ class gather_insertions props = object(self)
 
   method private translate_constant = function
     | Integer (_i, str_opt) ->
-    (* let unsigned = false in *)
-    (* let ikind = *)
-    (*   if Cil.fitsInInt IInt i then IInt else Cil.intKindForValue i unsigned in *)
-    (* CInt64 (i, ikind, str_opt) *)
       let fresh_var = self#fresh_Z_varinfo() in
       let insert_0 = Ins.decl_varinfo fresh_var in
       let str = Cil.mkString ~loc:Ins.loc (Extlib.the str_opt) in
@@ -289,7 +285,7 @@ class gather_insertions props = object(self)
       let i_2 = Instru(Ins.instru_Z_init ret) in
       let i_3 = Instru(Ins.instru_Z_ui_sub ret Ins.zero e) in
       let i_4 = Instru(Ins.instru_Z_clear e) in
-      i_0 @ [i_1; i_2; i_3; i_4], e.enode
+      i_0 @ [i_1; i_2; i_3; i_4], Lval(Cil.var ret)
     | Lreal -> assert false (* TODO: reals *)
     | _ -> let ins, e = self#translate_term t in ins, UnOp(op,e,(Cil.typeOf e))
 
