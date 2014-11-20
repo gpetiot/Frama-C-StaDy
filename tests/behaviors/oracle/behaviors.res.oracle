@@ -18,33 +18,33 @@ void f(int x, int y, int z)
   old_z = z;
   {
     {
-      if(((1 && x >= y) && x >= z)) {
+      if(x >= y && x >= z) {
         int __stady_pred_0;
         __stady_pred_0 = old_y <= old_x;
         if(__stady_pred_0) {
           __stady_pred_0 = old_z <= old_x;
         }
-        if(!(__stady_pred_0)) {
+        if(! __stady_pred_0) {
           pathcrawler_assert_exception("Post-condition!",15);
         }
       }
-      if(((1 && y >= x) && y >= z)) {
+      if(y >= x && y >= z) {
         int __stady_pred_1;
         __stady_pred_1 = old_x <= old_y;
         if(__stady_pred_1) {
           __stady_pred_1 = old_z <= old_y;
         }
-        if(!(__stady_pred_1)) {
+        if(! __stady_pred_1) {
           pathcrawler_assert_exception("Post-condition!",8);
         }
       }
-      if(((1 && z >= x) && z >= y)) {
+      if(z >= x && z >= y) {
         int __stady_pred_2;
         __stady_pred_2 = old_x <= old_z;
         if(__stady_pred_2) {
           __stady_pred_2 = old_y <= old_z;
         }
-        if(!(__stady_pred_2)) {
+        if(! __stady_pred_2) {
           pathcrawler_assert_exception("Post-condition!",0);
         }
       }
