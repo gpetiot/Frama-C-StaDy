@@ -187,7 +187,6 @@ let mpz_t() =
   let ty = Sd_options.mpz_t in
   let ty = !ty in
   let ty = Extlib.the ty in
-  let ty = ty.ttype in
   ty
 
 

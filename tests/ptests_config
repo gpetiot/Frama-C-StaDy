@@ -1,0 +1,7 @@
+DEFAULT_SUITES= stmt_spec behaviors quantified binary_search bubble_sort insertion_sort merge_arrays merge_sort quick_sort tcas first_subset next_subset deleteSubstr1a deleteSubstr1c deleteSubstr2b deleteSubstr3 deleteSubstr4 sum_array num_of struct overflow_should_crash overflow_shouldnt_crash
+TOPLEVEL_PATH=/usr/local/bin/frama-c
+FRAMAC_SHARE=/usr/local/share/frama-c
+FRAMAC_PLUGIN=.
+FRAMAC_PLUGIN_GUI=./gui
+FRAMAC_LIB=/usr/local/lib/frama-c
+OCAMLRUNPARAM=
