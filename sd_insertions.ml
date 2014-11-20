@@ -235,10 +235,11 @@ class gather_insertions props = object(self)
   method translated_properties() = Sd_utils.no_repeat translated_properties
 
   method private translate_constant = function
-    | Integer (_i, str_opt) ->
+    | Integer (i, str_opt) ->
       let fresh_var = self#fresh_Z_varinfo() in
       let insert_0 = Ins.decl_varinfo fresh_var in
-      let str = Cil.mkString ~loc:Ins.loc (Extlib.the str_opt) in
+      let str = try Extlib.the str_opt with _ -> Integer.to_string i in
+      let str = Cil.mkString ~loc:Ins.loc str in
       let insert_1 = Instru(Ins.instru_Z_init_set_str fresh_var str) in
       [insert_0; insert_1], Cil.evar fresh_var
     | LStr str -> [], Cil.new_exp ~loc:Ins.loc (Const(CStr str))

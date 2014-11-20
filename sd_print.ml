@@ -137,7 +137,7 @@ let pp_instruction fmt = function
   | Sd_insertions.IZ_ui_sub (v,e,e') ->
     Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)" pp_var v pp_exp e pp_exp e'
   | Sd_insertions.IZ_binop (o,v,e,e') ->
-    Format.fprintf fmt " __gmpz_%a(%a, %a, %a)"
+    Format.fprintf fmt "__gmpz_%a(%a, %a, %a)"
       pp_garith o pp_var v pp_exp e pp_exp e'
   | Sd_insertions.IZ_binop_ui (o,v,e,e') ->
     Format.fprintf fmt "__gmpz_%a_ui(%a, %a, %a)"
