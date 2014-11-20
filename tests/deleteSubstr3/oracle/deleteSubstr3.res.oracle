@@ -422,11 +422,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
                 if(__stady_pred_10) {
                   __stady_pred_10 = j <= sublen;
                 }
-<<<<<<< HEAD
-                if(!(__stady_pred_10)) {
-=======
                 if(! __stady_pred_10) {
->>>>>>> feature/use_cil_exp
                   pathcrawler_assert_exception("Loop invariant not preserved!",24);
                 }
                 int __stady_pred_12;

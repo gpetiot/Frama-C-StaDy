@@ -72,8 +72,6 @@ module Ins = struct
   let my_Z_varinfo s = my_varinfo (Sd_utils.mpz_t()) s
   let my_pred_varinfo s = my_varinfo Cil.intType s
 
-  (* pred_expr: replace by exp later *)
-
   (* expressions *)
   let zero = Cil.zero ~loc
   let one = Cil.one ~loc
