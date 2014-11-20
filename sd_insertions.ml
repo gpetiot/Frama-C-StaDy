@@ -33,11 +33,11 @@ type instruction =
 | IZ_binop of binop * exp * exp * exp
 | IZ_binop_ui of binop * exp * exp  * exp
 | IZ_binop_si of binop * exp * exp * exp
-| IZ_get_ui of varinfo * exp
-| IZ_get_si of varinfo * exp
-| IZ_cmp of varinfo * exp * exp
-| IZ_cmp_ui of varinfo * exp * exp
-| IZ_cmp_si of varinfo * exp * exp
+| IZ_get_ui of lval * exp
+| IZ_get_si of lval * exp
+| IZ_cmp of lval * exp * exp
+| IZ_cmp_ui of lval * exp * exp
+| IZ_cmp_si of lval * exp * exp
 
 type insertion =
 | Instru of instruction
@@ -228,7 +228,7 @@ class gather_insertions props = object(self)
 	| Linteger ->
 	  let v = self#fresh_ctype_varinfo Cil.intType in
 	  let ii_0 = Ins.decl_varinfo v in
-	  let ii_1 = Instru(Ins.instru_Z_get_si v b') in
+	  let ii_1 = Instru(Ins.instru_Z_get_si (Cil.var v) b') in
 	  let ii_2 = Instru(Ins.instru_Z_clear b') in
 	  [ii_0; ii_1; ii_2], Cil.evar v
 	| _ -> [], b'
@@ -298,7 +298,7 @@ class gather_insertions props = object(self)
 	      let tmp = self#fresh_ctype_varinfo Cil.intType in
 	      let e_tmp = Cil.evar tmp in
 	      let i_1 = Ins.decl_varinfo tmp in
-	      let i_2 =	Instru(Ins.instru_Z_cmp tmp x y) in
+	      let i_2 =	Instru(Ins.instru_Z_cmp (Cil.var tmp) x y) in
 	      let op = binop_to_relation op in
 	      let lvar = Cil.var var in
 	      let insert_3 =
@@ -326,7 +326,7 @@ class gather_insertions props = object(self)
       let tmp = self#fresh_ctype_varinfo Cil.intType in
       let e_tmp = Cil.evar tmp in
       let i_1 = Ins.decl_varinfo tmp in
-      let i_2 = Instru(Ins.instru_Z_cmp_si tmp cond' Ins.zero) in
+      let i_2 = Instru(Ins.instru_Z_cmp_si (Cil.var tmp) cond' Ins.zero) in
       let inserts_then_0, then_b' = self#translate_term then_b in
       let inserts_then = inserts_then_0
 	@ [Instru(Ins.instru_Z_set e_fresh_var then_b');
@@ -396,12 +396,13 @@ class gather_insertions props = object(self)
     let inserts_0, v = self#translate_term t in
     let var = self#fresh_ctype_varinfo ty in
     let insert_1 = Ins.decl_varinfo var in
-    let insert_2 =
+    let get =
       match ty with
-      | x when Cil.isUnsignedInteger x -> Instru(Ins.instru_Z_get_ui var v)
-      | x when Cil.isSignedInteger x -> Instru(Ins.instru_Z_get_si var v)
+      | x when Cil.isUnsignedInteger x -> Ins.instru_Z_get_ui
+      | x when Cil.isSignedInteger x -> Ins.instru_Z_get_si
       | _ -> assert false
     in
+    let insert_2 = Instru(get (Cil.var var) v) in
     let insert_3 = Instru(Ins.instru_Z_clear v) in
     inserts_0 @ [insert_1; insert_2; insert_3], (Cil.evar var).enode
   | Lreal -> assert false (* TODO: reals *)
@@ -444,8 +445,8 @@ class gather_insertions props = object(self)
     let tmp = self#fresh_ctype_varinfo Cil.intType in
     let e_tmp = Cil.evar tmp in
     let ii_1 = Ins.decl_varinfo tmp in
-    let ii_2 = Instru(Ins.instru_Z_cmp tmp e_fresh_iter up) in
-    let ii_3 = Instru(Ins.instru_Z_cmp tmp e_fresh_iter up) in
+    let ii_2 = Instru(Ins.instru_Z_cmp (Cil.var tmp) e_fresh_iter up) in
+    let ii_3 = Instru(Ins.instru_Z_cmp (Cil.var tmp) e_fresh_iter up) in
     let ins_b = ins_b_0 @ [ins_b_1; ins_b_2; ii_3] @ clear_lambda in
     let i_7 = IFor(Skip, Ins.cmp Rle e_tmp Ins.zero, Skip, ins_b) in
     let e_fresh_iter = Cil.evar fresh_iter in
@@ -496,7 +497,7 @@ class gather_insertions props = object(self)
   	| x when Cil.isSignedInteger x -> Ins.instru_Z_get_si
   	| _ -> assert false (* unreachable *)
       in
-      let insert_2 = Instru(get var e) in
+      let insert_2 = Instru(get (Cil.var var) e) in
       let insert_3 = Instru(Ins.instru_Z_clear e) in
       inserts_0 @ [insert_1; insert_2; insert_3], (Cil.evar var).enode
     | Lreal -> assert false (* reals *)
@@ -564,7 +565,7 @@ class gather_insertions props = object(self)
       | Linteger ->
   	let tmp = self#fresh_ctype_varinfo Cil.intType in
   	let i_1 = Ins.decl_varinfo tmp in
-  	let i_2 = Instru(Ins.instru_Z_get_si tmp e) in
+	let i_2 = Instru(Ins.instru_Z_get_si (Cil.var tmp) e) in
 	ins @ [i_1; i_2], Cil.evar tmp
       | Lreal -> assert false (* unreachable *)
       | _ -> ins, e
@@ -607,7 +608,7 @@ class gather_insertions props = object(self)
       | Linteger, Linteger ->
 	let var = self#fresh_ctype_varinfo Cil.intType in
 	let insert_2 = Ins.decl_varinfo var in
-	let insert_3 = Instru(Ins.instru_Z_cmp var t1' t2') in
+	let insert_3 = Instru(Ins.instru_Z_cmp (Cil.var var) t1' t2') in
 	[insert_2; insert_3], Ins.cmp rel (Cil.evar var) Ins.zero
       | Linteger, Ctype x ->
 	let var = self#fresh_ctype_varinfo Cil.intType in
@@ -617,7 +618,7 @@ class gather_insertions props = object(self)
 	  else if Cil.isSignedInteger x then Ins.instru_Z_cmp_si
 	  else assert false
 	in
-	let insert_3 = Instru(cmp var t1' t2') in
+	let insert_3 = Instru(cmp (Cil.var var) t1' t2') in
 	[insert_2; insert_3], Ins.cmp rel (Cil.evar var) Ins.zero
       | Lreal, Lreal -> assert false (* TODO: reals *)
       | Ctype x, Linteger ->
@@ -632,7 +633,7 @@ class gather_insertions props = object(self)
 	let e_fresh_var = Cil.evar fresh_var' in
 	let insert_3 = Instru(init_set e_fresh_var t1') in
 	let insert_4 = Ins.decl_varinfo var in
-	let insert_5 = Instru(Ins.instru_Z_cmp var e_fresh_var t2') in
+	let insert_5 = Instru(Ins.instru_Z_cmp (Cil.var var) e_fresh_var t2') in
 	let insert_7 = Instru(Ins.instru_Z_clear e_fresh_var) in
 	[insert_2; insert_3; insert_4; insert_5; insert_7],
 	Ins.cmp rel (Cil.evar var) Ins.zero
@@ -698,7 +699,7 @@ class gather_insertions props = object(self)
       | Linteger ->
 	let tmp = self#fresh_ctype_varinfo Cil.intType in
 	let i_1 = Ins.decl_varinfo tmp in
-	let i_2 = Instru(Ins.instru_Z_cmp_si tmp term_var Ins.zero) in
+	let i_2 = Instru(Ins.instru_Z_cmp_si (Cil.var tmp) term_var Ins.zero) in
 	Ins.cmp Rneq (Cil.evar tmp) Ins.zero,
 	[i_1; i_2],
 	[Instru(Ins.instru_Z_clear term_var)]
@@ -745,14 +746,15 @@ class gather_insertions props = object(self)
 	let insert_2 = Ins.decl_varinfo var in
 	let tmp' = self#fresh_ctype_varinfo Cil.intType in
 	let ii_1 = Ins.decl_varinfo tmp' in
-	let ii_2 = Instru(Ins.instru_Z_cmp_ui tmp' y' Ins.zero) in
+	let ii_2 = Instru(Ins.instru_Z_cmp_ui (Cil.var tmp') y' Ins.zero) in
 	let tmp = self#fresh_ctype_varinfo Cil.intType in
 	let i_1 = Ins.decl_varinfo tmp in
 	let ltmp = Cil.var tmp in
 	let i_2 = Instru(Ins.instru_pc_dim ltmp x') in
 	let tmp'' = self#fresh_ctype_varinfo Cil.intType in
 	let ii_3 = Ins.decl_varinfo tmp'' in
-	let ii_4 = Instru(Ins.instru_Z_cmp_ui tmp'' y' (Cil.evar tmp)) in
+	let ii_4 =
+	  Instru(Ins.instru_Z_cmp_ui (Cil.var tmp'') y' (Cil.evar tmp)) in
 	let e1 = Ins.cmp Rge (Cil.evar tmp') Ins.zero in
 	let e2 = Ins.cmp Rlt (Cil.evar tmp'') Ins.zero in
 	let e3 = Cil.mkBinOp ~loc:Ins.loc LAnd e1 e2 in
@@ -804,7 +806,7 @@ class gather_insertions props = object(self)
 	    in
 	    let tmp = self#fresh_ctype_varinfo Cil.intType in
 	    let i_1 = Ins.decl_varinfo tmp in
-	    let i_2 = Instru(Ins.instru_Z_cmp tmp e_fresh_iter t2') in
+	    let i_2 = Instru(Ins.instru_Z_cmp (Cil.var tmp) e_fresh_iter t2') in
 	    let e_var = Cil.evar var in
 	    let exp2 =
 	      if forall then e_var
@@ -815,7 +817,7 @@ class gather_insertions props = object(self)
 	    let ins_b_2 =
 	      Instru(Ins.instru_Z_binop_ui
 		   PlusA e_fresh_iter e_fresh_iter Ins.one) in
-	    let i_3 = Instru(Ins.instru_Z_cmp tmp e_fresh_iter t2') in
+	    let i_3 = Instru(Ins.instru_Z_cmp (Cil.var tmp) e_fresh_iter t2') in
 	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
 	    let e1 = Ins.cmp r2 (Cil.evar tmp) Ins.zero in
 	    let e2 = Cil.mkBinOp ~loc:Ins.loc LAnd e1 exp2 in
@@ -841,7 +843,8 @@ class gather_insertions props = object(self)
 	    in
 	    let tmp = self#fresh_ctype_varinfo Cil.intType in
 	    let i_1 = Ins.decl_varinfo tmp in
-	    let i_2 = Instru(Ins.instru_Z_cmp_si tmp e_fresh_iter t2') in
+	    let ltmp = Cil.var tmp in
+	    let i_2 = Instru(Ins.instru_Z_cmp_si ltmp e_fresh_iter t2') in
 	    let e_var = Cil.evar var in
 	    let exp2 =
 	      if forall then e_var
@@ -852,7 +855,7 @@ class gather_insertions props = object(self)
 	    let ins_b_2 =
 	      Instru(Ins.instru_Z_binop_ui
 		       PlusA e_fresh_iter e_fresh_iter Ins.one) in
-	    let i_3 = Instru(Ins.instru_Z_cmp_si tmp e_fresh_iter t2') in
+	    let i_3 = Instru(Ins.instru_Z_cmp_si ltmp e_fresh_iter t2') in
 	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; i_3] in
 	    let e1 = Ins.cmp r2 (Cil.evar tmp) Ins.zero in
 	    let e2 = Cil.mkBinOp ~loc:Ins.loc LAnd e1 exp2 in
@@ -1074,7 +1077,7 @@ class gather_insertions props = object(self)
 	    | Linteger ->
 	      let tmp = self#fresh_ctype_varinfo Cil.ulongType in
 	      let i_1 = Ins.decl_varinfo tmp in
-	      let i_2 = Instru(Ins.instru_Z_get_si tmp h') in
+	      let i_2 = Instru(Ins.instru_Z_get_si (Cil.var tmp) h') in
 	      let loc = Ins.loc in
 	      let e_tmp = Cil.evar tmp in
 	      let e1 = Cil.new_exp ~loc (SizeOf ty) in
@@ -1086,7 +1089,7 @@ class gather_insertions props = object(self)
 	      let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	      let lmy_iterator = Cil.var my_iterator in
 	      let init = Ins.instru_affect lmy_iterator Ins.zero in
-	      let i_3 = Instru(Ins.instru_Z_get_si tmp h') in
+	      let i_3 = Instru(Ins.instru_Z_get_si (Cil.var tmp) h') in
 	      let e_iterator = Cil.evar my_iterator in
 	      let cond = Ins.cmp Rlt e_iterator e_tmp in
 	      let e3 = Cil.mkBinOp ~loc PlusA e_iterator Ins.one in
@@ -1148,7 +1151,7 @@ class gather_insertions props = object(self)
 	      let init = Ins.instru_affect lmy_iterator Ins.zero in
 	      let tmp = self#fresh_ctype_varinfo Cil.intType in
 	      let i_1 = Ins.decl_varinfo tmp in
-	      let i_2 = Instru(Ins.instru_Z_get_si tmp h') in
+	      let i_2 = Instru(Ins.instru_Z_get_si (Cil.var tmp) h') in
 	      let e_iterator = Cil.evar my_iterator in
 	      let e_tmp = Cil.evar tmp in
 	      let cond = Ins.cmp Rlt e_iterator e_tmp in
@@ -1312,7 +1315,8 @@ class gather_insertions props = object(self)
 	      let tmp = self#fresh_ctype_varinfo Cil.intType in
 	      let e_tmp = Cil.evar tmp in
 	      let i_1 = Ins.decl_varinfo tmp in
-	      let i_2 = Instru(Ins.instru_Z_cmp_ui tmp term' Ins.zero) in
+	      let ltmp = Cil.var tmp in
+	      let i_2 = Instru(Ins.instru_Z_cmp_ui ltmp term' Ins.zero) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
 	      self#insert (BegStmt stmt.sid) i_1;
 	      self#insert (BegStmt stmt.sid) i_2;
@@ -1329,12 +1333,12 @@ class gather_insertions props = object(self)
 	      self#insert (BegIter stmt.sid) insert_3;
 	      let inserts_4, term' = self#translate_term term in
 	      List.iter (self#insert (EndIter stmt.sid)) inserts_4;
-	      let i_3 = Instru(Ins.instru_Z_cmp_ui tmp e_variant Ins.zero) in
+	      let i_3 = Instru(Ins.instru_Z_cmp_ui ltmp e_variant Ins.zero) in
 	      let instr = Instru(Pc_exn("Variant non positive", id)) in
 	      self#insert (EndIter stmt.sid) i_3;
 	      self#insert (EndIter stmt.sid)
 		(Ins.ins_if(Ins.cmp Rlt e_tmp Ins.zero) [instr] []);
-	      let i_4 = Instru(Ins.instru_Z_cmp tmp term' e_variant) in
+	      let i_4 = Instru(Ins.instru_Z_cmp ltmp term' e_variant) in
 	      let instr = Instru(Pc_exn("Variant non decreasing", id)) in
 	      self#insert (EndIter stmt.sid) i_4;
 	      self#insert (EndIter stmt.sid)

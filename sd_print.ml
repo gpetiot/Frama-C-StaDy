@@ -11,7 +11,6 @@ let pp_label fmt = function
   | Sd_insertions.EndIter s -> Format.fprintf fmt "EndIter %i" s
   | Sd_insertions.Glob -> Format.fprintf fmt "Global"
 
-let pp_var = Printer.pp_varinfo
 let pp_lval = Printer.pp_lval
 let pp_exp = Printer.pp_exp
 
@@ -64,15 +63,15 @@ let pp_instruction fmt = function
     Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
       pp_garith o pp_exp e pp_exp e' pp_exp e''
   | Sd_insertions.IZ_get_ui (v,e) ->
-    Format.fprintf fmt "%a = __gmpz_get_ui(%a)" pp_var v pp_exp e
+    Format.fprintf fmt "%a = __gmpz_get_ui(%a)" pp_lval v pp_exp e
   | Sd_insertions.IZ_get_si (v,e) ->
-    Format.fprintf fmt "%a = __gmpz_get_si(%a)" pp_var v pp_exp e
+    Format.fprintf fmt "%a = __gmpz_get_si(%a)" pp_lval v pp_exp e
   | Sd_insertions.IZ_cmp (v,e,e') ->
-    Format.fprintf fmt "%a = __gmpz_cmp(%a, %a)" pp_var v pp_exp e pp_exp e'
+    Format.fprintf fmt "%a = __gmpz_cmp(%a, %a)" pp_lval v pp_exp e pp_exp e'
   | Sd_insertions.IZ_cmp_ui (v,e,e') ->
-    Format.fprintf fmt "%a = __gmpz_cmp_ui(%a, %a)" pp_var v pp_exp e pp_exp e'
+    Format.fprintf fmt "%a = __gmpz_cmp_ui(%a, %a)" pp_lval v pp_exp e pp_exp e'
   | Sd_insertions.IZ_cmp_si (v,e,e') ->
-    Format.fprintf fmt "%a = __gmpz_cmp_si(%a, %a)" pp_var v pp_exp e pp_exp e'
+    Format.fprintf fmt "%a = __gmpz_cmp_si(%a, %a)" pp_lval v pp_exp e pp_exp e'
 
 let rec pp_insertion ?(line_break = true) fmt ins =
   let rec aux fmt = function
