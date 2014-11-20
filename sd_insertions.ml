@@ -234,14 +234,21 @@ class gather_insertions props = object(self)
 
   method translated_properties() = Sd_utils.no_repeat translated_properties
 
-  method private translate_constant = function
+  method private translate_constant ty = function
     | Integer (i, str_opt) ->
-      let fresh_var = self#fresh_Z_varinfo() in
-      let insert_0 = Ins.decl_varinfo fresh_var in
-      let str = try Extlib.the str_opt with _ -> Integer.to_string i in
-      let str = Cil.mkString ~loc:Ins.loc str in
-      let insert_1 = Instru(Ins.instru_Z_init_set_str fresh_var str) in
-      [insert_0; insert_1], Cil.evar fresh_var
+      begin
+	match ty with
+	| Linteger ->
+	  let fresh_var = self#fresh_Z_varinfo() in
+	  let insert_0 = Ins.decl_varinfo fresh_var in
+	  let str = try Extlib.the str_opt with _ -> Integer.to_string i in
+	  let str = Cil.mkString ~loc:Ins.loc str in
+	  let insert_1 = Instru(Ins.instru_Z_init_set_str fresh_var str) in
+	  [insert_0; insert_1], Cil.evar fresh_var
+	| Ctype (TInt(ikind,_)) ->
+	  [], Cil.new_exp ~loc:Ins.loc (Const(CInt64(i,ikind,str_opt)))
+	| _ -> assert false (* unreachable *)
+      end
     | LStr str -> [], Cil.new_exp ~loc:Ins.loc (Const(CStr str))
     | LWStr i64_l -> [], Cil.new_exp ~loc:Ins.loc (Const(CWStr i64_l))
     | LChr c -> [], Cil.new_exp ~loc:Ins.loc (Const(CChr c))
@@ -572,7 +579,8 @@ class gather_insertions props = object(self)
     | _ -> assert false (* unreachable *)
 
   method private translate_term_node t = match t.term_node with
-  | TConst c -> let ins, e = self#translate_constant c in ins, e.enode
+  | TConst c ->
+    let ins, e = self#translate_constant t.term_type c in ins, e.enode
   | TLval tl -> let ins, lv = self#translate_lval tl in ins, Lval lv
   | TSizeOf ty -> [], SizeOf ty
   | TSizeOfE t -> let ins, e = self#translate_term t in ins, SizeOfE e
