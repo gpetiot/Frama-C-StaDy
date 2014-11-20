@@ -363,9 +363,9 @@ class print_insertions insertions () = object(self)
   | Sd_insertions.IRet _
   (* | Sd_insertions.Ret _ *) -> ()
   | Sd_insertions.IZ_clear _
-  (* | Sd_insertions.Z_clear _ *) -> gmpz_clear <- true
+  (* | Sd_insertions.Z_clear _ *) -> gmpz_clear <- true; gmp <- true
   | Sd_insertions.IZ_init _
-  (* | Sd_insertions.Z_init _ *) -> gmpz_init <- true; gmp <- true
+  (* | Sd_insertions.Z_init _ *) -> gmpz_init <- true
   | Sd_insertions.IZ_init_set _
   (* | Sd_insertions.Z_init_set _ *) -> gmpz_init_set <- true
   | Sd_insertions.IZ_init_set_ui _
@@ -448,8 +448,8 @@ class print_insertions insertions () = object(self)
 };\
 typedef struct __anonstruct___mpz_struct_1 __mpz_struct;\
 typedef __mpz_struct mpz_t[1];";
-      gmpz_get_ui, "extern unsigned int __gmpz_get_ui(mpz_t);";
-      gmpz_get_si, "extern signed int __gmpz_get_si(mpz_t);";
+      gmpz_get_ui, "extern unsigned long int __gmpz_get_ui(mpz_t);";
+      gmpz_get_si, "extern signed long int __gmpz_get_si(mpz_t);";
       gmpz_cmp_ui, "extern int __gmpz_cmp_ui(mpz_t, unsigned long int);";
       gmpz_cmp_si, "extern int __gmpz_cmp_si(mpz_t, signed long int);";
       gmpz_cmp, "extern int __gmpz_cmp(mpz_t, mpz_t);";
