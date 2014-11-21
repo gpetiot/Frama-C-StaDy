@@ -314,29 +314,26 @@ class gather_insertions props = object(self)
   method private translate_tif cond then_b else_b =
     match then_b.term_type with
     | Linteger ->
-      let fresh_var = self#fresh_Z_varinfo() in
-      let insert_0 = decl_varinfo fresh_var in
-      let e_fresh_var= Cil.evar fresh_var in
-      let insert_1 = Instru(instru_Z_init e_fresh_var) in
-      let inserts_2, cond' = self#translate_term cond in
+      let ret = self#fresh_Z_varinfo() in
+      let i_0 = decl_varinfo ret in
+      let e_ret= Cil.evar ret in
+      let i_1 = Instru(instru_Z_init e_ret) in
+      let i_2, cond' = self#translate_term cond in
       let tmp = self#fresh_ctype_varinfo Cil.intType in
       let e_tmp = Cil.evar tmp in
-      let i_1 = decl_varinfo tmp in
-      let i_2 = Instru(instru_Z_cmp_si (Cil.var tmp) cond' zero) in
+      let i_3 = decl_varinfo tmp in
+      let i_4 = Instru(instru_Z_cmp_si (Cil.var tmp) cond' zero) in
       let inserts_then_0, then_b' = self#translate_term then_b in
-      let inserts_then = inserts_then_0
-	@ [Instru(instru_Z_set e_fresh_var then_b');
-	   Instru(instru_Z_clear then_b')]
-      in
+      let set_1 = Instru(instru_Z_set e_ret then_b') in
+      let clear_1 = Instru(instru_Z_clear then_b') in
+      let inserts_then = inserts_then_0	@ [set_1 ; clear_1] in
       let inserts_else_0, else_b' = self#translate_term else_b in
-      let inserts_else = inserts_else_0
-	@ [Instru(instru_Z_set e_fresh_var else_b');
-	   Instru(instru_Z_clear else_b')]
-      in
-      let insert_3 = ins_if (cmp Rneq e_tmp zero) inserts_then inserts_else in
-      let insert_4 = Instru(instru_Z_clear cond') in
-      [insert_0; insert_1] @ inserts_2 @ [i_1; i_2; insert_3; insert_4],
-      e_fresh_var.enode
+      let set_2 = Instru(instru_Z_set e_ret else_b') in
+      let clear_2 = Instru(instru_Z_clear else_b') in
+      let inserts_else = inserts_else_0 @ [ set_2 ; clear_2] in
+      let i_5 = ins_if (cmp Rneq e_tmp zero) inserts_then inserts_else in
+      let i_6 = Instru(instru_Z_clear cond') in
+      [i_0; i_1] @ i_2 @ [i_3; i_4; i_5; i_6], e_ret.enode
     | Lreal -> assert false (* TODO: reals *)
     | _ -> assert false (* unreachable *)
 
