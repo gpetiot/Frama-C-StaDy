@@ -85,3 +85,13 @@ module Behavior_Reachability =
       let dependencies = [Ast.self]
       let size = 64
      end)
+
+module Externals =
+  State_builder.Hashtbl
+    (Datatype.String.Hashtbl)
+    (Cil_datatype.Varinfo)
+    (struct
+      let name = "Externals"
+      let dependencies = [Ast.self]
+      let size = 31
+     end)

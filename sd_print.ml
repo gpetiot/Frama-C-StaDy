@@ -13,64 +13,16 @@ let pp_label fmt = function
 
 let pp_lval = Printer.pp_lval
 let pp_exp = Printer.pp_exp
+let pp_list = Sd_debug.pp_list ~sep:", "
 
-let pp_garith fmt = function
-  | PlusA -> Format.fprintf fmt "add"
-  | MinusA -> Format.fprintf fmt "sub"
-  | Mult -> Format.fprintf fmt "mul"
-  | Div -> Format.fprintf fmt "tdiv_q"
-  | Mod -> Format.fprintf fmt "tdiv_r"
-  | _ -> assert false (* not used by the translation *)
 
 let pp_instruction fmt = function
   | Sd_insertions.Skip -> ()
-  | Sd_insertions.Pc_to_framac s ->
-    Format.fprintf fmt "pathcrawler_to_framac(\"%s\")" s
-  | Sd_insertions.Pc_exn(s,i)->
-    Format.fprintf fmt"pathcrawler_assert_exception(\"%s\",%i)" s i
   | Sd_insertions.IAffect(v,e)-> Format.fprintf fmt "%a = %a" pp_lval v pp_exp e
-  | Sd_insertions.IFree e -> Format.fprintf fmt "free(%a)" pp_exp e
-  | Sd_insertions.IPc_dim (v,e) ->
-    Format.fprintf fmt "%a = pathcrawler_dimension(%a)" pp_lval v pp_exp e
-  | Sd_insertions.IPc_assume e ->
-    Format.fprintf fmt "pathcrawler_assume(%a)" pp_exp e
-  | Sd_insertions.IMalloc (v,e) ->
-    Format.fprintf fmt "%a = malloc(%a)" pp_lval v pp_exp e
-  | Sd_insertions.IZ_clear e -> Format.fprintf fmt "__gmpz_clear(%a)" pp_exp e
-  | Sd_insertions.IZ_init e -> Format.fprintf fmt "__gmpz_init(%a)" pp_exp e
-  | Sd_insertions.IZ_init_set (e,e') ->
-    Format.fprintf fmt "__gmpz_init_set(%a, %a)" pp_exp e pp_exp e'
-  | Sd_insertions.IZ_init_set_ui (e,e') ->
-    Format.fprintf fmt "__gmpz_init_set_ui(%a, %a)" pp_exp e pp_exp e'
-  | Sd_insertions.IZ_init_set_si (e,e') ->
-    Format.fprintf fmt "__gmpz_init_set_si(%a, %a)" pp_exp e pp_exp e'
-  | Sd_insertions.IZ_init_set_str (e,e') ->
-    Format.fprintf fmt "__gmpz_init_set_str(%a, %a, 10)" pp_exp e pp_exp e'
-  | Sd_insertions.IZ_set (e,e') ->
-    Format.fprintf fmt "__gmpz_set(%a, %a)" pp_exp e pp_exp e'
-  | Sd_insertions.IZ_abs (e,e') ->
-    Format.fprintf fmt "%a = __gmpz_set(%a)" pp_exp e pp_exp e'
-  | Sd_insertions.IZ_ui_sub (e,e',e'') ->
-    Format.fprintf fmt "__gmpz_ui_sub(%a, %a, %a)" pp_exp e pp_exp e' pp_exp e''
-  | Sd_insertions.IZ_binop (o,e,e',e'') ->
-    Format.fprintf fmt "__gmpz_%a(%a, %a, %a)"
-      pp_garith o pp_exp e pp_exp e' pp_exp e''
-  | Sd_insertions.IZ_binop_ui (o,e,e',e'') ->
-    Format.fprintf fmt "__gmpz_%a_ui(%a, %a, %a)"
-      pp_garith o pp_exp e pp_exp e' pp_exp e''
-  | Sd_insertions.IZ_binop_si (o,e,e',e'') ->
-    Format.fprintf fmt "__gmpz_%a_si(%a, %a, %a)"
-      pp_garith o pp_exp e pp_exp e' pp_exp e''
-  | Sd_insertions.IZ_get_ui (v,e) ->
-    Format.fprintf fmt "%a = __gmpz_get_ui(%a)" pp_lval v pp_exp e
-  | Sd_insertions.IZ_get_si (v,e) ->
-    Format.fprintf fmt "%a = __gmpz_get_si(%a)" pp_lval v pp_exp e
-  | Sd_insertions.IZ_cmp (v,e,e') ->
-    Format.fprintf fmt "%a = __gmpz_cmp(%a, %a)" pp_lval v pp_exp e pp_exp e'
-  | Sd_insertions.IZ_cmp_ui (v,e,e') ->
-    Format.fprintf fmt "%a = __gmpz_cmp_ui(%a, %a)" pp_lval v pp_exp e pp_exp e'
-  | Sd_insertions.IZ_cmp_si (v,e,e') ->
-    Format.fprintf fmt "%a = __gmpz_cmp_si(%a, %a)" pp_lval v pp_exp e pp_exp e'
+  | Sd_insertions.ICall(None,e,args) ->
+    Format.fprintf fmt "%a(%a)" pp_exp e (pp_list pp_exp) args
+  | Sd_insertions.ICall(Some v,e,args) ->
+    Format.fprintf fmt "%a = %a(%a)" pp_lval v pp_exp e (pp_list pp_exp) args
 
 let rec pp_insertion ?(line_break = true) fmt ins =
   let rec aux fmt = function
@@ -244,48 +196,39 @@ class print_insertions insertions () = object(self)
   method private instru = function
   | Sd_insertions.Skip -> ()
   | Sd_insertions.IAffect _ -> ()
-  | Sd_insertions.IFree _ -> free <- true
-  | Sd_insertions.Pc_to_framac _ -> pc_to_fc <- true
-  | Sd_insertions.Pc_exn _ -> pc_assert_exc <- true
-  | Sd_insertions.IZ_clear _ -> gmpz_clear <- true; gmp <- true
-  | Sd_insertions.IZ_init _ -> gmpz_init <- true
-  | Sd_insertions.IZ_init_set _ -> gmpz_init_set <- true
-  | Sd_insertions.IZ_init_set_ui _ -> gmpz_init_set_ui <- true
-  | Sd_insertions.IZ_init_set_si _ -> gmpz_init_set_si <- true
-  | Sd_insertions.IZ_init_set_str _ -> gmpz_init_set_str <- true
-  | Sd_insertions.IZ_set _ -> gmpz_set <- true
-  | Sd_insertions.IZ_abs _ -> gmpz_abs <- true
-  | Sd_insertions.IZ_ui_sub _ -> gmpz_ui_sub <- true
-  | Sd_insertions.IZ_binop (binop,_,_,_) ->
-    begin
-      match binop with
-      | PlusA -> gmpz_add <- true
-      | MinusA -> gmpz_sub <- true
-      | Mult -> gmpz_mul <- true
-      | Div -> gmpz_tdiv_q <- true
-      | Mod -> gmpz_tdiv_r <- true
-      | _ -> ()
-    end
-  | Sd_insertions.IZ_binop_ui (binop,_,_,_) ->
-    begin
-      match binop with
-      | PlusA -> gmpz_add_ui <- true
-      | MinusA -> gmpz_sub_ui <- true
-      | Mult -> gmpz_mul_ui <- true
-      | Div -> gmpz_tdiv_q_ui <- true
-      | Mod -> gmpz_tdiv_r_ui <- true
-      | _ -> ()
-    end
-  | Sd_insertions.IZ_binop_si (Mult,_,_,_) -> gmpz_mul_si <- true
-  | Sd_insertions.IZ_binop_si _ -> ()
-  | Sd_insertions.IZ_get_ui _ -> gmpz_get_ui <- true
-  | Sd_insertions.IZ_get_si _ -> gmpz_get_si <- true
-  | Sd_insertions.IPc_dim _ -> pc_dim <- true
-  | Sd_insertions.IPc_assume _ -> pc_assume <- true
-  | Sd_insertions.IMalloc _ -> malloc <- true
-  | Sd_insertions.IZ_cmp _ -> gmpz_cmp <- true
-  | Sd_insertions.IZ_cmp_ui _ -> gmpz_cmp_ui <- true
-  | Sd_insertions.IZ_cmp_si _ -> gmpz_cmp_si <- true
+  | Sd_insertions.ICall (_,{enode=Lval(Var v,_)},_) ->
+    if v.vname = "malloc" then malloc <- true
+    else if v.vname = "free" then free <- true
+    else if v.vname = "pathcrawler_dimension" then pc_dim <- true
+    else if v.vname = "pathcrawler_assert_exception" then pc_assert_exc <- true
+    else if v.vname = "pathcrawler_assume" then pc_assume <- true
+    else if v.vname = "pathcrawler_to_framac" then pc_to_fc <- true
+    else if v.vname = "__gmpz_clear" then (gmpz_clear <- true; gmp <- true)
+    else if v.vname = "__gmpz_init" then gmpz_init <- true
+    else if v.vname = "__gmpz_init_set" then gmpz_init_set <- true
+    else if v.vname = "__gmpz_init_set_ui" then gmpz_init_set_ui <- true
+    else if v.vname = "__gmpz_init_set_si" then gmpz_init_set_si <- true
+    else if v.vname = "__gmpz_init_set_str" then gmpz_init_set_str <- true
+    else if v.vname = "__gmpz_set" then gmpz_set <- true
+    else if v.vname = "__gmpz_abs" then gmpz_abs <- true
+    else if v.vname = "__gmpz_add" then gmpz_add <- true
+    else if v.vname = "__gmpz_add_ui" then gmpz_add_ui <- true
+    else if v.vname = "__gmpz_sub" then gmpz_sub <- true
+    else if v.vname = "__gmpz_sub_ui" then gmpz_sub_ui <- true
+    else if v.vname = "__gmpz_ui_sub" then gmpz_ui_sub <- true
+    else if v.vname = "__gmpz_mul" then gmpz_mul <- true
+    else if v.vname = "__gmpz_mul_ui" then gmpz_mul_ui <- true
+    else if v.vname = "__gmpz_mul_si" then gmpz_mul_si <- true
+    else if v.vname = "__gmpz_tdiv_q" then gmpz_tdiv_q <- true
+    else if v.vname = "__gmpz_tdiv_q_ui" then gmpz_tdiv_q_ui <- true
+    else if v.vname = "__gmpz_tdiv_r" then gmpz_tdiv_r <- true
+    else if v.vname = "__gmpz_tdiv_r_ui" then gmpz_tdiv_r_ui <- true
+    else if v.vname = "__gmpz_get_ui" then gmpz_get_ui <- true
+    else if v.vname = "__gmpz_get_si" then gmpz_get_si <- true
+    else if v.vname = "__gmpz_cmp" then gmpz_cmp <- true
+    else if v.vname = "__gmpz_cmp_ui" then gmpz_cmp_ui <- true
+    else if v.vname = "__gmpz_cmp_si" then gmpz_cmp_si <- true
+  | _ -> ()
 
   method private insertion = function
   | Sd_insertions.Instru i -> self#instru i

@@ -13,31 +13,8 @@ type label =
 
 type instruction =
 | Skip
-| Pc_to_framac of string
-| Pc_exn of string * int
 | IAffect of lval * exp
-
-| IFree of exp
-| IPc_dim of lval * exp
-| IPc_assume of exp
-| IMalloc of lval * exp
-| IZ_clear of exp
-| IZ_init of exp
-| IZ_init_set of exp * exp
-| IZ_init_set_ui of exp * exp
-| IZ_init_set_si of exp * exp
-| IZ_init_set_str of exp * exp
-| IZ_set of exp * exp
-| IZ_abs of exp * exp
-| IZ_ui_sub of exp * exp * exp
-| IZ_binop of binop * exp * exp * exp
-| IZ_binop_ui of binop * exp * exp  * exp
-| IZ_binop_si of binop * exp * exp * exp
-| IZ_get_ui of lval * exp
-| IZ_get_si of lval * exp
-| IZ_cmp of lval * exp * exp
-| IZ_cmp_ui of lval * exp * exp
-| IZ_cmp_si of lval * exp * exp
+| ICall of lval option * exp * exp list
 
 type insertion =
 | Instru of instruction
@@ -77,71 +54,63 @@ module Ins = struct
   let zero = Cil.zero ~loc
   let one = Cil.one ~loc
   let cmp rel e1 e2 = Cil.mkBinOp ~loc (relation_to_binop rel) e1 e2
-
-  let void = TVoid []
-  let ptr ty = TPtr(ty,[])
-  let arg ty = "", ty, []
-  let char = Cil.charType and int = Cil.intType
-  and ulong = Cil.ulongType and long = Cil.longType
-  let mpz = Sd_utils.mpz_t()
-  let fct name ret args = Cil.makeGlobalVar name (TFun(ret,Some args,false,[]))
-
-  (* varinfos of functions *)
-  let v_malloc = fct " malloc" (ptr void) [arg ulong]
-  let v_free = fct "free" void [arg(ptr void)]
-  let v_pc_dim = fct "pathcrawler_dimension" int [arg(ptr void)]
-  let v_pc_exc = fct "pathcrawler_assert_exception" int [arg(ptr char); arg int]
-  let v_pc_assume = fct "pathcrawler_assume" void [arg int]
-  let v_pc_to_fc = fct "pathcrawler_to_framac" void [arg (ptr char)]
-  let v_Z_clear = fct "__gmpz_clear" void [arg mpz]
-  let v_Z_init = fct "__gmpz_init" void [arg mpz]
-  let v_Z_init_set = fct "__gmpz_init_set" void [arg mpz; arg mpz]
-  let v_Z_init_set_ui = fct "__gmpz_init_set_ui" void [arg mpz; arg ulong]
-  let v_Z_init_set_si = fct "__gmpz_init_set_si" void [arg mpz; arg long]
-  let v_Z_init_set_str =
-    fct "__gmpz_init_set_str" void [arg mpz; arg (ptr char); arg int]
-  let v_Z_set = fct "__gmpz_set" void [arg mpz; arg mpz]
-  let v_Z_abs = fct "__gmpz_abs" void [arg mpz; arg mpz]
-  let v_Z_add = fct "__gmpz_add" void [arg mpz; arg mpz; arg mpz]
-  let v_Z_add_ui = fct "__gmpz_add_ui" void [arg mpz; arg mpz; arg ulong]
-  let v_Z_sub = fct "__gmpz_sub" void [arg mpz; arg mpz; arg mpz]
-  let v_Z_sub_ui = fct "__gmpz_sub_ui" void [arg mpz; arg mpz; arg ulong]
-  let v_Z_ui_sub = fct "__gmpz_ui_sub" void [arg mpz; arg ulong; arg mpz]
-  let v_Z_mul = fct "__gmpz_mul" void [arg mpz; arg mpz; arg mpz]
-  let v_Z_mul_ui = fct "__gmpz_mul_ui" void [arg mpz; arg mpz; arg ulong]
-  let v_Z_mul_si = fct "__gmpz_mul_si" void [arg mpz; arg mpz; arg long]
-  let v_Z_tdiv_q = fct "__gmpz_tdiv_q" void [arg mpz; arg mpz; arg mpz]
-  let v_Z_tdiv_q_ui = fct "__gmpz_tdiv_q_ui" void [arg mpz; arg mpz; arg ulong]
-  let v_Z_tdiv_r = fct "__gmpz_tdiv_r" void [arg mpz; arg mpz; arg mpz]
-  let v_Z_tdiv_r_ui = fct "__gmpz_tdiv_r_ui" void [arg mpz; arg mpz; arg ulong]
-  let v_Z_get_ui = fct "__gmpz_get_ui" ulong [arg mpz]
-  let v_Z_get_si = fct "__gmpz_get_si" long [arg mpz]
-  let v_Z_cmp = fct "__gmpz_cmp" int [arg mpz; arg mpz]
-  let v_Z_cmp_ui = fct "__gmpz_cmp_ui" int [arg mpz; arg ulong]
-  let v_Z_cmp_si = fct "__gmpz_cmp_si" int [arg mpz; arg long]
+  let get str = Sd_states.Externals.find str
 
   (* instructions *)
   let instru_affect a b = IAffect(a,b)
-  let instru_free a = IFree a
-  let instru_pc_dim a b = IPc_dim(a,b)
-  let instru_malloc a b = IMalloc(a,b)
-  let instru_Z_clear a = IZ_clear a
-  let instru_Z_init a = IZ_init a
-  let instru_Z_init_set a b = IZ_init_set(a,b)
-  let instru_Z_init_set_ui a b = IZ_init_set_ui(a,b)
-  let instru_Z_init_set_si a b = IZ_init_set_si(a,b)
-  let instru_Z_init_set_str a b = IZ_init_set_str(a,b)
-  let instru_Z_set a b = IZ_set(a,b)
-  let instru_Z_abs a b = IZ_abs(a,b)
-  let instru_Z_ui_sub a b c = IZ_ui_sub(a,b,c)
-  let instru_Z_binop a b c d = IZ_binop(a,b,c,d)
-  let instru_Z_binop_ui a b c d = IZ_binop_ui(a,b,c,d)
-  let instru_Z_binop_si a b c d = IZ_binop_si(a,b,c,d)
-  let instru_Z_get_ui a b = IZ_get_ui(a,b)
-  let instru_Z_get_si a b = IZ_get_si(a,b)
-  let instru_Z_cmp a b c = IZ_cmp(a,b,c)
-  let instru_Z_cmp_ui a b c = IZ_cmp_ui(a,b,c)
-  let instru_Z_cmp_si a b c = IZ_cmp_si(a,b,c)
+  let instru_malloc a b = ICall(Some a,Cil.evar (get "malloc"),[b])
+  let instru_free a = ICall(None,Cil.evar (get "free"),[a])
+  let instru_pc_dim a b = ICall(Some a,Cil.evar(get"pathcrawler_dimension"),[b])
+  let pc_exc a b =
+    ICall(None,Cil.evar(get"pathcrawler_assert_exception"),[a;b])
+  let pc_assume a = ICall(None,Cil.evar (get "pathcrawler_assume"),[a])
+  let pc_to_fc a = ICall(None,Cil.evar (get "pathcrawler_to_framac"),[a])
+  let instru_Z_clear a = ICall(None,Cil.evar (get "__gmpz_clear"),[a])
+  let instru_Z_init a = ICall(None,Cil.evar (get "__gmpz_init"),[a])
+  let instru_Z_init_set a b =ICall(None,Cil.evar(get"__gmpz_init_set"),[a;b])
+  let instru_Z_init_set_ui a b =
+    ICall(None,Cil.evar (get "__gmpz_init_set_ui"),[a;b])
+  let instru_Z_init_set_si a b =
+    ICall(None,Cil.evar (get "__gmpz_init_set_si"),[a;b])
+  let instru_Z_init_set_str a b c =
+    ICall(None,Cil.evar (get "__gmpz_init_set_str"),[a;b;c])
+  let instru_Z_set a b = ICall(None,Cil.evar (get "__gmpz_set"),[a;b])
+  let instru_Z_abs a b = ICall(None,Cil.evar (get "__gmpz_abs"),[a;b])
+  let instru_Z_add a b c = ICall(None,Cil.evar (get "__gmpz_add"),[a;b;c])
+  let instru_Z_add_ui a b c =ICall(None,Cil.evar(get"__gmpz_add_ui"),[a;b;c])
+  let instru_Z_sub a b c = ICall(None,Cil.evar (get "__gmpz_sub"),[a;b;c])
+  let instru_Z_sub_ui a b c =ICall(None,Cil.evar(get"__gmpz_sub_ui"),[a;b;c])
+  let instru_Z_ui_sub a b c =ICall(None,Cil.evar(get"__gmpz_ui_sub"),[a;b;c])
+  let instru_Z_mul a b c = ICall(None,Cil.evar (get "__gmpz_mul"),[a;b;c])
+  let instru_Z_mul_ui a b c =ICall(None,Cil.evar(get"__gmpz_mul_ui"),[a;b;c])
+  let instru_Z_mul_si a b c =ICall(None,Cil.evar(get"__gmpz_mul_si"),[a;b;c])
+  let instru_Z_tdiv_q a b c =ICall(None,Cil.evar(get"__gmpz_tdiv_q"),[a;b;c])
+  let instru_Z_tdiv_q_ui a b c =
+    ICall(None,Cil.evar(get "__gmpz_tdiv_q_ui"),[a;b;c])
+  let instru_Z_tdiv_r a b c =ICall(None,Cil.evar(get"__gmpz_tdiv_r"),[a;b;c])
+  let instru_Z_tdiv_r_ui a b c =
+    ICall(None,Cil.evar (get "__gmpz_tdiv_r_ui"),[a;b;c])
+  let instru_Z_get_ui a b = ICall(Some a,Cil.evar (get "__gmpz_get_ui"),[b])
+  let instru_Z_get_si a b = ICall(Some a,Cil.evar (get "__gmpz_get_si"),[b])
+  let instru_Z_cmp a b c = ICall(Some a,Cil.evar (get "__gmpz_cmp"),[b;c])
+  let instru_Z_cmp_ui a b c =ICall(Some a,Cil.evar(get"__gmpz_cmp_ui"),[b;c])
+  let instru_Z_cmp_si a b c =ICall(Some a,Cil.evar(get"__gmpz_cmp_si"),[b;c])
+
+  let instru_Z_binop = function
+    | PlusA -> instru_Z_add
+    | MinusA -> instru_Z_sub
+    | Mult -> instru_Z_mul
+    | Div -> instru_Z_tdiv_q
+    | Mod -> instru_Z_tdiv_r
+    | _ -> assert false
+
+  let instru_Z_binop_ui = function 
+    | PlusA -> instru_Z_add_ui
+    | MinusA -> instru_Z_sub_ui
+    | Mult -> instru_Z_mul_ui
+    | Div -> instru_Z_tdiv_q_ui
+    | Mod -> instru_Z_tdiv_r_ui
+    | _ -> assert false
 
   (* insertions *)
   let decl_varinfo v = Decl v
@@ -207,7 +176,10 @@ class gather_insertions props = object(self)
 	  let str = try Extlib.the str_opt with _ -> Integer.to_string i in
 	  let str = Cil.mkString ~loc:Ins.loc str in
 	  let e_fresh_var = Cil.evar fresh_var in
-	  let insert_1 = Instru(Ins.instru_Z_init_set_str e_fresh_var str) in
+	  let ten =
+	    Cil.new_exp ~loc:Ins.loc
+	      (Const(CInt64(Integer.of_int 10, Cil_types.IInt, Some("10")))) in
+	  let insert_1 =Instru(Ins.instru_Z_init_set_str e_fresh_var str ten) in
 	  [insert_0; insert_1], Cil.evar fresh_var
 	| Ctype (TInt(ikind,_)) ->
 	  [], Cil.new_exp ~loc:Ins.loc (Const(CInt64(i,ikind,str_opt)))
@@ -301,17 +273,13 @@ class gather_insertions props = object(self)
 	    | Linteger, Ctype ty' when Cil.isUnsignedInteger ty' ->
 	      [Instru(Ins.instru_Z_binop_ui op e_fresh_var x y)]
 	    | Linteger, Ctype ty' when Cil.isSignedInteger ty' ->
-	      [Instru(Ins.instru_Z_binop_si op e_fresh_var x y)]
+	      assert(op = Mult);
+	      [Instru(Ins.instru_Z_mul_si e_fresh_var x y)]
 	    | Ctype ty', Linteger when Cil.isUnsignedInteger ty' ->
-	      if op = PlusA || op = Mult then
-	        [Instru(Ins.instru_Z_binop_ui op e_fresh_var y x)]
-	      else
-		assert false (* TODO *)
+	      assert(op = MinusA);
+	      [Instru(Ins.instru_Z_ui_sub e_fresh_var x y)]
 	    | Ctype ty', Linteger when Cil.isSignedInteger ty' ->
-	      if op = PlusA || op = Mult then
-	        [Instru(Ins.instru_Z_binop_si op e_fresh_var y x)]
-	      else
-		assert false (* TODO *)
+	      assert false
 	    | Ctype(TInt _), Ctype(TInt _) ->
 	      let fresh_var1 = self#fresh_Z_varinfo() in
 	      let insert_4 = Ins.decl_varinfo fresh_var1 in
@@ -1066,7 +1034,7 @@ class gather_insertions props = object(self)
 		  Sd_states.Behavior_Reachability.replace
 		    bhv_to_reach_cpt (kf, b, false);
 		  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-		  [Instru(Pc_to_framac str)]
+		  [Instru(self#pc_to_fc str)]
 		end
 	      else []
 	    in
@@ -1081,7 +1049,7 @@ class gather_insertions props = object(self)
 		  Sd_states.Behavior_Reachability.replace
 		    bhv_to_reach_cpt (kf, b, false);
 		  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-		  [Instru(Pc_to_framac str)]
+		  [Instru(self#pc_to_fc str)]
 		end
 	      else []
 	    in
@@ -1277,10 +1245,19 @@ class gather_insertions props = object(self)
     in
     aux [] Ins.zero pred_lists
 
+  method private pc_exc str i =
+    let str = Cil.mkString ~loc:Ins.loc str in
+    let i = Cil.new_exp ~loc:Ins.loc
+      (Const(CInt64(Integer.of_int i, Cil_types.IInt, Some(string_of_int i))))
+    in
+    Ins.pc_exc str i
+
+  method private pc_to_fc str = Ins.pc_to_fc (Cil.mkString ~loc:Ins.loc str)
+
   method private pc_assert_exception pred msg id prop =
     let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
     let e = Cil.new_exp ~loc:Ins.loc (UnOp(LNot, var, Cil.intType)) in
-    let insert_1 = Ins.ins_if e [Instru(Pc_exn(msg, id))] [] in
+    let insert_1 = Ins.ins_if e [Instru(self#pc_exc msg id)] [] in
     translated_properties <- prop :: translated_properties;
     inserts_0 @ [insert_1]
 
@@ -1360,7 +1337,7 @@ class gather_insertions props = object(self)
 	      let i_1 = Ins.decl_varinfo tmp in
 	      let ltmp = Cil.var tmp in
 	      let i_2 = Instru(Ins.instru_Z_cmp_ui ltmp term' Ins.zero) in
-	      let instr = Instru(Pc_exn("Variant non positive", id)) in
+	      let instr = Instru(self#pc_exc "Variant non positive" id) in
 	      self#insert (BegStmt stmt.sid) i_1;
 	      self#insert (BegStmt stmt.sid) i_2;
 	      self#insert (BegStmt stmt.sid)
@@ -1377,12 +1354,12 @@ class gather_insertions props = object(self)
 	      let inserts_4, term' = self#translate_term term in
 	      List.iter (self#insert (EndIter stmt.sid)) inserts_4;
 	      let i_3 = Instru(Ins.instru_Z_cmp_ui ltmp e_variant Ins.zero) in
-	      let instr = Instru(Pc_exn("Variant non positive", id)) in
+	      let instr = Instru(self#pc_exc "Variant non positive" id) in
 	      self#insert (EndIter stmt.sid) i_3;
 	      self#insert (EndIter stmt.sid)
 		(Ins.ins_if(Ins.cmp Rlt e_tmp Ins.zero) [instr] []);
 	      let i_4 = Instru(Ins.instru_Z_cmp ltmp term' e_variant) in
-	      let instr = Instru(Pc_exn("Variant non decreasing", id)) in
+	      let instr = Instru(self#pc_exc "Variant non decreasing" id) in
 	      self#insert (EndIter stmt.sid) i_4;
 	      self#insert (EndIter stmt.sid)
 		(Ins.ins_if(Ins.cmp Rge e_tmp Ins.zero) [instr] []);
@@ -1393,7 +1370,7 @@ class gather_insertions props = object(self)
 	      let inserts_0, term' = self#translate_term term in
 	      List.iter (self#insert (BegStmt stmt.sid)) inserts_0;
 	      let cond = Ins.cmp Rlt term' Ins.zero in
-	      let instr = Instru(Pc_exn("Variant non positive", id)) in
+	      let instr = Instru(self#pc_exc "Variant non positive" id) in
 	      self#insert (BegStmt stmt.sid) (Ins.ins_if cond [instr] []);
 	      let inserts_1, term' = self#translate_term term in
 	      List.iter (self#insert (BegIter stmt.sid)) inserts_1;
@@ -1406,10 +1383,10 @@ class gather_insertions props = object(self)
 	      List.iter (self#insert (EndIter stmt.sid)) inserts_2;
 	      let e_variant = Cil.evar variant in
 	      let cond = Ins.cmp Rlt e_variant Ins.zero in
-	      let instr = Instru(Pc_exn("Variant non positive", id)) in
+	      let instr = Instru(self#pc_exc "Variant non positive" id) in
 	      self#insert (EndIter stmt.sid) (Ins.ins_if cond [instr] []);
 	      let cond = Ins.cmp Rge term' e_variant in
-	      let instr = Instru(Pc_exn("Variant non decreasing", id)) in
+	      let instr = Instru(self#pc_exc "Variant non decreasing" id) in
 	      self#insert (EndIter stmt.sid) (Ins.ins_if cond [instr] [])
 	  end;
 	  translated_properties <- prop :: translated_properties
@@ -1422,7 +1399,7 @@ class gather_insertions props = object(self)
     if List.mem stmt.sid stmts_to_reach then
       begin
 	let str = Format.sprintf "@@FC:REACHABLE_STMT:%i" stmt.sid in
-	self#insert (BegStmt stmt.sid) (Instru(Pc_to_framac str))
+	self#insert (BegStmt stmt.sid) (Instru(self#pc_to_fc str))
       end;
     let kf = Kernel_function.find_englobing_kf stmt in
     match stmt.skind with
