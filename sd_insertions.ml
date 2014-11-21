@@ -584,49 +584,44 @@ class gather_insertions props = object(self)
   method private translate_rel rel t1 t2 =
     let inserts_0, t1' = self#translate_term t1 in
     let inserts_1, t2' = self#translate_term t2 in
-    let clear_t1 = match t1.term_type with
-	Linteger -> [Instru(instru_Z_clear t1')] | _ -> []
-    in
-    let clear_t2 = match t2.term_type with
-	Linteger -> [Instru(instru_Z_clear t2')] | _ -> []
-    in
+    let clear_t1 = Instru(instru_Z_clear t1') in
+    let clear_t2 = Instru(instru_Z_clear t2') in
     let inserts, ret =
       match t1.term_type, t2.term_type with
       | Linteger, Linteger ->
 	let var = self#fresh_ctype_varinfo Cil.intType in
-	let insert_2 = decl_varinfo var in
-	let insert_3 = Instru(instru_Z_cmp (Cil.var var) t1' t2') in
-	[insert_2; insert_3], cmp rel (Cil.evar var) zero
+	let i_2 = decl_varinfo var in
+	let i_3 = Instru(instru_Z_cmp (Cil.var var) t1' t2') in
+	[i_2; i_3; clear_t1; clear_t2], cmp rel (Cil.evar var) zero
       | Linteger, Ctype x ->
 	let var = self#fresh_ctype_varinfo Cil.intType in
-	let insert_2 = decl_varinfo var in
+	let i_2 = decl_varinfo var in
 	let zcmp =
 	  if Cil.isUnsignedInteger x then instru_Z_cmp_ui
 	  else if Cil.isSignedInteger x then instru_Z_cmp_si
 	  else assert false
 	in
-	let insert_3 = Instru(zcmp (Cil.var var) t1' t2') in
-	[insert_2; insert_3], cmp rel (Cil.evar var) zero
+	let i_3 = Instru(zcmp (Cil.var var) t1' t2') in
+	[i_2; i_3; clear_t1], cmp rel (Cil.evar var) zero
       | Lreal, Lreal -> assert false (* TODO: reals *)
       | Ctype x, Linteger ->
 	let var = self#fresh_ctype_varinfo Cil.intType in
 	let fresh_var' = self#fresh_Z_varinfo() in
-	let insert_2 = decl_varinfo fresh_var' in
+	let i_2 = decl_varinfo fresh_var' in
 	let init_set =
 	  if Cil.isUnsignedInteger x then instru_Z_init_set_ui
 	  else if Cil.isSignedInteger x then instru_Z_init_set_si
 	  else assert false
 	in
 	let e_fresh_var = Cil.evar fresh_var' in
-	let insert_3 = Instru(init_set e_fresh_var t1') in
-	let insert_4 = decl_varinfo var in
-	let insert_5 = Instru(instru_Z_cmp (Cil.var var) e_fresh_var t2') in
-	let insert_7 = Instru(instru_Z_clear e_fresh_var) in
-	[insert_2; insert_3; insert_4; insert_5; insert_7],
-	cmp rel (Cil.evar var) zero
+	let i_3 = Instru(init_set e_fresh_var t1') in
+	let i_4 = decl_varinfo var in
+	let i_5 = Instru(instru_Z_cmp (Cil.var var) e_fresh_var t2') in
+	let i_6 = Instru(instru_Z_clear e_fresh_var) in
+	[i_2; i_3; i_4; i_5; i_6; clear_t2], cmp rel (Cil.evar var) zero
       | _ -> [], cmp rel t1' t2'
     in
-    inserts_0 @ inserts_1 @ inserts @ clear_t1 @ clear_t2, ret
+    inserts_0 @ inserts_1 @ inserts, ret
 
   method private translate_and p q =
     let var = self#fresh_pred_varinfo() in
