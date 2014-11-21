@@ -1,5 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/tcas/tcas.c"
-[kernel] preprocessing with "gcc -C -E -I.  gmp.c"
+[kernel] preprocessing with "gcc -C -E -I.  externals.c"
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -742,7 +742,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_2);
         __gmpz_clear(__stady_gmp_3);
         if(! (__stady_term_2 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",47);
+          pathcrawler_assert_exception("Post-condition!", 47);
         }
       }
       mpz_t __stady_gmp_4;
@@ -766,7 +766,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_6);
         __gmpz_clear(__stady_gmp_7);
         if(! (__stady_term_5 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",37);
+          pathcrawler_assert_exception("Post-condition!", 37);
         }
       }
       mpz_t __stady_gmp_8;
@@ -791,7 +791,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_10);
         __gmpz_clear(__stady_gmp_11);
         if(! (__stady_term_8 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",28);
+          pathcrawler_assert_exception("Post-condition!", 28);
         }
       }
       mpz_t __stady_gmp_12;
@@ -816,7 +816,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_14);
         __gmpz_clear(__stady_gmp_15);
         if(! (__stady_term_11 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",34);
+          pathcrawler_assert_exception("Post-condition!", 34);
         }
       }
       mpz_t __stady_gmp_16;
@@ -841,7 +841,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_18);
         __gmpz_clear(__stady_gmp_19);
         if(! (__stady_term_14 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",41);
+          pathcrawler_assert_exception("Post-condition!", 41);
         }
       }
       mpz_t __stady_gmp_20;
@@ -866,7 +866,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_22);
         __gmpz_clear(__stady_gmp_23);
         if(! (__stady_term_17 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",48);
+          pathcrawler_assert_exception("Post-condition!", 48);
         }
       }
       if(Own_Tracked_Alt > Other_Tracked_Alt) {
@@ -879,7 +879,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_24);
         __gmpz_clear(__stady_gmp_25);
         if(! (__stady_term_18 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",55);
+          pathcrawler_assert_exception("Post-condition!", 55);
         }
       }
       if(Own_Tracked_Alt < Other_Tracked_Alt) {
@@ -892,7 +892,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_26);
         __gmpz_clear(__stady_gmp_27);
         if(! (__stady_term_19 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",29);
+          pathcrawler_assert_exception("Post-condition!", 29);
         }
       }
       if(Up_Separation > Down_Separation) {
@@ -905,7 +905,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_28);
         __gmpz_clear(__stady_gmp_29);
         if(! (__stady_term_20 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",5);
+          pathcrawler_assert_exception("Post-condition!", 5);
         }
       }
       if(Up_Separation < Down_Separation) {
@@ -918,7 +918,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_30);
         __gmpz_clear(__stady_gmp_31);
         if(! (__stady_term_21 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",35);
+          pathcrawler_assert_exception("Post-condition!", 35);
         }
       }
     }

@@ -1,5 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_sort/merge_sort.c"
-[kernel] preprocessing with "gcc -C -E -I.  gmp.c"
+[kernel] preprocessing with "gcc -C -E -I.  externals.c"
 tests/merge_sort/merge_sort.c:96:[stady] warning: Native Precondition:
                  \separated(table, ret) unsupported
 [stady:generated-pl] generated Prolog precondition:
@@ -86,7 +86,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   __stady_pred_0 = __stady_term_0 >= 0 && __stady_term_2 < 0;
   __gmpz_clear(__stady_gmp_2);
   if(! __stady_pred_0) {
-    pathcrawler_assert_exception("Pre-condition!",18);
+    pathcrawler_assert_exception("Pre-condition!", 18);
   }
   mpz_t __stady_gmp_3;
   __gmpz_init_set_si(__stady_gmp_3, iEnd);
@@ -107,7 +107,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   __stady_pred_1 = __stady_term_3 >= 0 && __stady_term_5 < 0;
   __gmpz_clear(__stady_gmp_5);
   if(! __stady_pred_1) {
-    pathcrawler_assert_exception("Pre-condition!",26);
+    pathcrawler_assert_exception("Pre-condition!", 26);
   }
   int *old_A;
   int *old_ptr_A;
@@ -159,7 +159,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         __stady_pred_2 = j <= iEnd;
       }
       if(! __stady_pred_2) {
-        pathcrawler_assert_exception("Loop invariant not established!",9);
+        pathcrawler_assert_exception("Loop invariant not established!", 9);
       }
       int __stady_pred_4;
       __stady_pred_4 = iLeft <= i0;
@@ -167,7 +167,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         __stady_pred_4 = i0 <= iRight;
       }
       if(! __stady_pred_4) {
-        pathcrawler_assert_exception("Loop invariant not established!",16);
+        pathcrawler_assert_exception("Loop invariant not established!", 16);
       }
       int __stady_pred_6;
       __stady_pred_6 = iRight <= i1;
@@ -175,7 +175,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         __stady_pred_6 = i1 <= iEnd;
       }
       if(! __stady_pred_6) {
-        pathcrawler_assert_exception("Loop invariant not established!",24);
+        pathcrawler_assert_exception("Loop invariant not established!", 24);
       }
       mpz_t __stady_gmp_8;
       __gmpz_init_set_si(__stady_gmp_8, i0);
@@ -214,7 +214,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
       __gmpz_clear(__stady_gmp_14);
       __gmpz_clear(__stady_gmp_17);
       if(! (__stady_term_10 == 0)) {
-        pathcrawler_assert_exception("Loop invariant not established!",4);
+        pathcrawler_assert_exception("Loop invariant not established!", 4);
       }
       mpz_t __stady_gmp_28;
       __gmpz_init_set_si(__stady_gmp_28, iEnd);
@@ -228,7 +228,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
       int __stady_term_12;
       __stady_term_12 = __gmpz_cmp_ui(__stady_gmp_30, 0);
       if(__stady_term_12 < 0) {
-        pathcrawler_assert_exception("Variant non positive",19);
+        pathcrawler_assert_exception("Variant non positive", 19);
       }
       while (1) {
         mpz_t __stady_gmp_31;
@@ -287,7 +287,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
           __stady_pred_3 = j <= iEnd;
         }
         if(! __stady_pred_3) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",9);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 9);
         }
         int __stady_pred_5;
         __stady_pred_5 = iLeft <= i0;
@@ -295,7 +295,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
           __stady_pred_5 = i0 <= iRight;
         }
         if(! __stady_pred_5) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",16);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 16);
         }
         int __stady_pred_7;
         __stady_pred_7 = iRight <= i1;
@@ -303,7 +303,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
           __stady_pred_7 = i1 <= iEnd;
         }
         if(! __stady_pred_7) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",24);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 24);
         }
         mpz_t __stady_gmp_18;
         __gmpz_init_set_si(__stady_gmp_18, i0);
@@ -342,7 +342,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         __gmpz_clear(__stady_gmp_24);
         __gmpz_clear(__stady_gmp_27);
         if(! (__stady_term_11 == 0)) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",4);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 4);
         }
         mpz_t __stady_gmp_35;
         __gmpz_init_set_si(__stady_gmp_35, iEnd);
@@ -355,11 +355,11 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         __gmpz_clear(__stady_gmp_36);
         __stady_term_12 = __gmpz_cmp_ui(__stady_gmp_34, 0);
         if(__stady_term_12 < 0) {
-          pathcrawler_assert_exception("Variant non positive",19);
+          pathcrawler_assert_exception("Variant non positive", 19);
         }
         __stady_term_12 = __gmpz_cmp(__stady_gmp_37, __stady_gmp_34);
         if(__stady_term_12 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing",19);
+          pathcrawler_assert_exception("Variant non decreasing", 19);
         }
         __gmpz_clear(__stady_gmp_34);
         }
@@ -393,7 +393,7 @@ void CopyArray(int *A, int *B, int n)
   __stady_pred_8 = __stady_term_13 >= 0 && __stady_term_15 < 0;
   __gmpz_clear(__stady_gmp_40);
   if(! __stady_pred_8) {
-    pathcrawler_assert_exception("Pre-condition!",8);
+    pathcrawler_assert_exception("Pre-condition!", 8);
   }
   mpz_t __stady_gmp_41;
   __gmpz_init_set_si(__stady_gmp_41, n);
@@ -414,7 +414,7 @@ void CopyArray(int *A, int *B, int n)
   __stady_pred_9 = __stady_term_16 >= 0 && __stady_term_18 < 0;
   __gmpz_clear(__stady_gmp_43);
   if(! __stady_pred_9) {
-    pathcrawler_assert_exception("Pre-condition!",13);
+    pathcrawler_assert_exception("Pre-condition!", 13);
   }
   int *old_A;
   int *old_ptr_A;
@@ -466,7 +466,7 @@ void CopyArray(int *A, int *B, int n)
         __stady_pred_10 = i <= n;
       }
       if(! __stady_pred_10) {
-        pathcrawler_assert_exception("Loop invariant not established!",0);
+        pathcrawler_assert_exception("Loop invariant not established!", 0);
       }
       mpz_t __stady_gmp_50;
       __gmpz_init_set_si(__stady_gmp_50, n);
@@ -480,7 +480,7 @@ void CopyArray(int *A, int *B, int n)
       int __stady_term_25;
       __stady_term_25 = __gmpz_cmp_ui(__stady_gmp_52, 0);
       if(__stady_term_25 < 0) {
-        pathcrawler_assert_exception("Variant non positive",27);
+        pathcrawler_assert_exception("Variant non positive", 27);
       }
       while (1) {
         mpz_t __stady_gmp_53;
@@ -515,7 +515,7 @@ void CopyArray(int *A, int *B, int n)
           __stady_pred_11 = i <= n;
         }
         if(! __stady_pred_11) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",0);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 0);
         }
         mpz_t __stady_gmp_57;
         __gmpz_init_set_si(__stady_gmp_57, n);
@@ -528,11 +528,11 @@ void CopyArray(int *A, int *B, int n)
         __gmpz_clear(__stady_gmp_58);
         __stady_term_25 = __gmpz_cmp_ui(__stady_gmp_56, 0);
         if(__stady_term_25 < 0) {
-          pathcrawler_assert_exception("Variant non positive",27);
+          pathcrawler_assert_exception("Variant non positive", 27);
         }
         __stady_term_25 = __gmpz_cmp(__stady_gmp_59, __stady_gmp_56);
         if(__stady_term_25 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing",27);
+          pathcrawler_assert_exception("Variant non decreasing", 27);
         }
         __gmpz_clear(__stady_gmp_56);
         }
@@ -586,7 +586,7 @@ void BottomUpSort(int n, int *A, int *B)
   __stady_pred_12 = __stady_term_26 >= 0 && __stady_term_28 < 0;
   __gmpz_clear(__stady_gmp_62);
   if(! __stady_pred_12) {
-    pathcrawler_assert_exception("Pre-condition!",20);
+    pathcrawler_assert_exception("Pre-condition!", 20);
   }
   mpz_t __stady_gmp_63;
   __gmpz_init_set_si(__stady_gmp_63, n);
@@ -607,7 +607,7 @@ void BottomUpSort(int n, int *A, int *B)
   __stady_pred_13 = __stady_term_29 >= 0 && __stady_term_31 < 0;
   __gmpz_clear(__stady_gmp_65);
   if(! __stady_pred_13) {
-    pathcrawler_assert_exception("Pre-condition!",1);
+    pathcrawler_assert_exception("Pre-condition!", 1);
   }
   int old_n;
   old_n = n;
@@ -681,7 +681,7 @@ void BottomUpSort(int n, int *A, int *B)
         __stady_pred_16 = __stady_term_42 <= 0;
       }
       if(! __stady_pred_16) {
-        pathcrawler_assert_exception("Loop invariant not established!",22);
+        pathcrawler_assert_exception("Loop invariant not established!", 22);
       }
       mpz_t __stady_gmp_114;
       __gmpz_init_set_si(__stady_gmp_114, n);
@@ -695,7 +695,7 @@ void BottomUpSort(int n, int *A, int *B)
       int __stady_term_45;
       __stady_term_45 = __gmpz_cmp_ui(__stady_gmp_116, 0);
       if(__stady_term_45 < 0) {
-        pathcrawler_assert_exception("Variant non positive",5);
+        pathcrawler_assert_exception("Variant non positive", 5);
       }
       while (1) {
         mpz_t __stady_gmp_117;
@@ -761,7 +761,8 @@ void BottomUpSort(int n, int *A, int *B)
                 __stady_pred_14 = __stady_term_37 <= 0;
               }
               if(! __stady_pred_14) {
-                pathcrawler_assert_exception("Loop invariant not established!",11);
+                pathcrawler_assert_exception("Loop invariant not established!", 
+                11);
               }
               mpz_t __stady_gmp_88;
               __gmpz_init_set_si(__stady_gmp_88, n);
@@ -775,7 +776,7 @@ void BottomUpSort(int n, int *A, int *B)
               int __stady_term_40;
               __stady_term_40 = __gmpz_cmp_ui(__stady_gmp_90, 0);
               if(__stady_term_40 < 0) {
-                pathcrawler_assert_exception("Variant non positive",3);
+                pathcrawler_assert_exception("Variant non positive", 3);
               }
               while (1) {
                 mpz_t __stady_gmp_91;
@@ -844,13 +845,15 @@ void BottomUpSort(int n, int *A, int *B)
                   __gmpz_clear(__stady_gmp_85);
                   __gmpz_clear(__stady_gmp_86);
                   int __stady_term_39;
-                  __stady_term_39 = __gmpz_cmp(__stady_gmp_80, __stady_gmp_87);
+                  __stady_term_39 = __gmpz_cmp(__stady_gmp_80, 
+                  __stady_gmp_87);
                   __gmpz_clear(__stady_gmp_80);
                   __gmpz_clear(__stady_gmp_87);
                   __stady_pred_15 = __stady_term_39 <= 0;
                 }
                 if(! __stady_pred_15) {
-                  pathcrawler_assert_exception("Loop invariant not preserved!",11);
+                  pathcrawler_assert_exception("Loop invariant not preserved!", 
+                  11);
                 }
                 mpz_t __stady_gmp_95;
                 __gmpz_init_set_si(__stady_gmp_95, n);
@@ -863,11 +866,11 @@ void BottomUpSort(int n, int *A, int *B)
                 __gmpz_clear(__stady_gmp_96);
                 __stady_term_40 = __gmpz_cmp_ui(__stady_gmp_94, 0);
                 if(__stady_term_40 < 0) {
-                  pathcrawler_assert_exception("Variant non positive",3);
+                  pathcrawler_assert_exception("Variant non positive", 3);
                 }
                 __stady_term_40 = __gmpz_cmp(__stady_gmp_97, __stady_gmp_94);
                 if(__stady_term_40 >= 0) {
-                  pathcrawler_assert_exception("Variant non decreasing",3);
+                  pathcrawler_assert_exception("Variant non decreasing", 3);
                 }
                 __gmpz_clear(__stady_gmp_94);
                 }
@@ -913,7 +916,7 @@ void BottomUpSort(int n, int *A, int *B)
           __stady_pred_17 = __stady_term_44 <= 0;
         }
         if(! __stady_pred_17) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",22);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 22);
         }
         mpz_t __stady_gmp_121;
         __gmpz_init_set_si(__stady_gmp_121, n);
@@ -926,11 +929,11 @@ void BottomUpSort(int n, int *A, int *B)
         __gmpz_clear(__stady_gmp_122);
         __stady_term_45 = __gmpz_cmp_ui(__stady_gmp_120, 0);
         if(__stady_term_45 < 0) {
-          pathcrawler_assert_exception("Variant non positive",5);
+          pathcrawler_assert_exception("Variant non positive", 5);
         }
         __stady_term_45 = __gmpz_cmp(__stady_gmp_123, __stady_gmp_120);
         if(__stady_term_45 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing",5);
+          pathcrawler_assert_exception("Variant non decreasing", 5);
         }
         __gmpz_clear(__stady_gmp_120);
         }
@@ -1030,7 +1033,7 @@ void merge_sort(int *table, int l, int *ret)
         __gmpz_clear(__stady_gmp_127);
       }
       if(! __stady_pred_18) {
-        pathcrawler_assert_exception("Post-condition!",10);
+        pathcrawler_assert_exception("Post-condition!", 10);
       }
     }
     free(old_ptr_table);

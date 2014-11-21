@@ -1,5 +1,5 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/quantified/quantified.c"
-[kernel] preprocessing with "gcc -C -E -I.  gmp.c"
+[kernel] preprocessing with "gcc -C -E -I.  externals.c"
 tests/quantified/quantified.c:13:[stady] warning: Native Precondition:
                  ∀ ℤ __q_i; 0 ≤ __q_i < n ⇒ \valid(*(t+__q_i)+(0 .. n-1)) unsupported
 tests/quantified/quantified.c:13:[stady] warning: Native Precondition:
@@ -170,7 +170,8 @@ int f_precond(int **t, int n)
                 __stady_term_10 = __gmpz_get_si(__stady_gmp_15);
                 __gmpz_clear(__stady_gmp_15);
                 mpz_t __stady_gmp_16;
-                __gmpz_init_set_si(__stady_gmp_16, *(*(t + __stady_term_9) + __stady_term_10));
+                __gmpz_init_set_si(__stady_gmp_16, 
+                *(*(t + __stady_term_9) + __stady_term_10));
                 mpz_t __stady_gmp_17;
                 __gmpz_init_set_str(__stady_gmp_17, "0", 10);
                 int __stady_term_11;
