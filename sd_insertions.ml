@@ -358,36 +358,36 @@ class gather_insertions props = object(self)
       | Ctype x -> Ctype (Cil.unrollType x)
       | x -> x
     in
-    let inserts_0, v = self#translate_term t in
-    let fresh_var = self#fresh_Z_varinfo() in
-    let insert_1 = decl_varinfo fresh_var in
+    let i_0, v = self#translate_term t in
+    let ret = self#fresh_Z_varinfo() in
+    let i_1 = decl_varinfo ret in
     let init_set =
       match ty with
       | Ctype x when Cil.isUnsignedInteger x -> instru_Z_init_set_ui
       | Ctype x when Cil.isSignedInteger x -> instru_Z_init_set_si
       | _ -> assert false
     in
-    let e_fresh_var = Cil.evar fresh_var in
-    let insert_2 = Instru(init_set e_fresh_var v) in
-    inserts_0 @ [insert_1; insert_2], e_fresh_var.enode
+    let e_ret = Cil.evar ret in
+    let i_2 = Instru(init_set e_ret v) in
+    i_0 @ [i_1; i_2], e_ret.enode
   | Lreal -> assert false (* TODO: reals *)
   | _ -> assert false (* unreachable *)
 
   (* logic type -> C type *)
   method private translate_coerce t ty = match t.term_type with
   | Linteger ->
-    let inserts_0, v = self#translate_term t in
-    let var = self#fresh_ctype_varinfo ty in
-    let insert_1 = decl_varinfo var in
+    let i_0, v = self#translate_term t in
+    let ret = self#fresh_ctype_varinfo ty in
+    let i_1 = decl_varinfo ret in
     let get =
       match ty with
       | x when Cil.isUnsignedInteger x -> instru_Z_get_ui
       | x when Cil.isSignedInteger x -> instru_Z_get_si
       | _ -> assert false
     in
-    let insert_2 = Instru(get (Cil.var var) v) in
-    let insert_3 = Instru(instru_Z_clear v) in
-    inserts_0 @ [insert_1; insert_2; insert_3], (Cil.evar var).enode
+    let i_2 = Instru(get (Cil.var ret) v) in
+    let i_3 = Instru(instru_Z_clear v) in
+    i_0 @ [i_1; i_2; i_3], (Cil.evar ret).enode
   | Lreal -> assert false (* TODO: reals *)
   | _ -> assert false (* unreachable *)
 
@@ -448,15 +448,14 @@ class gather_insertions props = object(self)
 	begin
 	  let param = List.hd params in
 	  assert (List.tl params = []);
-	  let inserts_0, x = self#translate_term param in
-	  let fresh_var = self#fresh_Z_varinfo() in
-	  let insert_1 = decl_varinfo fresh_var in
-	  let e_fresh_var = Cil.evar fresh_var in
-	  let insert_2 = Instru(instru_Z_init e_fresh_var) in
-	  let insert_3 = Instru(instru_Z_abs e_fresh_var x) in
-	  let insert_4 = Instru(instru_Z_clear x) in
-	  inserts_0 @ [insert_1; insert_2; insert_3; insert_4],
-	  e_fresh_var.enode
+	  let i_0, x = self#translate_term param in
+	  let ret = self#fresh_Z_varinfo() in
+	  let i_1 = decl_varinfo ret in
+	  let e_ret = Cil.evar ret in
+	  let i_2 = Instru(instru_Z_init e_ret) in
+	  let i_3 = Instru(instru_Z_abs e_ret x) in
+	  let i_4 = Instru(instru_Z_clear x) in
+	  i_0 @ [i_1; i_2; i_3; i_4], e_ret.enode
 	end
       else
 	if s = "\\sum" || s = "\\product" || s = "\\numof" then
@@ -470,18 +469,18 @@ class gather_insertions props = object(self)
   method private translate_cast ty t =
     match t.term_type with (* source type *)
     | Linteger ->
-      let inserts_0, e = self#translate_term t in
-      let var = self#fresh_ctype_varinfo ty in
-      let insert_1 = decl_varinfo var in
+      let i_0, e = self#translate_term t in
+      let ret = self#fresh_ctype_varinfo ty in
+      let i_1 = decl_varinfo ret in
       let get =
   	match ty with (* dest type *)
   	| x when Cil.isUnsignedInteger x -> instru_Z_get_ui
   	| x when Cil.isSignedInteger x -> instru_Z_get_si
   	| _ -> assert false (* unreachable *)
       in
-      let insert_2 = Instru(get (Cil.var var) e) in
-      let insert_3 = Instru(instru_Z_clear e) in
-      inserts_0 @ [insert_1; insert_2; insert_3], (Cil.evar var).enode
+      let i_2 = Instru(get (Cil.var ret) e) in
+      let i_3 = Instru(instru_Z_clear e) in
+      i_0 @ [i_1; i_2; i_3], (Cil.evar ret).enode
     | Lreal -> assert false (* reals *)
     | Ctype _ -> let ins, e = self#translate_term t in ins, CastE (ty, e)
     | _ -> assert false (* unreachable *)
