@@ -16,6 +16,7 @@ type instruction =
 | Pc_to_framac of string
 | Pc_exn of string * int
 | IAffect of lval * exp
+
 | IFree of exp
 | IPc_dim of lval * exp
 | IPc_assume of exp
@@ -76,6 +77,48 @@ module Ins = struct
   let zero = Cil.zero ~loc
   let one = Cil.one ~loc
   let cmp rel e1 e2 = Cil.mkBinOp ~loc (relation_to_binop rel) e1 e2
+
+  let void = TVoid []
+  let ptr ty = TPtr(ty,[])
+  let arg ty = "", ty, []
+  let char = Cil.charType and int = Cil.intType
+  and ulong = Cil.ulongType and long = Cil.longType
+  let mpz = Sd_utils.mpz_t()
+  let fct name ret args = Cil.makeGlobalVar name (TFun(ret,Some args,false,[]))
+
+  (* varinfos of functions *)
+  let v_malloc = fct " malloc" (ptr void) [arg ulong]
+  let v_free = fct "free" void [arg(ptr void)]
+  let v_pc_dim = fct "pathcrawler_dimension" int [arg(ptr void)]
+  let v_pc_exc = fct "pathcrawler_assert_exception" int [arg(ptr char); arg int]
+  let v_pc_assume = fct "pathcrawler_assume" void [arg int]
+  let v_pc_to_fc = fct "pathcrawler_to_framac" void [arg (ptr char)]
+  let v_Z_clear = fct "__gmpz_clear" void [arg mpz]
+  let v_Z_init = fct "__gmpz_init" void [arg mpz]
+  let v_Z_init_set = fct "__gmpz_init_set" void [arg mpz; arg mpz]
+  let v_Z_init_set_ui = fct "__gmpz_init_set_ui" void [arg mpz; arg ulong]
+  let v_Z_init_set_si = fct "__gmpz_init_set_si" void [arg mpz; arg long]
+  let v_Z_init_set_str =
+    fct "__gmpz_init_set_str" void [arg mpz; arg (ptr char); arg int]
+  let v_Z_set = fct "__gmpz_set" void [arg mpz; arg mpz]
+  let v_Z_abs = fct "__gmpz_abs" void [arg mpz; arg mpz]
+  let v_Z_add = fct "__gmpz_add" void [arg mpz; arg mpz; arg mpz]
+  let v_Z_add_ui = fct "__gmpz_add_ui" void [arg mpz; arg mpz; arg ulong]
+  let v_Z_sub = fct "__gmpz_sub" void [arg mpz; arg mpz; arg mpz]
+  let v_Z_sub_ui = fct "__gmpz_sub_ui" void [arg mpz; arg mpz; arg ulong]
+  let v_Z_ui_sub = fct "__gmpz_ui_sub" void [arg mpz; arg ulong; arg mpz]
+  let v_Z_mul = fct "__gmpz_mul" void [arg mpz; arg mpz; arg mpz]
+  let v_Z_mul_ui = fct "__gmpz_mul_ui" void [arg mpz; arg mpz; arg ulong]
+  let v_Z_mul_si = fct "__gmpz_mul_si" void [arg mpz; arg mpz; arg long]
+  let v_Z_tdiv_q = fct "__gmpz_tdiv_q" void [arg mpz; arg mpz; arg mpz]
+  let v_Z_tdiv_q_ui = fct "__gmpz_tdiv_q_ui" void [arg mpz; arg mpz; arg ulong]
+  let v_Z_tdiv_r = fct "__gmpz_tdiv_r" void [arg mpz; arg mpz; arg mpz]
+  let v_Z_tdiv_r_ui = fct "__gmpz_tdiv_r_ui" void [arg mpz; arg mpz; arg ulong]
+  let v_Z_get_ui = fct "__gmpz_get_ui" ulong [arg mpz]
+  let v_Z_get_si = fct "__gmpz_get_si" long [arg mpz]
+  let v_Z_cmp = fct "__gmpz_cmp" int [arg mpz; arg mpz]
+  let v_Z_cmp_ui = fct "__gmpz_cmp_ui" int [arg mpz; arg ulong]
+  let v_Z_cmp_si = fct "__gmpz_cmp_si" int [arg mpz; arg long]
 
   (* instructions *)
   let instru_affect a b = IAffect(a,b)
