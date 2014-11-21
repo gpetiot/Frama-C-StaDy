@@ -242,74 +242,65 @@ class gather_insertions props = object(self)
       let e' = Cil.new_exp ~loc (BinOp(op,a',e,(Cil.typeOf a'))) in
       i_0 @ i_1 @ i_2, e'.enode
     else
-      let inserts_0, x = self#translate_term a in
-      let inserts_1, y = self#translate_term b in
-      begin
-	match ty with
-	| Linteger ->
-	  let fresh_var = self#fresh_Z_varinfo() in
-	  let insert_2 = decl_varinfo fresh_var in
-	  let e_fresh_var = Cil.evar fresh_var in
-	  let insert_3 = Instru(instru_Z_init e_fresh_var) in
-	  let clear_t1 = match a.term_type with
-	    Linteger -> [Instru(instru_Z_clear x)] | _ -> []
-	  in
-	  let clear_t2 = match b.term_type with
-	    Linteger -> [Instru(instru_Z_clear y)] | _ -> []
-	  in
-	  let inserts =
-	    match a.term_type, b.term_type with
-	    | Linteger, Linteger -> [Instru(instru_Z_binop op e_fresh_var x y)]
-	    | Linteger, Ctype ty' when Cil.isUnsignedInteger ty' ->
-	      [Instru(instru_Z_binop_ui op e_fresh_var x y)]
-	    | Linteger, Ctype ty' when Cil.isSignedInteger ty' ->
-	      assert(op = Mult);
-	      [Instru(instru_Z_mul_si e_fresh_var x y)]
-	    | Ctype ty', Linteger when Cil.isUnsignedInteger ty' ->
-	      assert(op = MinusA);
-	      [Instru(instru_Z_ui_sub e_fresh_var x y)]
-	    | Ctype ty', Linteger when Cil.isSignedInteger ty' -> assert false
-	    | Ctype(TInt _), Ctype(TInt _) ->
-	      let fresh_var1 = self#fresh_Z_varinfo() in
-	      let insert_4 = decl_varinfo fresh_var1 in
-	      let fresh_var2 = self#fresh_Z_varinfo() in
-	      let insert_5 = decl_varinfo fresh_var2 in
-	      let e_fresh_var1 = Cil.evar fresh_var1 in
-	      let e_fresh_var2 = Cil.evar fresh_var2 in
-	      let insert_6 = Instru(instru_Z_init_set_si e_fresh_var1 x) in
-	      let insert_7 = Instru(instru_Z_init_set_si e_fresh_var2 y) in
-	      [insert_4; insert_5; insert_6; insert_7;
-	       Instru(instru_Z_binop op e_fresh_var e_fresh_var1 e_fresh_var2);
-	       Instru(instru_Z_clear e_fresh_var1);
-	       Instru(instru_Z_clear e_fresh_var2)]
-	    | _ -> assert false
-	  in
-	  inserts_0 @ inserts_1 @ [insert_2; insert_3] @ inserts
-	  @ clear_t1 @ clear_t2,
-	  e_fresh_var.enode
-	| Lreal -> assert false (* TODO: reals *)
-	| Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
-	  begin
-	    match a.term_type, b.term_type with
-	    | Linteger, Linteger ->
-	      let var = self#fresh_ctype_varinfo Cil.intType in
-	      let insert_2 = decl_varinfo var in
-	      let tmp = self#fresh_ctype_varinfo Cil.intType in
-	      let e_tmp = Cil.evar tmp in
-	      let i_1 = decl_varinfo tmp in
-	      let i_2 =	Instru(instru_Z_cmp (Cil.var tmp) x y) in
-	      let op = binop_to_relation op in
-	      let lvar = Cil.var var in
-	      let insert_3 = Instru(instru_affect lvar (cmp op e_tmp zero)) in
-	      let insert_4 = Instru(instru_Z_clear x) in
-	      let insert_5 = Instru(instru_Z_clear y) in
-	      inserts_0 @ inserts_1
-	      @ [insert_2; i_1; i_2; insert_3; insert_4; insert_5],
-	      (Cil.evar var).enode
-	    | _ -> inserts_0 @ inserts_1, (Cil.mkBinOp ~loc op x y).enode
-	  end
-	| _ -> assert false (* unreachable ? *)
-      end
+      let i_0, x = self#translate_term a in
+      let i_1, y = self#translate_term b in
+      match ty with
+      | Linteger ->
+	let ret = self#fresh_Z_varinfo() in
+	let i_2 = decl_varinfo ret in
+	let e_ret = Cil.evar ret in
+	let i_3 = Instru(instru_Z_init e_ret) in
+	let clear_t1 = Instru(instru_Z_clear x) in
+	let clear_t2 = Instru(instru_Z_clear y) in
+	let inserts =
+	  match a.term_type, b.term_type with
+	  | Linteger, Linteger ->
+	    [Instru(instru_Z_binop op e_ret x y); clear_t1; clear_t2]
+	  | Linteger, Ctype ty' when Cil.isUnsignedInteger ty' ->
+	    [Instru(instru_Z_binop_ui op e_ret x y); clear_t1]
+	  | Linteger, Ctype ty' when Cil.isSignedInteger ty' ->
+	    assert(op = Mult);
+	    [Instru(instru_Z_mul_si e_ret x y); clear_t1]
+	  | Ctype ty', Linteger when Cil.isUnsignedInteger ty' ->
+	    assert(op = MinusA);
+	    [Instru(instru_Z_ui_sub e_ret x y); clear_t2]
+	  | Ctype ty', Linteger when Cil.isSignedInteger ty' -> assert false
+	  | Ctype(TInt _), Ctype(TInt _) ->
+	    let v_1 = self#fresh_Z_varinfo() in
+	    let i_4 = decl_varinfo v_1 in
+	    let v_2 = self#fresh_Z_varinfo() in
+	    let i_5 = decl_varinfo v_2 in
+	    let e_v_1 = Cil.evar v_1 in
+	    let e_v_2 = Cil.evar v_2 in
+	    let i_6 = Instru(instru_Z_init_set_si e_v_1 x) in
+	    let i_7 = Instru(instru_Z_init_set_si e_v_2 y) in
+	    let i_8 = Instru(instru_Z_binop op e_ret e_v_1 e_v_2) in
+	    let i_9 = Instru(instru_Z_clear e_v_1) in
+	    let i_10 = Instru(instru_Z_clear e_v_2) in
+	    [i_4; i_5; i_6; i_7; i_8; i_9; i_10]
+	  | _ -> assert false
+	in
+	i_0 @ i_1 @ [i_2; i_3] @ inserts, e_ret.enode
+      | Lreal -> assert false (* TODO: reals *)
+      | Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
+	begin
+	  match a.term_type, b.term_type with
+	  | Linteger, Linteger ->
+	    let var = self#fresh_ctype_varinfo Cil.intType in
+	    let i_2 = decl_varinfo var in
+	    let tmp = self#fresh_ctype_varinfo Cil.intType in
+	    let e_tmp = Cil.evar tmp in
+	    let i_3 = decl_varinfo tmp in
+	    let i_4 = Instru(instru_Z_cmp (Cil.var tmp) x y) in
+	    let op = binop_to_relation op in
+	    let lvar = Cil.var var in
+	    let i_5 = Instru(instru_affect lvar (cmp op e_tmp zero)) in
+	    let i_6 = Instru(instru_Z_clear x) in
+	    let i_7 = Instru(instru_Z_clear y) in
+	    i_0 @ i_1 @ [i_2; i_3; i_4; i_5; i_6; i_7], (Cil.evar var).enode
+	  | _ -> i_0 @ i_1, (Cil.mkBinOp ~loc op x y).enode
+	end
+      | _ -> assert false
 
   method private translate_tif cond then_b else_b =
     match then_b.term_type with
