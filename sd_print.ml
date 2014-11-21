@@ -30,7 +30,6 @@ let pp_instruction fmt = function
     Format.fprintf fmt"pathcrawler_assert_exception(\"%s\",%i)" s i
   | Sd_insertions.IAffect(v,e)-> Format.fprintf fmt "%a = %a" pp_lval v pp_exp e
   | Sd_insertions.IFree e -> Format.fprintf fmt "free(%a)" pp_exp e
-  | Sd_insertions.IRet e -> Format.fprintf fmt "return %a" pp_exp e
   | Sd_insertions.IPc_dim (v,e) ->
     Format.fprintf fmt "%a = pathcrawler_dimension(%a)" pp_lval v pp_exp e
   | Sd_insertions.IPc_assume e ->
@@ -82,6 +81,7 @@ let rec pp_insertion ?(line_break = true) fmt ins =
   begin
     match ins with
     | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
+    | Sd_insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" pp_exp e
     | Sd_insertions.Decl v ->
       Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v
     | Sd_insertions.Block b ->
@@ -247,7 +247,6 @@ class print_insertions insertions () = object(self)
   | Sd_insertions.IFree _ -> free <- true
   | Sd_insertions.Pc_to_framac _ -> pc_to_fc <- true
   | Sd_insertions.Pc_exn _ -> pc_assert_exc <- true
-  | Sd_insertions.IRet _ -> ()
   | Sd_insertions.IZ_clear _ -> gmpz_clear <- true; gmp <- true
   | Sd_insertions.IZ_init _ -> gmpz_init <- true
   | Sd_insertions.IZ_init_set _ -> gmpz_init_set <- true
@@ -290,6 +289,7 @@ class print_insertions insertions () = object(self)
 
   method private insertion = function
   | Sd_insertions.Instru i -> self#instru i
+  | Sd_insertions.IRet _ -> ()
   | Sd_insertions.Decl _ -> ()
   | Sd_insertions.Block i -> List.iter self#insertion i
   | Sd_insertions.IIf(_,i1,i2) ->

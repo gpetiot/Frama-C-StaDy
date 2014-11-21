@@ -17,7 +17,6 @@ type instruction =
 | Pc_exn of string * int
 | IAffect of lval * exp
 | IFree of exp
-| IRet of exp
 | IPc_dim of lval * exp
 | IPc_assume of exp
 | IMalloc of lval * exp
@@ -41,6 +40,7 @@ type instruction =
 
 type insertion =
 | Instru of instruction
+| IRet of exp
 | Decl of varinfo
 | Block of insertion list
 | IIf of exp * insertion list * insertion list
@@ -80,7 +80,6 @@ module Ins = struct
   (* instructions *)
   let instru_affect a b = IAffect(a,b)
   let instru_free a = IFree a
-  let instru_ret a = IRet a
   let instru_pc_dim a b = IPc_dim(a,b)
   let instru_malloc a b = IMalloc(a,b)
   let instru_Z_clear a = IZ_clear a
@@ -103,6 +102,7 @@ module Ins = struct
 
   (* insertions *)
   let decl_varinfo v = Decl v
+  let ins_ret a = IRet a
   let ins_if  a b c = IIf(a,b,c)
   let ins_for a b c d = IFor(a,b,c,d)
 end
@@ -964,7 +964,7 @@ class gather_insertions props = object(self)
       (* untreated predicates are translated as True *)
       if v <> Ins.one then
 	let e = Cil.new_exp ~loc:Ins.loc (UnOp (LNot, v, Cil.intType)) in
-	ins @ [Ins.ins_if e [Instru(Ins.instru_ret Ins.zero)] []]
+	ins @ [Ins.ins_if e [Ins.ins_ret Ins.zero] []]
       else ins
     in
     let do_behavior b =
