@@ -94,29 +94,6 @@ class print_insertions insertions () = object(self)
     is_ghost <- old_is_ghost
   (* end of fundecl *)
 
-  (* do not print calls to function that do not have a body *)
-  method! instr fmt i = match i with
-  | Call (_ret, fct_exp, _args, _loc) ->
-    begin
-      let fct_varinfo = match fct_exp.enode  with
-	| Lval(Var v,NoOffset) -> v
-	| _ -> assert false
-      in
-      let kf = Globals.Functions.get fct_varinfo in
-      let is_def = Kernel_function.is_definition kf in
-      if is_def then
-	super#instr fmt i
-      else
-	begin
-	  Sd_options.Self.warning ~current:true ~once:true
-	    "function %s does not have a body"
-	    fct_varinfo.vname;
-	  Sd_options.Self.warning ~current:true "%a has been discarded"
-	    Printer.pp_instr i
-	end
-    end
-  | _ -> super#instr fmt i
-
   method! private annotated_stmt next fmt stmt =
     Format.pp_open_hvbox fmt 2;
     self#stmt_labels fmt stmt;
