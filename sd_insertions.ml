@@ -109,7 +109,7 @@ let ins_ret a = IRet a
 let ins_if  a b c = IIf(a,b,c)
 let ins_for a b c d = IFor(a,b,c,d)
 
-class gather_insertions props = object(self)
+class gather_insertions props spec_insuf = object(self)
   inherit Visitor.frama_c_inplace as super
 
   val insertions : (label, insertion Queue.t) Hashtbl.t = Hashtbl.create 64

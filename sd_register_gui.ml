@@ -16,12 +16,21 @@ let pc_panel (main_ui:Design.main_window_extension_points) =
   "stady", vbox#coerce, Some refresh
   
 
+open Cil_types
 
 let to_do_on_select
     (popup_factory:GMenu.menu GMenu.factory)
     (main_ui:Design.main_window_extension_points) button_nb selected
-    (compute: ?props:Property.t list -> unit -> unit) =
+    (compute: ?props:Property.t list -> ?spec_insuf:stmt -> unit -> unit) =
   match selected with
+  | Pretty_source.PStmt (_, ({skind=Loop _} as stmt))
+  | Pretty_source.PStmt (_, ({skind=Instr (Call _)} as stmt)) ->
+    if button_nb = 3 then
+      let callback() =
+  	compute ~spec_insuf:stmt ();
+  	main_ui#redisplay()
+      in
+      ignore (popup_factory#add_item "Check for Spec. Insufficiency" ~callback)
   | Pretty_source.PIP prop ->
     begin
       try
