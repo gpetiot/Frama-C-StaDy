@@ -270,6 +270,8 @@ let run() =
       setup_props_bijection();
       let p' = Project.create "__stady_externals"  in
       let mpz_t, externals = Project.on p' (fun () ->
+	let old_verbose = Kernel.Verbose.get() in
+	Kernel.GeneralVerbose.set 0;
 	let file = Sd_options.Self.Share.file ~error:true "externals.c" in
 	let mpz_t_file = File.from_filename file in
 	File.init_from_c_files [mpz_t_file];
@@ -287,6 +289,7 @@ let run() =
 	  | _ -> Cil.SkipChildren
 	end in
 	Cil.visitCilFileSameGlobals set_mpzt (Ast.get ());
+	Kernel.GeneralVerbose.set old_verbose;
 	!tmp_mpz_t, !externals
       ) () in
       Project.remove ~project:p' ();

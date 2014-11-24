@@ -1,5 +1,4 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_sort/merge_sort.c"
-[kernel] preprocessing with "gcc -C -E -I.  externals.c"
 tests/merge_sort/merge_sort.c:96:[stady] warning: Native Precondition:
                  \separated(table, ret) unsupported
 [stady:generated-pl] generated Prolog precondition:

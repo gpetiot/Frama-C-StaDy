@@ -1,5 +1,4 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/binary_search/binary_search.c"
-[kernel] preprocessing with "gcc -C -E -I.  externals.c"
 tests/binary_search/binary_search.c:16:[stady] warning: Native Precondition:
                  ∀ ℤ __q_j; 0 ≤ __q_j < length-1 ⇒ *(arr+__q_j) ≤ *(arr+(__q_j+1)) unsupported
 [stady:generated-pl] generated Prolog precondition:

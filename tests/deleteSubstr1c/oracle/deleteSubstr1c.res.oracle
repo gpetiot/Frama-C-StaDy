@@ -1,5 +1,4 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/deleteSubstr1c/deleteSubstr1c.c"
-[kernel] preprocessing with "gcc -C -E -I.  externals.c"
 tests/deleteSubstr1c/deleteSubstr1c.c:68:[stady] warning: Native Precondition:
                  \separated(dest+(0 .. strlen-1), substr+(0 .. sublen-1)) unsupported
 tests/deleteSubstr1c/deleteSubstr1c.c:68:[stady] warning: Native Precondition:

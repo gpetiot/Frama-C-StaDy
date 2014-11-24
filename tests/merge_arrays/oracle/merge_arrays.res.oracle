@@ -1,5 +1,4 @@
 [kernel] preprocessing with "gcc -C -E -I.  tests/merge_arrays/merge_arrays.c"
-[kernel] preprocessing with "gcc -C -E -I.  externals.c"
 tests/merge_arrays/merge_arrays.c:17:[stady] warning: Native Precondition:
                  ∀ ℤ __q_i; 0 ≤ __q_i < l1-1 ⇒ *(t1+__q_i) ≤ *(t1+(__q_i+1)) unsupported
 tests/merge_arrays/merge_arrays.c:17:[stady] warning: Native Precondition:
