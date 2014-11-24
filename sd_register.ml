@@ -54,8 +54,8 @@ let emitter =
 
 
 let compute_props props =
-  let fname =
-    Filename.chop_extension(Filename.basename(List.hd (Kernel.Files.get()))) in
+  let files = Kernel.Files.get() in
+  let fname = Filename.chop_extension (Filename.basename (List.hd files)) in
   let kf = fst (Globals.entry_point()) in
   let entry_point = Kernel_function.get_name kf in
   let precond_fname = Printf.sprintf "__sd_%s_%s.pl" fname entry_point in
@@ -241,6 +241,29 @@ let properties_of_name name =
   Property_status.fold gather []
 
 
+let selected_props() =
+  let properties = Sd_options.Properties.get () in
+  let behaviors = Sd_options.Behaviors.get () in
+  let functions = Sd_options.Functions.get () in
+  let gather p b = List.rev_append (properties_of_behavior b) p in
+  let props = List.fold_left gather [] behaviors in
+  let gather p f = List.rev_append (properties_of_function f) p in
+  let props = List.fold_left gather props functions in
+  let gather p n = List.rev_append (properties_of_name n) p in
+  let props = List.fold_left gather props properties in
+  let app p l = p :: l in
+  let props = if props = [] then Property_status.fold app [] else props in
+  let to_do p =
+    match Property_status.get p with
+    | Property_status.Inconsistent _
+    | Property_status.Never_tried
+    | Property_status.Best (Property_status.False_if_reachable,_)
+    | Property_status.Best (Property_status.Dont_know,_) -> true
+    | _ -> false
+  in
+  List.filter to_do props
+
+
 let run() =
   if Sd_options.Enabled.get() then
     begin
@@ -269,33 +292,7 @@ let run() =
       Sd_options.mpz_t := mpz_t;
       List.iter (fun(a,b) -> Sd_states.Externals.add a b) externals;
       
-      let properties = Sd_options.Properties.get () in
-      let behaviors = Sd_options.Behaviors.get () in
-      let functions = Sd_options.Functions.get () in
-      let gather p b = List.rev_append (properties_of_behavior b) p in
-      let props = List.fold_left gather [] behaviors in
-      let gather p f = List.rev_append (properties_of_function f) p in
-      let props = List.fold_left gather props functions in
-      let gather p n = List.rev_append (properties_of_name n) p in
-      let props = List.fold_left gather props properties in
-      let app p l = p :: l in
-      let props = if props = [] then Property_status.fold app [] else props in
-      let to_do p =
-	match Property_status.get p with
-	| Property_status.Inconsistent _
-	| Property_status.Never_tried
-	| Property_status.Best (Property_status.False_if_reachable,_)
-	| Property_status.Best (Property_status.Dont_know,_) -> true
-	| _ -> false
-      in
-      let props = List.filter to_do props in
-      let dkey = Sd_options.dkey_properties in
-      Sd_options.Self.debug ~dkey "selected properties:";
-      let info_prop p =
-	Sd_options.Self.debug ~dkey "%a %sfound" Property.pretty p
-	  (try ignore(Sd_utils.to_id p); "" with Not_found -> "not")
-      in
-      List.iter info_prop props;
+      let props = selected_props() in
       compute_props props;
       Sd_states.Id_To_Property.clear();
       Sd_states.Property_To_Id.clear();
