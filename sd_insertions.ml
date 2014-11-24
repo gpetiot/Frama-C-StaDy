@@ -280,7 +280,7 @@ class gather_insertions props = object(self)
 	in
 	i_0 @ i_1 @ [i_2; i_3] @ inserts, e_ret.enode
       | Lreal -> assert false (* TODO: reals *)
-      | Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
+      | Ltype _ as lt when Logic_const.is_boolean_type lt ->
 	begin
 	  match a.term_type, b.term_type with
 	  | Linteger, Linteger ->
@@ -413,7 +413,6 @@ class gather_insertions props = object(self)
 	Instru(F.binop Mult e_fresh_var e_fresh_var lambda_t),
 	[Instru(F.clear lambda_t)]
       | s when s = "\\numof" ->
-	(* lambda_t of type: Ltype(lt,_) when lt.lt_name = Utf8_logic.boolean *)
 	let cond = cmp Rneq lambda_t zero in
 	let instr = Instru(F.binop_ui PlusA e_fresh_var e_fresh_var one) in
 	ins_if cond [instr] [], []
@@ -671,7 +670,7 @@ class gather_insertions props = object(self)
 	[i_1; i_2], [Instru(F.clear term_var)]
       | Lreal -> assert false (* unreachable *)
       | Ctype (TInt _) -> cmp Rneq term_var zero, [], []
-      | Ltype (lt,_) when lt.lt_name = Utf8_logic.boolean ->
+      | Ltype _ as lt when Logic_const.is_boolean_type lt ->
 	cmp Rneq term_var zero, [], []
       | _ -> assert false (* unreachable *)
     in
