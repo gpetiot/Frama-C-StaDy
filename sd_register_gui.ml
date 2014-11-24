@@ -19,7 +19,8 @@ let pc_panel (main_ui:Design.main_window_extension_points) =
 
 let to_do_on_select
     (popup_factory:GMenu.menu GMenu.factory)
-    (main_ui:Design.main_window_extension_points) button_nb selected compute =
+    (main_ui:Design.main_window_extension_points) button_nb selected
+    (compute: ?props:Property.t list -> unit -> unit) =
   match selected with
   | Pretty_source.PIP prop ->
     begin
@@ -29,7 +30,7 @@ let to_do_on_select
 	  let nb = Datatype.String.Hashtbl.length tbl in
 	  if nb > 0 then main_ui#pretty_information "%i counter-examples@." nb;
 	  Datatype.String.Hashtbl.iter_sorted (fun tc (input,conc,symb) ->
-	    main_ui#pretty_information "Counter-example (by PathCrawler-VA):@.";
+	    main_ui#pretty_information "Counter-example (by PathCrawler):@.";
 	    if tc <> "" then main_ui#pretty_information "%s@.@\n" tc;
 	    let pretty (s, v) = main_ui #pretty_information "%s = %s@." s v in
 	    main_ui#pretty_information "input:@.";
@@ -57,7 +58,7 @@ let to_do_on_select
       | _ -> ()
     end;
     if button_nb = 3 then
-      let callback() = compute [prop]; main_ui#redisplay() in
+      let callback() = compute ~props:[prop] (); main_ui#redisplay() in
       ignore (popup_factory#add_item "Validate property with StaDy" ~callback)
   | _ -> ()
 
@@ -70,7 +71,8 @@ let pc_selector
 let main main_ui =
   try
     Sd_register.setup_props_bijection();
-    let compute = (fun props -> Sd_register.compute_props props) in
+    Sd_register.do_externals();
+    let compute = Sd_register.compute_props in
     main_ui#register_panel pc_panel;
     main_ui#register_source_selector (pc_selector compute)
   with _ -> ()

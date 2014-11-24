@@ -53,7 +53,122 @@ let emitter =
     ~correctness:[] ~tuning:[]
 
 
-let compute_props props =
+let do_externals() =
+  Sd_states.Externals.clear();
+  let p' = Project.create "__stady_externals"  in
+  let mpz_t, externals = Project.on p' (fun () ->
+    let old_verbose = Kernel.Verbose.get() in
+    Kernel.GeneralVerbose.set 0;
+    let file = Sd_options.Self.Share.file ~error:true "externals.c" in
+    let mpz_t_file = File.from_filename file in
+    File.init_from_c_files [mpz_t_file];
+    let tmp_mpz_t = ref None in
+    let externals = ref [] in
+    let set_mpzt = object
+      inherit Cil.nopCilVisitor
+      method !vglob = function
+      | GType({ torig_name = s } as info, _) when s = "mpz_t" ->
+	tmp_mpz_t := Some (TNamed(info,[]));
+	Cil.SkipChildren
+      | GFun({svar=vi},_) ->
+	externals := (vi.vname, vi) :: !externals;
+	Cil.SkipChildren
+      | _ -> Cil.SkipChildren
+    end in
+    Cil.visitCilFileSameGlobals set_mpzt (Ast.get ());
+    Kernel.GeneralVerbose.set old_verbose;
+    !tmp_mpz_t, !externals
+  ) () in
+  Project.remove ~project:p' ();
+  Sd_options.mpz_t := mpz_t;
+  List.iter (fun(a,b) -> Sd_states.Externals.add a b) externals
+
+
+let setup_props_bijection () =
+  Sd_states.Id_To_Property.clear();
+  Sd_states.Property_To_Id.clear();
+  (* Bijection: unique_identifier <--> property *)
+  let property_id = ref 0 in
+  let fc_builtin = "__fc_builtin_for_normalization.i" in
+  let on_property property =
+    let pos1,_ = Property.location property in
+    if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
+      begin
+	Sd_states.Property_To_Id.add property !property_id;
+	Sd_states.Id_To_Property.add !property_id property;
+	property_id := !property_id + 1
+      end
+  in
+  Property_status.iter on_property;
+  let kf = fst (Globals.entry_point()) in
+  let strengthened_precond =
+    try
+      let bhv = Sd_utils.default_behavior kf in
+      let typically_preds = Sd_utils.typically_preds bhv in
+      List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
+    with _ -> []
+  in
+  let register p = try Property_status.register p with _ -> () in
+  List.iter register strengthened_precond
+
+
+let properties_of_behavior name =
+  let gather p ret =
+    match Property.get_behavior p with
+    | Some b when b.b_name = name -> p :: ret
+    | _ -> ret
+  in
+  Property_status.fold gather []
+
+
+let properties_of_function name =
+  let gather p ret =
+    match Property.get_kf p with
+    | Some kf when (Kernel_function.get_name kf) = name -> p :: ret
+    | _ -> ret
+  in
+  Property_status.fold gather []
+
+
+let properties_of_name name =
+  let gather p ret =
+    try
+      let buf = Buffer.create 32 in
+      let fmt = Format.formatter_of_buffer buf in
+      Property.short_pretty fmt p;
+      Format.pp_print_flush fmt ();
+      let str = Buffer.contents buf in
+      Buffer.clear buf;
+      if str = name then p :: ret else ret
+    with _ -> ret
+  in
+  Property_status.fold gather []
+
+
+let selected_props() =
+  let properties = Sd_options.Properties.get () in
+  let behaviors = Sd_options.Behaviors.get () in
+  let functions = Sd_options.Functions.get () in
+  let gather p b = List.rev_append (properties_of_behavior b) p in
+  let props = List.fold_left gather [] behaviors in
+  let gather p f = List.rev_append (properties_of_function f) p in
+  let props = List.fold_left gather props functions in
+  let gather p n = List.rev_append (properties_of_name n) p in
+  let props = List.fold_left gather props properties in
+  let app p l = p :: l in
+  let props = if props = [] then Property_status.fold app [] else props in
+  let to_do p =
+    match Property_status.get p with
+    | Property_status.Inconsistent _
+    | Property_status.Never_tried
+    | Property_status.Best (Property_status.False_if_reachable,_)
+    | Property_status.Best (Property_status.Dont_know,_) -> true
+    | _ -> false
+  in
+  List.filter to_do props
+
+
+let compute_props ?(props=selected_props()) () =
   let files = Kernel.Files.get() in
   let fname = Filename.chop_extension (Filename.basename (List.hd files)) in
   let kf = fst (Globals.entry_point()) in
@@ -180,124 +295,12 @@ let compute_props props =
     end
 
 
-let setup_props_bijection () =
-  Sd_states.Id_To_Property.clear();
-  Sd_states.Property_To_Id.clear();
-  (* Bijection: unique_identifier <--> property *)
-  let property_id = ref 0 in
-  let fc_builtin = "__fc_builtin_for_normalization.i" in
-  let on_property property =
-    let pos1,_ = Property.location property in
-    if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
-      begin
-	Sd_states.Property_To_Id.add property !property_id;
-	Sd_states.Id_To_Property.add !property_id property;
-	property_id := !property_id + 1
-      end
-  in
-  Property_status.iter on_property;
-  let kf = fst (Globals.entry_point()) in
-  let strengthened_precond =
-    try
-      let bhv = Sd_utils.default_behavior kf in
-      let typically_preds = Sd_utils.typically_preds bhv in
-      List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
-    with _ -> []
-  in
-  let register p = try Property_status.register p with _ -> () in
-  List.iter register strengthened_precond
-
-
-let properties_of_behavior name =
-  let gather p ret =
-    match Property.get_behavior p with
-    | Some b when b.b_name = name -> p :: ret
-    | _ -> ret
-  in
-  Property_status.fold gather []
-
-
-let properties_of_function name =
-  let gather p ret =
-    match Property.get_kf p with
-    | Some kf when (Kernel_function.get_name kf) = name -> p :: ret
-    | _ -> ret
-  in
-  Property_status.fold gather []
-
-
-let properties_of_name name =
-  let gather p ret =
-    try
-      let buf = Buffer.create 32 in
-      let fmt = Format.formatter_of_buffer buf in
-      Property.short_pretty fmt p;
-      Format.pp_print_flush fmt ();
-      let str = Buffer.contents buf in
-      Buffer.clear buf;
-      if str = name then p :: ret else ret
-    with _ -> ret
-  in
-  Property_status.fold gather []
-
-
-let selected_props() =
-  let properties = Sd_options.Properties.get () in
-  let behaviors = Sd_options.Behaviors.get () in
-  let functions = Sd_options.Functions.get () in
-  let gather p b = List.rev_append (properties_of_behavior b) p in
-  let props = List.fold_left gather [] behaviors in
-  let gather p f = List.rev_append (properties_of_function f) p in
-  let props = List.fold_left gather props functions in
-  let gather p n = List.rev_append (properties_of_name n) p in
-  let props = List.fold_left gather props properties in
-  let app p l = p :: l in
-  let props = if props = [] then Property_status.fold app [] else props in
-  let to_do p =
-    match Property_status.get p with
-    | Property_status.Inconsistent _
-    | Property_status.Never_tried
-    | Property_status.Best (Property_status.False_if_reachable,_)
-    | Property_status.Best (Property_status.Dont_know,_) -> true
-    | _ -> false
-  in
-  List.filter to_do props
-
-
 let run() =
   if Sd_options.Enabled.get() then
     begin
       setup_props_bijection();
-      let p' = Project.create "__stady_externals"  in
-      let mpz_t, externals = Project.on p' (fun () ->
-	let old_verbose = Kernel.Verbose.get() in
-	Kernel.GeneralVerbose.set 0;
-	let file = Sd_options.Self.Share.file ~error:true "externals.c" in
-	let mpz_t_file = File.from_filename file in
-	File.init_from_c_files [mpz_t_file];
-	let tmp_mpz_t = ref None in
-	let externals = ref [] in
-	let set_mpzt = object
-	  inherit Cil.nopCilVisitor
-	  method !vglob = function
-	  | GType({ torig_name = s } as info, _) when s = "mpz_t" ->
-	    tmp_mpz_t := Some (TNamed(info,[]));
-	    Cil.SkipChildren
-	  | GFun({svar=vi},_) ->
-	    externals := (vi.vname, vi) :: !externals;
-	    Cil.SkipChildren
-	  | _ -> Cil.SkipChildren
-	end in
-	Cil.visitCilFileSameGlobals set_mpzt (Ast.get ());
-	Kernel.GeneralVerbose.set old_verbose;
-	!tmp_mpz_t, !externals
-      ) () in
-      Project.remove ~project:p' ();
-      Sd_options.mpz_t := mpz_t;
-      List.iter (fun(a,b) -> Sd_states.Externals.add a b) externals;
-      
-      let props = selected_props() in
-      compute_props props;
+      do_externals();
+      compute_props ();
       Sd_states.Id_To_Property.clear();
       Sd_states.Property_To_Id.clear();
       Sd_states.Not_Translated_Predicates.clear();
