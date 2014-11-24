@@ -930,8 +930,10 @@ class gather_insertions props = object(self)
       let typically = List.filter not_translated (Sd_utils.typically_preds b) in
       let to_prop = Property.ip_of_requires kf kloc b in
       let in_props = (fun p -> List.mem (to_prop p) props) in
-      let requires = List.filter in_props requires in
-      let typically = List.filter in_props typically in
+      let requires, typically =
+	if pre_entry_point then requires, typically
+	else List.filter in_props requires, List.filter in_props typically
+      in
       let do_requires pred =
 	if pre_entry_point then translate_as_return pred
 	else
