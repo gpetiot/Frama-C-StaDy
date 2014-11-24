@@ -1,4 +1,6 @@
 
+let () = Plugin.is_share_visible ()
+
 module Self = Plugin.Register (struct
   let name = "StaDy"
   let shortname = "stady"
