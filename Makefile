@@ -1,6 +1,7 @@
 
 FRAMAC_SHARE	:=$(shell frama-c.byte -print-path)
 FRAMAC_LIBDIR	:=$(shell frama-c.byte -print-libpath)
+PLUGIN_DIR ?=.
 PLUGIN_NAME	:= StaDy
 
 PLUGIN_TESTS_DIRS := \
@@ -45,6 +46,17 @@ PLUGIN_CMO	:= \
 PLUGIN_GUI_CMO 	:= sd_register_gui 
 include $(FRAMAC_SHARE)/Makefile.dynamic
 
+install::
+	$(PRINT_CP) $(PLUGIN_NAME) share files
+	$(MKDIR) $(FRAMAC_SHARE)/stady
+	$(CP) $(StaDy_DIR)/externals.c $(FRAMAC_SHARE)/stady
+
+uninstall::
+	$(PRINT_RM) $(PLUGIN_NAME) share files
+	$(RM) -r $(FRAMAC_SHARE)/stady
+
 clean::
-	$(RM) __sd_instru_*.c __sd_*.pl
-	$(RM) -r pathcrawler___sd_instru_* testcases___sd_instru_*
+	$(RM) $(StaDy_DIR)/__sd_instru_*.c
+	$(RM) $(StaDy_DIR)/__sd_*.pl
+	$(RM) -r $(StaDy_DIR)/pathcrawler___sd_instru_*
+	$(RM) -r $(StaDy_DIR)/testcases___sd_instru_*
