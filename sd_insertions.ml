@@ -72,7 +72,7 @@ module F = struct
   let free x = call "free" None [x]
   let pc_dim x y = call "pathcrawler_dimension" (Some x) [y]
   let pc_exc x y = call "pathcrawler_assert_exception" None [x;y]
-  let pc_assume x = call "pathcrawler_assume" None [x]
+  let pc_assume x y = call "pathcrawler_assume_exception" None [x;y]
   let pc_to_fc x = call "pathcrawler_to_framac" None [x]
   let clear x = call "__gmpz_clear" None [x]
   let init x = call "__gmpz_init" None [x]
@@ -129,6 +129,9 @@ class gather_insertions props spec_insuf = object(self)
      been translated into pathcrawler_assert_exception *)
   val mutable translated_properties = []
 
+  val mutable new_globals = ([]:varinfo list)
+
+  method get_new_globals () = new_globals
   method get_insertions () = insertions
 
   method private insert label str =
@@ -1192,6 +1195,11 @@ class gather_insertions props spec_insuf = object(self)
     let const = CInt64(Integer.of_int i, IInt, Some(string_of_int i)) in
     F.pc_exc str (Cil.new_exp ~loc (Const const))
 
+  method private pc_ass str i =
+    let str = Cil.mkString ~loc str in
+    let const = CInt64(Integer.of_int i, IInt, Some(string_of_int i)) in
+    F.pc_assume str (Cil.new_exp ~loc (Const const))
+
   method private pc_to_fc str = F.pc_to_fc (Cil.mkString ~loc str)
 
   method private pc_assert_exception pred msg id prop =
@@ -1199,6 +1207,12 @@ class gather_insertions props spec_insuf = object(self)
     let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
     let insert_1 = ins_if e [Instru(self#pc_exc msg id)] [] in
     translated_properties <- prop :: translated_properties;
+    inserts_0 @ [insert_1]
+
+  method private pc_assume pred =
+    let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
+    let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
+    let insert_1 = ins_if e [Instru(self#pc_ass "" 0)] [] in
     inserts_0 @ [insert_1]
 
   method private for_behaviors bhvs ins =
@@ -1354,6 +1368,88 @@ class gather_insertions props spec_insuf = object(self)
       add_block_reachability b1;
       add_block_reachability b2;
       Cil.DoChildren
+    | Loop (_,b,_,_,_) when spec_insuf <> None ->
+      if (Extlib.the spec_insuf).sid = stmt.sid then
+	begin
+	  let kf = Kernel_function.find_englobing_kf stmt in
+	  let ca_l = Annotations.code_annot stmt in
+	  let ca_l = List.map (fun x -> x.annot_content) ca_l in
+	  let if_stmt = List.hd b.bstmts in
+	  let loop_cond =
+	    match if_stmt.skind with
+	    | If(e,_,_,_) -> e
+	    | _ ->
+	      Sd_options.Self.warning ~current:true ~once:true
+		"loop condition not found";
+	      zero
+	  in
+	  let on_bhv _ bhv (ins_glob, ins) =
+	    let bname = bhv.b_name in
+	    let bhv_in l =
+	      List.mem bname l || (Cil.is_default_behavior bhv && l = []) in
+	    let f_assigns ret = function
+	      | AAssigns (l, a) when bhv_in l -> a :: ret
+	      | _ -> ret
+	    in
+	    let f_linvs ret = function
+	      | AInvariant(l, _, p) when bhv_in l -> p :: ret
+	      | _ -> ret
+	    in
+	    let assigns = List.fold_left f_assigns [] ca_l in
+	    let merge_assigns ret = function
+	      | WritesAny ->
+		Sd_options.Self.warning ~current:true ~once:true
+		  "assigns clause not precise enough";
+		ret
+	      | Writes (froms) -> (List.map fst froms) @ ret
+	    in
+	    let assigns = List.fold_left merge_assigns [] assigns in
+	    let linvs = List.fold_left f_linvs [] ca_l in
+	    let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
+	    let new_globals, new_affects = List.fold_left (
+	      fun (ret1,ret2) term ->
+		let t = term.it_content in
+		let ty = match t.term_type with Ctype x->x | _-> assert false in
+		match t.term_node with
+		| TLval lv ->
+		  let ins, e = self#translate_lval lv in
+		  let vi = self#fresh_ctype_varinfo ty in
+		  new_globals <- vi :: new_globals;
+		  let aff = Instru(instru_affect e (Cil.evar vi)) in
+		  (decl_varinfo vi)::ret1, ins @ [aff] @ ret2
+		| _ ->
+		  Sd_options.Self.warning ~current:true ~once:true
+		    "term %a in assigns clause must be a left value"
+		    Printer.pp_term t;
+		  ret1,ret2
+	    ) ([],[]) assigns in
+
+	    let ins_block = List.fold_left (
+	      fun ret p ->
+		let ins_a = self#pc_assume p.content in
+		ret @ ins_a
+	    ) new_affects linvs in
+	    let ins_bhv = ins_if e_assumes ins_block [] in
+
+	    ins_glob @ new_globals, ins @ ins_assumes @ [ins_bhv]
+	  in
+
+	  let ins_glob, ins_h = Annotations.fold_behaviors on_bhv kf ([],[]) in
+	  List.iter (self#insert Glob) ins_glob;
+	  List.iter (self#insert (EndStmt stmt.sid)) ins_h;
+	  let ins_ass = Instru(self#pc_ass "" 0) in
+	  self#insert (EndStmt stmt.sid) (ins_if loop_cond [ins_ass] []);
+	  Cil.SkipChildren
+	end
+      else
+	Cil.DoChildren
+    | Instr (Call _) when spec_insuf <> None ->
+      if (Extlib.the spec_insuf).sid = stmt.sid then
+	begin
+	  Cil.SkipChildren
+	end
+      else
+	Cil.DoChildren
     | _ -> Cil.DoChildren
 
   method! vglob_aux = function

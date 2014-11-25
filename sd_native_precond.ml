@@ -340,11 +340,8 @@ let rec requires_to_prolog constraints pred =
   | _ -> assert false
 
 
-let translate precond_file_name =
-  let buf = Buffer.create 512 in
-  let fmt = Format.formatter_of_buffer buf in
+let compute_constraints() =
   let kf = fst (Globals.entry_point()) in
-  let func_name = Kernel_function.get_name kf in
   let bhv = Sd_utils.default_behavior kf in
   let subst pred = (new Sd_subst.subst)#pnamed pred [] [] [] [] in
   let requires_preds = bhv.b_requires in
@@ -434,6 +431,19 @@ let translate precond_file_name =
   let add_int_dom_to_list k (v,w) doms =  PLIntDom (k,v,w) :: doms in
   let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
   let domains = List.rev domains in
+  domains, unquantifs, quantifs
+
+
+let add_global v domains unquantifs quantifs =
+  let domains = input_from_type domains v.vtype (PLCVar v) in
+  domains, unquantifs, quantifs
+
+
+let translate precond_file_name domains unquantifs quantifs =
+  let buf = Buffer.create 512 in
+  let fmt = Format.formatter_of_buffer buf in
+  let kf = fst (Globals.entry_point()) in
+  let func_name = Kernel_function.get_name kf in
   let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
   let same_constraint_for_precond before after =
     Format.fprintf fmt "%s('%s',%s) :-\n  %s('%s',%s).\n"

@@ -14,8 +14,7 @@ let typically_typer ~typing_context ~loc bhv = function
 let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
-let translate filename props spec_insuf =
-  Kernel.Unicode.set false;
+let translate props spec_insuf =
   let gatherer = new Sd_insertions.gather_insertions props spec_insuf in
   Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
   let insertions = gatherer#get_insertions() in
@@ -29,7 +28,13 @@ let translate filename props spec_insuf =
     Sd_options.Self.feedback ~dkey "--------------------"
   in
   Hashtbl.iter print_insertions_at_label insertions;
-  let printer = new Sd_print.print_insertions insertions () in
+  insertions, gatherer#translated_properties(), gatherer#get_new_globals()
+
+
+let print_translation filename insertions spec_insuf =
+  let old_unicode = Kernel.Unicode.get() in
+  Kernel.Unicode.set false;
+  let printer = new Sd_print.print_insertions insertions spec_insuf () in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
@@ -45,7 +50,7 @@ let translate filename props spec_insuf =
   flush out_file;
   close_out out_file;
   Buffer.clear buf;
-  gatherer#translated_properties()
+  Kernel.Unicode.set old_unicode
 
 
 let emitter =
@@ -156,16 +161,7 @@ let selected_props() =
   let gather p n = List.rev_append (properties_of_name n) p in
   let props = List.fold_left gather props properties in
   let app p l = p :: l in
-  let props = if props = [] then Property_status.fold app [] else props in
-  let to_do p =
-    match Property_status.get p with
-    | Property_status.Inconsistent _
-    | Property_status.Never_tried
-    | Property_status.Best (Property_status.False_if_reachable,_)
-    | Property_status.Best (Property_status.Dont_know,_) -> true
-    | _ -> false
-  in
-  List.filter to_do props
+  if props = [] then Property_status.fold app [] else props
 
 
 let compute_props ?(props=selected_props()) ?spec_insuf () =
@@ -176,18 +172,27 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   let precond_fname = Printf.sprintf "__sd_%s_%s.pl" fname entry_point in
   let instru_fname = Printf.sprintf "__sd_instru_%s_%s.c" fname entry_point in
   (* Translate some parts of the pre-condition in Prolog *)
-  let native_precond_generated =
-    try Sd_native_precond.translate precond_fname; true with _ -> false in
+  let native_precond_generated, domains, unquantifs, quantifs =
+    try let a,b,c = Sd_native_precond.compute_constraints() in true, a, b, c
+    with _ -> false, [], [], []
+  in
   Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
-  let translated_props = translate instru_fname props spec_insuf in
+  let insertions, translated_props, new_globals = translate props spec_insuf in
   let test_params =
     if native_precond_generated then
-      Printf.sprintf "-pc-test-params %s" precond_fname
-    else
-      ""
+      begin
+	let domains, unquantifs, quantifs =
+	  let add_global (d, u, q) v = Sd_native_precond.add_global v d u q in
+	  List.fold_left add_global (domains,unquantifs,quantifs) new_globals
+	in
+	Sd_native_precond.translate precond_fname domains unquantifs quantifs;
+	Printf.sprintf "-pc-test-params %s" precond_fname
+      end
+    else ""
   in
+  print_translation instru_fname insertions spec_insuf;
   let cmd =
     Printf.sprintf
       "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s \

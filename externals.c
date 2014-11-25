@@ -35,6 +35,6 @@ void __gmpz_tdiv_r_ui(mpz_t x, const mpz_t y, unsigned long int z){}
 int pathcrawler_assert_exception(char* x,int y){return 0;}
 int pathcrawler_dimension(void* x){return 0;}
 void pathcrawler_to_framac(char* x){}
-void pathcrawler_assume(int x){}
+int pathcrawler_assume_exception(char* x,int y){return 0;}
 void* malloc(unsigned long x){return 0;}
 void free(void* x){}

@@ -38,7 +38,7 @@ let rec pp_insertion ?(line_break = true) fmt ins =
       let ty = Cil.stripConstLocalType v.vtype in
       let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
       let ty = array_to_ptr ty in
-      let v' = {v with vtype =ty} in
+      let v' = {v with vtype = ty} in
       Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v'
     | Sd_insertions.Block b ->
       if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
@@ -60,7 +60,7 @@ let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
 
 
-class print_insertions insertions () = object(self)
+class print_insertions insertions spec_insuf () = object(self)
   inherit Printer.extensible_printer () as super
 
   method private insertions_at fmt label =
@@ -116,12 +116,17 @@ class print_insertions insertions () = object(self)
     begin
       match stmt.skind with
       | Loop(_,b,l,_,_) ->
-	Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
-	  (fun fmt -> self#line_directive fmt) l;
-	self#insertions_at fmt (Sd_insertions.BegIter stmt.sid);
-	Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
-	self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
-	Format.fprintf fmt "}@\n @]"
+	if spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid then
+	  ()
+	else
+	  begin
+	    Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
+	      (fun fmt -> self#line_directive fmt) l;
+	    self#insertions_at fmt (Sd_insertions.BegIter stmt.sid);
+	    Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
+	    self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
+	    Format.fprintf fmt "}@\n @]"
+	  end
       | Return _ ->
 	let f = Kernel_function.get_name kf in
 	self#insertions_at fmt (Sd_insertions.EndFunc f);
@@ -182,7 +187,7 @@ class print_insertions insertions () = object(self)
     else if v.vname = "free" then free <- true
     else if v.vname = "pathcrawler_dimension" then pc_dim <- true
     else if v.vname = "pathcrawler_assert_exception" then pc_assert_exc <- true
-    else if v.vname = "pathcrawler_assume" then pc_assume <- true
+    else if v.vname = "pathcrawler_assume_exception" then pc_assume <- true
     else if v.vname = "pathcrawler_to_framac" then pc_to_fc <- true
     else if v.vname = "__gmpz_clear" then (gmpz_clear <- true; gmp <- true)
     else if v.vname = "__gmpz_init" then gmpz_init <- true
@@ -270,7 +275,7 @@ typedef __mpz_struct mpz_t[1];";
       pc_assert_exc, "extern int pathcrawler_assert_exception(char*,int);";
       pc_dim, "extern int pathcrawler_dimension(void*);";
       pc_to_fc, "extern void pathcrawler_to_framac(char*);";
-      pc_assume, "extern void pathcrawler_assume(int);";
+      pc_assume, "extern int pathcrawler_assume_exception(char*,int);";
       malloc, "extern void* malloc(unsigned long);";
       free, "extern void free(void*);";
     ] in
