@@ -227,16 +227,16 @@ void f(int *t, int x)
 [pc] Unexpected failure of goal write_status_prefix_and_path(3).
 [pc] Please report this bug.
 [pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(5).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
 [pc] Unexpected failure of goal write_status_prefix_and_path(7).
 [pc] Please report this bug.
 [pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(11).
+[pc] Unexpected failure of goal write_status_prefix_and_path(9).
 [pc] Please report this bug.
 [pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(12).
+[pc] Unexpected failure of goal write_status_prefix_and_path(10).
+[pc] Please report this bug.
+[pc] TEST GENERATION WARNING!!!
+[pc] Unexpected failure of goal write_status_prefix_and_path(11).
 [pc] Please report this bug.
 [pc] TEST GENERATION WARNING!!!
 [pc] Unexpected failure of goal write_status_prefix_and_path(13).
@@ -275,7 +275,7 @@ void f(int *t, int x)
 [pc] Unexpected failure of goal write_status_prefix_and_path(29).
 [pc] Please report this bug.
 [pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(31) in the free  at line number 167 of file __sd_instru_inv_insuf_ok_f.c.
+[pc] Unexpected failure of goal write_status_prefix_and_path(30).
 [pc] Please report this bug.
 [pc] TEST GENERATION WARNING!!!
 [pc] Unexpected failure of goal write_status_prefix_and_path(32).
