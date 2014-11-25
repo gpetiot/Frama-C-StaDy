@@ -5,6 +5,7 @@ PLUGIN_DIR ?=.
 PLUGIN_NAME	:= StaDy
 
 PLUGIN_TESTS_DIRS := \
+	inv_insuf_ko \
 	stmt_spec \
 	behaviors \
 	quantified \
