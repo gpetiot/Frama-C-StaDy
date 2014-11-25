@@ -165,6 +165,14 @@ let selected_props() =
 
 
 let compute_props ?(props=selected_props()) ?spec_insuf () =
+  let spec_insuf =
+    match spec_insuf with
+    | Some x -> Some x
+    | None ->
+      let sid = Sd_options.Spec_Insuf.get() in
+      try let stmt, _ = Kernel_function.find_from_sid sid in Some stmt
+      with _ -> None
+  in
   let files = Kernel.Files.get() in
   let fname = Filename.chop_extension (Filename.basename (List.hd files)) in
   let kf = fst (Globals.entry_point()) in
