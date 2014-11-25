@@ -35,7 +35,11 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
     | Sd_insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" pp_exp e
     | Sd_insertions.Decl v ->
-      Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v
+      let ty = Cil.stripConstLocalType v.vtype in
+      let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
+      let ty = array_to_ptr ty in
+      let v' = {v with vtype =ty} in
+      Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v'
     | Sd_insertions.Block b ->
       if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
     | Sd_insertions.IIf (e,b1,b2) ->
