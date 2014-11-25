@@ -109,11 +109,8 @@ class subst = object(self)
     | TAddrOf _ -> term (* TODO *)
     | TStartOf _ -> term (* TODO *)
     | Tapp (li,[],[lower;upper;({term_node=Tlambda([_],_)} as lambda)]) ->
-      let s = li.l_var_info.lv_name in
-      if s = "\\sum" || s = "\\product" || s = "\\numof" then
-	Tapp (li,[],[self#term lower ll vt vv; self#term upper ll vt vv;
-		     self#term lambda ll vt vv])
-      else assert false (* unreachable *)
+      Tapp (li,[],[self#term lower ll vt vv; self#term upper ll vt vv;
+		   self#term lambda ll vt vv])
     | Tapp (li,lassoc,params) ->
       let rec aux ret = function
 	| [] -> ret
