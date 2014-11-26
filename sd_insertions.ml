@@ -735,17 +735,20 @@ class gather_insertions props spec_insuf = object(self)
     inserts_0 @ inserts_1 @ inserts, ret
 
   method private translate_quantif ~forall logic_vars hyps goal =
-    if (List.length logic_vars) > 1 then
-      failwith "quantification on many variables unsupported!"; (* TODO *)
     let var = self#fresh_pred_varinfo() in
-    let lvar = List.hd logic_vars in
-    let t1,r1,r2,t2 = Sd_utils.extract_guards lvar hyps in
-    let iter_name = lvar.lv_name in
-    let insert_0 = decl_varinfo var in
+    let i_0 = decl_varinfo var in
     let init_val = if forall then one else zero in
     let lvar = Cil.var var in
-    let insert_1 = Instru(instru_affect lvar init_val) in
-    let inserts_3 =
+    let e_var = Cil.evar var in
+    let i_1 = Instru(instru_affect lvar init_val) in
+    let cond =
+      if forall then e_var
+      else Cil.new_exp ~loc (UnOp(LNot,e_var,Cil.intType))
+    in
+    let on_lvar (i_b,e_c,i_i,i_a) lvar =
+      let t1,r1,r2,t2 = Sd_utils.extract_guards lvar hyps in
+      let iter_name = lvar.lv_name in
+      let i_before, e_cond, i_inside, i_after =
       match t1.term_type with
       | Linteger ->
 	begin
@@ -764,23 +767,16 @@ class gather_insertions props spec_insuf = object(self)
 	    let tmp = self#fresh_ctype_varinfo Cil.intType in
 	    let i_5 = decl_varinfo tmp in
 	    let i_6 = Instru(F.cmp (Cil.var tmp) e_iter t2') in
-	    let e_var = Cil.evar var in
-	    let exp2 =
-	      if forall then e_var
-	      else Cil.new_exp ~loc (UnOp(LNot,e_var,Cil.intType))
-	    in
-	    let ins_b_0, goal_var = self#translate_pnamed goal in
-	    let ins_b_1 = Instru(instru_affect lvar goal_var) in
 	    let ins_b_2 = Instru(F.binop_ui PlusA e_iter e_iter one) in
 	    let ins_b_3 = Instru(F.cmp (Cil.var tmp) e_iter t2') in
-	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; ins_b_3] in
 	    let e1 = cmp r2 (Cil.evar tmp) zero in
-	    let e2 = Cil.mkBinOp ~loc LAnd e1 exp2 in
-	    let i_7 = ins_for Skip e2 Skip inserts_block in
 	    let i_8 = Instru(F.clear e_iter) in
 	    let i_9 = Instru(F.clear t1') in
 	    let i_10 = Instru(F.clear t2') in
-	    [i_0] @ i_1 @ i_2 @ [i_3] @ i_4 @ [i_5; i_6; i_7; i_8; i_9; i_10]
+	    let i_before = i_0 :: i_1 @ i_2 @ i_3 :: i_4 @ [i_5; i_6] in
+	    let i_inside = [ins_b_2; ins_b_3] in
+	    let i_after = [i_8; i_9; i_10] in
+	    i_before, e1, i_inside, i_after
 	  | Lreal -> assert false (* TODO: reals *)
 	  | _ ->
 	    let fresh_iter = my_Z_varinfo iter_name in
@@ -797,22 +793,15 @@ class gather_insertions props spec_insuf = object(self)
 	    let i_5 = decl_varinfo tmp in
 	    let ltmp = Cil.var tmp in
 	    let i_6 = Instru(F.cmp_si ltmp e_iter t2') in
-	    let e_var = Cil.evar var in
-	    let exp2 =
-	      if forall then e_var
-	      else Cil.new_exp ~loc (UnOp(LNot,e_var,Cil.intType))
-	    in
-	    let ins_b_0, goal_var = self#translate_pnamed goal in 
-	    let ins_b_1 = Instru(instru_affect lvar goal_var) in
 	    let ins_b_2 = Instru(F.binop_ui PlusA e_iter e_iter one) in
 	    let ins_b_3 = Instru(F.cmp_si ltmp e_iter t2') in
-	    let inserts_block = ins_b_0 @ [ins_b_1; ins_b_2; ins_b_3] in
 	    let e1 = cmp r2 (Cil.evar tmp) zero in
-	    let e2 = Cil.mkBinOp ~loc LAnd e1 exp2 in
-	    let i_7 = ins_for Skip e2 Skip inserts_block in
 	    let i_8 = Instru(F.clear e_iter) in
 	    let i_9 = Instru(F.clear t1') in
-	    [i_0] @ i_1 @ i_2 @ [i_3] @ i_4 @ [i_5; i_6; i_7; i_8; i_9]
+	    let i_before = i_0 :: i_1 @ i_2 @ i_3 :: i_4 @ [i_5; i_6] in
+	    let i_inside = [ins_b_2; ins_b_3] in
+	    let i_after = [i_8; i_9] in
+	    i_before, e1, i_inside, i_after
 	end
       | Lreal -> assert false (* TODO: reals *)
       | _ ->
@@ -826,23 +815,26 @@ class gather_insertions props spec_insuf = object(self)
 	  | Rle -> t1'
 	  | _ -> assert false)
 	in
-	let e_var = Cil.evar var in
 	let e_iter = Cil.evar iter in
 	let e1 = cmp r2 e_iter t2' in
-	let e2 =
-	  if forall then e_var
-	  else Cil.new_exp ~loc (UnOp(LNot,e_var,Cil.intType))
-	in
-	let exp2 = Cil.mkBinOp ~loc LAnd e1 e2 in
-	let e3 = Cil.mkBinOp ~loc PlusA e_iter one in
-	let next = instru_affect liter e3 in
-	let ins_b_0, goal_var = self#translate_pnamed goal in
-	let ins_b_1 = Instru(instru_affect lvar goal_var) in
-	let inserts_block = ins_b_0 @ [ins_b_1]	in
-	let insert_3 = ins_for init exp2 next inserts_block in
-	[insert_0] @ inserts_1 @ inserts_2 @ [insert_3]
+	let next = instru_affect liter (Cil.mkBinOp ~loc PlusA e_iter one) in
+	let i_before = insert_0 :: inserts_1 @ inserts_2 @ [Instru init] in
+	let i_inside = [Instru next] in
+	i_before, e1, i_inside, []
+      in
+      i_b @ i_before,
+      Cil.mkBinOp ~loc LAnd e_cond e_c,
+      i_i @ i_inside,
+      i_a @ i_after
     in
-    [insert_0; insert_1; Block inserts_3], Cil.evar var
+    let i_before, e_cond, i_inside, i_after =
+      List.fold_left on_lvar ([],cond,[],[]) logic_vars
+    in
+    let ins_b_0, goal_var = self#translate_pnamed goal in
+    let ins_b_1 = Instru(instru_affect lvar goal_var) in
+    let i_inside = ins_b_0 @ [ins_b_1] @ i_inside in
+    let i_loop = ins_for Skip e_cond Skip i_inside in
+    [i_0; i_1; Block (i_before @ [i_loop] @ i_after)], e_var
 
   method private translate_predicate = function
   | Pfalse -> [], zero

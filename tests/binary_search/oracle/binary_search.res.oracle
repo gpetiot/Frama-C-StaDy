@@ -310,14 +310,15 @@ int binary_search(int *arr, int length, int query)
                 __stady_pred_9 = 1;
                 {
                   int __q_x;
-                  for(__q_x = high + 1; __q_x < length && __stady_pred_9; __q_x = 
-                    __q_x + 1) {
+                  __q_x = high + 1;
+                  for(; __q_x < length && __stady_pred_9; ) {
                     mpz_t __stady_gmp_27;
                     __gmpz_init_set_si(__stady_gmp_27, __q_x);
                     int __stady_term_14;
                     __stady_term_14 = __gmpz_get_si(__stady_gmp_27);
                     __gmpz_clear(__stady_gmp_27);
                     __stady_pred_9 = *(arr + __stady_term_14) != query;
+                    __q_x = __q_x + 1;
                   }
                 }
                 __stady_pred_8 = __stady_pred_9;
