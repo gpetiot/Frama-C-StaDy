@@ -10,6 +10,7 @@ PLUGIN_TESTS_DIRS := \
 	stmt_spec \
 	behaviors \
 	quantified \
+	quantified_many \
 	binary_search \
 	bubble_sort \
 	insertion_sort \
