@@ -1385,30 +1385,27 @@ class gather_insertions props spec_insuf = object(self)
 	    let assigns = List.fold_left merge_assigns [] assigns in
 	    let linvs = List.fold_left f_linvs [] ca_l in
 	    let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
-	    let new_globals, new_affects = List.fold_left (
-	      fun (ret1,ret2) term ->
-		let t = term.it_content in
-		let ty = match t.term_type with Ctype x->x | _-> assert false in
-		match t.term_node with
-		| TLval lv ->
-		  let ins, e = self#translate_lval lv in
-		  let vi = self#fresh_ctype_varinfo ty in
-		  new_globals <- vi :: new_globals;
-		  let aff = Instru(instru_affect e (Cil.evar vi)) in
-		  (decl_varinfo vi)::ret1, ins @ [aff] @ ret2
-		| _ ->
-		  Sd_options.Self.warning ~current:true ~once:true
-		    "term %a in assigns clause must be a left value"
-		    Printer.pp_term t;
-		  ret1,ret2
-	    ) ([],[]) assigns in
-	    let ins_block = List.fold_left (
-	      fun ret p ->
-		let ins_a = self#pc_assume p.content in
-		ret @ ins_a
-	    ) new_affects linvs in
+	    let on_term (ret1,ret2) term =
+	      let t = term.it_content in
+	      let ty = match t.term_type with Ctype x->x | _-> assert false in
+	      match t.term_node with
+	      | TLval lv ->
+		let ins, e = self#translate_lval lv in
+		let vi = self#fresh_ctype_varinfo ty in
+		new_globals <- vi :: new_globals;
+		let aff = Instru(instru_affect e (Cil.evar vi)) in
+		(decl_varinfo vi)::ret1, ins @ aff :: ret2
+	      | _ ->
+		Sd_options.Self.warning ~current:true ~once:true
+		  "term %a in assigns clause must be a left value"
+		  Printer.pp_term t;
+		ret1,ret2
+	    in
+	    let globals, affects = List.fold_left on_term ([],[]) assigns in
+	    let on_inv ret p = ret @ (self#pc_assume p.content) in
+	    let ins_block = List.fold_left on_inv affects linvs in
 	    let ins_bhv = ins_if e_assumes ins_block [] in
-	    ins_glob @ new_globals, ins @ ins_assumes @ [ins_bhv]
+	    ins_glob @ globals, ins @ ins_assumes @ [ins_bhv]
 	  in
 	  let ins_glob, ins_h = Annotations.fold_behaviors on_bhv kf ([],[]) in
 	  List.iter (self#insert Glob) ins_glob;
