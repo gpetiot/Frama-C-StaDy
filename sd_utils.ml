@@ -18,8 +18,7 @@ let fieldinfo_to_int fi =
   in
   aux 0 fi.Cil_types.fcomp.Cil_types.cfields
 
-let machdep () =
-  match Kernel.Machdep.get() with
+let machdep() = match Kernel.Machdep.get() with
   | "x86_64" -> 64
   | "x86_32" | "ppc_32" -> 32
   | "x86_16" -> 16
@@ -51,24 +50,21 @@ let extract_guards var p =
     | Some x, None | None, Some x -> Some x | None, None -> None
     | _ -> assert false
   in
-  let rec is_var_to_guard t = match t.term_node with
-    | TLogic_coerce (_, t) -> is_var_to_guard t
+  let rec to_guard t = match t.term_node with
+    | TLogic_coerce (_, t) -> to_guard t
     | TLval(TVar x, TNoOffset) -> Cil_datatype.Logic_var.equal x var
     | _ -> false
   in
-  let rec aux p =
-    match p.content with
+  let rec aux p = match p.content with
     | Pand(p1, p2) ->
       let a,b,c,d = aux p1 and e,f,g,h = aux p2 in
       (merge_term a e), (merge_rel b f), (merge_rel c g), (merge_term d h)
-    | Prel((Rlt|Rle) as r, t1, t2) when is_var_to_guard t1 ->
-      None, None, Some r, Some t2
-    | Prel((Rlt|Rle) as r, t1, t2) when is_var_to_guard t2 ->
-      Some t1, Some r, None, None
-    | Prel(Rge, t1, t2) when is_var_to_guard t1 -> Some t2, Some Rle, None, None
-    | Prel(Rgt, t1, t2) when is_var_to_guard t1 -> Some t2, Some Rlt, None, None
-    | Prel(Rge, t1, t2) when is_var_to_guard t2 -> None, None, Some Rle, Some t1
-    | Prel(Rgt, t1, t2) when is_var_to_guard t2 -> None, None, Some Rlt, Some t1
+    | Prel((Rlt|Rle) as r, t, u) when to_guard t -> None, None, Some r, Some u
+    | Prel((Rlt|Rle) as r, t, u) when to_guard u -> Some t, Some r, None, None
+    | Prel(Rge, t, u) when to_guard t -> Some u, Some Rle, None, None
+    | Prel(Rgt, t, u) when to_guard t -> Some u, Some Rlt, None, None
+    | Prel(Rge, t, u) when to_guard u -> None, None, Some Rle, Some t
+    | Prel(Rgt, t, u) when to_guard u -> None, None, Some Rlt, Some t
     | _ -> None, None, None, None
   in
   let a,b,c,d = aux p in
@@ -79,68 +75,54 @@ let error_term t = Sd_options.Self.abort "term: %a" Sd_debug.pp_term t
 let error_toffset t = Sd_options.Self.abort "toffset: %a" Sd_debug.pp_toffset t
 let error_pred p = Sd_options.Self.abort "pred: %a" Sd_debug.pp_pred p
 
+let is_one = function
+  | {term_node=TConst(Integer(i,_))} when Integer.equal i Integer.one -> true
+  | _ -> false
+
 
 (* Extracts the varinfo of the variable and its inferred size as a term
    from a term t as \valid(t). *)
 let rec extract_from_valid t =
+  let loc = t.term_loc in
   match t.term_node with
-  | TBinOp (((PlusPI|IndexPI|MinusPI) as op),
-    	    ({term_node=TCastE((TPtr _) as ty,t)} as _operand1),
+  | TBinOp ((PlusPI|IndexPI|MinusPI) as op,
+    	    {term_node=TCastE((TPtr _) as ty,t)},
     	    ({term_node=(Trange (_, Some _))} as operand2)) ->
-      extract_from_valid
-    	{t with term_node=TBinOp(op, {t with term_type=Ctype ty}, operand2)}
+    extract_from_valid
+      {t with term_node=TBinOp(op, {t with term_type=Ctype ty}, operand2)}
   | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)}),
-	   ({term_node=
-	       Trange(_,
-		      Some {term_node=
-			  TBinOp (MinusA, x,
-				  {term_node=TConst (Integer (i, _))})})}))
-      when Integer.equal i Integer.one ->
-    let varinfo = Extlib.the v.lv_origin in
+	   {term_node=TLval(TVar {lv_origin=Some varinfo}, _)},
+	   {term_node=Trange(_,Some {term_node=TBinOp(MinusA,x,k)})})
+      when is_one k ->
     varinfo, x
   | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)}),
-	   ({term_node=Trange(_,Some bound)})) ->
-    let varinfo = Extlib.the v.lv_origin in
-    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
+	   {term_node=TLval(TVar {lv_origin=Some varinfo}, _)},
+	   {term_node=Trange(_,Some bound)}) ->
+    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc ()) in
     let einfo = {exp_type=bound.term_type; exp_name=[]} in
-    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
-    varinfo, term
-  | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval(TVar v, _)}),
-	   (t2 (* anything but a Trange *))) ->
-    let varinfo = Extlib.the v.lv_origin in
-    let tnode = TBinOp (PlusA, t2, Cil.lone ~loc:t.term_loc()) in
+    varinfo, Cil.term_of_exp_info t.term_loc tnode einfo
+  | TBinOp((PlusPI|IndexPI),{term_node=TLval(TVar{lv_origin=Some vi}, _)},t2) ->
+    let tnode = TBinOp (PlusA, t2, Cil.lone ~loc ()) in
     let einfo = {exp_type=t2.term_type; exp_name=[]} in
-    let term = Cil.term_of_exp_info t.term_loc tnode einfo in
-    varinfo, term
+    vi, Cil.term_of_exp_info t.term_loc tnode einfo
   | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval tlval}),
-	   ({term_node=
-	       Trange(_,
-		      Some {term_node=
-			  TBinOp (MinusA, x,
-				  {term_node=TConst (Integer (i, _))})})}))
-      when Integer.equal i Integer.one ->
+	   {term_node=TLval tlval},
+	   {term_node=Trange(_,Some {term_node=TBinOp(MinusA,x,k)})})
+      when is_one k ->
     let varinfo, _ = extract_from_valid {t with term_node=TLval tlval} in
     varinfo, x
   | TBinOp((PlusPI|IndexPI),
-	   ({term_node=TLval tlval}),
-	   ({term_node=Trange(_,Some bound)})) ->
-    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc:t.term_loc()) in
+	   {term_node=TLval tlval},
+	   {term_node=Trange(_,Some bound)}) ->
+    let tnode = TBinOp (PlusA, bound, Cil.lone ~loc ()) in
     let einfo = {exp_type=bound.term_type; exp_name=[]} in
     let term = Cil.term_of_exp_info t.term_loc tnode einfo in
     let varinfo, _ = extract_from_valid {t with term_node=TLval tlval} in
     varinfo, term
-  | TLval (TVar v, TNoOffset) ->
-    let varinfo = Extlib.the v.lv_origin in
-    let term = Cil.lone ~loc:t.term_loc () in
-    varinfo, term
+  | TLval (TVar{lv_origin=Some vi},TNoOffset) -> vi, Cil.lone ~loc ()
   | TLval (TMem m, TNoOffset) ->
     let varinfo, _ = extract_from_valid m in
-    let term = Cil.lone ~loc:t.term_loc () in
-    varinfo, term
+    varinfo, Cil.lone ~loc ()
   | _ -> Sd_options.Self.debug "\\valid(%a)" Sd_debug.pp_term t; assert false
 
 
@@ -166,8 +148,7 @@ let lengths_from_requires kf =
 	  let terms = append_end terms term in
 	  Cil_datatype.Varinfo.Hashtbl.replace kf_tbl v terms;
 	  Cil.DoChildren
-	with
-	| _ -> Cil.DoChildren
+	with _ -> Cil.DoChildren
       end
     | _ -> Cil.DoChildren
   end
