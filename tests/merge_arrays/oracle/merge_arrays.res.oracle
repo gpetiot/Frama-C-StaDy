@@ -14,20 +14,20 @@ tests/merge_arrays/merge_arrays.c:17:[stady] warning: Native Precondition:
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('merge_arrays', dim('t1'), [], int([1..4294967295])).
-dom('merge_arrays', dim('t2'), [], int([1..4294967295])).
-dom('merge_arrays', dim('t3'), [], int([1..4294967295])).
-dom('merge_arrays', cont('t1',_), [], int([-2147483648..2147483647])).
-dom('merge_arrays', cont('t2',_), [], int([-2147483648..2147483647])).
 dom('merge_arrays', cont('t3',_), [], int([-2147483648..2147483647])).
+dom('merge_arrays', cont('t2',_), [], int([-2147483648..2147483647])).
+dom('merge_arrays', cont('t1',_), [], int([-2147483648..2147483647])).
+dom('merge_arrays', dim('t3'), [], int([1..4294967295])).
+dom('merge_arrays', dim('t2'), [], int([1..4294967295])).
+dom('merge_arrays', dim('t1'), [], int([1..4294967295])).
 dom('pathcrawler__merge_arrays_precond',A,B,C) :-
   dom('merge_arrays',A,B,C).
 create_input_vals('merge_arrays', Ins):-
-  create_input_val(dim('t1'), int([1..4294967295]),Ins),
-  create_input_val(dim('t2'), int([1..4294967295]),Ins),
-  create_input_val(dim('t3'), int([1..4294967295]),Ins),
-  create_input_val('l1', int([0..3]),Ins),
   create_input_val('l2', int([0..3]),Ins),
+  create_input_val('l1', int([0..3]),Ins),
+  create_input_val(dim('t3'), int([1..4294967295]),Ins),
+  create_input_val(dim('t2'), int([1..4294967295]),Ins),
+  create_input_val(dim('t1'), int([1..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__merge_arrays_precond',Ins) :-
   create_input_vals('merge_arrays',Ins).

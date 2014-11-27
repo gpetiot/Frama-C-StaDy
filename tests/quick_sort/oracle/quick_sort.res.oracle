@@ -10,19 +10,19 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('quick_sort', dim('arr'), [], int([1..4294967295])).
-dom('quick_sort', dim('beg'), [], int([100..4294967295])).
-dom('quick_sort', dim('end'), [], int([100..4294967295])).
-dom('quick_sort', cont('arr',_), [], int([-2147483648..2147483647])).
-dom('quick_sort', cont('beg',_), [], int([-2147483648..2147483647])).
 dom('quick_sort', cont('end',_), [], int([-2147483648..2147483647])).
+dom('quick_sort', cont('beg',_), [], int([-2147483648..2147483647])).
+dom('quick_sort', cont('arr',_), [], int([-2147483648..2147483647])).
+dom('quick_sort', dim('end'), [], int([100..4294967295])).
+dom('quick_sort', dim('beg'), [], int([100..4294967295])).
+dom('quick_sort', dim('arr'), [], int([1..4294967295])).
 dom('pathcrawler__quick_sort_precond',A,B,C) :-
   dom('quick_sort',A,B,C).
 create_input_vals('quick_sort', Ins):-
-  create_input_val(dim('arr'), int([1..4294967295]),Ins),
-  create_input_val(dim('beg'), int([100..4294967295]),Ins),
-  create_input_val(dim('end'), int([100..4294967295]),Ins),
   create_input_val('elements', int([0..3]),Ins),
+  create_input_val(dim('end'), int([100..4294967295]),Ins),
+  create_input_val(dim('beg'), int([100..4294967295]),Ins),
+  create_input_val(dim('arr'), int([1..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__quick_sort_precond',Ins) :-
   create_input_vals('quick_sort',Ins).

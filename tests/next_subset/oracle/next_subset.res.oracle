@@ -12,13 +12,13 @@ tests/next_subset/next_subset.c:22:[stady] warning: Native Precondition:
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('nextSubset', dim('s'), [], int([1..4294967295])).
 dom('nextSubset', cont('s',_), [], int([-2147483648..2147483647])).
+dom('nextSubset', dim('s'), [], int([1..4294967295])).
 dom('pathcrawler__nextSubset_precond',A,B,C) :-
   dom('nextSubset',A,B,C).
 create_input_vals('nextSubset', Ins):-
-  create_input_val(dim('s'), int([1..4294967295]),Ins),
   create_input_val('n', int([0..3]),Ins),
+  create_input_val(dim('s'), int([1..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__nextSubset_precond',Ins) :-
   create_input_vals('nextSubset',Ins).

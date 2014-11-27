@@ -10,13 +10,13 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('num_of', dim('t'), [], int([1..4294967295])).
 dom('num_of', cont('t',_), [], int([-2147483648..2147483647])).
+dom('num_of', dim('t'), [], int([1..4294967295])).
 dom('pathcrawler__num_of_precond',A,B,C) :-
   dom('num_of',A,B,C).
 create_input_vals('num_of', Ins):-
-  create_input_val(dim('t'), int([1..4294967295]),Ins),
   create_input_val('n', int([1..3]),Ins),
+  create_input_val(dim('t'), int([1..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__num_of_precond',Ins) :-
   create_input_vals('num_of',Ins).

@@ -10,26 +10,26 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('f', dim(cont(cont('s',_),1)), [], int([0..4294967295])).
-dom('f', dim(cont(cont('s2',_),1)), [], int([0..4294967295])).
-dom('f', dim('s'), [], int([1..4294967295])).
-dom('f', dim('s2'), [], int([1..4294967295])).
+dom('f', cont(cont('s',0),0), [], int([0..10])).
+dom('f', cont(cont(cont('s2',_),1),_), [], int([-2147483648..2147483647])).
+dom('f', cont(cont('s2',_),0), [], int([-2147483648..2147483647])).
+dom('f', cont(cont(cont('s',_),1),_), [], int([-2147483648..2147483647])).
+dom('f', cont(cont('s',_),0), [], int([-2147483648..2147483647])).
 dom('f', dim(cont(cont('s',0),1)), [], int([1..4294967295])).
 dom('f', dim(cont(cont('s2',0),1)), [], int([10..4294967295])).
-dom('f', cont(cont('s',_),0), [], int([-2147483648..2147483647])).
-dom('f', cont(cont(cont('s',_),1),_), [], int([-2147483648..2147483647])).
-dom('f', cont(cont('s2',_),0), [], int([-2147483648..2147483647])).
-dom('f', cont(cont(cont('s2',_),1),_), [], int([-2147483648..2147483647])).
-dom('f', cont(cont('s',0),0), [], int([0..10])).
+dom('f', dim('s2'), [], int([1..4294967295])).
+dom('f', dim('s'), [], int([1..4294967295])).
+dom('f', dim(cont(cont('s2',_),1)), [], int([0..4294967295])).
+dom('f', dim(cont(cont('s',_),1)), [], int([0..4294967295])).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
-  create_input_val(dim('s'), int([1..4294967295]),Ins),
-  create_input_val(dim('s2'), int([1..4294967295]),Ins),
+  create_input_val(cont(cont('s',0),0), int([0..10]),Ins),
+  create_input_val('n', int([0..5]),Ins),
   create_input_val(dim(cont(cont('s',0),1)), int([1..4294967295]),Ins),
   create_input_val(dim(cont(cont('s2',0),1)), int([10..4294967295]),Ins),
-  create_input_val('n', int([0..5]),Ins),
-  create_input_val(cont(cont('s',0),0), int([0..10]),Ins),
+  create_input_val(dim('s2'), int([1..4294967295]),Ins),
+  create_input_val(dim('s'), int([1..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).

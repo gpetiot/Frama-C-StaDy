@@ -33,15 +33,10 @@ type pl_constraint =
 
 
 
-let in_dom =
-  let rec aux = function
-    | PLBinOp _ -> true
-    | PLDim _ -> true
-    | PLContAll _ -> true
-    | PLCont _ -> true
+let in_dom = function
+  | PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> match t with
+    | PLBinOp _ | PLDim _ | PLContAll _ | PLCont _ -> true
     | PLConst _ | PLLVar _ | PLCVar _ -> false
-  in
-  function | PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> aux t
 
 let in_create_input_val =
   let rec aux = function
@@ -112,7 +107,7 @@ class pl_printer = object(self)
       (try Extlib.the str1 with _ -> "?")
       (try Extlib.the str2 with _ -> "?")
 
-  method relation fmt = function
+  method rel fmt = function
   | Rlt -> Format.fprintf fmt "inf"
   | Rgt -> Format.fprintf fmt "sup"
   | Rle -> Format.fprintf fmt "infegal"
@@ -120,28 +115,15 @@ class pl_printer = object(self)
   | Req -> Format.fprintf fmt "egal"
   | Rneq -> Format.fprintf fmt "diff"
 
-  method rel fmt (x,r,y) =
-    Format.fprintf fmt "cond(%a,%a,%a,pre)"
-      self#relation r self#term x self#term y
+  method cond fmt (x,r,y) =
+    Format.fprintf fmt "cond(%a,%a,%a,pre)" self#rel r self#term x self#term y
 
   method quantif fmt (lvars, compo_rels, (x,r,y)) =
-    Format.fprintf fmt "uq_cond(\n  [\n";
-    let rec aux = function
-      | [] -> ()
-      | h :: [] -> Format.fprintf fmt "    %s\n" (String.uppercase h.lv_name)
-      | h :: t -> Format.fprintf fmt "    %s,\n" (String.uppercase h.lv_name);
-	aux t
-    in
-    aux lvars;
-    Format.fprintf fmt "  ],\n  [\n";
-    let rec aux = function
-      | [] -> ()
-      | h :: [] -> Format.fprintf fmt "    %a\n" self#rel h
-      | h :: t -> Format.fprintf fmt "    %a,\n" self#rel h; aux t
-    in
-    aux compo_rels;
-    Format.fprintf fmt "  ],\n  %a,%a,%a)"
-      self#relation r self#term x self#term y
+    let aux fmt s = Format.fprintf fmt "    %s" (String.uppercase s.lv_name) in
+    Format.fprintf fmt "uq_cond(\n  [\n%a\n  ],\n  [\n%a\n  ],\n  %a,%a,%a)"
+      (Sd_debug.pp_list ~sep:",\n" aux) lvars
+      (Sd_debug.pp_list ~sep:",\n" self#cond) compo_rels
+       self#rel r self#term x self#term y
 end
 
 
@@ -157,10 +139,9 @@ let prolog_header =
   ^ "dom(0,0,0,0).\n"
 
 class to_pl = object(self)
-  method logic_var lv =
-    match lv.lv_origin with
-    | None -> PLLVar lv
-    | Some v -> PLCVar v
+  method logic_var lv = match lv.lv_origin with
+  | None -> PLLVar lv
+  | Some v -> PLCVar v
 
   method term_offset ret = function
   | TNoOffset -> List.rev ret
@@ -182,25 +163,24 @@ class to_pl = object(self)
     let toffsets = self#term_offset [] toffset in
     List.fold_left (fun t tof -> PLCont (t, tof)) tlhost' toffsets
 
-  method term t =
-    match t.term_node with
-    | TLogic_coerce (_, t') -> self#term t'
-    | TConst (LEnum {eival={enode=Const (CInt64 (ii,_,_))}})
-    | TConst (Integer (ii, _)) -> PLConst (PLInt ii)
-    | TConst (LEnum {eival={enode=Const (CReal (f,_,_))}})
-    | TConst (LReal {r_nearest=f}) -> PLConst (PLFloat f)
-    | TConst (LEnum {eival={enode=Const (CChr c)}})
-    | TConst (LChr c) -> PLConst (PLInt (Integer.of_int (int_of_char c)))
-    | TLval tl -> self#term_lval tl
-    | TBinOp(op,x,y)-> PLBinOp (self#term x, op, self#term y)
-    | TUnOp (Neg, term) ->
-      begin
-	match (self#term term) with
-	| PLConst (PLInt i) -> PLConst (PLInt (Integer.neg i))
-	| _ -> Sd_utils.error_term t
-      end
-    | Tat(t',LogicLabel(_,l)) when l = "Here" || l = "Old" -> self#term t'
-    | _ -> Sd_utils.error_term t
+  method term t = match t.term_node with
+  | TLogic_coerce (_, t') -> self#term t'
+  | TConst (LEnum {eival={enode=Const (CInt64 (ii,_,_))}})
+  | TConst (Integer (ii, _)) -> PLConst (PLInt ii)
+  | TConst (LEnum {eival={enode=Const (CReal (f,_,_))}})
+  | TConst (LReal {r_nearest=f}) -> PLConst (PLFloat f)
+  | TConst (LEnum {eival={enode=Const (CChr c)}})
+  | TConst (LChr c) -> PLConst (PLInt (Integer.of_int (int_of_char c)))
+  | TLval tl -> self#term_lval tl
+  | TBinOp(op,x,y)-> PLBinOp (self#term x, op, self#term y)
+  | TUnOp (Neg, term) ->
+    begin
+      match (self#term term) with
+      | PLConst (PLInt i) -> PLConst (PLInt (Integer.neg i))
+      | _ -> Sd_utils.error_term t
+    end
+  | Tat(t',LogicLabel(_,l)) when l = "Here" || l = "Old" -> self#term t'
+  | _ -> Sd_utils.error_term t
 end
 
 let term_to_pl t = try (new to_pl)#term t with _ -> Sd_utils.error_term t
@@ -247,8 +227,7 @@ let rec input_from_type domains ty t =
 	  let d = PLIntDom (PLDim t, Some ii, Some ii) in
 	  input_from_type (d :: domains) ty' (PLContAll t)
 	| _ -> assert false
-      else
-	assert false
+      else assert false
     else
       let d = PLIntDom (PLDim t, Some Integer.zero, Some maxuint) in
       input_from_type (d :: domains) ty' (PLContAll t)
@@ -263,14 +242,14 @@ let rec valid_to_prolog term =
     let t = term_to_pl term in
     [ PLDomain (PLIntDom (PLDim t, Some (Integer.one), Some maxuint)) ]
   | TBinOp (((PlusPI|IndexPI|MinusPI) as op),
-    	    ({term_node=TCastE((TPtr _) as ty,t)} as _operand1),
+    	    ({term_node=TCastE((TPtr _) as ty,t)}),
     	    ({term_node=(Trange (_, Some _))} as operand2)) ->
     valid_to_prolog
       {term with term_node=TBinOp(op, {t with term_type=Ctype ty}, operand2)}
   | TBinOp ((PlusPI|IndexPI), t, {term_node=(Trange (_, Some x))}) ->
     let t' = term_to_pl t in
     let x' = term_to_pl x in
-    let one =  PLConst (PLInt(Integer.one)) in
+    let one = PLConst (PLInt Integer.one) in
     begin
       match x' with
       | PLConst (PLInt i) ->
@@ -286,13 +265,10 @@ let rel_to_prolog rel term1 term2 =
   let var1 = term_to_pl term1 in
   let var2 = term_to_pl term2 in
   let rec no_var = function
-    | PLBinOp (x,_,y) -> no_var x && no_var y
+    | PLBinOp (x,_,y) | PLCont (x,y) -> no_var x && no_var y
+    | PLDim x | PLContAll x -> no_var x
+    | PLLVar _ | PLCVar _ -> false
     | PLConst _ -> true
-    | PLDim x -> no_var x
-    | PLContAll x -> no_var x
-    | PLCont (x,y) -> no_var x && no_var y
-    | PLLVar _ -> false
-    | PLCVar _ -> false
   in
   match var1 with
   | PLConst (PLInt x) ->
@@ -301,11 +277,11 @@ let rel_to_prolog rel term1 term2 =
       | PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
 	begin
 	  match rel with
-	  | Rlt -> PLDomain (PLIntDom (var2, (Some (Integer.succ x)), None))
-	  | Rgt -> PLDomain (PLIntDom (var2, None, (Some (Integer.pred x))))
-	  | Rle -> PLDomain (PLIntDom (var2, (Some x), None))
-	  | Rge -> PLDomain (PLIntDom (var2, None, (Some x)))
-	  | Req -> PLDomain (PLIntDom (var2, (Some x), (Some x)))
+	  | Rlt -> PLDomain (PLIntDom (var2, Some (Integer.succ x), None))
+	  | Rgt -> PLDomain (PLIntDom (var2, None, Some (Integer.pred x)))
+	  | Rle -> PLDomain (PLIntDom (var2, Some x, None))
+	  | Rge -> PLDomain (PLIntDom (var2, None, Some x))
+	  | Req -> PLDomain (PLIntDom (var2, Some x, Some x))
 	  | Rneq -> PLUnquantif (var1, rel, var2)
 	end
       | _ -> PLUnquantif (var1, rel, var2)
@@ -317,11 +293,11 @@ let rel_to_prolog rel term1 term2 =
       | PLConst (PLInt y) ->
 	begin
 	  match rel with
-	  | Rlt -> PLDomain (PLIntDom (var1, None, (Some (Integer.pred y))))
-	  | Rgt -> PLDomain (PLIntDom (var1, (Some (Integer.succ y)), None))
-	  | Rle -> PLDomain (PLIntDom (var1, None, (Some y)))
-	  | Rge -> PLDomain (PLIntDom (var1, (Some y), None))
-	  | Req -> PLDomain (PLIntDom (var1, (Some y), (Some y)))
+	  | Rlt -> PLDomain (PLIntDom (var1, None, Some (Integer.pred y)))
+	  | Rgt -> PLDomain (PLIntDom (var1, Some (Integer.succ y), None))
+	  | Rle -> PLDomain (PLIntDom (var1, None, Some y))
+	  | Rge -> PLDomain (PLIntDom (var1, Some y, None))
+	  | Req -> PLDomain (PLIntDom (var1, Some y, (Some y)))
 	  | Rneq -> PLUnquantif (var1, rel, var2)
 	end
       | _ -> PLUnquantif (var1, rel, var2)
@@ -329,12 +305,10 @@ let rel_to_prolog rel term1 term2 =
   | _ -> PLUnquantif (var1, rel, var2)
 
 
-let rec requires_to_prolog constraints pred =
-  match pred.content with
+let rec requires_to_prolog constraints pred = match pred.content with
   | Pand (p, q) -> requires_to_prolog (requires_to_prolog constraints p) q
   | Ptrue -> constraints
-  | Pvalid(_,t) | Pvalid_read(_,t) ->
-    List.rev_append (List.rev (valid_to_prolog t)) constraints
+  | Pvalid(_,t) | Pvalid_read(_,t) -> (valid_to_prolog t) @ constraints
   | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
   | Pat(p,LogicLabel(_,l)) when l = "Here" -> requires_to_prolog constraints p
   | _ -> assert false
@@ -364,12 +338,13 @@ let compute_constraints() =
   let constraints = List.fold_left f constraints requires_preds in
   let dkey = Sd_options.dkey_native_precond in
   Sd_options.Self.feedback ~dkey "non-default behaviors ignored!";
-  let is_domain = function PLDomain _ -> true | _ -> false in
-  let domains, constraints = List.partition is_domain constraints in
-  let unfold = function PLDomain d -> d | _ -> assert false in
-  let domains = List.map unfold domains in
-  let is_quantif = function PLQuantif _ -> true |  _ -> false in
-  let quantifs, unquantifs = List.partition is_quantif constraints in
+  let split_constraints (d,q,uq) c = match c with
+    | PLUnquantif x -> d, q, x::uq
+    | PLQuantif x -> d, x::q, uq
+    | PLDomain x -> x::d, q, uq
+  in
+  let domains, quantifs, unquantifs =
+    List.fold_left split_constraints ([],[],[]) constraints in
   let formals = Kernel_function.get_formals kf in
   let create_input d v = input_from_type d v.vtype (PLCVar v) in
   let domains = List.fold_left create_input domains formals in
@@ -377,8 +352,7 @@ let compute_constraints() =
   let domains_tbl = Hashtbl.create 32 in
   let is_int_domain = function PLIntDom _ -> true | _ -> false in
   let int_doms, float_doms = List.partition is_int_domain domains in
-  let merge_int f a b =
-    match (a,b) with
+  let merge_int f a b = match (a,b) with
     | None, x -> x
     | x, None -> x
     | Some x, Some y -> Some (f x y)
@@ -408,7 +382,7 @@ let compute_constraints() =
   in
   let fixed_dims, unquantifs =
     let rec aux ret1 ret2 = function
-      | (PLUnquantif (PLDim t1, Req, t2) as unquantif) :: t ->
+      | ((PLDim t1, Req, t2) as unquantif) :: t ->
 	begin
 	  try
 	    let t', to_apply = extract_ops t2 in
@@ -426,11 +400,9 @@ let compute_constraints() =
     in
     aux [] [] unquantifs
   in
-  let unquantifs = List.rev unquantifs in
   List.iter merge_int_doms fixed_dims;
-  let add_int_dom_to_list k (v,w) doms =  PLIntDom (k,v,w) :: doms in
+  let add_int_dom_to_list k (v,w) doms = PLIntDom (k,v,w) :: doms in
   let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
-  let domains = List.rev domains in
   domains, unquantifs, quantifs
 
 
@@ -452,25 +424,24 @@ let translate precond_file_name domains unquantifs quantifs =
   let printer = new pl_printer in
   (* PRINTING *)
   Format.fprintf fmt "%s" prolog_header;
-  List.iter
-    (fun x ->
-      if in_dom x then
-	Format.fprintf fmt "dom('%s', %a).\n"
-	  func_name printer#complex_domain x)
-    domains;
+  let on_complex_domain x =
+    if in_dom x then
+      Format.fprintf fmt "dom('%s', %a).\n" func_name printer#complex_domain x
+  in
+  List.iter on_complex_domain domains;
   same_constraint_for_precond "dom" "A,B,C";
   Format.fprintf fmt "create_input_vals('%s', Ins):-\n" func_name;
-  List.iter
-    (fun x ->
-      if in_create_input_val x then
-	Format.fprintf fmt "  create_input_val(%a,Ins),\n" printer#domain x)
-    domains;
+  let on_simple_domain x =
+    if in_create_input_val x then
+      Format.fprintf fmt "  create_input_val(%a,Ins),\n" printer#domain x
+  in
+  List.iter on_simple_domain domains;
   Format.fprintf fmt "  true.\n";
   same_constraint_for_precond "create_input_vals" "Ins";
   Format.fprintf fmt "quantif_preconds('%s',\n  [\n" func_name;
   let rec aux = function
-    | PLQuantif h::[] -> Format.fprintf fmt "    %a\n" printer#quantif h
-    | PLQuantif h::t -> Format.fprintf fmt "    %a,\n" printer#quantif h; aux t
+    | h::[] -> Format.fprintf fmt "    %a\n" printer#quantif h
+    | h::t -> Format.fprintf fmt "    %a,\n" printer#quantif h; aux t
     | _ -> ()
   in
   aux quantifs;
@@ -478,8 +449,8 @@ let translate precond_file_name domains unquantifs quantifs =
   same_constraint_for_precond "quantif_preconds" "A";
   Format.fprintf fmt "unquantif_preconds('%s',\n  [\n" func_name;
   let rec aux = function
-    | PLUnquantif h :: [] -> Format.fprintf fmt "    %a\n" printer#rel h
-    | PLUnquantif h :: t -> Format.fprintf fmt "    %a,\n" printer#rel h; aux t
+    | h :: [] -> Format.fprintf fmt "    %a\n" printer#cond h
+    | h :: t -> Format.fprintf fmt "    %a,\n" printer#cond h; aux t
     | _ -> ()
   in
   aux unquantifs;

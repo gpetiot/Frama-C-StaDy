@@ -16,20 +16,20 @@ tests/deleteSubstr2b/deleteSubstr2b.c:68:[stady] warning: \separated(dest+(0 .. 
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('delete_substr', dim('str'), [], int([1..4294967295])).
-dom('delete_substr', dim('substr'), [], int([1..4294967295])).
-dom('delete_substr', dim('dest'), [], int([1..4294967295])).
-dom('delete_substr', cont('str',_), [], int([-128..127])).
-dom('delete_substr', cont('substr',_), [], int([-128..127])).
 dom('delete_substr', cont('dest',_), [], int([-128..127])).
+dom('delete_substr', cont('substr',_), [], int([-128..127])).
+dom('delete_substr', cont('str',_), [], int([-128..127])).
+dom('delete_substr', dim('dest'), [], int([1..4294967295])).
+dom('delete_substr', dim('substr'), [], int([1..4294967295])).
+dom('delete_substr', dim('str'), [], int([1..4294967295])).
 dom('pathcrawler__delete_substr_precond',A,B,C) :-
   dom('delete_substr',A,B,C).
 create_input_vals('delete_substr', Ins):-
-  create_input_val(dim('str'), int([1..4294967295]),Ins),
-  create_input_val(dim('substr'), int([1..4294967295]),Ins),
-  create_input_val(dim('dest'), int([1..4294967295]),Ins),
-  create_input_val('strlen', int([-2147483648..2]),Ins),
   create_input_val('sublen', int([1..2147483647]),Ins),
+  create_input_val('strlen', int([-2147483648..2]),Ins),
+  create_input_val(dim('dest'), int([1..4294967295]),Ins),
+  create_input_val(dim('substr'), int([1..4294967295]),Ins),
+  create_input_val(dim('str'), int([1..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__delete_substr_precond',Ins) :-
   create_input_vals('delete_substr',Ins).
