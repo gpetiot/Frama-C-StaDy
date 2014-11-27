@@ -25,6 +25,7 @@ create_input_vals('pathcrawler__binary_search_precond',Ins) :-
   create_input_vals('binary_search',Ins).
 quantif_preconds('binary_search',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__binary_search_precond',A) :-

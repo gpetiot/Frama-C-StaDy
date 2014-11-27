@@ -25,12 +25,14 @@ create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
 quantif_preconds('f',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__f_precond',A) :-
   quantif_preconds('f',A).
 unquantif_preconds('f',
   [
+
   ]
 ).
 unquantif_preconds('pathcrawler__f_precond',A) :-

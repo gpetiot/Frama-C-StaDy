@@ -28,6 +28,7 @@ create_input_vals('pathcrawler__quick_sort_precond',Ins) :-
   create_input_vals('quick_sort',Ins).
 quantif_preconds('quick_sort',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__quick_sort_precond',A) :-

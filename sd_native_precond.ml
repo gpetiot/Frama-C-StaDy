@@ -438,23 +438,13 @@ let translate precond_file_name domains unquantifs quantifs =
   List.iter on_simple_domain domains;
   Format.fprintf fmt "  true.\n";
   same_constraint_for_precond "create_input_vals" "Ins";
-  Format.fprintf fmt "quantif_preconds('%s',\n  [\n" func_name;
-  let rec aux = function
-    | h::[] -> Format.fprintf fmt "    %a\n" printer#quantif h
-    | h::t -> Format.fprintf fmt "    %a,\n" printer#quantif h; aux t
-    | _ -> ()
-  in
-  aux quantifs;
-  Format.fprintf fmt "  ]\n).\n";
+  let pp_quantif fmt k = Format.fprintf fmt "    %a" printer#quantif k in
+  let pp_unquantif fmt k = Format.fprintf fmt "    %a" printer#cond k in
+  Format.fprintf fmt "quantif_preconds('%s',\n  [\n%a\n  ]\n).\n"
+    func_name (Sd_debug.pp_list ~sep:"," pp_quantif) quantifs;
   same_constraint_for_precond "quantif_preconds" "A";
-  Format.fprintf fmt "unquantif_preconds('%s',\n  [\n" func_name;
-  let rec aux = function
-    | h :: [] -> Format.fprintf fmt "    %a\n" printer#cond h
-    | h :: t -> Format.fprintf fmt "    %a,\n" printer#cond h; aux t
-    | _ -> ()
-  in
-  aux unquantifs;
-  Format.fprintf fmt "  ]\n).\n";
+  Format.fprintf fmt "unquantif_preconds('%s',\n  [\n%a\n  ]\n).\n"
+    func_name (Sd_debug.pp_list ~sep:"," pp_unquantif) unquantifs;
   same_constraint_for_precond "unquantif_preconds" "A";
   Format.fprintf fmt "strategy('%s',[]).\n" func_name;
   same_constraint_for_precond "strategy" "A";

@@ -22,6 +22,7 @@ create_input_vals('pathcrawler__insertion_sort_precond',Ins) :-
   create_input_vals('insertion_sort',Ins).
 quantif_preconds('insertion_sort',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__insertion_sort_precond',A) :-

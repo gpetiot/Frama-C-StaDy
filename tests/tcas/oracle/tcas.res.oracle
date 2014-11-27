@@ -41,12 +41,14 @@ create_input_vals('pathcrawler__alt_sep_test_precond',Ins) :-
   create_input_vals('alt_sep_test',Ins).
 quantif_preconds('alt_sep_test',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__alt_sep_test_precond',A) :-
   quantif_preconds('alt_sep_test',A).
 unquantif_preconds('alt_sep_test',
   [
+
   ]
 ).
 unquantif_preconds('pathcrawler__alt_sep_test_precond',A) :-

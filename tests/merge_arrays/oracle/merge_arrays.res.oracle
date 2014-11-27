@@ -33,6 +33,7 @@ create_input_vals('pathcrawler__merge_arrays_precond',Ins) :-
   create_input_vals('merge_arrays',Ins).
 quantif_preconds('merge_arrays',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__merge_arrays_precond',A) :-

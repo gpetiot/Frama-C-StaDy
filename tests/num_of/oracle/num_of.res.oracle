@@ -22,6 +22,7 @@ create_input_vals('pathcrawler__num_of_precond',Ins) :-
   create_input_vals('num_of',Ins).
 quantif_preconds('num_of',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__num_of_precond',A) :-

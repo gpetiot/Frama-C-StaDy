@@ -24,6 +24,7 @@ create_input_vals('pathcrawler__nextSubset_precond',Ins) :-
   create_input_vals('nextSubset',Ins).
 quantif_preconds('nextSubset',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__nextSubset_precond',A) :-

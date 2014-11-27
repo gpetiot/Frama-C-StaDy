@@ -35,6 +35,7 @@ create_input_vals('pathcrawler__delete_substr_precond',Ins) :-
   create_input_vals('delete_substr',Ins).
 quantif_preconds('delete_substr',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__delete_substr_precond',A) :-

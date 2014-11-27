@@ -28,6 +28,7 @@ create_input_vals('pathcrawler__merge_sort_precond',Ins) :-
   create_input_vals('merge_sort',Ins).
 quantif_preconds('merge_sort',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__merge_sort_precond',A) :-

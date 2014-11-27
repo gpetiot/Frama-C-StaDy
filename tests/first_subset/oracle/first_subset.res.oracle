@@ -22,6 +22,7 @@ create_input_vals('pathcrawler__firstSubset_precond',Ins) :-
   create_input_vals('firstSubset',Ins).
 quantif_preconds('firstSubset',
   [
+
   ]
 ).
 quantif_preconds('pathcrawler__firstSubset_precond',A) :-
