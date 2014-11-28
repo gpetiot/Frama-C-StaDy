@@ -52,7 +52,7 @@ let my_pred_varinfo s = my_varinfo Cil.intType s
 let zero = Cil.zero ~loc
 let one = Cil.one ~loc
 let cmp rel e1 e2 = Cil.mkBinOp ~loc (relation_to_binop rel) e1 e2
-let get str = Sd_states.Externals.find str
+let get = Sd_states.Externals.find
 
 (* instructions *)
 let instru_affect a b = IAffect(a,b)
@@ -1147,7 +1147,7 @@ class gather_insertions props spec_insuf = object(self)
     List.iter do_varinfo (Kernel_function.get_formals kf);
     Cil.DoChildren
 
-  method private subst_pred p = (new Sd_subst.subst)#pred p [] [] [] []
+  method private subst_pred p = (new Sd_subst.subst ())#pred p [] [] [] []
 
   method private cond_of_assumes ?(subst_pred=self#subst_pred) pred_list =
     let rec aux insertions ret = function
@@ -1416,9 +1416,92 @@ class gather_insertions props spec_insuf = object(self)
 	end
       else
 	Cil.DoChildren
-    | Instr (Call _) when spec_insuf <> None ->
+    | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
+	when spec_insuf <> None ->
       if (Extlib.the spec_insuf).sid = stmt.sid then
 	begin
+	  let kf = Globals.Functions.get fct_varinfo in
+	  let formals = Kernel_function.get_formals kf in
+	  let on_bhv _ bhv (ins_glob, ins) =
+	    let merge_assigns = function
+	      | WritesAny ->
+		Sd_options.Self.warning ~current:true ~once:true
+		  "assigns clause not precise enough";
+		[]
+	      | Writes (froms) -> List.map fst froms
+	    in
+	    let assigns = merge_assigns bhv.b_assigns in
+	    let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
+	    (* if the function called returns a value (into a variable r),
+	     * we declare a fresh global variable (new input)
+	     * we affect the value of this new input to the variable r *)
+	    let decl_ret, ins_ret =
+	      match ret with
+	      | Some r ->
+		let vi = self#fresh_ctype_varinfo (Cil.typeOfLval r) in
+		new_globals <- vi :: new_globals;
+		let aff = Instru(instru_affect r (Cil.evar vi)) in
+		[decl_varinfo vi], [aff]
+	      | None -> [], []
+	    in
+	    (* we create variables old_* to save the values of globals and
+	     * formal parameters before function call *)
+	    let save v(a,b,c)=let d,e,f=self#save_varinfo kf v in d@a,e@b,f@c in
+	    let save_global v _ l = save v l in
+	    let save_formal l v = save v l in
+	    let i1,i2,i3 = Globals.Vars.fold save_global ([],[],[]) in
+	    let i1,i2,i3 = List.fold_left save_formal (i1,i2,i3) formals in
+	    let begin_save = i1 @ i2 and end_save = i3 in
+	    (* for each term of the assigns clause,
+	     * - we translate the term in C
+	     * - we declare a fresh global variable (new input)
+	     * - we affect the value of this new input to the term *)
+	    let on_term (ret1,ret2) term =
+	      let t = term.it_content in
+	      let ty = match t.term_type with Ctype x->x | _-> assert false in
+	      match t.term_node with
+	      | TLval lv ->
+		let ins, e = self#translate_lval lv in
+		let vi = self#fresh_ctype_varinfo ty in
+		new_globals <- vi :: new_globals;
+		let aff = Instru(instru_affect e (Cil.evar vi)) in
+		(decl_varinfo vi)::ret1, ins @ aff :: ret2
+	      | _ ->
+		Sd_options.Self.warning ~current:true ~once:true
+		  "term %a in assigns clause must be a left value"
+		  Printer.pp_term t;
+		ret1,ret2
+	    in
+	    let globals, affects = List.fold_left on_term ([],[]) assigns in
+	    let globals, affects = globals @ decl_ret, affects @ ins_ret in
+	    let ensures = bhv.b_post_cond in
+	    let on_post ins (_,{ip_content=p}) =
+	      let p = match ret with
+	      (* we substitute \result with the lvalue r in p *)
+	      | Some r -> (new Sd_subst.subst ~subst_result:r ())#pred p[][][][]
+	      | None -> p
+	      in
+	      ins @ (self#pc_assume p)
+	    in
+	    let posts = List.fold_left on_post [] ensures in
+	    let ins_bhv =
+	      ins_if e_assumes (begin_save @ affects @ posts @ end_save) [] in
+	    ins_glob @ globals, ins @ ins_assumes @ [ins_bhv]
+	  in
+	  let ins_glob,ins_h = Annotations.fold_behaviors on_bhv kf ([],[]) in
+	  let formals_and_args = List.combine formals args in
+	  (* for each pair (formal parameter, effective parameter),
+	   * - we declare a fresh (in block) variable for the formal parameter
+	   * - we affect the value of the effective parameter to this variable
+	   *)
+	  let on_comb ret (formal,arg) =
+	    let i_0 = decl_varinfo formal in
+	    let i_1 = Instru(instru_affect (Cil.var formal) arg) in
+	    [i_0; i_1] @ ret
+	  in
+	  let ins_formals = List.fold_left on_comb [] formals_and_args in
+	  List.iter (self#insert Glob) ins_glob;
+	  self#insert (EndStmt stmt.sid) (Block (ins_formals @ ins_h));
 	  Cil.SkipChildren
 	end
       else
