@@ -257,15 +257,6 @@ class gather_insertions props spec_insuf = object(self)
 	  match a.term_type, b.term_type with
 	  | Linteger, Linteger ->
 	    [Instru(F.binop op e_ret x y); clear_t1; clear_t2]
-	  | Linteger, Ctype ty' when Cil.isUnsignedInteger ty' ->
-	    [Instru(F.binop_ui op e_ret x y); clear_t1]
-	  | Linteger, Ctype ty' when Cil.isSignedInteger ty' ->
-	    assert(op = Mult);
-	    [Instru(F.mul_si e_ret x y); clear_t1]
-	  | Ctype ty', Linteger when Cil.isUnsignedInteger ty' ->
-	    assert(op = MinusA);
-	    [Instru(F.ui_sub e_ret x y); clear_t2]
-	  | Ctype ty', Linteger when Cil.isSignedInteger ty' -> assert false
 	  | Ctype(TInt _), Ctype(TInt _) ->
 	    let v_1 = self#fresh_Z_varinfo() in
 	    let i_4 = decl_varinfo v_1 in
