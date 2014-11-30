@@ -886,8 +886,8 @@ class gather_insertions props spec_insuf = object(self)
   method private pre ~pre_entry_point kf behaviors kloc =
     let not_translated p =
       if pre_entry_point then
-	Sd_states.Not_Translated_Predicates.fold_left
-	  (fun b e -> b || e = p.ip_id) false
+	let filter ret id = ret || id = p.ip_id in
+	Sd_states.Not_Translated_Predicates.fold_left filter false
       else true
     in
     let translate_as_return pred =
@@ -898,48 +898,44 @@ class gather_insertions props spec_insuf = object(self)
 	ins @ [ins_if e [ins_ret zero] []]
       else ins
     in
-    let do_behavior b =
+    let do_behavior ins b =
       let requires = List.filter not_translated b.b_requires in
       let typically = List.filter not_translated (Sd_utils.typically_preds b) in
       let to_prop = Property.ip_of_requires kf kloc b in
-      let in_props = (fun p -> List.mem (to_prop p) props) in
+      let in_props p = List.mem (to_prop p) props in
       let requires, typically =
 	if pre_entry_point then requires, typically
 	else List.filter in_props requires, List.filter in_props typically
       in
-      let do_requires pred =
-	if pre_entry_point then translate_as_return pred
+      let do_requires ins pred =
+	if pre_entry_point then ins @ (translate_as_return pred)
 	else
 	  let prop = to_prop pred in
-	  let id = Sd_utils.to_id prop in
-	  self#pc_assert_exception pred.ip_content "Pre-condition!" id prop
+	  ins @ (self#pc_assert_exception pred.ip_content "Pre-condition!" prop)
       in
-      let do_typically pred =
-	if pre_entry_point then translate_as_return pred else []
+      let do_typically ins pred =
+	if pre_entry_point then ins @ (translate_as_return pred) else ins
       in
       if requires <> [] || typically <> [] then
-	let typically = List.map do_typically typically in
-	let requires = List.map do_requires requires in
-	let inserts' = List.fold_left (@) [] typically in
-	let inserts = List.fold_left (@) inserts' requires in
+	let inserts' = List.fold_left do_typically [] typically in
+	let inserts = List.fold_left do_requires inserts' requires in
 	if b.b_assumes <> [] then
 	  let inserts_0, exp = self#cond_of_assumes b.b_assumes in
 	  let insert_1 = ins_if exp inserts [] in
-	  inserts_0 @ [insert_1]
-	else inserts
-      else []
+	  ins @ inserts_0 @ [insert_1]
+	else ins @ inserts
+      else ins
     in
-    List.fold_left (@) [] (List.map do_behavior behaviors)
+    List.fold_left do_behavior [] behaviors
 
   method private post kf behaviors kloc =
-    let do_behavior b =
+    let do_behavior ins b =
       let post = b.b_post_cond in
       let to_prop = Property.ip_of_ensures kf kloc b in
       let post = List.filter (fun x -> List.mem (to_prop x) props) post in
-      let do_postcond (tk,pred) =
+      let do_postcond ins (tk,pred) =
 	let prop = to_prop (tk,pred) in
-	let id = Sd_utils.to_id prop in
-	self#pc_assert_exception pred.ip_content "Post-condition!" id prop
+	ins @ (self#pc_assert_exception pred.ip_content "Post-condition!" prop)
       in
       let str = Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
       let add_reach_info =
@@ -960,10 +956,9 @@ class gather_insertions props spec_insuf = object(self)
 		end
 	      else []
 	    in
-	    let inserts_then_1 =
-	      List.fold_left (@) [] (List.map do_postcond post) in
-	    let insert_1 = ins_if exp (inserts_then_0@inserts_then_1) [] in
-	    inserts_0 @ [insert_1]
+	    let inserts_then_1 = List.fold_left do_postcond [] post in
+	    let insert_1 = ins_if exp (inserts_then_0 @ inserts_then_1) [] in
+	    ins @ inserts_0 @ [insert_1]
 	  else
 	    let inserts_0 = 
 	      if add_reach_info then
@@ -975,24 +970,22 @@ class gather_insertions props spec_insuf = object(self)
 		end
 	      else []
 	    in
-	    let inserts_1 = List.fold_left (@) [] (List.map do_postcond post) in
-	    inserts_0 @ inserts_1
+	    let inserts_1 = List.fold_left do_postcond [] post in
+	    ins @ inserts_0 @ inserts_1
 	end
-      else []
+      else ins
     in
-    List.fold_left (@) [] (List.map do_behavior behaviors)
+    List.fold_left do_behavior [] behaviors
 
   (* alloc and dealloc variables for \at terms *)
-  method private save_varinfo kf varinfo =
+  method private save_varinfo kf vi =
     let dig_type = function
       | TPtr(ty,_) | TArray(ty,_,_,_) -> ty
       | ty -> Sd_options.Self.abort "dig_type %a" Printer.pp_typ ty
     in
     let dig_type x = dig_type (Cil.unrollTypeDeep x) in
     let lengths = Sd_utils.lengths_from_requires kf in
-    let terms =
-      try Cil_datatype.Varinfo.Hashtbl.find lengths varinfo with Not_found -> []
-    in
+    let terms = try Cil_datatype.Varinfo.Hashtbl.find lengths vi with _ -> [] in
     let do_varinfo v =
       let my_v = v in
       let my_old_v = my_varinfo v.vtype ("old_"^v.vname) in
@@ -1060,13 +1053,11 @@ class gather_insertions props spec_insuf = object(self)
 	inserts_decl, inserts_before
       else [insert_decl], [insert_before]
     in
-    let inserts_decl, inserts_before = do_varinfo varinfo in
+    let inserts_decl, inserts_before = do_varinfo vi in
     let do_varinfo v =
       let rec dealloc_aux my_old_ptr = function
 	| [] -> []
-	| _ :: [] ->
-	  let e = Cil.new_exp ~loc (Lval my_old_ptr) in
-	  [Instru(F.free e)]
+	| _ :: [] -> [ Instru(F.free (Cil.new_exp ~loc (Lval my_old_ptr))) ]
 	| h :: t ->
 	  let my_iterator = self#fresh_ctype_varinfo Cil.intType in
 	  let insert_0 = decl_varinfo my_iterator in
@@ -1108,7 +1099,7 @@ class gather_insertions props spec_insuf = object(self)
       let my_old_ptr = my_varinfo v.vtype ("old_ptr_" ^ v.vname) in
       dealloc_aux (Cil.var my_old_ptr) terms
     in
-    let inserts_after = do_varinfo varinfo in
+    let inserts_after = do_varinfo vi in
     inserts_decl, inserts_before, inserts_after
 
   method! vfunc f =
@@ -1117,8 +1108,8 @@ class gather_insertions props spec_insuf = object(self)
     let behaviors = Annotations.behaviors kf in
     self#compute_result_varinfo f;
     let pre_entry_point = f.svar.vname = entry_point in
-    let fname =
-      if pre_entry_point then (f.svar.vname ^ "_precond") else f.svar.vname in
+    let fprename = f.svar.vname ^ "_precond" in
+    let fname = if pre_entry_point then fprename else f.svar.vname in
     let label_pre = BegFunc fname in
     let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
     List.iter (self#insert label_pre) inserts_pre;
@@ -1172,9 +1163,10 @@ class gather_insertions props spec_insuf = object(self)
 
   method private pc_to_fc str = F.pc_to_fc (Cil.mkString ~loc str)
 
-  method private pc_assert_exception pred msg id prop =
+  method private pc_assert_exception pred msg prop =
     let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
     let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
+    let id = Sd_utils.to_id prop in
     let insert_1 = ins_if e [Instru(self#pc_exc msg id)] [] in
     translated_properties <- prop :: translated_properties;
     inserts_0 @ [insert_1]
@@ -1227,8 +1219,7 @@ class gather_insertions props spec_insuf = object(self)
 
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  let id = Sd_utils.to_id prop in
-	  let ins = self#pc_assert_exception pred.content "Assert!" id prop in
+	  let ins = self#pc_assert_exception pred.content "Assert!" prop in
 	  let inserts = self#for_behaviors for_behaviors ins in
 	  List.iter (self#insert (BegStmt stmt.sid)) inserts
 
@@ -1236,9 +1227,8 @@ class gather_insertions props spec_insuf = object(self)
 
 	let prop = Property.ip_of_code_annot_single kf stmt ca in
 	if List.mem prop props then
-	  let id = Sd_utils.to_id prop in
 	  let f label msg =
-	    let ins = self#pc_assert_exception pred.content msg id prop in
+	    let ins = self#pc_assert_exception pred.content msg prop in
 	    let inserts = self#for_behaviors for_behaviors ins in
 	    List.iter (self#insert label) inserts
 	  in
