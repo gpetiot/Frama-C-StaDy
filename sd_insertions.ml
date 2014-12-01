@@ -725,6 +725,8 @@ class gather_insertions props spec_insuf = object(self)
     in
     inserts_0 @ inserts_1 @ inserts, ret
 
+  method private translate_forall = self#translate_quantif ~forall:true
+  method private translate_exists = self#translate_quantif ~forall:false
   method private translate_quantif ~forall logic_vars hyps goal =
     let var = self#fresh_pred_varinfo() in
     let i_0 = decl_varinfo var in
@@ -841,14 +843,12 @@ class gather_insertions props spec_insuf = object(self)
   | Pnot p -> self#translate_not p
   | Pif(t,p,q) -> self#translate_pif t p q
   | Plet _ as p -> self#unsupported_predicate p
-  | Pforall(logic_vars,{content=Pimplies(hyps,goal)}) ->
-    self#translate_quantif ~forall:true logic_vars hyps goal
+  | Pforall(vars,{content=Pimplies(h,g)}) -> self#translate_forall vars h g
   | Pforall _ as p ->
     Sd_options.Self.warning ~current:true
       "%a not of the form \\forall ...; a ==> b" Printer.pp_predicate p;
     self#unsupported_predicate p
-  | Pexists(logic_vars,{content=Pand(hyps,goal)}) ->
-    self#translate_quantif ~forall:false logic_vars hyps goal
+  | Pexists(vars,{content=Pand(h,g)}) -> self#translate_exists vars h g
   | Pexists _ as p ->
     Sd_options.Self.warning ~current:true
       "%a not of the form \\exists ...; a && b" Printer.pp_predicate p;
