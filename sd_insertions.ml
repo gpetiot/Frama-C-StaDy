@@ -272,7 +272,7 @@ class gather_insertions props spec_insuf = object(self)
 	    [i_4; i_5; i_6; i_7; i_8; i_9; i_10]
 	  | _ -> assert false
 	in
-	i_0 @ i_1 @ [i_2; i_3] @ inserts, e_ret.enode
+	i_0 @ i_1 @ i_2 :: i_3 :: inserts, e_ret.enode
       | Lreal -> assert false (* TODO: reals *)
       | Ltype _ as lt when Logic_const.is_boolean_type lt ->
 	begin
@@ -316,7 +316,7 @@ class gather_insertions props spec_insuf = object(self)
       let inserts_else = inserts_else_0 @ [ set_2 ; clear_2] in
       let i_5 = ins_if (cmp Rneq e_tmp zero) inserts_then inserts_else in
       let i_6 = Instru(F.clear cond') in
-      [i_0; i_1] @ i_2 @ [i_3; i_4; i_5; i_6], e_ret.enode
+      i_0 :: i_1 :: i_2 @ [i_3; i_4; i_5; i_6], e_ret.enode
     | Lreal -> assert false (* TODO: reals *)
     | _ -> assert false (* unreachable *)
 
@@ -416,7 +416,7 @@ class gather_insertions props spec_insuf = object(self)
     let ii_1 = decl_varinfo tmp in
     let ii_2 = Instru(F.cmp (Cil.var tmp) e_iter up) in
     let ii_3 = Instru(F.cmp (Cil.var tmp) e_iter up) in
-    let ins_b = ins_b_0 @ [ins_b_1; ins_b_2; ii_3] @ clear_lambda in
+    let ins_b = ins_b_0 @ ins_b_1 :: ins_b_2 :: ii_3 :: clear_lambda in
     let i_7 = ins_for Skip (cmp Rle e_tmp zero) Skip ins_b in
     let i_8 = Instru(F.clear e_iter) in
     let i_9 = Instru(F.clear low) in
@@ -629,7 +629,7 @@ class gather_insertions props spec_insuf = object(self)
     let inserts_b_0, pred2_var = self#translate_pnamed q in
     let insert_b_1 = Instru(instru_affect lvar pred2_var) in
     let insert_3 = ins_if pred1_var (inserts_b_0 @ [insert_b_1]) [] in
-    [insert_0; insert_1] @ inserts_2 @ [insert_3], Cil.evar var
+    insert_0 :: insert_1 :: inserts_2 @ [insert_3], Cil.evar var
 
   method private translate_equiv p q =
     let inserts_0, pred1_var = self#translate_pnamed p in
@@ -670,7 +670,7 @@ class gather_insertions props spec_insuf = object(self)
     let insert_else_1 = Instru(instru_affect lres_var pred2_var) in
     let inserts_else = inserts_else_0 @ [insert_else_1] in
     let insert_2 = ins_if cond inserts_then inserts_else in
-    inserts_0 @ ii @ [insert_1; insert_2] @ insert_3, Cil.evar res_var
+    inserts_0 @ ii @ insert_1 :: insert_2 :: insert_3, Cil.evar res_var
 
   method private unsupported_predicate p =
     Sd_options.Self.warning ~current:true "%a unsupported"
@@ -825,9 +825,9 @@ class gather_insertions props spec_insuf = object(self)
     in
     let ins_b_0, goal_var = self#translate_pnamed goal in
     let ins_b_1 = Instru(instru_affect lvar goal_var) in
-    let i_inside = ins_b_0 @ [ins_b_1] @ i_inside in
+    let i_inside = ins_b_0 @ ins_b_1 :: i_inside in
     let i_loop = ins_for Skip e_cond Skip i_inside in
-    [i_0; i_1; Block (i_before @ [i_loop] @ i_after)], e_var
+    [i_0; i_1; Block (i_before @ i_loop :: i_after)], e_var
 
   method private translate_predicate = function
   | Pfalse -> [], zero
@@ -1094,7 +1094,7 @@ class gather_insertions props spec_insuf = object(self)
 	      [ins_for init cond step inserts_block]
 	  in
 	  let e = Cil.new_exp ~loc (Lval my_old_ptr) in
-	  [insert_0] @ inserts_1 @ inserts' @ [Instru(F.free e)]
+	  insert_0 :: inserts_1 @ inserts' @ [Instru(F.free e)]
       in
       let my_old_ptr = my_varinfo v.vtype ("old_ptr_" ^ v.vname) in
       dealloc_aux (Cil.var my_old_ptr) terms
