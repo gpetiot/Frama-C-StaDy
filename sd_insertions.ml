@@ -914,40 +914,24 @@ class gather_insertions props spec_insuf = object(self)
 	ins @ (self#pc_assert_exception pred.ip_content "Post-condition!" prop)
       in
       let str = Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
-      let add_reach_info =
+      let to_reach =
 	not (Cil.is_default_behavior b)
 	&& (Sd_options.Behavior_Reachability.get())
       in
+      Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt (kf,b,false);
+      bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
       if post <> [] || (Sd_options.Behavior_Reachability.get()) then
 	begin
 	  if b.b_assumes <> [] then
-	    let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-	    let inserts_then_0 =
-	      if add_reach_info then
-		begin
-		  Sd_states.Behavior_Reachability.replace
-		    bhv_to_reach_cpt (kf, b, false);
-		  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-		  [Instru(self#pc_to_fc str)]
-		end
-	      else []
-	    in
-	    let inserts_then_1 = List.fold_left do_postcond [] post in
-	    let insert_1 = ins_if exp (inserts_then_0 @ inserts_then_1) [] in
-	    ins @ inserts_0 @ [insert_1]
+	    let i_0, exp = self#cond_of_assumes b.b_assumes in
+	    let ii_0 = if to_reach then [Instru(self#pc_to_fc str)] else [] in
+	    let ii_1 = List.fold_left do_postcond [] post in
+	    let i_1 = ins_if exp (ii_0 @ ii_1) [] in
+	    ins @ i_0 @ [i_1]
 	  else
-	    let inserts_0 = 
-	      if add_reach_info then
-		begin
-		  Sd_states.Behavior_Reachability.replace
-		    bhv_to_reach_cpt (kf, b, false);
-		  bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-		  [Instru(self#pc_to_fc str)]
-		end
-	      else []
-	    in
-	    let inserts_1 = List.fold_left do_postcond [] post in
-	    ins @ inserts_0 @ inserts_1
+	    let i_0 = if to_reach then [Instru(self#pc_to_fc str)] else [] in
+	    let i_1 = List.fold_left do_postcond [] post in
+	    ins @ i_0 @ i_1
 	end
       else ins
     in
