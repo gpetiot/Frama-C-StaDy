@@ -987,11 +987,10 @@ class gather_insertions props spec_insuf = object(self)
     let lengths = Sd_utils.lengths_from_requires kf in
     let terms = try Cil_datatype.Varinfo.Hashtbl.find lengths vi with _ -> [] in
     let do_varinfo v =
-      let my_v = v in
       let my_old_v = my_varinfo v.vtype ("old_"^v.vname) in
       let insert_decl = decl_varinfo my_old_v in
       let lmy_old_v = Cil.var my_old_v in
-      let insert_before = Instru(instru_affect lmy_old_v (Cil.evar my_v)) in
+      let insert_before = Instru(instru_affect lmy_old_v (Cil.evar v)) in
       let rec alloc_aux my_old_ptr my_ptr ty = function
 	| h :: t ->
 	  let ty = dig_type ty in
@@ -1048,7 +1047,7 @@ class gather_insertions props spec_insuf = object(self)
 	let my_old_ptr = my_varinfo v.vtype ("old_ptr_" ^ v.vname) in
 	let insert_0 = decl_varinfo my_old_ptr in
 	let inserts_decl = [insert_decl; insert_0] in
-	let ins = alloc_aux (Cil.var my_old_ptr) (Cil.var my_v) v.vtype terms in
+	let ins = alloc_aux (Cil.var my_old_ptr) (Cil.var v) v.vtype terms in
 	let inserts_before = insert_before :: ins in
 	inserts_decl, inserts_before
       else [insert_decl], [insert_before]
