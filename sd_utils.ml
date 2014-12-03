@@ -42,11 +42,7 @@ open Cil_types
 
 (* extract guards for logic vars, e.g.: [0 <= a <= 10; x <= b <= y] *)
 let extract_guards var p =
-  let merge_term x y = match (x,y) with
-    | Some x, None | None, Some x -> Some x | None, None -> None
-    | _ -> assert false
-  in
-  let merge_rel x y = match (x,y) with
+  let merge x y = match (x,y) with
     | Some x, None | None, Some x -> Some x | None, None -> None
     | _ -> assert false
   in
@@ -58,7 +54,7 @@ let extract_guards var p =
   let rec aux p = match p.content with
     | Pand(p1, p2) ->
       let a,b,c,d = aux p1 and e,f,g,h = aux p2 in
-      (merge_term a e), (merge_rel b f), (merge_rel c g), (merge_term d h)
+      merge a e, merge b f, merge c g, merge d h
     | Prel((Rlt|Rle) as r, t, u) when to_guard t -> None, None, Some r, Some u
     | Prel((Rlt|Rle) as r, t, u) when to_guard u -> Some t, Some r, None, None
     | Prel(Rge, t, u) when to_guard t -> Some u, Some Rle, None, None
@@ -68,7 +64,7 @@ let extract_guards var p =
     | _ -> None, None, None, None
   in
   let a,b,c,d = aux p in
-  (Extlib.the a), (Extlib.the b), (Extlib.the c), (Extlib.the d)
+  Extlib.the a, Extlib.the b, Extlib.the c, Extlib.the d
 
 
 let error_term t = Sd_options.Self.abort "term: %a" Sd_debug.pp_term t
