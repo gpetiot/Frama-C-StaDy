@@ -300,7 +300,7 @@ class gather_insertions props spec_insuf = object(self)
     let inserts_then_0, then_b' = self#translate_term then_b in
     let set_1 = Instru(F.set e_ret then_b') in
     let clear_1 = Instru(F.clear then_b') in
-    let inserts_then = inserts_then_0	@ [set_1 ; clear_1] in
+    let inserts_then = inserts_then_0 @ [set_1 ; clear_1] in
     let inserts_else_0, else_b' = self#translate_term else_b in
     let set_2 = Instru(F.set e_ret else_b') in
     let clear_2 = Instru(F.clear else_b') in
@@ -1342,7 +1342,7 @@ class gather_insertions props spec_insuf = object(self)
 	  in
 	  (* we create variables old_* to save the values of globals and
 	   * formal parameters before function call *)
-	  let save v(a,b,c)=let d,e,f=self#save_varinfo kf v in d@a,e@b,f@c in
+	  let save v (a,b,c) =let d,e,f=self#save_varinfo kf v in d@a,e@b,f@c in
 	  let save_global v _ l = save v l in
 	  let save_formal l v = save v l in
 	  let i1,i2,i3 = Globals.Vars.fold save_global ([],[],[]) in
@@ -1354,7 +1354,7 @@ class gather_insertions props spec_insuf = object(self)
 	   * - we affect the value of this new input to the term *)
 	  let on_term (ret1,ret2) term =
 	    let t = term.it_content in
-	    let ty = match t.term_type with Ctype x->x | _-> assert false in
+	    let ty = match t.term_type with Ctype x -> x | _-> assert false in
 	    match t.term_node with
 	    | TLval lv ->
 	      let ins, e = self#translate_lval lv in
@@ -1392,7 +1392,7 @@ class gather_insertions props spec_insuf = object(self)
 	let on_comb ret (formal,arg) =
 	  let i_0 = decl_varinfo formal in
 	  let i_1 = Instru(instru_affect (Cil.var formal) arg) in
-	  [i_0; i_1] @ ret
+	  i_0 :: i_1 :: ret
 	in
 	let ins_formals = List.fold_left on_comb [] formals_and_args in
 	List.iter (self#insert Glob) ins_glob;
