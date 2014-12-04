@@ -721,57 +721,34 @@ class gather_insertions props spec_insuf = object(self)
       let iter_name = lvar.lv_name in
       let i_before, e_cond, i_inside, i_after = match t1.term_type with
 	| Linteger ->
-	  begin match t2.term_type with
-	  | Linteger ->
-	    let fresh_iter = my_Z_varinfo iter_name in
-	    let i_0 = decl_varinfo fresh_iter in
-	    let i_1, t1' = self#translate_term t1 in
-	    let i_2, t2' = self#translate_term t2 in
-	    let e_iter = Cil.evar fresh_iter in
-	    let i_3 = Instru(F.init_set e_iter t1') in
-	    let i_4 =
-	      if r1=Rlt then [Instru(F.binop_ui PlusA e_iter e_iter one)]
-	      else []
-	    in
-	    let tmp = self#fresh_ctype_varinfo Cil.intType in
-	    let i_5 = decl_varinfo tmp in
-	    let i_6 = Instru(F.cmp (Cil.var tmp) e_iter t2') in
-	    let ins_b_2 = Instru(F.binop_ui PlusA e_iter e_iter one) in
-	    let ins_b_3 = Instru(F.cmp (Cil.var tmp) e_iter t2') in
-	    let e1 = cmp r2 (Cil.evar tmp) zero in
-	    let i_8 = Instru(F.clear e_iter) in
-	    let i_9 = Instru(F.clear t1') in
-	    let i_10 = Instru(F.clear t2') in
-	    let i_before = i_0 :: i_1 @ i_2 @ i_3 :: i_4 @ [i_5; i_6] in
-	    let i_inside = [ins_b_2; ins_b_3] in
-	    let i_after = [i_8; i_9; i_10] in
-	    i_before, e1, i_inside, i_after
-	  | Lreal -> assert false (* TODO: reals *)
-	  | _ ->
-	    let fresh_iter = my_Z_varinfo iter_name in
-	    let i_0 = decl_varinfo fresh_iter in
-	    let i_1, t1' = self#translate_term t1 in
-	    let i_2, t2' = self#translate_term t2 in
-	    let e_iter = Cil.evar fresh_iter in
-	    let i_3 = Instru(F.init_set e_iter t1') in
-	    let i_4 =
-	      if r1=Rlt then [Instru(F.binop_ui PlusA e_iter e_iter one)]
-	      else []
-	    in
-	    let tmp = self#fresh_ctype_varinfo Cil.intType in
-	    let i_5 = decl_varinfo tmp in
-	    let ltmp = Cil.var tmp in
-	    let i_6 = Instru(F.cmp_si ltmp e_iter t2') in
-	    let ins_b_2 = Instru(F.binop_ui PlusA e_iter e_iter one) in
-	    let ins_b_3 = Instru(F.cmp_si ltmp e_iter t2') in
-	    let e1 = cmp r2 (Cil.evar tmp) zero in
-	    let i_8 = Instru(F.clear e_iter) in
-	    let i_9 = Instru(F.clear t1') in
-	    let i_before = i_0 :: i_1 @ i_2 @ i_3 :: i_4 @ [i_5; i_6] in
-	    let i_inside = [ins_b_2; ins_b_3] in
-	    let i_after = [i_8; i_9] in
-	    i_before, e1, i_inside, i_after
-	  end
+	  let fresh_iter = my_Z_varinfo iter_name in
+	  let i_0 = decl_varinfo fresh_iter in
+	  let i_1, t1' = self#translate_term t1 in
+	  let i_2, t2' = self#translate_term t2 in
+	  let e_iter = Cil.evar fresh_iter in
+	  let i_3 = Instru(F.init_set e_iter t1') in
+	  let i_4 =
+	    if r1=Rlt then [Instru(F.binop_ui PlusA e_iter e_iter one)]
+	    else []
+	  in
+	  let tmp = self#fresh_ctype_varinfo Cil.intType in
+	  let i_5 = decl_varinfo tmp in
+	  let ltmp = Cil.var tmp in
+	  let ins_b_2 = Instru(F.binop_ui PlusA e_iter e_iter one) in
+	  let e1 = cmp r2 (Cil.evar tmp) zero in
+	  let i_8 = Instru(F.clear e_iter) in
+	  let i_9 = Instru(F.clear t1') in
+	  let cmp, i_10 = match t2.term_type with
+	    | Linteger -> F.cmp, [Instru(F.clear t2')]
+	    | Lreal -> assert false (* TODO: reals *)
+	    | _ -> F.cmp_si, []
+	  in
+	  let i_6 = Instru(cmp ltmp e_iter t2') in
+	  let ins_b_3 = Instru(cmp ltmp e_iter t2') in
+	  let i_before = i_0 :: i_1 @ i_2 @ i_3 :: i_4 @ [i_5; i_6] in
+	  let i_inside = [ins_b_2; ins_b_3] in
+	  let i_after = i_8 :: i_9 :: i_10 in
+	  i_before, e1, i_inside, i_after
 	| Lreal -> assert false (* TODO: reals *)
 	| _ ->
 	  let iter = my_varinfo Cil.intType iter_name in
