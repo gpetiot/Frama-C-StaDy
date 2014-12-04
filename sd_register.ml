@@ -203,8 +203,8 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   print_translation instru_fname insertions spec_insuf;
   let cmd =
     Printf.sprintf
-      "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s \
- -pc -pc-gmp -pc-validate-asserts %s -pc-com %s -pc-no-xml %s"
+      "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -lib-entry \
+ -pc -pc-gmp -pc-validate-asserts %s -pc-com %s -pc-no-xml %s -pc-deter"
       instru_fname
       entry_point
       test_params

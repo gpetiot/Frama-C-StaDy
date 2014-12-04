@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main alt_sep_test -stady -stady-pc-options="-lib-entry" -stady-msg-key generated-c,generated-pl -then -report
+OPT: -main alt_sep_test -stady -stady-msg-key generated-c,generated-pl -then -report
 */
 
 

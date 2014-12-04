@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main f -stady -stady-spec-insuf 3 -stady-pc-options="-lib-entry -pc-deter" -stady-msg-key generated-c,generated-pl -then -report
+OPT: -main f -stady -stady-spec-insuf 3 -stady-msg-key generated-c,generated-pl -then -report
 */
 
 int found;
