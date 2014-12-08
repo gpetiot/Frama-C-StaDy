@@ -7,6 +7,8 @@ PLUGIN_NAME	:= StaDy
 PLUGIN_TESTS_DIRS := \
 	inv_insuf_ok \
 	inv_insuf_ko \
+	spec_insuf_ok \
+	spec_insuf_ko \
 	stmt_spec \
 	behaviors \
 	quantified \
