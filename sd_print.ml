@@ -30,24 +30,23 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     | h :: [] -> pp_insertion ~line_break:false fmt h
     | h :: t -> pp_insertion ~line_break:true fmt h; aux fmt t
   in
-  begin
-    match ins with
-    | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
-    | Sd_insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" pp_exp e
-    | Sd_insertions.Decl v ->
-      let ty = Cil.stripConstLocalType v.vtype in
-      let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
-      let ty = array_to_ptr ty in
-      let v' = {v with vtype = ty} in
-      Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v'
-    | Sd_insertions.Block b ->
-      if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
-    | Sd_insertions.IIf (e,b1,b2) ->
-      Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_exp e aux b1;
-      if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
-    | Sd_insertions.IFor (i1,e,i2,b) ->
-      Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n%a@]@\n}"
-	pp_instruction i1 pp_exp e pp_instruction i2 aux b
+  begin match ins with
+  | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
+  | Sd_insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" pp_exp e
+  | Sd_insertions.Decl v ->
+    let ty = Cil.stripConstLocalType v.vtype in
+    let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
+    let ty = array_to_ptr ty in
+    let v' = {v with vtype = ty} in
+    Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v'
+  | Sd_insertions.Block b ->
+    if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
+  | Sd_insertions.IIf (e,b1,b2) ->
+    Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_exp e aux b1;
+    if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
+  | Sd_insertions.IFor (i1,e,i2,b) ->
+    Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n%a@]@\n}"
+      pp_instruction i1 pp_exp e pp_instruction i2 aux b
   end;
   if line_break then Format.fprintf fmt "@\n"
 
@@ -60,7 +59,7 @@ let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
 
 
-class print_insertions insertions spec_insuf () = object(self)
+class print_insertions insertions functions spec_insuf () = object(self)
   inherit Printer.extensible_printer () as super
 
   method private insertions_at fmt label =
@@ -74,19 +73,18 @@ class print_insertions insertions spec_insuf () = object(self)
     let old_is_ghost = is_ghost in
     is_ghost <- true;
     (* BEGIN precond (entry-point) *)
-    if f.svar.vname = entry_point_name then
-      begin
-	let precond = f.svar.vname ^ "_precond" in
-	let x,y,z =
-	  match f.svar.vtype with TFun(_,x,y,z) -> x,y,z | _ -> assert false
-	in
-	Format.fprintf fmt "%a@ @[<hov 2>{@\n"
-	  (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" precond)))
-	  (TFun(Cil.intType,x,y,z));
-        self#insertions_at fmt (Sd_insertions.BegFunc precond);
-	Format.fprintf fmt "@[return 1;@]";
-	Format.fprintf fmt "@]@\n}@\n@\n"
-      end;
+    if f.svar.vname = entry_point_name then begin
+      let precond = f.svar.vname ^ "_precond" in
+      let x,y,z =
+	match f.svar.vtype with TFun(_,x,y,z) -> x,y,z | _ -> assert false
+      in
+      Format.fprintf fmt "%a@ @[<hov 2>{@\n"
+	(self#typ (Some (fun fmt -> Format.fprintf fmt "%s" precond)))
+	(TFun(Cil.intType,x,y,z));
+      self#insertions_at fmt (Sd_insertions.BegFunc precond);
+      Format.fprintf fmt "@[return 1;@]";
+      Format.fprintf fmt "@]@\n}@\n@\n"
+    end;
     (* END precond (entry-point) *)
     Format.fprintf fmt "@[%t%a@\n@[<v 2>" ignore self#vdecl f.svar;
     (* body. *)
@@ -118,15 +116,14 @@ class print_insertions insertions spec_insuf () = object(self)
       | Loop(_,b,l,_,_) ->
 	if spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid then
 	  ()
-	else
-	  begin
-	    Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
-	      (fun fmt -> self#line_directive fmt) l;
-	    self#insertions_at fmt (Sd_insertions.BegIter stmt.sid);
-	    Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
-	    self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
-	    Format.fprintf fmt "}@\n @]"
-	  end
+	else begin
+	  Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
+	    (fun fmt -> self#line_directive fmt) l;
+	  self#insertions_at fmt (Sd_insertions.BegIter stmt.sid);
+	  Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
+	  self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
+	  Format.fprintf fmt "}@\n @]"
+	end
       | Instr(Call(_,{enode=Lval(Var _,NoOffset)},_,_))
 	  when spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid ->()
       | Return _ ->
@@ -141,11 +138,26 @@ class print_insertions insertions spec_insuf () = object(self)
     Format.pp_close_box fmt ()
   (* end of annotated_stmt *)
 
+  method private func_header fmt f =
+    Format.fprintf fmt "@[<v 2>%a(%a);@\n@]"
+      self#vdecl f.Sd_insertions.func_var
+      (Sd_debug.pp_list ~sep:"," self#vdecl) f.Sd_insertions.func_formals
+
+  method private func fmt f =
+    Format.fprintf fmt "@[<v 2>%a(%a) {@\n"
+      self#vdecl f.Sd_insertions.func_var
+      (Sd_debug.pp_list ~sep:"," self#vdecl) f.Sd_insertions.func_formals;
+    let pp_ins x = Format.fprintf fmt "%a" pp_insertion_lb x in
+    List.iter pp_ins f.Sd_insertions.func_stmts;
+    Format.fprintf fmt "@]@\n}@\n"
+
   method! file fmt f =
     Format.fprintf fmt "@[/* Generated by Frama-C */@\n";
     self#headers fmt;
+    List.iter (fun x -> self#func_header fmt x) functions;
     self#insertions_at fmt (Sd_insertions.Glob);
     Cil.iterGlobals f (fun g -> self#global fmt g);
+    List.iter (fun x -> self#func fmt x) functions;
     Format.fprintf fmt "@]@."
 
   val mutable gmp = false
@@ -288,15 +300,14 @@ typedef __mpz_struct mpz_t[1];";
   method! global fmt g =
     match g with
     | GFun (fundec, l) ->
-      if print_var fundec.svar then
-  	begin
-  	  let oldattr = fundec.svar.vattr in
-  	  fundec.svar.vattr <- [];
-  	  self#line_directive ~forcefile:true fmt l;
-  	  self#fundecl fmt fundec;
-  	  fundec.svar.vattr <- oldattr;
-  	  Format.fprintf fmt "@\n"
-  	end
+      if print_var fundec.svar then begin
+  	let oldattr = fundec.svar.vattr in
+  	fundec.svar.vattr <- [];
+  	self#line_directive ~forcefile:true fmt l;
+  	self#fundecl fmt fundec;
+  	fundec.svar.vattr <- oldattr;
+  	Format.fprintf fmt "@\n"
+      end
     | GVarDecl (_, vi, _) -> if print_var vi then super#global fmt g
     | GVar (vi,_,_) ->
       let old_vghost = vi.vghost in

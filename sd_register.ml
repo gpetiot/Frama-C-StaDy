@@ -17,7 +17,10 @@ let () = Logic_typing.register_behavior_extension "typically" typically_typer
 let translate props spec_insuf =
   let gatherer = new Sd_insertions.gather_insertions props spec_insuf in
   Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
-  let insertions = gatherer#get_insertions() in
+  let insertions = gatherer#get_insertions()
+  and functions = gatherer#get_functions()
+  and props = gatherer#translated_properties()
+  and globals = gatherer#get_new_globals() in
   let print_insertions_at_label lab insertions =
     let dkey = Sd_options.dkey_insertions in
     let f ins =
@@ -28,13 +31,13 @@ let translate props spec_insuf =
     Sd_options.Self.feedback ~dkey "--------------------"
   in
   Hashtbl.iter print_insertions_at_label insertions;
-  insertions, gatherer#translated_properties(), gatherer#get_new_globals()
+  insertions, functions, props, globals
 
 
-let print_translation filename insertions spec_insuf =
+let print_translation filename insertions fcts spec_insuf =
   let old_unicode = Kernel.Unicode.get() in
   Kernel.Unicode.set false;
-  let printer = new Sd_print.print_insertions insertions spec_insuf () in
+  let printer = new Sd_print.print_insertions insertions fcts spec_insuf () in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
@@ -187,7 +190,8 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
-  let insertions, translated_props, new_globals = translate props spec_insuf in
+  let insertions, functions, translated_props, new_globals =
+    translate props spec_insuf in
   let test_params =
     if native_precond_generated then
       begin
@@ -200,7 +204,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
       end
     else ""
   in
-  print_translation instru_fname insertions spec_insuf;
+  print_translation instru_fname insertions functions spec_insuf;
   let cmd =
     Printf.sprintf
       "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -lib-entry \

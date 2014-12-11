@@ -24,6 +24,15 @@ type insertion =
 | IIf of exp * insertion list * insertion list
 | IFor of instruction * exp * instruction * insertion list
 
+type func = {
+  mutable func_var: varinfo;
+  mutable func_formals: varinfo list;
+  mutable func_locals: varinfo list;
+  mutable func_stmts: insertion list;
+}
+
+let mk_func v f l s = {func_var=v; func_formals=f; func_locals=l; func_stmts=s;}
+
 let binop_to_relation = function
   | Lt -> Rlt
   | Gt -> Rgt
@@ -113,6 +122,7 @@ class gather_insertions props spec_insuf = object(self)
   inherit Visitor.frama_c_inplace as super
 
   val insertions : (label, insertion Queue.t) Hashtbl.t = Hashtbl.create 64
+  val mutable functions = ([] : func list)
   val mutable result_varinfo = None
   val mutable in_old_term = false
   val mutable in_old_ptr = false
@@ -133,6 +143,7 @@ class gather_insertions props spec_insuf = object(self)
 
   method get_new_globals () = new_globals
   method get_insertions () = insertions
+  method get_functions () = functions
 
   method private insert label str =
     try
