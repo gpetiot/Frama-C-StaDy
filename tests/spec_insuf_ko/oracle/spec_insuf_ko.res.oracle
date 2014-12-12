@@ -58,6 +58,7 @@ extern int pathcrawler_dimension(void*);
 extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
+void __stady_fct_0(int *A, int n);
 int __stady_term_19;
 int __stady_term_17;
 int __stady_term_15;
@@ -184,56 +185,7 @@ void f(int *t, int k)
   old_k = k;
   {
     {
-      {
-        int n;
-        n = k;
-        int *A;
-        A = t;
-        if(1) {
-          int old_n;
-          int *old_A;
-          int *old_ptr_A;
-          old_n = n;
-          old_A = A;
-          mpz_t __stady_gmp_9;
-          __gmpz_init_set_si(__stady_gmp_9, n);
-          int __stady_term_10;
-          unsigned long __stady_term_11;
-          __stady_term_11 = __gmpz_get_si(__stady_gmp_9);
-          old_ptr_A = malloc(__stady_term_11 * (unsigned long)sizeof(int));
-          __stady_term_11 = __gmpz_get_si(__stady_gmp_9);
-          for(__stady_term_10 = 0; (unsigned long)__stady_term_10 < __stady_term_11; __stady_term_10 = 
-            __stady_term_10 + 1) {
-            old_ptr_A[__stady_term_10] = A[__stady_term_10];
-          }
-          __gmpz_clear(__stady_gmp_9);
-          mpz_t __stady_gmp_13;
-          __gmpz_init_set_str(__stady_gmp_13, "3", 10);
-          int __stady_term_18;
-          __stady_term_18 = __gmpz_get_si(__stady_gmp_13);
-          __gmpz_clear(__stady_gmp_13);
-          *(A + __stady_term_18) = __stady_term_19;
-          mpz_t __stady_gmp_12;
-          __gmpz_init_set_str(__stady_gmp_12, "2", 10);
-          int __stady_term_16;
-          __stady_term_16 = __gmpz_get_si(__stady_gmp_12);
-          __gmpz_clear(__stady_gmp_12);
-          *(A + __stady_term_16) = __stady_term_17;
-          mpz_t __stady_gmp_11;
-          __gmpz_init_set_str(__stady_gmp_11, "1", 10);
-          int __stady_term_14;
-          __stady_term_14 = __gmpz_get_si(__stady_gmp_11);
-          __gmpz_clear(__stady_gmp_11);
-          *(A + __stady_term_14) = __stady_term_15;
-          mpz_t __stady_gmp_10;
-          __gmpz_init_set_str(__stady_gmp_10, "0", 10);
-          int __stady_term_12;
-          __stady_term_12 = __gmpz_get_si(__stady_gmp_10);
-          __gmpz_clear(__stady_gmp_10);
-          *(A + __stady_term_12) = __stady_term_13;
-          free(old_ptr_A);
-        }
-      }
+      __stady_fct_0(t, k);
       
     }
     {
@@ -256,6 +208,52 @@ void f(int *t, int k)
   }
 }
 
+void __stady_fct_0(int *A, int n) {
+  if(1) {
+    int old_n;
+    int *old_A;
+    int *old_ptr_A;
+    old_n = n;
+    old_A = A;
+    mpz_t __stady_gmp_9;
+    __gmpz_init_set_si(__stady_gmp_9, n);
+    int __stady_term_10;
+    unsigned long __stady_term_11;
+    __stady_term_11 = __gmpz_get_si(__stady_gmp_9);
+    old_ptr_A = malloc(__stady_term_11 * (unsigned long)sizeof(int));
+    __stady_term_11 = __gmpz_get_si(__stady_gmp_9);
+    for(__stady_term_10 = 0; (unsigned long)__stady_term_10 < __stady_term_11; __stady_term_10 = 
+      __stady_term_10 + 1) {
+      old_ptr_A[__stady_term_10] = A[__stady_term_10];
+    }
+    __gmpz_clear(__stady_gmp_9);
+    mpz_t __stady_gmp_13;
+    __gmpz_init_set_str(__stady_gmp_13, "3", 10);
+    int __stady_term_18;
+    __stady_term_18 = __gmpz_get_si(__stady_gmp_13);
+    __gmpz_clear(__stady_gmp_13);
+    *(A + __stady_term_18) = __stady_term_19;
+    mpz_t __stady_gmp_12;
+    __gmpz_init_set_str(__stady_gmp_12, "2", 10);
+    int __stady_term_16;
+    __stady_term_16 = __gmpz_get_si(__stady_gmp_12);
+    __gmpz_clear(__stady_gmp_12);
+    *(A + __stady_term_16) = __stady_term_17;
+    mpz_t __stady_gmp_11;
+    __gmpz_init_set_str(__stady_gmp_11, "1", 10);
+    int __stady_term_14;
+    __stady_term_14 = __gmpz_get_si(__stady_gmp_11);
+    __gmpz_clear(__stady_gmp_11);
+    *(A + __stady_term_14) = __stady_term_15;
+    mpz_t __stady_gmp_10;
+    __gmpz_init_set_str(__stady_gmp_10, "0", 10);
+    int __stady_term_12;
+    __stady_term_12 = __gmpz_get_si(__stady_gmp_10);
+    __gmpz_clear(__stady_gmp_10);
+    *(A + __stady_term_12) = __stady_term_13;
+    free(old_ptr_A);
+  }
+}
 
 [kernel] preprocessing with "gcc -C -E -I.  __sd_instru_spec_insuf_ko_f.c"
 [kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_spec_insuf_ko_f.c"

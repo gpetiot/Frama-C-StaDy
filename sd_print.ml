@@ -139,16 +139,22 @@ class print_insertions insertions functions spec_insuf () = object(self)
   (* end of annotated_stmt *)
 
   method private func_header fmt f =
-    Format.fprintf fmt "@[<v 2>%a(%a);@\n@]"
-      self#vdecl f.Sd_insertions.func_var
-      (Sd_debug.pp_list ~sep:"," self#vdecl) f.Sd_insertions.func_formals
+    let ty = f.Sd_insertions.func_var.vtype in
+    let vname = f.Sd_insertions.func_var.vname in
+    Format.fprintf fmt "@[%a;@\n@]"
+      (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" vname))) ty
 
   method private func fmt f =
-    Format.fprintf fmt "@[<v 2>%a(%a) {@\n"
-      self#vdecl f.Sd_insertions.func_var
-      (Sd_debug.pp_list ~sep:"," self#vdecl) f.Sd_insertions.func_formals;
-    let pp_ins x = Format.fprintf fmt "%a" pp_insertion_lb x in
-    List.iter pp_ins f.Sd_insertions.func_stmts;
+    let ty = f.Sd_insertions.func_var.vtype in
+    let vname = f.Sd_insertions.func_var.vname in
+    Format.fprintf fmt "@[<v 2>%a {@\n"
+      (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" vname))) ty;
+    let rec aux = function
+      | [] -> ()
+      | [h] -> Format.fprintf fmt "%a" (pp_insertion ~line_break:false) h
+      | h::t -> Format.fprintf fmt "%a" (pp_insertion ~line_break:true) h; aux t
+    in
+    aux f.Sd_insertions.func_stmts;
     Format.fprintf fmt "@]@\n}@\n"
 
   method! file fmt f =
@@ -242,6 +248,8 @@ class print_insertions insertions functions spec_insuf () = object(self)
 
   method private headers fmt =
     Hashtbl.iter (fun _ q -> Queue.iter self#insertion q) insertions;
+    let on_func f = List.iter self#insertion f.Sd_insertions.func_stmts in
+    List.iter on_func functions;
     let headers = [
       gmp, "struct __anonstruct___mpz_struct_1 {\
    int _mp_alloc ;\

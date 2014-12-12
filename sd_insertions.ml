@@ -131,6 +131,7 @@ class gather_insertions props spec_insuf = object(self)
   val mutable last_Z_var_id = -1
   val mutable last_ctype_var_id = -1
   val mutable last_pred_var_id = -1
+  val mutable last_fct_id = -1
 
   (* list of stmt ids (sids) used for testing reachibility of some stmts *)
   val mutable stmts_to_reach = []
@@ -167,6 +168,11 @@ class gather_insertions props spec_insuf = object(self)
     last_pred_var_id <- last_pred_var_id + 1;
     let varname = "__stady_pred_" ^ (string_of_int last_pred_var_id) in
     my_pred_varinfo varname
+
+  method private fresh_fct_varinfo ty =
+    last_fct_id <- last_fct_id + 1;
+    let varname = "__stady_fct_" ^ (string_of_int last_fct_id) in
+    my_varinfo ty varname
 
   method translated_properties() = Sd_utils.no_repeat translated_properties
 
@@ -1330,6 +1336,12 @@ class gather_insertions props spec_insuf = object(self)
       if (Extlib.the spec_insuf).sid = stmt.sid then
 	let kf = Globals.Functions.get fct_varinfo in
 	let formals = Kernel_function.get_formals kf in
+	let locals = [] in
+	let ty = match fct_varinfo.vtype with
+	  | TFun(_, a, _, _) -> TFun(TVoid [], a, false, [])
+	  | _ -> assert false
+	in
+	let vi = self#fresh_fct_varinfo ty in
 	let on_bhv _ bhv (ins_glob, ins) =
 	  let merge_assigns = function
 	    | WritesAny ->
@@ -1396,18 +1408,10 @@ class gather_insertions props spec_insuf = object(self)
 	  ins_glob @ globals, ins @ ins_assumes @ [ins_bhv]
 	in
 	let ins_glob,ins_h = Annotations.fold_behaviors on_bhv kf ([],[]) in
-	let formals_and_args = List.combine formals args in
-	(* for each pair (formal parameter, effective parameter),
-	 * - we declare a fresh (in block) variable for the formal parameter
-	 * - we affect the value of the effective parameter to this variable *)
-	let on_comb ret (formal,arg) =
-	  let i_0 = decl_varinfo formal in
-	  let i_1 = Instru(instru_affect (Cil.var formal) arg) in
-	  i_0 :: i_1 :: ret
-	in
-	let ins_formals = List.fold_left on_comb [] formals_and_args in
 	List.iter (self#insert Glob) ins_glob;
-	self#insert (EndStmt stmt.sid) (Block (ins_formals @ ins_h));
+	let new_f = mk_func vi formals locals ins_h in
+	functions <- new_f :: functions;
+	self#insert (EndStmt stmt.sid) (Instru(ICall(None, Cil.evar vi, args)));
 	Cil.SkipChildren
       else Cil.DoChildren
     | _ -> Cil.DoChildren
