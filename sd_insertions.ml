@@ -1246,6 +1246,37 @@ class gather_insertions props spec_insuf = object(self)
     Cil.DoChildren
   (* end vcode_annot *)
 
+  method private assigns_swd assigns =
+    let merge_assigns ret = function
+      | WritesAny ->
+	Sd_options.Self.warning ~current:true ~once:true
+	  "assigns clause not precise enough";
+	ret
+      | Writes (froms) -> (List.map fst froms) @ ret
+    in
+    let assigns = List.fold_left merge_assigns [] assigns in
+    (* for each term of the assigns clause,
+     * - we translate the term in C
+     * - we declare a fresh global variable (new input)
+     * - we affect the value of this new input to the term *)
+    let on_term (ret1,ret2) term =
+      let t = term.it_content in
+      let ty = match t.term_type with Ctype x -> x | _-> assert false in
+      match t.term_node with
+      | TLval lv ->
+	let ins, e = self#translate_lval lv in
+	let vi = self#fresh_ctype_varinfo ty in
+	new_globals <- vi :: new_globals;
+	let aff = Instru(instru_affect e (Cil.evar vi)) in
+	(decl_varinfo vi)::ret1, ins @ aff :: ret2
+      | _ ->
+	Sd_options.Self.warning ~current:true ~once:true
+	  "term %a in assigns clause must be a left value"
+	  Printer.pp_term t;
+	ret1,ret2
+    in
+    List.fold_left on_term ([],[]) assigns
+
   method! vstmt_aux stmt =
     if List.mem stmt.sid stmts_to_reach then
       begin
@@ -1292,33 +1323,9 @@ class gather_insertions props spec_insuf = object(self)
 	    | _ -> ret
 	  in
 	  let assigns = List.fold_left f_assigns [] ca_l in
-	  let merge_assigns ret = function
-	    | WritesAny ->
-	      Sd_options.Self.warning ~current:true ~once:true
-		"assigns clause not precise enough";
-	      ret
-	    | Writes (froms) -> (List.map fst froms) @ ret
-	  in
-	  let assigns = List.fold_left merge_assigns [] assigns in
 	  let linvs = List.fold_left f_linvs [] ca_l in
 	  let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
-	  let on_term (ret1,ret2) term =
-	    let t = term.it_content in
-	    let ty = match t.term_type with Ctype x->x | _-> assert false in
-	    match t.term_node with
-	    | TLval lv ->
-	      let ins, e = self#translate_lval lv in
-	      let vi = self#fresh_ctype_varinfo ty in
-	      new_globals <- vi :: new_globals;
-	      let aff = Instru(instru_affect e (Cil.evar vi)) in
-	      (decl_varinfo vi)::ret1, ins @ aff :: ret2
-	    | _ ->
-	      Sd_options.Self.warning ~current:true ~once:true
-		"term %a in assigns clause must be a left value"
-		Printer.pp_term t;
-	      ret1,ret2
-	  in
-	  let globals, affects = List.fold_left on_term ([],[]) assigns in
+	  let globals, affects = self#assigns_swd assigns in
 	  let on_inv ret p = ret @ (self#pc_assume p.content) in
 	  let ins_block = List.fold_left on_inv affects linvs in
 	  let ins_bhv = ins_if e_assumes ins_block [] in
@@ -1343,14 +1350,6 @@ class gather_insertions props spec_insuf = object(self)
 	in
 	let vi = self#fresh_fct_varinfo ty in
 	let on_bhv _ bhv (ins_glob, ins) =
-	  let merge_assigns = function
-	    | WritesAny ->
-	      Sd_options.Self.warning ~current:true ~once:true
-		"assigns clause not precise enough";
-	      []
-	    | Writes (froms) -> List.map fst froms
-	  in
-	  let assigns = merge_assigns bhv.b_assigns in
 	  let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
 	  (* if the function called returns a value (into a variable r),
 	   * we declare a fresh global variable (new input)
@@ -1371,27 +1370,7 @@ class gather_insertions props spec_insuf = object(self)
 	  let i1,i2,i3 = Globals.Vars.fold save_global ([],[],[]) in
 	  let i1,i2,i3 = List.fold_left save_formal (i1,i2,i3) formals in
 	  let begin_save = i1 @ i2 and end_save = i3 in
-	  (* for each term of the assigns clause,
-	   * - we translate the term in C
-	   * - we declare a fresh global variable (new input)
-	   * - we affect the value of this new input to the term *)
-	  let on_term (ret1,ret2) term =
-	    let t = term.it_content in
-	    let ty = match t.term_type with Ctype x -> x | _-> assert false in
-	    match t.term_node with
-	    | TLval lv ->
-	      let ins, e = self#translate_lval lv in
-	      let vi = self#fresh_ctype_varinfo ty in
-	      new_globals <- vi :: new_globals;
-	      let aff = Instru(instru_affect e (Cil.evar vi)) in
-	      (decl_varinfo vi)::ret1, ins @ aff :: ret2
-	    | _ ->
-	      Sd_options.Self.warning ~current:true ~once:true
-		"term %a in assigns clause must be a left value"
-		Printer.pp_term t;
-	      ret1,ret2
-	  in
-	  let globals, affects = List.fold_left on_term ([],[]) assigns in
+	  let globals, affects = self#assigns_swd [bhv.b_assigns] in
 	  let globals, affects = globals @ decl_ret, affects @ ins_ret in
 	  let ensures = bhv.b_post_cond in
 	  let on_post ins (_,{ip_content=p}) =
