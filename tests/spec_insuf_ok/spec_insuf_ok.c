@@ -5,7 +5,7 @@ OPT: -main f -stady -stady-spec-insuf 28 -stady-msg-key generated-c,generated-pl
 
 /*@ requires n == 4;
   @ requires \valid(A+(0..n-1));
-  @ assigns A[0], A[1], A[2], A[3];
+  @ assigns A[0..n-1];
   @ ensures \forall integer i; 0 <= i < n ==>
   @         \forall integer j; i <= j < n ==> A[i] <= A[j];
   @*/

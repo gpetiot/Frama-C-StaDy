@@ -10,15 +10,14 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
+dom('f', cont('__stady_term_16',_), [], int([-2147483648..2147483647])).
+dom('f', dim('__stady_term_16'), [], int([0..4294967295])).
 dom('f', cont('t',_), [], int([-2147483648..2147483647])).
 dom('f', dim('t'), [], int([4..4])).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
-  create_input_val('__stady_term_17', int([-2147483648..2147483647]),Ins),
-  create_input_val('__stady_term_19', int([-2147483648..2147483647]),Ins),
-  create_input_val('__stady_term_21', int([-2147483648..2147483647]),Ins),
-  create_input_val('__stady_term_23', int([-2147483648..2147483647]),Ins),
+  create_input_val(dim('__stady_term_16'), int([0..4294967295]),Ins),
   create_input_val('k', int([4..4]),Ins),
   create_input_val(dim('t'), int([4..4]),Ins),
   true.
@@ -62,10 +61,7 @@ extern int pathcrawler_assume_exception(char*,int);
 extern void* malloc(unsigned long);
 extern void free(void*);
 void __stady_fct_0(int *A, int n);
-int __stady_term_23;
-int __stady_term_21;
-int __stady_term_19;
-int __stady_term_17;
+int *__stady_term_16;
 void sort(int *A, int n)
 {
   mpz_t __stady_gmp_0;
@@ -77,7 +73,7 @@ void sort(int *A, int n)
   __gmpz_clear(__stady_gmp_0);
   __gmpz_clear(__stady_gmp_1);
   if(! (__stady_term_0 == 0)) {
-    pathcrawler_assert_exception("Pre-condition!", 9);
+    pathcrawler_assert_exception("Pre-condition!", 8);
   }
   mpz_t __stady_gmp_2;
   __gmpz_init_set_si(__stady_gmp_2, n);
@@ -285,81 +281,103 @@ void __stady_fct_0(int *A, int n) {
       old_ptr_A[__stady_term_14] = A[__stady_term_14];
     }
     __gmpz_clear(__stady_gmp_15);
-    mpz_t __stady_gmp_19;
-    __gmpz_init_set_str(__stady_gmp_19, "3", 10);
-    int __stady_term_22;
-    __stady_term_22 = __gmpz_get_si(__stady_gmp_19);
-    __gmpz_clear(__stady_gmp_19);
-    *(A + __stady_term_22) = __stady_term_23;
-    mpz_t __stady_gmp_18;
-    __gmpz_init_set_str(__stady_gmp_18, "2", 10);
-    int __stady_term_20;
-    __stady_term_20 = __gmpz_get_si(__stady_gmp_18);
-    __gmpz_clear(__stady_gmp_18);
-    *(A + __stady_term_20) = __stady_term_21;
+    mpz_t __stady_gmp_16;
+    __gmpz_init_set_si(__stady_gmp_16, n);
     mpz_t __stady_gmp_17;
     __gmpz_init_set_str(__stady_gmp_17, "1", 10);
-    int __stady_term_18;
-    __stady_term_18 = __gmpz_get_si(__stady_gmp_17);
-    __gmpz_clear(__stady_gmp_17);
-    *(A + __stady_term_18) = __stady_term_19;
-    mpz_t __stady_gmp_16;
-    __gmpz_init_set_str(__stady_gmp_16, "0", 10);
-    int __stady_term_16;
-    __stady_term_16 = __gmpz_get_si(__stady_gmp_16);
+    mpz_t __stady_gmp_18;
+    __gmpz_init(__stady_gmp_18);
+    __gmpz_sub(__stady_gmp_18, __stady_gmp_16, __stady_gmp_17);
     __gmpz_clear(__stady_gmp_16);
-    *(A + __stady_term_16) = __stady_term_17;
+    __gmpz_clear(__stady_gmp_17);
     int __stady_pred_3;
-    __stady_pred_3 = 1;
+    int __stady_term_17;
+    __stady_term_17 = __gmpz_cmp_ui(__stady_gmp_18, 0);
+    int __stady_term_18;
+    __stady_term_18 = pathcrawler_dimension(__stady_term_16);
+    int __stady_term_19;
+    __stady_term_19 = __gmpz_cmp_ui(__stady_gmp_18, __stady_term_18);
+    __stady_pred_3 = __stady_term_17 >= 0 && __stady_term_19 < 0;
+    __gmpz_clear(__stady_gmp_18);
+    if(! __stady_pred_3) {
+      pathcrawler_assume_exception("", 0);
+    }
+    mpz_t __stady_gmp_19;
+    mpz_t __stady_gmp_20;
+    __gmpz_init_set_str(__stady_gmp_20, "0", 10);
+    __gmpz_init_set(__stady_gmp_19, __stady_gmp_20);
+    mpz_t __stady_gmp_21;
+    __gmpz_init_set_si(__stady_gmp_21, n);
+    mpz_t __stady_gmp_22;
+    __gmpz_init_set_str(__stady_gmp_22, "1", 10);
+    mpz_t __stady_gmp_23;
+    __gmpz_init(__stady_gmp_23);
+    __gmpz_sub(__stady_gmp_23, __stady_gmp_21, __stady_gmp_22);
+    __gmpz_clear(__stady_gmp_21);
+    __gmpz_clear(__stady_gmp_22);
+    int __stady_term_20;
+    int __stady_term_21;
+    __stady_term_21 = __gmpz_cmp(__stady_gmp_19, __stady_gmp_23);
+    for(; __stady_term_21 <= 0; ) {
+      __stady_term_20 = __gmpz_get_si(__stady_gmp_19);
+      *(__stady_term_16 + __stady_term_20) = *(A + __stady_term_20);
+      __gmpz_add_ui(__stady_gmp_19, __stady_gmp_19, 1);
+      __stady_term_21 = __gmpz_cmp(__stady_gmp_19, __stady_gmp_23);
+    }
+    __gmpz_clear(__stady_gmp_19);
+    __gmpz_clear(__stady_gmp_20);
+    __gmpz_clear(__stady_gmp_23);
+    int __stady_pred_4;
+    __stady_pred_4 = 1;
     {
       mpz_t __q_i;
-      mpz_t __stady_gmp_20;
-      __gmpz_init_set_str(__stady_gmp_20, "0", 10);
-      mpz_t __stady_gmp_21;
-      __gmpz_init_set_si(__stady_gmp_21, old_n);
-      __gmpz_init_set(__q_i, __stady_gmp_20);
-      int __stady_term_24;
-      __stady_term_24 = __gmpz_cmp(__q_i, __stady_gmp_21);
-      for(; __stady_term_24 < 0 && __stady_pred_3; ) {
-        int __stady_pred_4;
-        __stady_pred_4 = 1;
+      mpz_t __stady_gmp_24;
+      __gmpz_init_set_str(__stady_gmp_24, "0", 10);
+      mpz_t __stady_gmp_25;
+      __gmpz_init_set_si(__stady_gmp_25, old_n);
+      __gmpz_init_set(__q_i, __stady_gmp_24);
+      int __stady_term_22;
+      __stady_term_22 = __gmpz_cmp(__q_i, __stady_gmp_25);
+      for(; __stady_term_22 < 0 && __stady_pred_4; ) {
+        int __stady_pred_5;
+        __stady_pred_5 = 1;
         {
           mpz_t __q_j;
-          mpz_t __stady_gmp_22;
-          __gmpz_init_set(__stady_gmp_22, __q_i);
-          mpz_t __stady_gmp_23;
-          __gmpz_init_set_si(__stady_gmp_23, old_n);
-          __gmpz_init_set(__q_j, __stady_gmp_22);
-          int __stady_term_25;
-          __stady_term_25 = __gmpz_cmp(__q_j, __stady_gmp_23);
-          for(; __stady_term_25 < 0 && __stady_pred_4; ) {
-            mpz_t __stady_gmp_24;
-            __gmpz_init_set(__stady_gmp_24, __q_i);
-            int __stady_term_26;
-            __stady_term_26 = __gmpz_get_si(__stady_gmp_24);
-            __gmpz_clear(__stady_gmp_24);
-            mpz_t __stady_gmp_25;
-            __gmpz_init_set(__stady_gmp_25, __q_j);
-            int __stady_term_27;
-            __stady_term_27 = __gmpz_get_si(__stady_gmp_25);
-            __gmpz_clear(__stady_gmp_25);
-            __stady_pred_4 = *(old_A + __stady_term_26) <= *(old_A + __stady_term_27);
+          mpz_t __stady_gmp_26;
+          __gmpz_init_set(__stady_gmp_26, __q_i);
+          mpz_t __stady_gmp_27;
+          __gmpz_init_set_si(__stady_gmp_27, old_n);
+          __gmpz_init_set(__q_j, __stady_gmp_26);
+          int __stady_term_23;
+          __stady_term_23 = __gmpz_cmp(__q_j, __stady_gmp_27);
+          for(; __stady_term_23 < 0 && __stady_pred_5; ) {
+            mpz_t __stady_gmp_28;
+            __gmpz_init_set(__stady_gmp_28, __q_i);
+            int __stady_term_24;
+            __stady_term_24 = __gmpz_get_si(__stady_gmp_28);
+            __gmpz_clear(__stady_gmp_28);
+            mpz_t __stady_gmp_29;
+            __gmpz_init_set(__stady_gmp_29, __q_j);
+            int __stady_term_25;
+            __stady_term_25 = __gmpz_get_si(__stady_gmp_29);
+            __gmpz_clear(__stady_gmp_29);
+            __stady_pred_5 = *(old_A + __stady_term_24) <= *(old_A + __stady_term_25);
             __gmpz_add_ui(__q_j, __q_j, 1);
-            __stady_term_25 = __gmpz_cmp(__q_j, __stady_gmp_23);
+            __stady_term_23 = __gmpz_cmp(__q_j, __stady_gmp_27);
           }
           __gmpz_clear(__q_j);
-          __gmpz_clear(__stady_gmp_22);
-          __gmpz_clear(__stady_gmp_23);
+          __gmpz_clear(__stady_gmp_26);
+          __gmpz_clear(__stady_gmp_27);
         }
-        __stady_pred_3 = __stady_pred_4;
+        __stady_pred_4 = __stady_pred_5;
         __gmpz_add_ui(__q_i, __q_i, 1);
-        __stady_term_24 = __gmpz_cmp(__q_i, __stady_gmp_21);
+        __stady_term_22 = __gmpz_cmp(__q_i, __stady_gmp_25);
       }
       __gmpz_clear(__q_i);
-      __gmpz_clear(__stady_gmp_20);
-      __gmpz_clear(__stady_gmp_21);
+      __gmpz_clear(__stady_gmp_24);
+      __gmpz_clear(__stady_gmp_25);
     }
-    if(! __stady_pred_3) {
+    if(! __stady_pred_4) {
       pathcrawler_assume_exception("", 0);
     }
     free(old_ptr_A);
@@ -392,9 +410,12 @@ void __stady_fct_0(int *A, int n) {
 [pc] TEST GENERATION WARNING!!!
 [pc] Unexpected failure of goal write_status_prefix_and_path(7).
 [pc] Please report this bug.
+[pc] TEST GENERATION WARNING!!!
+[pc] Unexpected failure of goal write_status_prefix_and_path(8).
+[pc] Please report this bug.
 [pc] generation finished
 [stady] all-paths: true
-[stady] 77 test cases
+[stady] 85 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
