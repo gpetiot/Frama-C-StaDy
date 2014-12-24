@@ -406,9 +406,7 @@ let compute_constraints() =
   domains, unquantifs, quantifs
 
 
-let add_global v domains unquantifs quantifs =
-  let domains = input_from_type domains v.vtype (PLCVar v) in
-  domains, unquantifs, quantifs
+let add_global v domains = input_from_type domains v.vtype (PLCVar v)
 
 
 let translate precond_file_name domains unquantifs quantifs =

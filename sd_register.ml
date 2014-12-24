@@ -195,10 +195,8 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   let test_params =
     if native_precond_generated then
       begin
-	let domains, unquantifs, quantifs =
-	  let add_global (d, u, q) v = Sd_native_precond.add_global v d u q in
-	  List.fold_left add_global (domains,unquantifs,quantifs) new_globals
-	in
+	let add_global d v = Sd_native_precond.add_global v d in
+	let domains = List.fold_left add_global domains new_globals in
 	Sd_native_precond.translate precond_fname domains unquantifs quantifs;
 	Printf.sprintf "-pc-test-params %s" precond_fname
       end
