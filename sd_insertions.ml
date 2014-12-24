@@ -1252,7 +1252,7 @@ class gather_insertions props spec_insuf = object(self)
 	Sd_options.Self.warning ~current:true ~once:true
 	  "assigns clause not precise enough";
 	ret
-      | Writes (froms) -> (List.map fst froms) @ ret
+      | Writes froms -> (List.map fst froms) @ ret
     in
     let assigns = List.fold_left merge_assigns [] assigns in
     (* for each term of the assigns clause,
@@ -1261,9 +1261,57 @@ class gather_insertions props spec_insuf = object(self)
      * - we affect the value of this new input to the term *)
     let on_term (ret1,ret2) term =
       let t = term.it_content in
-      let ty = match t.term_type with Ctype x -> x | _-> assert false in
       match t.term_node with
+      | TLval(TMem{term_node=TBinOp(op,
+				    op1,
+				    {term_node=Trange (Some t1, Some t2)})},
+	      TNoOffset) ->
+	assert(t1.term_type = Linteger);
+	assert(t2.term_type = Linteger);
+	let ty = match op1.term_type with Ctype t -> t | _ -> assert false in
+	(*let ty = TPtr (ty, []) in*)
+	let vi = self#fresh_ctype_varinfo ty in
+	new_globals <- vi :: new_globals;
+	let range_t = Logic_const.trange (Some t1, Some t2) in
+	let ptr_t = Logic_utils.expr_to_term ~cast:true (Cil.evar vi) in
+	let binop_t = TBinOp(op, ptr_t, range_t) in
+	let valid_t = Logic_const.term binop_t op1.term_type in
+	let valid_p = Logic_const.pvalid (LogicLabel(None,"Here"), valid_t) in
+	let valid_ip = Logic_const.new_predicate valid_p in
+	let i_00 = self#pc_assume valid_ip.ip_content in
+	let it = self#fresh_Z_varinfo () in
+	let e_it = Cil.evar it in
+	let i_0 = decl_varinfo it in
+	let i_1, e_t1 = self#translate_term t1 in
+	let i_2 = Instru(F.init_set e_it e_t1) in
+	let i_3, e_t2 = self#translate_term t2 in
+	let i_it = self#fresh_ctype_varinfo Cil.intType in
+	let e_i_it = Cil.evar i_it in
+	let i_4 = decl_varinfo i_it in
+	let tmp = self#fresh_ctype_varinfo Cil.intType in
+	let e_tmp = Cil.evar tmp in
+	let i_5 = decl_varinfo tmp in
+	let i_6 = Instru(F.cmp (Cil.var tmp) e_it e_t2) in
+	let cond = cmp Rle e_tmp zero in
+	let i_f_0 = Instru(F.get_si (Cil.var i_it) e_it) in
+	let e = Cil.new_exp ~loc (BinOp(op, (Cil.evar vi), e_i_it, ty)) in
+	let x = Mem e, NoOffset in
+	let ll, e_op1 = self#translate_term op1 in
+	assert (ll = []);
+	let e = Cil.new_exp ~loc (BinOp(op, e_op1, e_i_it, ty)) in
+	let y = Cil.new_exp ~loc (Lval(Mem e, NoOffset)) in
+	let i_f_1 = Instru(instru_affect x y) in
+	let i_f_2 = Instru(F.binop_ui PlusA e_it e_it one) in
+	let i_f_3 = Instru(F.cmp (Cil.var tmp) e_it e_t2) in
+	let i_7 = ins_for Skip cond Skip [i_f_0; i_f_1; i_f_2; i_f_3] in
+	let i_8 = Instru(F.clear e_it) in
+	let i_9 = Instru(F.clear e_t1) in
+	let i_10 = Instru(F.clear e_t2) in
+	(decl_varinfo vi) :: ret1,
+	i_00 @ i_0 :: i_1 @ i_2 :: i_3 @
+	  i_4 :: i_5 :: i_6 :: i_7 :: i_8 :: i_9 :: i_10 :: ret2
       | TLval lv ->
+	let ty = match t.term_type with Ctype x -> x | _ -> assert false in
 	let ins, e = self#translate_lval lv in
 	let vi = self#fresh_ctype_varinfo ty in
 	new_globals <- vi :: new_globals;
@@ -1271,9 +1319,9 @@ class gather_insertions props spec_insuf = object(self)
 	(decl_varinfo vi)::ret1, ins @ aff :: ret2
       | _ ->
 	Sd_options.Self.warning ~current:true ~once:true
-	  "term %a in assigns clause must be a left value"
+	  "term %a in assigns clause unsupported"
 	  Printer.pp_term t;
-	ret1,ret2
+	ret1, ret2
     in
     List.fold_left on_term ([],[]) assigns
 
