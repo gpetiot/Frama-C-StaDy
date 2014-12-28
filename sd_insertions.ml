@@ -189,8 +189,7 @@ class gather_insertions props spec_insuf = object(self)
 	let e_ten = Cil.new_exp ~loc (Const ten) in
 	let insert_1 = Instru(F.init_set_str e_fresh_var str e_ten) in
 	[insert_0; insert_1], Cil.evar fresh_var
-      | Ctype (TInt(ikind,_)) ->
-	[], Cil.new_exp ~loc (Const(CInt64(i,ikind,str_opt)))
+      | Ctype (TInt(ik,_)) -> [], Cil.new_exp ~loc (Const(CInt64(i,ik,str_opt)))
       | _ -> assert false (* unreachable *)
       end
     | LStr str -> [], Cil.new_exp ~loc (Const(CStr str))
@@ -238,70 +237,70 @@ class gather_insertions props spec_insuf = object(self)
   | Lreal -> assert false (* TODO: reals *)
   | _ -> let ins, e = self#translate_term t in ins, UnOp(op,e,(Cil.typeOf e))
 
-  method private translate_binop ty op a b =
-    if op = IndexPI || op = PlusPI || op = MinusPI then
-      let i_0, a' = self#translate_term a in
-      let i_1, b' = self#translate_term b in
-      let i_2, e = match b.term_type with
-	| Linteger ->
-	  let v = self#fresh_ctype_varinfo Cil.intType in
-	  let ii_0 = decl_varinfo v in
-	  let ii_1 = Instru(F.get_si (Cil.var v) b') in
-	  let ii_2 = Instru(F.clear b') in
-	  [ii_0; ii_1; ii_2], Cil.evar v
-	| _ -> [], b'
-      in
-      let e' = Cil.new_exp ~loc (BinOp(op,a',e,(Cil.typeOf a'))) in
-      i_0 @ i_1 @ i_2, e'.enode
-    else
-      let i_0, x = self#translate_term a in
-      let i_1, y = self#translate_term b in
-      match ty with
+  method private translate_binop ty op a b = match op with
+  | IndexPI | PlusPI | MinusPI ->
+    let i_0, a' = self#translate_term a in
+    let i_1, b' = self#translate_term b in
+    let i_2, e = match b.term_type with
       | Linteger ->
-	let ret = self#fresh_Z_varinfo() in
-	let i_2 = decl_varinfo ret in
-	let e_ret = Cil.evar ret in
-	let i_3 = Instru(F.init e_ret) in
-	let clear_t1 = Instru(F.clear x) in
-	let clear_t2 = Instru(F.clear y) in
-	let inserts = match a.term_type, b.term_type with
-	  | Linteger, Linteger ->
-	    [Instru(F.binop op e_ret x y); clear_t1; clear_t2]
-	  | Ctype(TInt _), Ctype(TInt _) ->
-	    let v_1 = self#fresh_Z_varinfo() in
-	    let i_4 = decl_varinfo v_1 in
-	    let v_2 = self#fresh_Z_varinfo() in
-	    let i_5 = decl_varinfo v_2 in
-	    let e_v_1 = Cil.evar v_1 in
-	    let e_v_2 = Cil.evar v_2 in
-	    let i_6 = Instru(F.init_set_si e_v_1 x) in
-	    let i_7 = Instru(F.init_set_si e_v_2 y) in
-	    let i_8 = Instru(F.binop op e_ret e_v_1 e_v_2) in
-	    let i_9 = Instru(F.clear e_v_1) in
-	    let i_10 = Instru(F.clear e_v_2) in
-	    [i_4; i_5; i_6; i_7; i_8; i_9; i_10]
-	  | _ -> assert false
-	in
-	i_0 @ i_1 @ i_2 :: i_3 :: inserts, e_ret.enode
-      | Lreal -> assert false (* TODO: reals *)
-      | Ltype _ as lt when Logic_const.is_boolean_type lt ->
-	begin match a.term_type, b.term_type with
+	let v = self#fresh_ctype_varinfo Cil.intType in
+	let ii_0 = decl_varinfo v in
+	let ii_1 = Instru(F.get_si (Cil.var v) b') in
+	let ii_2 = Instru(F.clear b') in
+	[ii_0; ii_1; ii_2], Cil.evar v
+      | _ -> [], b'
+    in
+    let e' = Cil.new_exp ~loc (BinOp(op,a',e,(Cil.typeOf a'))) in
+    i_0 @ i_1 @ i_2, e'.enode
+  | _ ->
+    let i_0, x = self#translate_term a in
+    let i_1, y = self#translate_term b in
+    match ty with
+    | Linteger ->
+      let ret = self#fresh_Z_varinfo() in
+      let i_2 = decl_varinfo ret in
+      let e_ret = Cil.evar ret in
+      let i_3 = Instru(F.init e_ret) in
+      let clear_t1 = Instru(F.clear x) in
+      let clear_t2 = Instru(F.clear y) in
+      let inserts = match a.term_type, b.term_type with
 	| Linteger, Linteger ->
-	  let var = self#fresh_ctype_varinfo Cil.intType in
-	  let i_2 = decl_varinfo var in
-	  let tmp = self#fresh_ctype_varinfo Cil.intType in
-	  let e_tmp = Cil.evar tmp in
-	  let i_3 = decl_varinfo tmp in
-	  let i_4 = Instru(F.cmp (Cil.var tmp) x y) in
-	  let op = binop_to_relation op in
-	  let lvar = Cil.var var in
-	  let i_5 = Instru(instru_affect lvar (cmp op e_tmp zero)) in
-	  let i_6 = Instru(F.clear x) in
-	  let i_7 = Instru(F.clear y) in
-	  i_0 @ i_1 @ [i_2; i_3; i_4; i_5; i_6; i_7], (Cil.evar var).enode
-	| _ -> i_0 @ i_1, (Cil.mkBinOp ~loc op x y).enode
-	end
-      | _ -> assert false
+	  [Instru(F.binop op e_ret x y); clear_t1; clear_t2]
+	| Ctype(TInt _), Ctype(TInt _) ->
+	  let v_1 = self#fresh_Z_varinfo() in
+	  let i_4 = decl_varinfo v_1 in
+	  let v_2 = self#fresh_Z_varinfo() in
+	  let i_5 = decl_varinfo v_2 in
+	  let e_v_1 = Cil.evar v_1 in
+	  let e_v_2 = Cil.evar v_2 in
+	  let i_6 = Instru(F.init_set_si e_v_1 x) in
+	  let i_7 = Instru(F.init_set_si e_v_2 y) in
+	  let i_8 = Instru(F.binop op e_ret e_v_1 e_v_2) in
+	  let i_9 = Instru(F.clear e_v_1) in
+	  let i_10 = Instru(F.clear e_v_2) in
+	  [i_4; i_5; i_6; i_7; i_8; i_9; i_10]
+	| _ -> assert false
+      in
+      i_0 @ i_1 @ i_2 :: i_3 :: inserts, e_ret.enode
+    | Lreal -> assert false (* TODO: reals *)
+    | Ltype _ as lt when Logic_const.is_boolean_type lt ->
+      begin match a.term_type, b.term_type with
+      | Linteger, Linteger ->
+	let var = self#fresh_ctype_varinfo Cil.intType in
+	let i_2 = decl_varinfo var in
+	let tmp = self#fresh_ctype_varinfo Cil.intType in
+	let e_tmp = Cil.evar tmp in
+	let i_3 = decl_varinfo tmp in
+	let i_4 = Instru(F.cmp (Cil.var tmp) x y) in
+	let op = binop_to_relation op in
+	let lvar = Cil.var var in
+	let i_5 = Instru(instru_affect lvar (cmp op e_tmp zero)) in
+	let i_6 = Instru(F.clear x) in
+	let i_7 = Instru(F.clear y) in
+	i_0 @ i_1 @ [i_2; i_3; i_4; i_5; i_6; i_7], (Cil.evar var).enode
+      | _ -> i_0 @ i_1, (Cil.mkBinOp ~loc op x y).enode
+      end
+    | _ -> assert false
 
   method private translate_tif cond then_b else_b = match then_b.term_type with
   | Linteger ->
@@ -1124,12 +1123,12 @@ class gather_insertions props spec_insuf = object(self)
     let insert_1 = ins_if e [Instru(self#pc_ass "" 0)] [] in
     inserts_0 @ [insert_1]
 
-  method private for_behaviors bhvs ins =
-    if bhvs <> [] then
-      let inserts_0, cond = self#cond_of_behaviors bhvs in
-      let insert_1 = ins_if cond ins [] in
-      inserts_0 @ [insert_1]
-    else ins
+  method private for_behaviors bhvs ins = match bhvs with
+  | [] -> ins
+  | bhvs ->
+    let inserts_0, cond = self#cond_of_behaviors bhvs in
+    let insert_1 = ins_if cond ins [] in
+    inserts_0 @ [insert_1]
 
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
@@ -1269,7 +1268,6 @@ class gather_insertions props spec_insuf = object(self)
 	assert(t1.term_type = Linteger);
 	assert(t2.term_type = Linteger);
 	let ty = match op1.term_type with Ctype t -> t | _ -> assert false in
-	(*let ty = TPtr (ty, []) in*)
 	let vi = self#fresh_ctype_varinfo ty in
 	new_globals <- vi :: new_globals;
 	let range_t = Logic_const.trange (Some t1, Some t2) in
