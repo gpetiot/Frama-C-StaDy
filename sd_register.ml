@@ -168,8 +168,7 @@ let selected_props() =
 
 
 let compute_props ?(props=selected_props()) ?spec_insuf () =
-  let spec_insuf =
-    match spec_insuf with
+  let spec_insuf = match spec_insuf with
     | Some x -> Some x
     | None ->
       let sid = Sd_options.Spec_Insuf.get() in

@@ -108,8 +108,7 @@ let process_socket s =
 
 
 let print_exit_code code =
-  let str =
-    match code with
+  let str = match code with
     | Unix.WEXITED _ -> "OK"
     | Unix.WSIGNALED _ ->  "killed"
     | Unix.WSTOPPED _ -> "stopped"
