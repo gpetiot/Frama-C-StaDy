@@ -3,13 +3,13 @@ open Cil_types
 
 
 let typically_typer ~typing_context ~loc bhv = function
-  | p::[] ->
+  | [p] ->
     let f = typing_context.Logic_typing.type_predicate in
     let state = typing_context.Logic_typing.pre_state in
     let pred = Logic_const.new_predicate (f state p) in
-    bhv.b_extended <- ("typically", 42, [pred]) ::bhv.b_extended
-  | _ -> typing_context.Logic_typing.error loc
-    "expecting a predicate after keyword 'typically'"
+    bhv.b_extended <- ("typically", 42, [pred]) :: bhv.b_extended
+  | _ ->
+    typing_context.Logic_typing.error loc "predicate expected after 'typically'"
 
 let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
