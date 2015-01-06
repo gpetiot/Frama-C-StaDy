@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main insertion_sort -stady -stady-msg-key generated-c,generated-pl -then -report
+STDOPT: +"-main insertion_sort -stady -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 /*@ requires 1 <= n <= 3;

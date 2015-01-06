@@ -1,4 +1,5 @@
-[kernel] preprocessing with "gcc -C -E -I.  tests/next_subset/next_subset.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing tests/next_subset/next_subset.c (with preprocessing)
 tests/next_subset/next_subset.c:22:[stady] warning: Native Precondition:
                  ∀ ℤ __q_i; 0 ≤ __q_i < n ⇒ *(s+__q_i) ≡ 0 ∨ *(s+__q_i) ≡ 1 unsupported
 [stady:generated-pl] generated Prolog precondition:
@@ -694,8 +695,10 @@ int nextSubset(int *s, int n)
 }
 
 
-[kernel] preprocessing with "gcc -C -E -I.  __sd_instru_next_subset_nextSubset.c"
-[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_next_subset_nextSubset.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_next_subset_nextSubset.c (with preprocessing)
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_next_subset_nextSubset.c (with preprocessing)
 [pc] analyzing...
 [pc] Compiling pathcrawler___sd_instru_next_subset_nextSubset/lanceur_nextSubset utilities ...
 [pc] Compiling pathcrawler___sd_instru_next_subset_nextSubset/lanceur_nextSubset ...

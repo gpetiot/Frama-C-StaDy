@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main quick_sort -pp-annot -stady -stady-msg-key generated-c,generated-pl -then -report
+STDOPT: +"-main quick_sort -pp-annot -stady -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 #define MAX_LEVELS 50

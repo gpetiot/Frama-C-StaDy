@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main f -stady -stady-msg-key generated-c,generated-pl -then -report
+STDOPT: +"-main f -stady -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 /*@ requires 0 <= n <= 3;

@@ -1,4 +1,5 @@
-[kernel] preprocessing with "gcc -C -E -I.  tests/merge_arrays/merge_arrays.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing tests/merge_arrays/merge_arrays.c (with preprocessing)
 tests/merge_arrays/merge_arrays.c:17:[stady] warning: Native Precondition:
                  ∀ ℤ __q_i; 0 ≤ __q_i < l1-1 ⇒ *(t1+__q_i) ≤ *(t1+(__q_i+1)) unsupported
 tests/merge_arrays/merge_arrays.c:17:[stady] warning: Native Precondition:
@@ -932,8 +933,10 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
 }
 
 
-[kernel] preprocessing with "gcc -C -E -I.  __sd_instru_merge_arrays_merge_arrays.c"
-[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_merge_arrays_merge_arrays.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_merge_arrays_merge_arrays.c (with preprocessing)
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_merge_arrays_merge_arrays.c (with preprocessing)
 [pc] analyzing...
 [pc] Compiling pathcrawler___sd_instru_merge_arrays_merge_arrays/lanceur_merge_arrays utilities ...
 [pc] Compiling pathcrawler___sd_instru_merge_arrays_merge_arrays/lanceur_merge_arrays ...

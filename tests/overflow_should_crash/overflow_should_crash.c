@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main f -pp-annot -stady -stady-msg-key generated-c,generated-pl -then -report
+STDOPT: +"-main f -pp-annot -stady -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 #include <limits.h>

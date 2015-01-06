@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main f -stady -stady-spec-insuf 28 -stady-msg-key generated-c,generated-pl -then -report
+STDOPT: +"-main f -stady -stady-spec-insuf 28 -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 /*@ requires n == 4;

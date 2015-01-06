@@ -67,7 +67,7 @@ class subst ?subst_result () = object(self)
   | Pvalid_read (l,t) -> Pvalid_read (self#label l ll, self#term t ll vt vv)
   | Pvalid (l,t) -> Pvalid (self#label l ll, self#term t ll vt vv)
   | Pinitialized (l,t) -> Pinitialized(self#label l ll, self#term t ll vt vv)
-  | Pspecified (l,t) -> Pspecified(self#label l ll, self#term t ll vt vv)
+  | Pdangling (l,t) -> Pdangling(self#label l ll, self#term t ll vt vv)
   | Pallocable (l,t) -> Pallocable (self#label l ll, self#term t ll vt vv)
   | Pfreeable (l,t) -> Pfreeable (self#label l ll, self#term t ll vt vv)
   | Pfresh(l1,l2,t1,t2) -> Pfresh(self#label l1 ll,self#label l2 ll,

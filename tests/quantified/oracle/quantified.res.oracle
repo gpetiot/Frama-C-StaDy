@@ -1,4 +1,5 @@
-[kernel] preprocessing with "gcc -C -E -I.  tests/quantified/quantified.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing tests/quantified/quantified.c (with preprocessing)
 tests/quantified/quantified.c:13:[stady] warning: Native Precondition:
                  ∀ ℤ __q_i; 0 ≤ __q_i < n ⇒ \valid(*(t+__q_i)+(0 .. n-1)) unsupported
 tests/quantified/quantified.c:13:[stady] warning: Native Precondition:
@@ -257,8 +258,10 @@ void f(int **t, int n)
 }
 
 
-[kernel] preprocessing with "gcc -C -E -I.  __sd_instru_quantified_f.c"
-[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_quantified_f.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_quantified_f.c (with preprocessing)
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_quantified_f.c (with preprocessing)
 [pc] analyzing...
 [pc] Compiling pathcrawler___sd_instru_quantified_f/lanceur_f utilities ...
 [pc] Compiling pathcrawler___sd_instru_quantified_f/lanceur_f ...

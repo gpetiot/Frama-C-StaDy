@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main merge_arrays -stady -stady-msg-key generated-c,generated-pl -then -report
+STDOPT: +"-main merge_arrays -stady -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 /*@ requires 0 <= l1;

@@ -1,4 +1,5 @@
-[kernel] preprocessing with "gcc -C -E -I.  tests/deleteSubstr4/deleteSubstr4.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing tests/deleteSubstr4/deleteSubstr4.c (with preprocessing)
 tests/deleteSubstr4/deleteSubstr4.c:68:[stady] warning: Native Precondition:
                  \separated(dest+(0 .. strlen-1), substr+(0 .. sublen-1)) unsupported
 tests/deleteSubstr4/deleteSubstr4.c:68:[stady] warning: Native Precondition:
@@ -1717,8 +1718,10 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 }
 
 
-[kernel] preprocessing with "gcc -C -E -I.  __sd_instru_deleteSubstr4_delete_substr.c"
-[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_deleteSubstr4_delete_substr.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_deleteSubstr4_delete_substr.c (with preprocessing)
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_deleteSubstr4_delete_substr.c (with preprocessing)
 [pc] analyzing...
 [pc] Compiling pathcrawler___sd_instru_deleteSubstr4_delete_substr/lanceur_delete_substr utilities ...
 [pc] Compiling pathcrawler___sd_instru_deleteSubstr4_delete_substr/lanceur_delete_substr ...

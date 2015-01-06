@@ -1,0 +1,138 @@
+#######################
+# Frama-C Environment #
+#######################
+
+ifndef FRAMAC_SHARE
+FRAMAC_SHARE	:= $(shell frama-c-config -print-share-path)
+endif
+
+ifndef FRAMAC_LIBDIR
+FRAMAC_LIBDIR	:= $(shell frama-c-config -print-libpath)
+endif
+
+#########################
+# Plug-in configuration #
+#########################
+
+PLUGIN_DIR ?=.
+PLUGIN_NAME := StaDy
+PLUGIN_CMO := \
+	local_config \
+	sd_options \
+	sd_debug \
+	sd_states \
+	sd_subst \
+	sd_utils \
+	sd_socket \
+	sd_native_precond \
+	sd_insertions \
+	sd_print \
+	sd_register
+PLUGIN_GUI_CMO 	:= sd_register_gui 
+PLUGIN_HAS_MLI:= yes
+#PLUGIN_DEPENDENCIES:=PathCrawler
+PLUGIN_TESTS_DIRS:= \
+	inv_insuf_ok \
+	inv_insuf_ko \
+	spec_insuf_ok \
+	spec_insuf_ko \
+	stmt_spec \
+	behaviors \
+	quantified \
+	quantified_many \
+	binary_search \
+	bubble_sort \
+	insertion_sort \
+	merge_arrays \
+	merge_sort \
+	quick_sort \
+	tcas \
+	first_subset \
+	next_subset \
+	deleteSubstr1a \
+	deleteSubstr1c \
+	deleteSubstr2b \
+	deleteSubstr3 \
+	deleteSubstr4 \
+	sum_array \
+	num_of \
+	struct \
+	overflow_should_crash \
+	overflow_shouldnt_crash
+PLUGIN_PTESTS_OPTS := -j 1
+PLUGIN_GENERATED:= $(PLUGIN_DIR)/local_config.ml
+
+$(PLUGIN_DIR)/tests/test_config: $(PLUGIN_DIR)/tests/test_config.in
+	$(PRINT_MAKING) $@
+	$(RM) $@
+	$(SED) -e "s|__PLUGIN_PATH__|`frama-c-config -print-plugin-path`|g $^ > $@
+	$(CHMOD_RO) $@
+
+tests:: $(PLUGIN_DIR)/tests/test_config
+
+################
+# Generic part #
+################
+
+include $(FRAMAC_SHARE)/Makefile.dynamic
+
+install::
+	$(PRINT_CP) $(PLUGIN_NAME) share files
+	$(MKDIR) $(FRAMAC_SHARE)/stady
+	$(CP) $(StaDy_DIR)/externals.c $(FRAMAC_SHARE)/stady
+
+uninstall::
+	$(PRINT_RM) $(PLUGIN_NAME) share files
+	$(RM) -r $(FRAMAC_SHARE)/stady
+
+clean::
+	$(RM) tests/test_config
+	$(RM) $(StaDy_DIR)/__sd_instru_*.c
+	$(RM) $(StaDy_DIR)/__sd_*.pl
+	$(RM) -r $(StaDy_DIR)/pathcrawler___sd_instru_*
+	$(RM) -r $(StaDy_DIR)/testcases___sd_instru_*
+
+distclean: clean
+	$(PRINT_RM) "any generated files"
+	$(RM) -rf autom4te.cache
+	$(RM) configure config.status config.log
+	$(RM) -rf .frama-c
+	$(RM) .depend
+
+#######################
+# Local configuration #
+#######################
+
+STADY_VERSION:=$(shell $(SED) -e 's/\\(.*\\)/\\1/' $(PLUGIN_DIR)/VERSION)
+
+$(PLUGIN_DIR)/local_config.ml: $(PLUGIN_DIR)/Makefile.in $(PLUGIN_DIR)/VERSION
+	$(PRINT_MAKING) $@
+	$(RM) $@
+	$(ECHO) "(* This file was automatically generated from $<. Don't edit it. *)" >> $@
+	$(ECHO) "let version = \""$(STADY_VERSION)"\"" >> $@
+	$(CHMOD_RO) $@
+
+##########
+# Header #
+##########
+
+headers::
+	@echo "Applying Headers..."
+	headache -c licence/headache_config.txt -h licence/CEA_PROPRIETARY \
+		*.ml *.mli \
+		Makefile.in configure.ac
+
+#####################################
+# Regenerating the Makefile on need #
+#####################################
+
+ifeq ("$(FRAMAC_INTERNAL)","yes")
+CONFIG_STATUS_DIR:=$(FRAMAC_SRC)
+CONFIG_STATUS_DIR_DEP:=
+else
+CONFIG_STATUS_DIR:=$(StaDy_DIR)
+CONFIG_STATUS_DIR_DEP:=$(CONFIG_STATUS_DIR)/config.status
+endif
+
+$(StaDy_DIR)/Makefile: $(StaDy_DIR)/Makefile.in $(CONFIG_STATUS_DIR_DEP)
+	cd $(CONFIG_STATUS_DIR) && ./config.status --file $@

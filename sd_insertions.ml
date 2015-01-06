@@ -831,7 +831,7 @@ class gather_insertions props spec_insuf = object(self)
     self#translate_valid t
   | Pvalid (_,t) -> self#translate_valid t
   | Pinitialized _ as p -> self#unsupported_predicate p
-  | Pspecified _ as p -> self#unsupported_predicate p
+  | Pdangling _ as p -> self#unsupported_predicate p
   | Pallocable _ as p -> self#unsupported_predicate p
   | Pfreeable _ as p -> self#unsupported_predicate p
   | Pfresh _ as p -> self#unsupported_predicate p

@@ -1,4 +1,5 @@
-[kernel] preprocessing with "gcc -C -E -I.  tests/tcas/tcas.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing tests/tcas/tcas.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -929,8 +930,10 @@ int alt_sep_test(void)
 }
 
 
-[kernel] preprocessing with "gcc -C -E -I.  __sd_instru_tcas_alt_sep_test.c"
-[kernel] preprocessing with "gcc -C -E -I. -include /usr/local/share/frama-c/pc/lib/lanceur_deb.h __sd_instru_tcas_alt_sep_test.c"
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_tcas_alt_sep_test.c (with preprocessing)
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing __sd_instru_tcas_alt_sep_test.c (with preprocessing)
 [pc] analyzing...
 [pc] Compiling pathcrawler___sd_instru_tcas_alt_sep_test/lanceur_alt_sep_test utilities ...
 [pc] Compiling pathcrawler___sd_instru_tcas_alt_sep_test/lanceur_alt_sep_test ...

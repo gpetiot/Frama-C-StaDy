@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main sum_array -rte -then -stady -stady-msg-key generated-c -then -report
+STDOPT: +"-main sum_array -rte -then -stady -stady-msg-key generated-c -then -report"
 */
 
 /*@ requires n >= 0 && \valid(t+(0..n-1)) ;

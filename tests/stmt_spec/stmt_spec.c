@@ -1,5 +1,5 @@
 /* run.config
-OPT: -main f -stady -stady-msg-key generated-c -then -report
+STDOPT: +"-main f -stady -stady-msg-key generated-c -then -report"
 */
 
 /*@ requires -100 <= x <= 100;

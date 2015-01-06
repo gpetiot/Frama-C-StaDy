@@ -1,6 +1,6 @@
 
 /* run.config
-OPT: -main delete_substr -stady -stady-msg-key generated-c,generated-pl -then -report
+STDOPT: +"-main delete_substr -stady -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 /*@ requires 0 < sublen <= strlen;
