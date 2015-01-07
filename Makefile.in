@@ -30,7 +30,7 @@ PLUGIN_CMO := \
 	sd_register
 PLUGIN_GUI_CMO 	:= sd_register_gui 
 PLUGIN_HAS_MLI:= yes
-#PLUGIN_DEPENDENCIES:=PathCrawler
+PLUGIN_DEPENDENCIES:=PathCrawler
 PLUGIN_TESTS_DIRS:= \
 	inv_insuf_ok \
 	inv_insuf_ko \
