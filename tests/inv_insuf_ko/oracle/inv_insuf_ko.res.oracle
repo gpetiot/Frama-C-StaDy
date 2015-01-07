@@ -11,16 +11,16 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('f', cont('t',_), [], int([-2147483648..2147483647])).
 dom('f', dim('t'), [], int([5..4294967295])).
+dom('f', cont('t',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
   create_input_val('__stady_term_2', int([-2147483648..2147483647]),Ins),
   create_input_val('__stady_term_3', int([-2147483648..2147483647]),Ins),
-  create_input_val('found', int([-2147483648..2147483647]),Ins),
-  create_input_val('x', int([-2147483648..2147483647]),Ins),
   create_input_val(dim('t'), int([5..4294967295]),Ins),
+  create_input_val('x', int([-2147483648..2147483647]),Ins),
+  create_input_val('found', int([-2147483648..2147483647]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
@@ -168,7 +168,7 @@ void f(int *t, int x)
       }
       if(! ((! (__stady_term_6 != 0) || __stady_pred_1) && (! __stady_pred_1 || 
                                                             __stady_term_6 != 0))) {
-        pathcrawler_assert_exception("Assert!", 4);
+        pathcrawler_assert_exception("Assert!", 1);
       }
       ;
     }

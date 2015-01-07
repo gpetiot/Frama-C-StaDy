@@ -13,14 +13,14 @@ tests/binary_search/binary_search.c:16:[stady] warning: Native Precondition:
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('binary_search', cont('arr',_), [], int([-2147483648..2147483647])).
 dom('binary_search', dim('arr'), [], int([1..4294967295])).
+dom('binary_search', cont('arr',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__binary_search_precond',A,B,C) :-
   dom('binary_search',A,B,C).
 create_input_vals('binary_search', Ins):-
+  create_input_val(dim('arr'), int([1..4294967295]),Ins),
   create_input_val('query', int([-2147483648..2147483647]),Ins),
   create_input_val('length', int([1..3]),Ins),
-  create_input_val(dim('arr'), int([1..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__binary_search_precond',Ins) :-
   create_input_vals('binary_search',Ins).
@@ -171,7 +171,7 @@ int binary_search(int *arr, int length, int query)
         __stady_pred_10 = __stady_term_16 <= 0;
       }
       if(! __stady_pred_10) {
-        pathcrawler_assert_exception("Loop invariant not established!", 4);
+        pathcrawler_assert_exception("Loop invariant not established!", 3);
       }
       mpz_t __stady_gmp_40;
       __gmpz_init_set_si(__stady_gmp_40, low);
@@ -209,7 +209,7 @@ int binary_search(int *arr, int length, int query)
         __stady_pred_12 = __stady_term_20 <= 0;
       }
       if(! __stady_pred_12) {
-        pathcrawler_assert_exception("Loop invariant not established!", 10);
+        pathcrawler_assert_exception("Loop invariant not established!", 14);
       }
       mpz_t __stady_gmp_56;
       __gmpz_init_set_si(__stady_gmp_56, high);
@@ -223,7 +223,7 @@ int binary_search(int *arr, int length, int query)
       int __stady_term_23;
       __stady_term_23 = __gmpz_cmp_ui(__stady_gmp_58, 0);
       if(__stady_term_23 < 0) {
-        pathcrawler_assert_exception("Variant non positive", 5);
+        pathcrawler_assert_exception("Variant non positive", 6);
       }
       while (1) {
         mpz_t __stady_gmp_59;
@@ -252,7 +252,7 @@ int binary_search(int *arr, int length, int query)
                 __stady_pred_5 = mean <= high;
               }
               if(! __stady_pred_5) {
-                pathcrawler_assert_exception("Assert!", 8);
+                pathcrawler_assert_exception("Assert!", 10);
               }
               ;
             }
@@ -285,7 +285,7 @@ int binary_search(int *arr, int length, int query)
                 __stady_pred_6 = __stady_pred_7;
               }
               if(! __stady_pred_6) {
-                pathcrawler_assert_exception("Assert!", 12);
+                pathcrawler_assert_exception("Assert!", 11);
               }
               ;
             }
@@ -326,7 +326,7 @@ int binary_search(int *arr, int length, int query)
                 __stady_pred_8 = __stady_pred_9;
               }
               if(! __stady_pred_8) {
-                pathcrawler_assert_exception("Assert!", 0);
+                pathcrawler_assert_exception("Assert!", 7);
               }
               ;
             }
@@ -375,7 +375,7 @@ int binary_search(int *arr, int length, int query)
           __stady_pred_11 = __stady_term_18 <= 0;
         }
         if(! __stady_pred_11) {
-          pathcrawler_assert_exception("Loop invariant not preserved!", 4);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 3);
         }
         mpz_t __stady_gmp_48;
         __gmpz_init_set_si(__stady_gmp_48, low);
@@ -413,7 +413,7 @@ int binary_search(int *arr, int length, int query)
           __stady_pred_13 = __stady_term_22 <= 0;
         }
         if(! __stady_pred_13) {
-          pathcrawler_assert_exception("Loop invariant not preserved!", 10);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 14);
         }
         mpz_t __stady_gmp_63;
         __gmpz_init_set_si(__stady_gmp_63, high);
@@ -426,11 +426,11 @@ int binary_search(int *arr, int length, int query)
         __gmpz_clear(__stady_gmp_64);
         __stady_term_23 = __gmpz_cmp_ui(__stady_gmp_62, 0);
         if(__stady_term_23 < 0) {
-          pathcrawler_assert_exception("Variant non positive", 5);
+          pathcrawler_assert_exception("Variant non positive", 6);
         }
         __stady_term_23 = __gmpz_cmp(__stady_gmp_65, __stady_gmp_62);
         if(__stady_term_23 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing", 5);
+          pathcrawler_assert_exception("Variant non decreasing", 6);
         }
         __gmpz_clear(__stady_gmp_62);
         }
@@ -458,7 +458,7 @@ int binary_search(int *arr, int length, int query)
           __stady_pred_1 = __retres < old_length;
         }
         if(! __stady_pred_1) {
-          pathcrawler_assert_exception("Post-condition!", 11);
+          pathcrawler_assert_exception("Post-condition!", 12);
         }
         int __stady_pred_2;
         __stady_pred_2 = 1;
@@ -503,7 +503,7 @@ int binary_search(int *arr, int length, int query)
           __stady_pred_2 = __stady_pred_3;
         }
         if(! __stady_pred_2) {
-          pathcrawler_assert_exception("Post-condition!", 14);
+          pathcrawler_assert_exception("Post-condition!", 13);
         }
         int __stady_pred_4;
         __stady_pred_4 = 1;
@@ -524,7 +524,7 @@ int binary_search(int *arr, int length, int query)
           __stady_pred_4 = *(old_arr + __stady_term_8) == old_query;
         }
         if(! __stady_pred_4) {
-          pathcrawler_assert_exception("Post-condition!", 3);
+          pathcrawler_assert_exception("Post-condition!", 5);
         }
       }
       free(old_ptr_arr);

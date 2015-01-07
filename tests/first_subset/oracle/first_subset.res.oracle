@@ -11,8 +11,8 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('firstSubset', cont('s',_), [], int([-2147483648..2147483647])).
 dom('firstSubset', dim('s'), [], int([1..4294967295])).
+dom('firstSubset', cont('s',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__firstSubset_precond',A,B,C) :-
   dom('firstSubset',A,B,C).
 create_input_vals('firstSubset', Ins):-
@@ -98,7 +98,7 @@ void firstSubset(int *s, int n)
         __stady_pred_2 = k <= n;
       }
       if(! __stady_pred_2) {
-        pathcrawler_assert_exception("Loop invariant not established!", 3);
+        pathcrawler_assert_exception("Loop invariant not established!", 2);
       }
       int __stady_pred_4;
       __stady_pred_4 = 1;
@@ -155,7 +155,7 @@ void firstSubset(int *s, int n)
         __gmpz_clear(__stady_gmp_14);
       }
       if(! __stady_pred_4) {
-        pathcrawler_assert_exception("Loop invariant not established!", 5);
+        pathcrawler_assert_exception("Loop invariant not established!", 7);
       }
       mpz_t __stady_gmp_29;
       __gmpz_init_set_si(__stady_gmp_29, n);
@@ -169,7 +169,7 @@ void firstSubset(int *s, int n)
       int __stady_term_19;
       __stady_term_19 = __gmpz_cmp_ui(__stady_gmp_31, 0);
       if(__stady_term_19 < 0) {
-        pathcrawler_assert_exception("Variant non positive", 0);
+        pathcrawler_assert_exception("Variant non positive", 4);
       }
       while (1) {
         mpz_t __stady_gmp_32;
@@ -204,7 +204,7 @@ void firstSubset(int *s, int n)
           __stady_pred_3 = k <= n;
         }
         if(! __stady_pred_3) {
-          pathcrawler_assert_exception("Loop invariant not preserved!", 3);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 2);
         }
         int __stady_pred_6;
         __stady_pred_6 = 1;
@@ -261,7 +261,7 @@ void firstSubset(int *s, int n)
           __gmpz_clear(__stady_gmp_22);
         }
         if(! __stady_pred_6) {
-          pathcrawler_assert_exception("Loop invariant not preserved!", 5);
+          pathcrawler_assert_exception("Loop invariant not preserved!", 7);
         }
         mpz_t __stady_gmp_36;
         __gmpz_init_set_si(__stady_gmp_36, n);
@@ -274,11 +274,11 @@ void firstSubset(int *s, int n)
         __gmpz_clear(__stady_gmp_37);
         __stady_term_19 = __gmpz_cmp_ui(__stady_gmp_35, 0);
         if(__stady_term_19 < 0) {
-          pathcrawler_assert_exception("Variant non positive", 0);
+          pathcrawler_assert_exception("Variant non positive", 4);
         }
         __stady_term_19 = __gmpz_cmp(__stady_gmp_38, __stady_gmp_35);
         if(__stady_term_19 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing", 0);
+          pathcrawler_assert_exception("Variant non decreasing", 4);
         }
         __gmpz_clear(__stady_gmp_35);
         }
@@ -341,7 +341,7 @@ void firstSubset(int *s, int n)
         __gmpz_clear(__stady_gmp_1);
       }
       if(! __stady_pred_0) {
-        pathcrawler_assert_exception("Post-condition!", 6);
+        pathcrawler_assert_exception("Post-condition!", 5);
       }
     }
     free(old_ptr_s);

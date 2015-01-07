@@ -11,32 +11,32 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',2), [], int([0..0])).
-dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',3), [], int([0..0])).
 dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',_), [], int([-2147483648..2147483647])).
 dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',0), [], int([16434..16434])).
-dom('alt_sep_test', dim('Positive_RA_Alt_Thresh'), [], int([4..4294967295])).
 dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',1), [], int([0..0])).
+dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',2), [], int([0..0])).
+dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',3), [], int([0..0])).
+dom('alt_sep_test', dim('Positive_RA_Alt_Thresh'), [], int([4..4294967295])).
 dom('pathcrawler__alt_sep_test_precond',A,B,C) :-
   dom('alt_sep_test',A,B,C).
 create_input_vals('alt_sep_test', Ins):-
+  create_input_val('Down_Separation', int([-2147483648..2147483647]),Ins),
+  create_input_val('Cur_Vertical_Sep', int([16684..16684]),Ins),
+  create_input_val('Other_RAC', int([0..2]),Ins),
+  create_input_val(cont('Positive_RA_Alt_Thresh',0), int([16434..16434]),Ins),
+  create_input_val(cont('Positive_RA_Alt_Thresh',1), int([0..0]),Ins),
   create_input_val(cont('Positive_RA_Alt_Thresh',2), int([0..0]),Ins),
   create_input_val(cont('Positive_RA_Alt_Thresh',3), int([0..0]),Ins),
-  create_input_val('Cur_Vertical_Sep', int([16684..16684]),Ins),
+  create_input_val('Own_Tracked_Alt_Rate', int([450..450]),Ins),
+  create_input_val('Two_of_Three_Reports_Valid', int([0..1]),Ins),
+  create_input_val('Own_Tracked_Alt', int([300..1000]),Ins),
   create_input_val('Climb_Inhibit', int([1..1]),Ins),
-  create_input_val('Other_Capability', int([0..0]),Ins),
-  create_input_val('Other_RAC', int([0..2]),Ins),
-  create_input_val('Down_Separation', int([-2147483648..2147483647]),Ins),
+  create_input_val('High_Confidence', int([32464..32464]),Ins),
   create_input_val('Up_Separation', int([-2147483648..2147483647]),Ins),
   create_input_val('Alt_Layer_Value', int([0..3]),Ins),
-  create_input_val('Other_Tracked_Alt', int([300..1000]),Ins),
-  create_input_val('Own_Tracked_Alt_Rate', int([450..450]),Ins),
-  create_input_val('Own_Tracked_Alt', int([300..1000]),Ins),
-  create_input_val('Two_of_Three_Reports_Valid', int([0..1]),Ins),
-  create_input_val('High_Confidence', int([32464..32464]),Ins),
-  create_input_val(cont('Positive_RA_Alt_Thresh',0), int([16434..16434]),Ins),
   create_input_val(dim('Positive_RA_Alt_Thresh'), int([4..4294967295]),Ins),
-  create_input_val(cont('Positive_RA_Alt_Thresh',1), int([0..0]),Ins),
+  create_input_val('Other_Capability', int([0..0]),Ins),
+  create_input_val('Other_Tracked_Alt', int([300..1000]),Ins),
   true.
 create_input_vals('pathcrawler__alt_sep_test_precond',Ins) :-
   create_input_vals('alt_sep_test',Ins).
@@ -744,7 +744,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_2);
         __gmpz_clear(__stady_gmp_3);
         if(! (__stady_term_2 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 47);
+          pathcrawler_assert_exception("Post-condition!", 41);
         }
       }
       mpz_t __stady_gmp_4;
@@ -768,7 +768,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_6);
         __gmpz_clear(__stady_gmp_7);
         if(! (__stady_term_5 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 37);
+          pathcrawler_assert_exception("Post-condition!", 19);
         }
       }
       mpz_t __stady_gmp_8;
@@ -793,7 +793,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_10);
         __gmpz_clear(__stady_gmp_11);
         if(! (__stady_term_8 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 28);
+          pathcrawler_assert_exception("Post-condition!", 46);
         }
       }
       mpz_t __stady_gmp_12;
@@ -818,7 +818,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_14);
         __gmpz_clear(__stady_gmp_15);
         if(! (__stady_term_11 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 34);
+          pathcrawler_assert_exception("Post-condition!", 7);
         }
       }
       mpz_t __stady_gmp_16;
@@ -843,7 +843,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_18);
         __gmpz_clear(__stady_gmp_19);
         if(! (__stady_term_14 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 41);
+          pathcrawler_assert_exception("Post-condition!", 33);
         }
       }
       mpz_t __stady_gmp_20;
@@ -868,7 +868,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_22);
         __gmpz_clear(__stady_gmp_23);
         if(! (__stady_term_17 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 48);
+          pathcrawler_assert_exception("Post-condition!", 13);
         }
       }
       if(Own_Tracked_Alt > Other_Tracked_Alt) {
@@ -881,7 +881,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_24);
         __gmpz_clear(__stady_gmp_25);
         if(! (__stady_term_18 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 55);
+          pathcrawler_assert_exception("Post-condition!", 0);
         }
       }
       if(Own_Tracked_Alt < Other_Tracked_Alt) {
@@ -894,7 +894,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_26);
         __gmpz_clear(__stady_gmp_27);
         if(! (__stady_term_19 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 29);
+          pathcrawler_assert_exception("Post-condition!", 22);
         }
       }
       if(Up_Separation > Down_Separation) {
@@ -907,7 +907,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_28);
         __gmpz_clear(__stady_gmp_29);
         if(! (__stady_term_20 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 5);
+          pathcrawler_assert_exception("Post-condition!", 30);
         }
       }
       if(Up_Separation < Down_Separation) {
@@ -920,7 +920,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_30);
         __gmpz_clear(__stady_gmp_31);
         if(! (__stady_term_21 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 35);
+          pathcrawler_assert_exception("Post-condition!", 15);
         }
       }
     }

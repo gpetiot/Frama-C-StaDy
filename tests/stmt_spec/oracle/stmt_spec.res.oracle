@@ -154,7 +154,7 @@ void f(int x)
                 __gmpz_clear(__stady_gmp_8);
                 __gmpz_clear(__stady_gmp_9);
                 if(! (__stady_term_4 <= 0)) {
-                  pathcrawler_assert_exception("Post-condition!", 2);
+                  pathcrawler_assert_exception("Post-condition!", 18);
                 }
               }
             }
@@ -211,7 +211,7 @@ void f(int x)
               __stady_pred_4 = __stady_term_10 < 0;
             }
             if(! __stady_pred_4) {
-              pathcrawler_assert_exception("Post-condition!", 17);
+              pathcrawler_assert_exception("Post-condition!", 14);
             }
           }
           
@@ -307,7 +307,7 @@ void f(int x)
           __stady_pred_10 = __stady_term_22 <= 0;
         }
         if(! __stady_pred_10) {
-          pathcrawler_assert_exception("Post-condition!", 9);
+          pathcrawler_assert_exception("Post-condition!", 6);
         }
       }
       mpz_t __stady_gmp_49;
@@ -328,7 +328,7 @@ void f(int x)
         __gmpz_clear(__stady_gmp_51);
         __gmpz_clear(__stady_gmp_52);
         if(! (__stady_term_24 != 0)) {
-          pathcrawler_assert_exception("Post-condition!", 0);
+          pathcrawler_assert_exception("Post-condition!", 13);
         }
       }
       

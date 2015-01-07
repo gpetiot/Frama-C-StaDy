@@ -74,7 +74,7 @@ void sort(int *A, int n)
   __gmpz_clear(__stady_gmp_0);
   __gmpz_clear(__stady_gmp_1);
   if(! (__stady_term_0 == 0)) {
-    pathcrawler_assert_exception("Pre-condition!", 8);
+    pathcrawler_assert_exception("Pre-condition!", 9);
   }
   mpz_t __stady_gmp_2;
   __gmpz_init_set_si(__stady_gmp_2, n);
@@ -95,7 +95,7 @@ void sort(int *A, int n)
   __stady_pred_0 = __stady_term_1 >= 0 && __stady_term_3 < 0;
   __gmpz_clear(__stady_gmp_4);
   if(! __stady_pred_0) {
-    pathcrawler_assert_exception("Pre-condition!", 2);
+    pathcrawler_assert_exception("Pre-condition!", 5);
   }
   int *old_A;
   int *old_ptr_A;
@@ -206,7 +206,7 @@ void sort(int *A, int n)
         __gmpz_clear(__stady_gmp_6);
       }
       if(! __stady_pred_1) {
-        pathcrawler_assert_exception("Post-condition!", 6);
+        pathcrawler_assert_exception("Post-condition!", 8);
       }
     }
     free(old_ptr_A);
@@ -255,7 +255,7 @@ void f(int *t, int k)
       __stady_term_11 = __gmpz_get_si(__stady_gmp_13);
       __gmpz_clear(__stady_gmp_13);
       if(! (*(old_t + __stady_term_10) <= *(old_t + __stady_term_11))) {
-        pathcrawler_assert_exception("Post-condition!", 5);
+        pathcrawler_assert_exception("Post-condition!", 4);
       }
     }
     free(old_ptr_t);

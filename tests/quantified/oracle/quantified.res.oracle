@@ -20,8 +20,8 @@ tests/quantified/quantified.c:13:[stady] warning: Native Precondition:
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('f', cont(cont('t',_),_), [], int([-2147483648..2147483647])).
 dom('f', dim(cont('t',_)), [], int([0..4294967295])).
+dom('f', cont(cont('t',_),_), [], int([-2147483648..2147483647])).
 dom('f', dim('t'), [], int([1..4294967295])).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).

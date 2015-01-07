@@ -13,14 +13,14 @@
 dom(0,0,0,0).
 dom('f', cont('__stady_term_12',_), [], int([-2147483648..2147483647])).
 dom('f', dim('__stady_term_12'), [], int([0..4294967295])).
-dom('f', cont('t',_), [], int([-2147483648..2147483647])).
 dom('f', dim('t'), [], int([4..4])).
+dom('f', cont('t',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
   create_input_val(dim('__stady_term_12'), int([0..4294967295]),Ins),
-  create_input_val('k', int([4..4]),Ins),
   create_input_val(dim('t'), int([4..4]),Ins),
+  create_input_val('k', int([4..4]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
@@ -74,7 +74,7 @@ void sort(int *A, int n)
   __gmpz_clear(__stady_gmp_0);
   __gmpz_clear(__stady_gmp_1);
   if(! (__stady_term_0 == 0)) {
-    pathcrawler_assert_exception("Pre-condition!", 5);
+    pathcrawler_assert_exception("Pre-condition!", 6);
   }
   mpz_t __stady_gmp_2;
   __gmpz_init_set_si(__stady_gmp_2, n);
@@ -200,7 +200,7 @@ void f(int *t, int k)
       __stady_term_7 = __gmpz_get_si(__stady_gmp_7);
       __gmpz_clear(__stady_gmp_7);
       if(! (*(old_t + __stady_term_6) <= *(old_t + __stady_term_7))) {
-        pathcrawler_assert_exception("Post-condition!", 1);
+        pathcrawler_assert_exception("Post-condition!", 3);
       }
     }
     free(old_ptr_t);

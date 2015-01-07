@@ -161,7 +161,7 @@ void f(int default_value)
         __gmpz_clear(__stady_gmp_9);
       }
       if(! __stady_pred_1) {
-        pathcrawler_assert_exception("Assert!", 2);
+        pathcrawler_assert_exception("Assert!", 3);
       }
       ;
     }
