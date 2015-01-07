@@ -86,7 +86,7 @@ uninstall::
 	$(RM) -r $(FRAMAC_SHARE)/stady
 
 clean::
-	$(RM) tests/test_config
+	$(RM) $(PLUGIN_DIR)/tests/test_config
 	$(RM) $(StaDy_DIR)/__sd_instru_*.c
 	$(RM) $(StaDy_DIR)/__sd_*.pl
 	$(RM) -r $(StaDy_DIR)/pathcrawler___sd_instru_*
