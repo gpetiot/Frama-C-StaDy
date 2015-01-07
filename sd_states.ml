@@ -58,7 +58,6 @@ module Not_Translated_Predicates =
     (struct
       let name = "Not_Translated_Predicates"
       let dependencies = [Ast.self]
-      let size = 64
      end)
 
 module Unreachable_Stmts =

@@ -13,7 +13,7 @@ let rec pp_list ?(sep=";") pp_elt fmt = function
 let pp_pair pp1 pp2 fmt (e1, e2) = Format.fprintf fmt "(%a, %a)" pp1 e1 pp2 e2
 
 class debug_ast () = object(self)
-  inherit Printer.extensible_printer () as super
+  inherit Printer.extensible_printer ()
     
   method! term_node fmt t = match t.term_node with
   | TConst lc -> Format.fprintf fmt "TConst(%a)" self#logic_constant lc
