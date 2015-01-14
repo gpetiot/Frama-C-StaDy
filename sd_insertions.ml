@@ -932,6 +932,11 @@ class gather_insertions props spec_insuf = object(self)
 
   (* alloc and dealloc variables for \at terms *)
   method private save_varinfo kf vi =
+    let rec strip_const = function
+      | TPtr (t, att) -> Cil.stripConstLocalType (TPtr(strip_const t, att))
+      | TArray (t,a,b,c) -> Cil.stripConstLocalType(TArray(strip_const t,a,b,c))
+      | ty -> Cil.stripConstLocalType ty
+    in
     let dig_type = function
       | TPtr(ty,_) | TArray(ty,_,_,_) -> ty
       | ty -> Sd_options.Self.abort "dig_type %a" Printer.pp_typ ty
@@ -940,7 +945,7 @@ class gather_insertions props spec_insuf = object(self)
     let lengths = Sd_utils.lengths_from_requires kf in
     let terms = try Cil_datatype.Varinfo.Hashtbl.find lengths vi with _ -> [] in
     let do_varinfo v =
-      let my_old_v = my_varinfo v.vtype ("old_"^v.vname) in
+      let my_old_v = my_varinfo (strip_const v.vtype) ("old_" ^ v.vname) in
       let insert_decl = decl_varinfo my_old_v in
       let lmy_old_v = Cil.var my_old_v in
       let insert_before = Instru(instru_affect lmy_old_v (Cil.evar v)) in
@@ -994,7 +999,7 @@ class gather_insertions props spec_insuf = object(self)
 	  [Instru(instru_affect my_old_ptr e)]
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
-	let my_old_ptr = my_varinfo v.vtype ("old_ptr_" ^ v.vname) in
+	let my_old_ptr = my_varinfo (strip_const v.vtype) ("old_ptr_"^v.vname)in
 	let insert_0 = decl_varinfo my_old_ptr in
 	let inserts_decl = [insert_decl; insert_0] in
 	let ins = alloc_aux (Cil.var my_old_ptr) (Cil.var v) v.vtype terms in
