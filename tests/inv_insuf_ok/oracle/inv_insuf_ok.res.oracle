@@ -58,9 +58,9 @@ extern int pathcrawler_assert_exception(char*,int);
 extern int pathcrawler_assume_exception(char*,int);
 extern void* malloc(unsigned long);
 extern void free(void*);
+int found;
 int __stady_term_3;
 int __stady_term_2;
-int found;
 int f_precond(int *t, int x)
 {
   return 1;
