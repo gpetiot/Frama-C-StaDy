@@ -862,7 +862,7 @@ class gather_insertions props spec_insuf = object(self)
     let translate_as_return pred =
       let ins, v = self#translate_predicate(self#subst_pred pred.ip_content) in
       (* untreated predicates are translated as True *)
-      if v <> one then
+      if not (Cil_datatype.Exp.equal v one) then
 	let e = Cil.new_exp ~loc (UnOp (LNot, v, Cil.intType)) in
 	ins @ [ins_if e [ins_ret zero] []]
       else ins
