@@ -83,14 +83,16 @@ class pl_printer = object(self)
 
   method integer fmt i = Integer.pretty fmt i
 
-  method integer_opt fmt = function
+  method integer_opt b fmt = function
+  | Some i when b && (Integer.compare i Integer.zero) < 0 ->
+     Format.fprintf fmt "(%a)" self#integer i
   | Some i -> Format.fprintf fmt "%a" self#integer i
   | None -> Format.fprintf fmt "?"
 
   method domain fmt = function
   | PLIntDom (t',a,b) ->
     Format.fprintf fmt "%a, int([%a..%a])"
-      self#term t' self#integer_opt a self#integer_opt b
+      self#term t' (self#integer_opt false) a (self#integer_opt true) b
   | PLFloatDom (t',str1,str2) ->
     Format.fprintf fmt "%a, float([(%s)..(%s)])"
       self#term t'
@@ -100,7 +102,7 @@ class pl_printer = object(self)
   method complex_domain fmt = function
   | PLIntDom (t',a,b) ->
     Format.fprintf fmt "%a, [], int([%a..%a])"
-      self#term t' self#integer_opt a self#integer_opt b
+      self#term t' (self#integer_opt false) a (self#integer_opt true) b
   | PLFloatDom (t',str1,str2) ->
     Format.fprintf fmt "%a, [], float([(%s)..(%s)])"
       self#term t'
