@@ -1099,6 +1099,45 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [pc] generation finished
 [stady] all-paths: false
 [stady] 240 test cases
+[stady]  Counter-example for ensures
+                            ∀ ℤ k;
+                              0 ≤ k < \old(strlen) ⇒
+                              \old(*(str+k)) ≡ *(\old(dest)+k)
+[stady]  testcases___sd_instru_deleteSubstr1a_delete_substr/delete_substr/testdrivers/TC_3.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]            dest[0]|               15|             -106|           str[1]
+[stady]            dest[1]|              -61|                 |
+[stady]       return value|                 |                0|                0
+[stady]             str[0]|               62|                 |
+[stady]             str[1]|             -106|                 |
+[stady]             strlen|                2|                 |
+[stady]             sublen|                1|                 |
+[stady]          substr[0]|               62|                 |
+[stady]  Counter-example for ensures
+                            ∀ ℤ k;
+                              0 ≤ k < \old(strlen) ⇒
+                              \old(*(str+k)) ≡ *(\old(dest)+k)
+[stady]  testcases___sd_instru_deleteSubstr1a_delete_substr/delete_substr/testdrivers/TC_4.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]            dest[0]|               23|               79|           str[0]
+[stady]            dest[1]|               21|                 |
+[stady]       return value|                 |                0|                0
+[stady]             str[0]|               79|                 |
+[stady]             str[1]|               79|                 |
+[stady]             strlen|                2|                 |
+[stady]             sublen|                1|                 |
+[stady]          substr[0]|               79|                 |
+[stady]  Counter-example for ensures \result ≡ 0
+[stady]  testcases___sd_instru_deleteSubstr1a_delete_substr/delete_substr/testdrivers/TC_5.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]            dest[0]|               96|                2|          dest[1]
+[stady]            dest[1]|                2|                 |
+[stady]       return value|                 |                0|                0
+[stady]             str[0]|                2|                 |
+[stady]             str[1]|                2|                 |
+[stady]             strlen|                2|                 |
+[stady]             sublen|                1|                 |
+[stady]          substr[0]|                2|                 |
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

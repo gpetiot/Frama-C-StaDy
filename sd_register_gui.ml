@@ -25,50 +25,43 @@ let to_do_on_select
   match selected with
   | Pretty_source.PStmt (_, ({skind=Loop _} as stmt))
   | Pretty_source.PStmt (_, ({skind=Instr (Call _)} as stmt)) ->
-    if button_nb = 3 then
-      let callback() =
-  	compute ~spec_insuf:stmt ();
-  	main_ui#redisplay()
-      in
-      ignore (popup_factory#add_item "Check for Spec. Insufficiency" ~callback)
+     if button_nb = 3 then
+       let callback() =
+  	 compute ~spec_insuf:stmt ();
+  	 main_ui#redisplay()
+       in
+       ignore (popup_factory#add_item "Check for Spec. Insufficiency" ~callback)
   | Pretty_source.PIP prop ->
-    begin
-      try
-	let tbl = Sd_states.TestFailures.find prop in
-	if button_nb = 1 then
-	  let nb = Datatype.String.Hashtbl.length tbl in
-	  if nb > 0 then main_ui#pretty_information "%i counter-examples@." nb;
-	  Datatype.String.Hashtbl.iter_sorted (fun tc (input,conc,symb) ->
-	    main_ui#pretty_information "Counter-example (by PathCrawler):@.";
-	    if tc <> "" then main_ui#pretty_information "%s@.@\n" tc;
-	    let pretty (s, v) = main_ui #pretty_information "%s = %s@." s v in
-	    main_ui#pretty_information "input:@.";
-	    List.iter pretty input;
-	    main_ui#pretty_information "------------------------@.";
-	    main_ui#pretty_information "concrete output:@.";
-	    List.iter pretty conc;
-	    main_ui#pretty_information "------------------------@.";
-	    main_ui#pretty_information "symbolic output:@.";
-	    List.iter pretty symb;
-	    main_ui#pretty_information "------------------------@."
-	  ) tbl
-	else if button_nb = 3 then
-	  Datatype.String.Hashtbl.iter_sorted (fun tc_c _ ->
-	    let callback() =
-	      let prj = Project.create tc_c in
-	      let sel = State_selection.of_list[Kernel.PreprocessAnnot.self] in
-	      Project.copy ~selection:sel prj;
-	      Project.on prj File.init_from_c_files [File.from_filename tc_c]
+     begin
+       try
+	 if button_nb = 1 then
+	   let file_tbl = Sd_states.TestFailures.find prop in
+	   let nb = Datatype.String.Hashtbl.length file_tbl in
+	   if nb > 0 then
+	     begin
+	       main_ui#pretty_information "%i Counter-Example(s)@." nb;
+	       Sd_utils.print_counter_examples
+		 true main_ui#pretty_information prop
+	     end
+	   else if button_nb = 3 then
+	     let file_tbl = Sd_states.TestFailures.find prop in
+	     let on_file tc_c _ =
+	       let callback() =
+		 let prj = Project.create tc_c in
+		 let sel = State_selection.of_list[Kernel.PreprocessAnnot.self] in
+		 Project.copy ~selection:sel prj;
+		 Project.on prj File.init_from_c_files [File.from_filename tc_c]
+	       in
+	       let item_str = Printf.sprintf "_Open %s in new project" tc_c in
+	       ignore (popup_factory#add_item item_str ~callback)
 	    in
-	    let item_str = Printf.sprintf "_Open %s in new project" tc_c in
-	    ignore (popup_factory#add_item item_str ~callback)
-	  ) tbl
-      with
-      | _ -> ()
-    end;
-    if button_nb = 3 then
-      let callback() = compute ~props:[prop] (); main_ui#redisplay() in
-      ignore (popup_factory#add_item "Validate property with StaDy" ~callback)
+	    Datatype.String.Hashtbl.iter_sorted on_file file_tbl
+       with
+       | _ -> ()
+     end;
+     if button_nb = 3 then
+       let callback() = compute ~props:[prop] (); main_ui#redisplay() in
+       ignore (popup_factory#add_item "Validate property with StaDy" ~callback)
   | _ -> ()
 
 

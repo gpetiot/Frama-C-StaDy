@@ -166,6 +166,41 @@ let mpz_t() =
   let ty = Extlib.the ty in
   ty
 
+let print_counter_examples
+      gui (pprint:('a, Format.formatter, unit) format -> 'a) prop =
+  let file_tbl = Sd_states.TestFailures.find prop in
+  let print x = if gui then pprint "%s@.@\n" x else pprint " %s@\n" x in
+  let n_chars n str =
+    let size = let s = n - (String.length str) in if s < 0 then 0 else s in
+    if (String.length str > n) then
+      let size_1, size_2 =
+	if n mod 2 = 0 then (n - 3) / 2 + 1, (n - 3) / 2
+	else (n - 3) / 2, (n - 3) / 2
+      in
+      (String.sub str 0 size_1)^"..."
+      ^(String.sub str ((String.length str) - size_2) size_2)
+    else (String.make size ' ') ^ str
+  in
+  let n_chars = n_chars 17 in
+  let on_var var (input,conc,symb) =
+    print
+      (Printf.sprintf
+	 "%s|%s|%s|%s"
+	 (n_chars var) (n_chars input) (n_chars conc) (n_chars symb))
+  in
+  let on_file f var_tbl =
+    Format.fprintf
+      Format.str_formatter "Counter-example for @[%a@]@." Property.pretty prop;
+    print (Format.flush_str_formatter());
+    if f <> "" then print (Printf.sprintf "%s\n" f);
+    if (Datatype.String.Hashtbl.length var_tbl) > 0 then
+      print (Printf.sprintf
+	       "%s|%s|%s|%s"
+	       (n_chars "variable") (n_chars "input")
+	       (n_chars "concrete output") (n_chars "symbolic output"));
+    Datatype.String.Hashtbl.iter_sorted on_var var_tbl
+  in
+  Datatype.String.Hashtbl.iter_sorted on_file file_tbl
 
 (* unused: interpreting string as precondition predicates *)
 (* let type_str_precond kf pred_as_string = *)

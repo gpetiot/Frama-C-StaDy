@@ -360,6 +360,46 @@ int sum_array(int *t, int n)
 [pc] generation finished
 [stady] all-paths: false
 [stady] 135 test cases
+[stady]  Counter-example for assert rte: signed_overflow: -2147483648 ≤ s+*(t+i);
+[stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_4.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]                  n|                2|                 |
+[stady]               t[0]|      -1740127965|                 |
+[stady]               t[1]|      -1251359816|                 |
+[stady]  Counter-example for assert rte: signed_overflow: -2147483648 ≤ s+*(t+i);
+[stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_7.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]                  n|                3|                 |
+[stady]               t[0]|                0|                 |
+[stady]               t[1]|       -897154901|                 |
+[stady]               t[2]|      -1421176958|                 |
+[stady]  Counter-example for assert rte: signed_overflow: -2147483648 ≤ s+*(t+i);
+[stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_9.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]                  n|                3|                 |
+[stady]               t[0]|        -10555854|                 |
+[stady]               t[1]|      -2139817863|                 |
+[stady]               t[2]|           200408|                 |
+[stady]  Counter-example for assert rte: signed_overflow: s+*(t+i) ≤ 2147483647;
+[stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_3.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]                  n|                2|                 |
+[stady]               t[0]|       1914720638|                 |
+[stady]               t[1]|       2086127769|                 |
+[stady]  Counter-example for assert rte: signed_overflow: s+*(t+i) ≤ 2147483647;
+[stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_6.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]                  n|                3|                 |
+[stady]               t[0]|                0|                 |
+[stady]               t[1]|        192302372|                 |
+[stady]               t[2]|       2062945588|                 |
+[stady]  Counter-example for assert rte: signed_overflow: s+*(t+i) ≤ 2147483647;
+[stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_8.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]                  n|                3|                 |
+[stady]               t[0]|       1271135914|                 |
+[stady]               t[1]|       1526803937|                 |
+[stady]               t[2]|           161763|                 |
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

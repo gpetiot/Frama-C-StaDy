@@ -279,7 +279,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   in
   let emit_status prop =
     try
-      let _ = Sd_states.TestFailures.find prop in
+      Sd_utils.print_counter_examples false Sd_options.Self.result prop;
       let status = Property_status.False_and_reachable in
       Property_status.emit emitter ~hyps:[] prop ~distinct status
     with

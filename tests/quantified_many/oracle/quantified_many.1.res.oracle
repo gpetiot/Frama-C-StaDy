@@ -211,6 +211,13 @@ void f(int default_value)
 [pc] generation finished
 [stady] all-paths: false
 [stady] 295 test cases
+[stady]  Counter-example for assert
+                            A4:
+                              ∃ ℤ a, ℤ b;
+                                0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b];
+[stady]  testcases___sd_instru_quantified_many_f/f/testdrivers/TC_1.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]      default_value|          -214739|                 |
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

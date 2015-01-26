@@ -60,6 +60,10 @@ void f(int x)
 [pc] generation finished
 [stady] all-paths: false
 [stady] 2 test cases
+[stady]  Counter-example for assert x+1 ≤ 2147483647;
+[stady]  testcases___sd_instru_overflow_should_crash_f/f/testdrivers/TC_2.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]                  x|       2147483647|                 |
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

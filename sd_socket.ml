@@ -30,21 +30,29 @@ let process_test_case s =
   let f = Filename.concat f func in
   let f = Filename.concat f "testdrivers" in
   let f = Filename.concat f ("TC_" ^ str_tc ^ ".c") in
-  let tbl =
+  let file_tbl =
     try Sd_states.TestFailures.find prop
     with Not_found -> Datatype.String.Hashtbl.create 32
   in
-  let input, conc, symb =
-    try Datatype.String.Hashtbl.find tbl f
-    with Not_found -> [], [], []
+  let var_tbl =
+    try Datatype.String.Hashtbl.find file_tbl f
+    with Not_found -> Datatype.String.Hashtbl.create 32
   in
-  let input, conc, symb =
-    if kind = "IN" then list_entries, conc, symb
-    else if kind = "OUTCONC" then input, list_entries, symb
-    else input, conc, list_entries
+  let on_pair (var, value) =
+    let i, c, s =
+      try Datatype.String.Hashtbl.find var_tbl var
+      with Not_found -> "", "", ""
+    in
+    let i, c, s =
+      if kind = "IN" then value,c,s
+      else if kind = "OUTCONC" then i,value,s
+      else i,c,value
+    in
+    Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
   in
-  Datatype.String.Hashtbl.replace tbl f (input,conc,symb);
-  Sd_states.TestFailures.replace prop tbl
+  List.iter on_pair list_entries;
+  Datatype.String.Hashtbl.replace file_tbl f var_tbl;
+  Sd_states.TestFailures.replace prop file_tbl
 
 
 let process_nb_test_cases s = Sd_states.NbCases.set (int_of_string s)
