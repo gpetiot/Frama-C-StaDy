@@ -26,15 +26,12 @@ let to_do_on_select
   | Pretty_source.PStmt (_, ({skind=Loop _} as stmt))
   | Pretty_source.PStmt (_, ({skind=Instr (Call _)} as stmt)) ->
      if button_nb = 3 then
-       let callback() =
-  	 compute ~spec_insuf:stmt ();
-  	 main_ui#redisplay()
-       in
+       let callback() = compute ~spec_insuf:stmt (); main_ui#redisplay() in
        ignore (popup_factory#add_item "Check for Spec. Insufficiency" ~callback)
   | Pretty_source.PIP prop ->
-     begin
-       try
-	 if button_nb = 1 then
+     if button_nb = 1 then
+       begin
+	 try
 	   let file_tbl = Sd_states.TestFailures.find prop in
 	   let nb = Datatype.String.Hashtbl.length file_tbl in
 	   if nb > 0 then
@@ -43,25 +40,31 @@ let to_do_on_select
 	       Sd_utils.print_counter_examples
 		 true main_ui#pretty_information prop
 	     end
-	   else if button_nb = 3 then
+	 with
+	   Not_found -> ()
+       end
+     else if button_nb = 3 then
+       begin
+	 begin
+	   try
 	     let file_tbl = Sd_states.TestFailures.find prop in
 	     let on_file tc_c _ =
 	       let callback() =
 		 let prj = Project.create tc_c in
-		 let sel = State_selection.of_list[Kernel.PreprocessAnnot.self] in
-		 Project.copy ~selection:sel prj;
+		 let s = State_selection.of_list[Kernel.PreprocessAnnot.self] in
+		 Project.copy ~selection:s prj;
 		 Project.on prj File.init_from_c_files [File.from_filename tc_c]
 	       in
 	       let item_str = Printf.sprintf "_Open %s in new project" tc_c in
 	       ignore (popup_factory#add_item item_str ~callback)
-	    in
-	    Datatype.String.Hashtbl.iter_sorted on_file file_tbl
-       with
-       | _ -> ()
-     end;
-     if button_nb = 3 then
-       let callback() = compute ~props:[prop] (); main_ui#redisplay() in
-       ignore (popup_factory#add_item "Validate property with StaDy" ~callback)
+	     in
+	     Datatype.String.Hashtbl.iter_sorted on_file file_tbl
+	   with
+	     Not_found -> ()
+	 end;
+	 let callback() = compute ~props:[prop] (); main_ui#redisplay() in
+	 ignore(popup_factory#add_item "Validate property with StaDy" ~callback)
+       end
   | _ -> ()
 
 
