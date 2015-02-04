@@ -13,16 +13,8 @@ let pp_label fmt = function
 
 let pp_lval = Printer.pp_lval
 let pp_exp = Printer.pp_exp
-let pp_list = Sd_debug.pp_list ~sep:", "
-
-
-let pp_instruction fmt = function
-  | Sd_insertions.Skip -> ()
-  | Sd_insertions.IAffect(v,e)-> Format.fprintf fmt "%a = %a" pp_lval v pp_exp e
-  | Sd_insertions.ICall(None,e,args) ->
-    Format.fprintf fmt "%a(%a)" pp_exp e (pp_list pp_exp) args
-  | Sd_insertions.ICall(Some v,e,args) ->
-    Format.fprintf fmt "%a = %a(%a)" pp_lval v pp_exp e (pp_list pp_exp) args
+let pp_list =  Pretty_utils.pp_list ~sep:", "
+let pp_instr = Printer.pp_instr
 
 let rec pp_insertion ?(line_break = true) fmt ins =
   let rec aux fmt = function
@@ -31,7 +23,7 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     | h :: t -> pp_insertion ~line_break:true fmt h; aux fmt t
   in
   begin match ins with
-  | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a;@]" pp_instruction i
+  | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a@]" pp_instr i
   | Sd_insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" pp_exp e
   | Sd_insertions.Decl v ->
     let ty = Cil.stripConstLocalType v.vtype in
@@ -45,8 +37,8 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_exp e aux b1;
     if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
   | Sd_insertions.IFor (i1,e,i2,b) ->
-    Format.fprintf fmt "@[<hov 2>for(%a; %a; %a) {@\n%a@]@\n}"
-      pp_instruction i1 pp_exp e pp_instruction i2 aux b
+    Format.fprintf fmt "@[%a@]@\n @[<hov 2>while(%a) {@\n%a @\n @[%a@]@]@\n}"
+      pp_instr i1 pp_exp e aux b pp_instr i2
   end;
   if line_break then Format.fprintf fmt "@\n"
 
@@ -199,9 +191,7 @@ class print_insertions insertions functions spec_insuf () = object(self)
   val mutable free = false
 
   method private instru = function
-  | Sd_insertions.Skip -> ()
-  | Sd_insertions.IAffect _ -> ()
-  | Sd_insertions.ICall (_,{enode=Lval(Var v,_)},_) ->
+  | Call (_,{enode=Lval(Var v,_)},_,_) ->
     if v.vname = "malloc" then malloc <- true
     else if v.vname = "free" then free <- true
     else if v.vname = "pathcrawler_dimension" then pc_dim <- true

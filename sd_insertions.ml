@@ -11,19 +11,16 @@ type label =
 | EndIter of int
 | Glob
 
-type instruction =
-| Skip
-| IAffect of lval * exp
-| ICall of lval option * exp * exp list
-
+(* alternate type 'stmt' *)
 type insertion =
-| Instru of instruction
+| Instru of instr
 | IRet of exp
 | Decl of varinfo
 | Block of insertion list
 | IIf of exp * insertion list * insertion list
-| IFor of instruction * exp * instruction * insertion list
+| IFor of instr * exp * instr * insertion list
 
+(* alternate type 'fundec' using insertions instead of stmts *)
 type func = {
   mutable func_var: varinfo;
   mutable func_formals: varinfo list;
@@ -64,8 +61,8 @@ let cmp rel e1 e2 = Cil.mkBinOp ~loc (relation_to_binop rel) e1 e2
 let get = Sd_states.Externals.find
 
 (* instructions *)
-let instru_affect a b = IAffect(a,b)
-
+let instru_affect a b = Set(a,b,loc)
+let instru_skip = Skip loc
 
 let binop_to_fname = function
   | PlusA -> "add"
@@ -76,7 +73,7 @@ let binop_to_fname = function
   | _ -> assert false
 
 module F = struct
-  let call fct ret args = let vi = get fct in ICall(ret, Cil.evar vi, args)
+  let call fct ret args = let vi = get fct in Call(ret, Cil.evar vi, args, loc)
   let malloc x y = call "malloc" (Some x) [y]
   let free x = call "free" None [x]
   let pc_dim x y = call "pathcrawler_dimension" (Some x) [y]
@@ -420,7 +417,7 @@ class gather_insertions props spec_insuf = object(self)
     let ii_2 = Instru(F.cmp (Cil.var tmp) e_iter up) in
     let ii_3 = Instru(F.cmp (Cil.var tmp) e_iter up) in
     let ins_b = ins_b_0 @ ins_b_1 :: ins_b_2 :: ii_3 :: clear_lambda in
-    let i_7 = ins_for Skip (cmp Rle e_tmp zero) Skip ins_b in
+    let i_7 = ins_for instru_skip (cmp Rle e_tmp zero) instru_skip ins_b in
     let i_8 = Instru(F.clear e_iter) in
     let i_9 = Instru(F.clear low) in
     let i_10 = Instru(F.clear up) in
@@ -795,7 +792,7 @@ class gather_insertions props spec_insuf = object(self)
     let ins_b_0, goal_var = self#translate_pnamed goal in
     let ins_b_1 = Instru(instru_affect lvar goal_var) in
     let i_inside = ins_b_0 @ ins_b_1 :: i_inside in
-    let i_loop = ins_for Skip e_cond Skip i_inside in
+    let i_loop = ins_for instru_skip e_cond instru_skip i_inside in
     [i_0; i_1; Block (i_before @ i_loop :: i_after)], e_var
 
   method private translate_predicate = function
@@ -942,6 +939,20 @@ class gather_insertions props spec_insuf = object(self)
       | ty -> Sd_options.Self.abort "dig_type %a" Printer.pp_typ ty
     in
     let dig_type x = dig_type (Cil.unrollTypeDeep x) in
+    let addoffset lval exp =
+      let ty = Cil.typeOfLval lval in
+      if Cil.isPointerType ty then
+	let base = Cil.new_exp ~loc (Lval lval) in
+	Mem(Cil.new_exp ~loc (BinOp(IndexPI, base, exp, ty))), NoOffset
+      else if Cil.isArrayType ty then
+	begin
+	  Sd_options.Self.feedback
+	    "addOffsetLval %a %a"
+	    Printer.pp_lval lval Printer.pp_offset (Index(exp,NoOffset));
+	  Cil.addOffsetLval (Index(exp, NoOffset)) lval
+	end
+      else assert false
+    in
     let lengths = Sd_utils.lengths_from_requires kf in
     let terms = try Cil_datatype.Varinfo.Hashtbl.find lengths vi with _ -> [] in
     let do_varinfo v =
@@ -953,7 +964,7 @@ class gather_insertions props spec_insuf = object(self)
 	| h :: t ->
 	  let ty = dig_type ty in
 	  let inserts_0, h' = self#translate_term h in
-	  let my_iterator = self#fresh_ctype_varinfo Cil.intType in
+	  let my_iterator = self#fresh_ctype_varinfo Cil.ulongType in
 	  let e_iterator = Cil.evar my_iterator in
 	  let lmy_iterator = Cil.var my_iterator in
 	  let insert_1 = decl_varinfo my_iterator in
@@ -961,17 +972,16 @@ class gather_insertions props spec_insuf = object(self)
 	  | Linteger ->
 	    let tmp = self#fresh_ctype_varinfo Cil.ulongType in
 	    let i_1 = decl_varinfo tmp in
-	    let i_2 = Instru(F.get_si (Cil.var tmp) h') in
+	    let i_2 = Instru(F.get_ui (Cil.var tmp) h') in
 	    let e_tmp = Cil.evar tmp in
 	    let e1 = Cil.new_exp ~loc (SizeOf ty) in
 	    let e2 = Cil.mkBinOp ~loc Mult e_tmp e1 in
 	    let insert_2 = Instru(F.malloc my_old_ptr e2) in
-	    let offset = Index(e_iterator, NoOffset) in
-	    let my_new_old_ptr = Cil.addOffsetLval offset my_old_ptr in
-	    let my_new_ptr = Cil.addOffsetLval offset my_ptr in
+	    let my_new_old_ptr = addoffset my_old_ptr e_iterator in
+	    let my_new_ptr = addoffset my_ptr e_iterator in
 	    let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	    let init = instru_affect lmy_iterator zero in
-	    let i_3 = Instru(F.get_si (Cil.var tmp) h') in
+	    let i_3 = Instru(F.get_ui (Cil.var tmp) h') in
 	    let cond = cmp Rlt e_iterator e_tmp in
 	    let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
 	    let step = instru_affect lmy_iterator e3 in
@@ -983,9 +993,8 @@ class gather_insertions props spec_insuf = object(self)
 	    let e1 = Cil.new_exp ~loc (SizeOf ty) in
 	    let e2 = Cil.mkBinOp ~loc Mult h' e1 in
 	    let insert_2 = Instru(F.malloc my_old_ptr e2) in
-	    let offset = Index(e_iterator, NoOffset) in
-	    let my_new_old_ptr = Cil.addOffsetLval offset my_old_ptr in
-	    let my_new_ptr = Cil.addOffsetLval offset my_ptr in
+	    let my_new_old_ptr = addoffset my_old_ptr e_iterator in
+	    let my_new_ptr = addoffset my_ptr e_iterator in
 	    let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	    let init = instru_affect lmy_iterator zero in
 	    let cond = cmp Rlt e_iterator h' in
@@ -1013,20 +1022,19 @@ class gather_insertions props spec_insuf = object(self)
 	| [] -> []
 	| _ :: [] -> [ Instru(F.free (Cil.new_exp ~loc (Lval my_old_ptr))) ]
 	| h :: t ->
-	  let my_iterator = self#fresh_ctype_varinfo Cil.intType in
+	  let my_iterator = self#fresh_ctype_varinfo Cil.ulongType in
 	  let e_iterator = Cil.evar my_iterator in
 	  let lmy_iterator = Cil.var my_iterator in
 	  let insert_0 = decl_varinfo my_iterator in
 	  let inserts_1, h' = self#translate_term h in
 	  let inserts' = match h.term_type with
 	    | Linteger ->
-	      let offset = Index(e_iterator, NoOffset) in
-	      let aux = Cil.addOffsetLval offset my_old_ptr in
+	      let aux = addoffset my_old_ptr e_iterator in
 	      let inserts_block = dealloc_aux aux t in
 	      let init = instru_affect lmy_iterator zero in
-	      let tmp = self#fresh_ctype_varinfo Cil.intType in
+	      let tmp = self#fresh_ctype_varinfo Cil.ulongType in
 	      let i_1 = decl_varinfo tmp in
-	      let i_2 = Instru(F.get_si (Cil.var tmp) h') in
+	      let i_2 = Instru(F.get_ui (Cil.var tmp) h') in
 	      let e_tmp = Cil.evar tmp in
 	      let cond = cmp Rlt e_iterator e_tmp in
 	      let e1 = Cil.mkBinOp ~loc PlusA e_iterator one in
@@ -1035,8 +1043,7 @@ class gather_insertions props spec_insuf = object(self)
 	      [i_1; i_2; insert_2; Instru(F.clear h')]
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
-	      let offset = Index(Cil.evar my_iterator, NoOffset) in
-	      let aux = Cil.addOffsetLval offset my_old_ptr in
+	      let aux = addoffset my_old_ptr (Cil.evar my_iterator) in
 	      let inserts_block = dealloc_aux aux t in
 	      let init = instru_affect lmy_iterator zero in
 	      let cond = cmp Rlt e_iterator h' in
@@ -1047,8 +1054,10 @@ class gather_insertions props spec_insuf = object(self)
 	  let e = Cil.new_exp ~loc (Lval my_old_ptr) in
 	  insert_0 :: inserts_1 @ inserts' @ [Instru(F.free e)]
       in
-      let my_old_ptr = my_varinfo v.vtype ("old_ptr_" ^ v.vname) in
-      dealloc_aux (Cil.var my_old_ptr) terms
+      if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
+	let my_old_ptr = my_varinfo v.vtype ("old_ptr_" ^ v.vname) in
+	dealloc_aux (Cil.var my_old_ptr) terms
+      else []
     in
     let inserts_after = do_varinfo vi in
     inserts_decl, inserts_before, inserts_after
@@ -1306,7 +1315,8 @@ class gather_insertions props spec_insuf = object(self)
 	let i_f_1 = Instru(instru_affect x y) in
 	let i_f_2 = Instru(F.binop_ui PlusA e_it e_it one) in
 	let i_f_3 = Instru(F.cmp (Cil.var tmp) e_it e_t2) in
-	let i_7 = ins_for Skip cond Skip [i_f_0; i_f_1; i_f_2; i_f_3] in
+	let i_7 =
+	  ins_for instru_skip cond instru_skip [i_f_0; i_f_1; i_f_2; i_f_3] in
 	let i_8 = Instru(F.clear e_it) in
 	let i_9 = Instru(F.clear e_t1) in
 	let i_10 = Instru(F.clear e_t2) in
@@ -1441,7 +1451,7 @@ class gather_insertions props spec_insuf = object(self)
 	List.iter (self#insert Glob) ins_glob;
 	let new_f = mk_func vi formals locals ins_h in
 	functions <- new_f :: functions;
-	self#insert (EndStmt stmt.sid) (Instru(ICall(None, Cil.evar vi, args)));
+	self#insert (EndStmt stmt.sid)(Instru(Call(None,Cil.evar vi,args,loc)));
 	Cil.SkipChildren
       else Cil.DoChildren
     | _ -> Cil.DoChildren

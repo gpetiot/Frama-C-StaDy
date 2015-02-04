@@ -22,22 +22,22 @@ void f(int x)
   {
     {
       mpz_t __stady_gmp_0;
-      __gmpz_init_set_si(__stady_gmp_0, x);
+      __gmpz_init_set_si(__stady_gmp_0,x);
       mpz_t __stady_gmp_1;
-      __gmpz_init_set_str(__stady_gmp_1, "1", 10);
+      __gmpz_init_set_str(__stady_gmp_1,"1",10);
       mpz_t __stady_gmp_2;
       __gmpz_init(__stady_gmp_2);
-      __gmpz_add(__stady_gmp_2, __stady_gmp_0, __stady_gmp_1);
+      __gmpz_add(__stady_gmp_2,__stady_gmp_0,__stady_gmp_1);
       __gmpz_clear(__stady_gmp_0);
       __gmpz_clear(__stady_gmp_1);
       mpz_t __stady_gmp_3;
-      __gmpz_init_set_str(__stady_gmp_3, "2147483647", 10);
+      __gmpz_init_set_str(__stady_gmp_3,"2147483647",10);
       int __stady_term_0;
-      __stady_term_0 = __gmpz_cmp(__stady_gmp_2, __stady_gmp_3);
+      __stady_term_0 = __gmpz_cmp(__stady_gmp_2,__stady_gmp_3);
       __gmpz_clear(__stady_gmp_2);
       __gmpz_clear(__stady_gmp_3);
       if(! (__stady_term_0 <= 0)) {
-        pathcrawler_assert_exception("Assert!", 0);
+        pathcrawler_assert_exception("Assert!",0);
       }
       ;
     }

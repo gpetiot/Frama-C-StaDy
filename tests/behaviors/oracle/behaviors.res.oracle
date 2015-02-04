@@ -25,7 +25,7 @@ void f(int x, int y, int z)
           __stady_pred_0 = old_z <= old_x;
         }
         if(! __stady_pred_0) {
-          pathcrawler_assert_exception("Post-condition!", 17);
+          pathcrawler_assert_exception("Post-condition!",17);
         }
       }
       if(y >= x && y >= z) {
@@ -35,7 +35,7 @@ void f(int x, int y, int z)
           __stady_pred_1 = old_z <= old_y;
         }
         if(! __stady_pred_1) {
-          pathcrawler_assert_exception("Post-condition!", 1);
+          pathcrawler_assert_exception("Post-condition!",1);
         }
       }
       if(z >= x && z >= y) {
@@ -45,7 +45,7 @@ void f(int x, int y, int z)
           __stady_pred_2 = old_y <= old_z;
         }
         if(! __stady_pred_2) {
-          pathcrawler_assert_exception("Post-condition!", 14);
+          pathcrawler_assert_exception("Post-condition!",14);
         }
       }
     }
