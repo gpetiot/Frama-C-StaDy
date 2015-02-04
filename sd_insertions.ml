@@ -968,41 +968,42 @@ class gather_insertions props spec_insuf = object(self)
 	  let e_iterator = Cil.evar my_iterator in
 	  let lmy_iterator = Cil.var my_iterator in
 	  let insert_1 = decl_varinfo my_iterator in
-	  begin match h.term_type with
-	  | Linteger ->
-	    let tmp = self#fresh_ctype_varinfo Cil.ulongType in
-	    let i_1 = decl_varinfo tmp in
-	    let i_2 = Instru(F.get_ui (Cil.var tmp) h') in
-	    let e_tmp = Cil.evar tmp in
-	    let e1 = Cil.new_exp ~loc (SizeOf ty) in
-	    let e2 = Cil.mkBinOp ~loc Mult e_tmp e1 in
-	    let insert_2 = Instru(F.malloc my_old_ptr e2) in
-	    let my_new_old_ptr = addoffset my_old_ptr e_iterator in
-	    let my_new_ptr = addoffset my_ptr e_iterator in
-	    let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
-	    let init = instru_affect lmy_iterator zero in
-	    let i_3 = Instru(F.get_ui (Cil.var tmp) h') in
-	    let cond = cmp Rlt e_iterator e_tmp in
-	    let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
-	    let step = instru_affect lmy_iterator e3 in
-	    let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
-	    let insert_4 = Instru(F.clear h') in
-	    inserts_0 @ [insert_1; i_1;i_2; insert_2; i_3; Instru init; insert_3; insert_4]
-	  | Lreal -> assert false (* TODO: reals *)
-	  | _ ->
-	    let e1 = Cil.new_exp ~loc (SizeOf ty) in
-	    let e2 = Cil.mkBinOp ~loc Mult h' e1 in
-	    let insert_2 = Instru(F.malloc my_old_ptr e2) in
-	    let my_new_old_ptr = addoffset my_old_ptr e_iterator in
-	    let my_new_ptr = addoffset my_ptr e_iterator in
-	    let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
-	    let init = instru_affect lmy_iterator zero in
-	    let cond = cmp Rlt e_iterator h' in
-	    let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
-	    let step = instru_affect lmy_iterator e3 in
-	    let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
-	    inserts_0 @ [insert_1; insert_2; Instru init; insert_3]
-	  end
+	  let inserts = match h.term_type with
+	    | Linteger ->
+	       let tmp = self#fresh_ctype_varinfo Cil.ulongType in
+	       let i_1 = decl_varinfo tmp in
+	       let i_2 = Instru(F.get_ui (Cil.var tmp) h') in
+	       let e_tmp = Cil.evar tmp in
+	       let e1 = Cil.new_exp ~loc (SizeOf ty) in
+	       let e2 = Cil.mkBinOp ~loc Mult e_tmp e1 in
+	       let insert_2 = Instru(F.malloc my_old_ptr e2) in
+	       let my_new_old_ptr = addoffset my_old_ptr e_iterator in
+	       let my_new_ptr = addoffset my_ptr e_iterator in
+	       let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
+	       let init = instru_affect lmy_iterator zero in
+	       let i_3 = Instru(F.get_ui (Cil.var tmp) h') in
+	       let cond = cmp Rlt e_iterator e_tmp in
+	       let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
+	       let step = instru_affect lmy_iterator e3 in
+	       let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
+	       let insert_4 = Instru(F.clear h') in
+	       [i_1; i_2; insert_2; i_3; Instru init; insert_3; insert_4]
+	    | Lreal -> assert false (* TODO: reals *)
+	    | _ ->
+	       let e1 = Cil.new_exp ~loc (SizeOf ty) in
+	       let e2 = Cil.mkBinOp ~loc Mult h' e1 in
+	       let insert_2 = Instru(F.malloc my_old_ptr e2) in
+	       let my_new_old_ptr = addoffset my_old_ptr e_iterator in
+	       let my_new_ptr = addoffset my_ptr e_iterator in
+	       let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
+	       let init = instru_affect lmy_iterator zero in
+	       let cond = cmp Rlt e_iterator h' in
+	       let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
+	       let step = instru_affect lmy_iterator e3 in
+	       let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
+	       [insert_2; Instru init; insert_3]
+	  in
+	  inserts_0 @ (insert_1 :: inserts)
 	| [] ->
 	  let e = Cil.new_exp ~loc (Lval my_ptr) in
 	  [Instru(instru_affect my_old_ptr e)]
