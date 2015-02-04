@@ -12,7 +12,7 @@ let pc_panel (main_ui:Design.main_window_extension_points) =
   let run_button = GButton.button ~label:"Run" ~packing:(vbox#pack) () in
   let callback() = Sd_register.run(); main_ui#redisplay() in
   let on_press() = main_ui#protect ~cancelable:true callback in
-  let _ = run_button#connect#pressed on_press in
+  ignore(run_button#connect#pressed on_press);
   "stady", vbox#coerce, Some refresh
   
 
