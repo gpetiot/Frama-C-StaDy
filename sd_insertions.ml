@@ -945,12 +945,7 @@ class gather_insertions props spec_insuf = object(self)
 	let base = Cil.new_exp ~loc (Lval lval) in
 	Mem(Cil.new_exp ~loc (BinOp(IndexPI, base, exp, ty))), NoOffset
       else if Cil.isArrayType ty then
-	begin
-	  Sd_options.Self.feedback
-	    "addOffsetLval %a %a"
-	    Printer.pp_lval lval Printer.pp_offset (Index(exp,NoOffset));
-	  Cil.addOffsetLval (Index(exp, NoOffset)) lval
-	end
+	Cil.addOffsetLval (Index(exp, NoOffset)) lval
       else assert false
     in
     let lengths = Sd_utils.lengths_from_requires kf in
