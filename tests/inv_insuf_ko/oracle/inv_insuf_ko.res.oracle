@@ -89,9 +89,9 @@ void f(int *t, int x)
   old_ptr_t = (int *)malloc(__stady_term_1 * (unsigned long)sizeof(int));
   __stady_term_1 = __gmpz_get_ui(__stady_gmp_2);
   __stady_term_0 = 0;
-   while(__stady_term_0 < __stady_term_1) {
-     *(old_ptr_t + __stady_term_0) = *(t + __stady_term_0); 
-      __stady_term_0 ++;
+  while(__stady_term_0 < __stady_term_1) {
+    *(old_ptr_t + __stady_term_0) = *(t + __stady_term_0);
+    __stady_term_0 ++;
   }
   __gmpz_clear(__stady_gmp_2);
   int old_x;
@@ -154,17 +154,15 @@ void f(int *t, int x)
         __gmpz_init_set(__q_i,__stady_gmp_9);
         int __stady_term_7;
         __stady_term_7 = __gmpz_cmp(__q_i,__stady_gmp_10);
-        ;
-         while(__stady_term_7 <= 0 && ! __stady_pred_1) {
-           mpz_t __stady_gmp_11;
-           __gmpz_init_set(__stady_gmp_11,__q_i);
-           int __stady_term_8;
-           __stady_term_8 = (int)__gmpz_get_si(__stady_gmp_11);
-           __gmpz_clear(__stady_gmp_11);
-           __stady_pred_1 = *(t + __stady_term_8) == x;
-           __gmpz_add_ui(__q_i,__q_i,1);
-           __stady_term_7 = __gmpz_cmp(__q_i,__stady_gmp_10); 
-            ;
+        while(__stady_term_7 <= 0 && ! __stady_pred_1) {
+          mpz_t __stady_gmp_11;
+          __gmpz_init_set(__stady_gmp_11,__q_i);
+          int __stady_term_8;
+          __stady_term_8 = (int)__gmpz_get_si(__stady_gmp_11);
+          __gmpz_clear(__stady_gmp_11);
+          __stady_pred_1 = *(t + __stady_term_8) == x;
+          __gmpz_add_ui(__q_i,__q_i,1);
+          __stady_term_7 = __gmpz_cmp(__q_i,__stady_gmp_10);
         }
         __gmpz_clear(__q_i);
         __gmpz_clear(__stady_gmp_9);

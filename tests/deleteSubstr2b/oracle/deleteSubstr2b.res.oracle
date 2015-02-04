@@ -147,9 +147,9 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
   old_ptr_str = (char *)malloc(__stady_term_22 * (unsigned long)sizeof(char));
   __stady_term_22 = __gmpz_get_ui(__stady_gmp_43);
   __stady_term_21 = 0;
-   while(__stady_term_21 < __stady_term_22) {
-     *(old_ptr_str + __stady_term_21) = *(str + __stady_term_21); 
-      __stady_term_21 ++;
+  while(__stady_term_21 < __stady_term_22) {
+    *(old_ptr_str + __stady_term_21) = *(str + __stady_term_21);
+    __stady_term_21 ++;
   }
   __gmpz_clear(__stady_gmp_43);
   int old_strlen;
@@ -165,9 +165,9 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
   old_ptr_substr = (char *)malloc(__stady_term_24 * (unsigned long)sizeof(char));
   __stady_term_24 = __gmpz_get_ui(__stady_gmp_44);
   __stady_term_23 = 0;
-   while(__stady_term_23 < __stady_term_24) {
-     *(old_ptr_substr + __stady_term_23) = *(substr + __stady_term_23); 
-      __stady_term_23 ++;
+  while(__stady_term_23 < __stady_term_24) {
+    *(old_ptr_substr + __stady_term_23) = *(substr + __stady_term_23);
+    __stady_term_23 ++;
   }
   __gmpz_clear(__stady_gmp_44);
   int old_sublen;
@@ -220,52 +220,48 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
         __gmpz_init_set(__q_k,__stady_gmp_83);
         int __stady_term_38;
         __stady_term_38 = __gmpz_cmp(__q_k,__stady_gmp_84);
-        ;
-         while(__stady_term_38 < 0 && __stady_pred_15) {
-           int __stady_pred_16;
-           __stady_pred_16 = 0;
-           {
-             mpz_t __q_l;
-             mpz_t __stady_gmp_85;
-             __gmpz_init_set_str(__stady_gmp_85,"0",10);
-             mpz_t __stady_gmp_86;
-             __gmpz_init_set_si(__stady_gmp_86,sublen);
-             __gmpz_init_set(__q_l,__stady_gmp_85);
-             int __stady_term_39;
-             __stady_term_39 = __gmpz_cmp(__q_l,__stady_gmp_86);
-             ;
-              while(__stady_term_39 < 0 && ! __stady_pred_16) {
-                mpz_t __stady_gmp_87;
-                __gmpz_init_set(__stady_gmp_87,__q_k);
-                mpz_t __stady_gmp_88;
-                __gmpz_init_set(__stady_gmp_88,__q_l);
-                mpz_t __stady_gmp_89;
-                __gmpz_init(__stady_gmp_89);
-                __gmpz_add(__stady_gmp_89,__stady_gmp_87,__stady_gmp_88);
-                __gmpz_clear(__stady_gmp_87);
-                __gmpz_clear(__stady_gmp_88);
-                int __stady_term_40;
-                __stady_term_40 = (int)__gmpz_get_si(__stady_gmp_89);
-                __gmpz_clear(__stady_gmp_89);
-                mpz_t __stady_gmp_90;
-                __gmpz_init_set(__stady_gmp_90,__q_l);
-                int __stady_term_41;
-                __stady_term_41 = (int)__gmpz_get_si(__stady_gmp_90);
-                __gmpz_clear(__stady_gmp_90);
-                __stady_pred_16 = (int)*(str + __stady_term_40) != (int)*(
-                                  substr + __stady_term_41);
-                __gmpz_add_ui(__q_l,__q_l,1);
-                __stady_term_39 = __gmpz_cmp(__q_l,__stady_gmp_86); 
-                 ;
-             }
-             __gmpz_clear(__q_l);
-             __gmpz_clear(__stady_gmp_85);
-             __gmpz_clear(__stady_gmp_86);
-           }
-           __stady_pred_15 = __stady_pred_16;
-           __gmpz_add_ui(__q_k,__q_k,1);
-           __stady_term_38 = __gmpz_cmp(__q_k,__stady_gmp_84); 
-            ;
+        while(__stady_term_38 < 0 && __stady_pred_15) {
+          int __stady_pred_16;
+          __stady_pred_16 = 0;
+          {
+            mpz_t __q_l;
+            mpz_t __stady_gmp_85;
+            __gmpz_init_set_str(__stady_gmp_85,"0",10);
+            mpz_t __stady_gmp_86;
+            __gmpz_init_set_si(__stady_gmp_86,sublen);
+            __gmpz_init_set(__q_l,__stady_gmp_85);
+            int __stady_term_39;
+            __stady_term_39 = __gmpz_cmp(__q_l,__stady_gmp_86);
+            while(__stady_term_39 < 0 && ! __stady_pred_16) {
+              mpz_t __stady_gmp_87;
+              __gmpz_init_set(__stady_gmp_87,__q_k);
+              mpz_t __stady_gmp_88;
+              __gmpz_init_set(__stady_gmp_88,__q_l);
+              mpz_t __stady_gmp_89;
+              __gmpz_init(__stady_gmp_89);
+              __gmpz_add(__stady_gmp_89,__stady_gmp_87,__stady_gmp_88);
+              __gmpz_clear(__stady_gmp_87);
+              __gmpz_clear(__stady_gmp_88);
+              int __stady_term_40;
+              __stady_term_40 = (int)__gmpz_get_si(__stady_gmp_89);
+              __gmpz_clear(__stady_gmp_89);
+              mpz_t __stady_gmp_90;
+              __gmpz_init_set(__stady_gmp_90,__q_l);
+              int __stady_term_41;
+              __stady_term_41 = (int)__gmpz_get_si(__stady_gmp_90);
+              __gmpz_clear(__stady_gmp_90);
+              __stady_pred_16 = (int)*(str + __stady_term_40) != (int)*(
+                                substr + __stady_term_41);
+              __gmpz_add_ui(__q_l,__q_l,1);
+              __stady_term_39 = __gmpz_cmp(__q_l,__stady_gmp_86);
+            }
+            __gmpz_clear(__q_l);
+            __gmpz_clear(__stady_gmp_85);
+            __gmpz_clear(__stady_gmp_86);
+          }
+          __stady_pred_15 = __stady_pred_16;
+          __gmpz_add_ui(__q_k,__q_k,1);
+          __stady_term_38 = __gmpz_cmp(__q_k,__stady_gmp_84);
         }
         __gmpz_clear(__q_k);
         __gmpz_clear(__stady_gmp_83);
@@ -352,30 +348,28 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
                 __gmpz_init_set(__q_k,__stady_gmp_49);
                 int __stady_term_27;
                 __stady_term_27 = __gmpz_cmp(__q_k,__stady_gmp_50);
-                ;
-                 while(__stady_term_27 < 0 && __stady_pred_11) {
-                   mpz_t __stady_gmp_51;
-                   __gmpz_init_set_si(__stady_gmp_51,i);
-                   mpz_t __stady_gmp_52;
-                   __gmpz_init_set(__stady_gmp_52,__q_k);
-                   mpz_t __stady_gmp_53;
-                   __gmpz_init(__stady_gmp_53);
-                   __gmpz_add(__stady_gmp_53,__stady_gmp_51,__stady_gmp_52);
-                   __gmpz_clear(__stady_gmp_51);
-                   __gmpz_clear(__stady_gmp_52);
-                   int __stady_term_28;
-                   __stady_term_28 = (int)__gmpz_get_si(__stady_gmp_53);
-                   __gmpz_clear(__stady_gmp_53);
-                   mpz_t __stady_gmp_54;
-                   __gmpz_init_set(__stady_gmp_54,__q_k);
-                   int __stady_term_29;
-                   __stady_term_29 = (int)__gmpz_get_si(__stady_gmp_54);
-                   __gmpz_clear(__stady_gmp_54);
-                   __stady_pred_11 = (int)*(str + __stady_term_28) == (int)*(
-                                     substr + __stady_term_29);
-                   __gmpz_add_ui(__q_k,__q_k,1);
-                   __stady_term_27 = __gmpz_cmp(__q_k,__stady_gmp_50); 
-                    ;
+                while(__stady_term_27 < 0 && __stady_pred_11) {
+                  mpz_t __stady_gmp_51;
+                  __gmpz_init_set_si(__stady_gmp_51,i);
+                  mpz_t __stady_gmp_52;
+                  __gmpz_init_set(__stady_gmp_52,__q_k);
+                  mpz_t __stady_gmp_53;
+                  __gmpz_init(__stady_gmp_53);
+                  __gmpz_add(__stady_gmp_53,__stady_gmp_51,__stady_gmp_52);
+                  __gmpz_clear(__stady_gmp_51);
+                  __gmpz_clear(__stady_gmp_52);
+                  int __stady_term_28;
+                  __stady_term_28 = (int)__gmpz_get_si(__stady_gmp_53);
+                  __gmpz_clear(__stady_gmp_53);
+                  mpz_t __stady_gmp_54;
+                  __gmpz_init_set(__stady_gmp_54,__q_k);
+                  int __stady_term_29;
+                  __stady_term_29 = (int)__gmpz_get_si(__stady_gmp_54);
+                  __gmpz_clear(__stady_gmp_54);
+                  __stady_pred_11 = (int)*(str + __stady_term_28) == (int)*(
+                                    substr + __stady_term_29);
+                  __gmpz_add_ui(__q_k,__q_k,1);
+                  __stady_term_27 = __gmpz_cmp(__q_k,__stady_gmp_50);
                 }
                 __gmpz_clear(__q_k);
                 __gmpz_clear(__stady_gmp_49);
@@ -450,30 +444,28 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
                   __gmpz_init_set(__q_k,__stady_gmp_55);
                   int __stady_term_30;
                   __stady_term_30 = __gmpz_cmp(__q_k,__stady_gmp_56);
-                  ;
-                   while(__stady_term_30 < 0 && __stady_pred_12) {
-                     mpz_t __stady_gmp_57;
-                     __gmpz_init_set_si(__stady_gmp_57,i);
-                     mpz_t __stady_gmp_58;
-                     __gmpz_init_set(__stady_gmp_58,__q_k);
-                     mpz_t __stady_gmp_59;
-                     __gmpz_init(__stady_gmp_59);
-                     __gmpz_add(__stady_gmp_59,__stady_gmp_57,__stady_gmp_58);
-                     __gmpz_clear(__stady_gmp_57);
-                     __gmpz_clear(__stady_gmp_58);
-                     int __stady_term_31;
-                     __stady_term_31 = (int)__gmpz_get_si(__stady_gmp_59);
-                     __gmpz_clear(__stady_gmp_59);
-                     mpz_t __stady_gmp_60;
-                     __gmpz_init_set(__stady_gmp_60,__q_k);
-                     int __stady_term_32;
-                     __stady_term_32 = (int)__gmpz_get_si(__stady_gmp_60);
-                     __gmpz_clear(__stady_gmp_60);
-                     __stady_pred_12 = (int)*(str + __stady_term_31) == (int)*(
-                                       substr + __stady_term_32);
-                     __gmpz_add_ui(__q_k,__q_k,1);
-                     __stady_term_30 = __gmpz_cmp(__q_k,__stady_gmp_56); 
-                      ;
+                  while(__stady_term_30 < 0 && __stady_pred_12) {
+                    mpz_t __stady_gmp_57;
+                    __gmpz_init_set_si(__stady_gmp_57,i);
+                    mpz_t __stady_gmp_58;
+                    __gmpz_init_set(__stady_gmp_58,__q_k);
+                    mpz_t __stady_gmp_59;
+                    __gmpz_init(__stady_gmp_59);
+                    __gmpz_add(__stady_gmp_59,__stady_gmp_57,__stady_gmp_58);
+                    __gmpz_clear(__stady_gmp_57);
+                    __gmpz_clear(__stady_gmp_58);
+                    int __stady_term_31;
+                    __stady_term_31 = (int)__gmpz_get_si(__stady_gmp_59);
+                    __gmpz_clear(__stady_gmp_59);
+                    mpz_t __stady_gmp_60;
+                    __gmpz_init_set(__stady_gmp_60,__q_k);
+                    int __stady_term_32;
+                    __stady_term_32 = (int)__gmpz_get_si(__stady_gmp_60);
+                    __gmpz_clear(__stady_gmp_60);
+                    __stady_pred_12 = (int)*(str + __stady_term_31) == (int)*(
+                                      substr + __stady_term_32);
+                    __gmpz_add_ui(__q_k,__q_k,1);
+                    __stady_term_30 = __gmpz_cmp(__q_k,__stady_gmp_56);
                   }
                   __gmpz_clear(__q_k);
                   __gmpz_clear(__stady_gmp_55);
@@ -556,52 +548,48 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           __gmpz_init_set(__q_k,__stady_gmp_91);
           int __stady_term_42;
           __stady_term_42 = __gmpz_cmp(__q_k,__stady_gmp_92);
-          ;
-           while(__stady_term_42 < 0 && __stady_pred_17) {
-             int __stady_pred_18;
-             __stady_pred_18 = 0;
-             {
-               mpz_t __q_l;
-               mpz_t __stady_gmp_93;
-               __gmpz_init_set_str(__stady_gmp_93,"0",10);
-               mpz_t __stady_gmp_94;
-               __gmpz_init_set_si(__stady_gmp_94,sublen);
-               __gmpz_init_set(__q_l,__stady_gmp_93);
-               int __stady_term_43;
-               __stady_term_43 = __gmpz_cmp(__q_l,__stady_gmp_94);
-               ;
-                while(__stady_term_43 < 0 && ! __stady_pred_18) {
-                  mpz_t __stady_gmp_95;
-                  __gmpz_init_set(__stady_gmp_95,__q_k);
-                  mpz_t __stady_gmp_96;
-                  __gmpz_init_set(__stady_gmp_96,__q_l);
-                  mpz_t __stady_gmp_97;
-                  __gmpz_init(__stady_gmp_97);
-                  __gmpz_add(__stady_gmp_97,__stady_gmp_95,__stady_gmp_96);
-                  __gmpz_clear(__stady_gmp_95);
-                  __gmpz_clear(__stady_gmp_96);
-                  int __stady_term_44;
-                  __stady_term_44 = (int)__gmpz_get_si(__stady_gmp_97);
-                  __gmpz_clear(__stady_gmp_97);
-                  mpz_t __stady_gmp_98;
-                  __gmpz_init_set(__stady_gmp_98,__q_l);
-                  int __stady_term_45;
-                  __stady_term_45 = (int)__gmpz_get_si(__stady_gmp_98);
-                  __gmpz_clear(__stady_gmp_98);
-                  __stady_pred_18 = (int)*(str + __stady_term_44) != (int)*(
-                                    substr + __stady_term_45);
-                  __gmpz_add_ui(__q_l,__q_l,1);
-                  __stady_term_43 = __gmpz_cmp(__q_l,__stady_gmp_94); 
-                   ;
-               }
-               __gmpz_clear(__q_l);
-               __gmpz_clear(__stady_gmp_93);
-               __gmpz_clear(__stady_gmp_94);
-             }
-             __stady_pred_17 = __stady_pred_18;
-             __gmpz_add_ui(__q_k,__q_k,1);
-             __stady_term_42 = __gmpz_cmp(__q_k,__stady_gmp_92); 
-              ;
+          while(__stady_term_42 < 0 && __stady_pred_17) {
+            int __stady_pred_18;
+            __stady_pred_18 = 0;
+            {
+              mpz_t __q_l;
+              mpz_t __stady_gmp_93;
+              __gmpz_init_set_str(__stady_gmp_93,"0",10);
+              mpz_t __stady_gmp_94;
+              __gmpz_init_set_si(__stady_gmp_94,sublen);
+              __gmpz_init_set(__q_l,__stady_gmp_93);
+              int __stady_term_43;
+              __stady_term_43 = __gmpz_cmp(__q_l,__stady_gmp_94);
+              while(__stady_term_43 < 0 && ! __stady_pred_18) {
+                mpz_t __stady_gmp_95;
+                __gmpz_init_set(__stady_gmp_95,__q_k);
+                mpz_t __stady_gmp_96;
+                __gmpz_init_set(__stady_gmp_96,__q_l);
+                mpz_t __stady_gmp_97;
+                __gmpz_init(__stady_gmp_97);
+                __gmpz_add(__stady_gmp_97,__stady_gmp_95,__stady_gmp_96);
+                __gmpz_clear(__stady_gmp_95);
+                __gmpz_clear(__stady_gmp_96);
+                int __stady_term_44;
+                __stady_term_44 = (int)__gmpz_get_si(__stady_gmp_97);
+                __gmpz_clear(__stady_gmp_97);
+                mpz_t __stady_gmp_98;
+                __gmpz_init_set(__stady_gmp_98,__q_l);
+                int __stady_term_45;
+                __stady_term_45 = (int)__gmpz_get_si(__stady_gmp_98);
+                __gmpz_clear(__stady_gmp_98);
+                __stady_pred_18 = (int)*(str + __stady_term_44) != (int)*(
+                                  substr + __stady_term_45);
+                __gmpz_add_ui(__q_l,__q_l,1);
+                __stady_term_43 = __gmpz_cmp(__q_l,__stady_gmp_94);
+              }
+              __gmpz_clear(__q_l);
+              __gmpz_clear(__stady_gmp_93);
+              __gmpz_clear(__stady_gmp_94);
+            }
+            __stady_pred_17 = __stady_pred_18;
+            __gmpz_add_ui(__q_k,__q_k,1);
+            __stady_term_42 = __gmpz_cmp(__q_k,__stady_gmp_92);
           }
           __gmpz_clear(__q_k);
           __gmpz_clear(__stady_gmp_91);
@@ -660,52 +648,48 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           __gmpz_init_set(__q_i,__stady_gmp_8);
           int __stady_term_7;
           __stady_term_7 = __gmpz_cmp(__q_i,__stady_gmp_11);
-          ;
-           while(__stady_term_7 < 0 && ! __stady_pred_3) {
-             int __stady_pred_4;
-             __stady_pred_4 = 1;
-             {
-               mpz_t __q_j;
-               mpz_t __stady_gmp_12;
-               __gmpz_init_set_str(__stady_gmp_12,"0",10);
-               mpz_t __stady_gmp_13;
-               __gmpz_init_set_si(__stady_gmp_13,sublen);
-               __gmpz_init_set(__q_j,__stady_gmp_12);
-               int __stady_term_8;
-               __stady_term_8 = __gmpz_cmp(__q_j,__stady_gmp_13);
-               ;
-                while(__stady_term_8 < 0 && __stady_pred_4) {
-                  mpz_t __stady_gmp_14;
-                  __gmpz_init_set(__stady_gmp_14,__q_i);
-                  mpz_t __stady_gmp_15;
-                  __gmpz_init_set(__stady_gmp_15,__q_j);
-                  mpz_t __stady_gmp_16;
-                  __gmpz_init(__stady_gmp_16);
-                  __gmpz_add(__stady_gmp_16,__stady_gmp_14,__stady_gmp_15);
-                  __gmpz_clear(__stady_gmp_14);
-                  __gmpz_clear(__stady_gmp_15);
-                  int __stady_term_9;
-                  __stady_term_9 = (int)__gmpz_get_si(__stady_gmp_16);
-                  __gmpz_clear(__stady_gmp_16);
-                  mpz_t __stady_gmp_17;
-                  __gmpz_init_set(__stady_gmp_17,__q_j);
-                  int __stady_term_10;
-                  __stady_term_10 = (int)__gmpz_get_si(__stady_gmp_17);
-                  __gmpz_clear(__stady_gmp_17);
-                  __stady_pred_4 = (int)*(str + __stady_term_9) == (int)*(
-                                   substr + __stady_term_10);
-                  __gmpz_add_ui(__q_j,__q_j,1);
-                  __stady_term_8 = __gmpz_cmp(__q_j,__stady_gmp_13); 
-                   ;
-               }
-               __gmpz_clear(__q_j);
-               __gmpz_clear(__stady_gmp_12);
-               __gmpz_clear(__stady_gmp_13);
-             }
-             __stady_pred_3 = __stady_pred_4;
-             __gmpz_add_ui(__q_i,__q_i,1);
-             __stady_term_7 = __gmpz_cmp(__q_i,__stady_gmp_11); 
-              ;
+          while(__stady_term_7 < 0 && ! __stady_pred_3) {
+            int __stady_pred_4;
+            __stady_pred_4 = 1;
+            {
+              mpz_t __q_j;
+              mpz_t __stady_gmp_12;
+              __gmpz_init_set_str(__stady_gmp_12,"0",10);
+              mpz_t __stady_gmp_13;
+              __gmpz_init_set_si(__stady_gmp_13,sublen);
+              __gmpz_init_set(__q_j,__stady_gmp_12);
+              int __stady_term_8;
+              __stady_term_8 = __gmpz_cmp(__q_j,__stady_gmp_13);
+              while(__stady_term_8 < 0 && __stady_pred_4) {
+                mpz_t __stady_gmp_14;
+                __gmpz_init_set(__stady_gmp_14,__q_i);
+                mpz_t __stady_gmp_15;
+                __gmpz_init_set(__stady_gmp_15,__q_j);
+                mpz_t __stady_gmp_16;
+                __gmpz_init(__stady_gmp_16);
+                __gmpz_add(__stady_gmp_16,__stady_gmp_14,__stady_gmp_15);
+                __gmpz_clear(__stady_gmp_14);
+                __gmpz_clear(__stady_gmp_15);
+                int __stady_term_9;
+                __stady_term_9 = (int)__gmpz_get_si(__stady_gmp_16);
+                __gmpz_clear(__stady_gmp_16);
+                mpz_t __stady_gmp_17;
+                __gmpz_init_set(__stady_gmp_17,__q_j);
+                int __stady_term_10;
+                __stady_term_10 = (int)__gmpz_get_si(__stady_gmp_17);
+                __gmpz_clear(__stady_gmp_17);
+                __stady_pred_4 = (int)*(str + __stady_term_9) == (int)*(
+                                 substr + __stady_term_10);
+                __gmpz_add_ui(__q_j,__q_j,1);
+                __stady_term_8 = __gmpz_cmp(__q_j,__stady_gmp_13);
+              }
+              __gmpz_clear(__q_j);
+              __gmpz_clear(__stady_gmp_12);
+              __gmpz_clear(__stady_gmp_13);
+            }
+            __stady_pred_3 = __stady_pred_4;
+            __gmpz_add_ui(__q_i,__q_i,1);
+            __stady_term_7 = __gmpz_cmp(__q_i,__stady_gmp_11);
           }
           __gmpz_clear(__q_i);
           __gmpz_clear(__stady_gmp_8);
@@ -754,30 +738,28 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
             __gmpz_init_set(__q_j,__stady_gmp_24);
             int __stady_term_13;
             __stady_term_13 = __gmpz_cmp(__q_j,__stady_gmp_25);
-            ;
-             while(__stady_term_13 < 0 && __stady_pred_6) {
-               mpz_t __stady_gmp_26;
-               __gmpz_init_set_si(__stady_gmp_26,__retres);
-               mpz_t __stady_gmp_27;
-               __gmpz_init_set(__stady_gmp_27,__q_j);
-               mpz_t __stady_gmp_28;
-               __gmpz_init(__stady_gmp_28);
-               __gmpz_add(__stady_gmp_28,__stady_gmp_26,__stady_gmp_27);
-               __gmpz_clear(__stady_gmp_26);
-               __gmpz_clear(__stady_gmp_27);
-               int __stady_term_14;
-               __stady_term_14 = (int)__gmpz_get_si(__stady_gmp_28);
-               __gmpz_clear(__stady_gmp_28);
-               mpz_t __stady_gmp_29;
-               __gmpz_init_set(__stady_gmp_29,__q_j);
-               int __stady_term_15;
-               __stady_term_15 = (int)__gmpz_get_si(__stady_gmp_29);
-               __gmpz_clear(__stady_gmp_29);
-               __stady_pred_6 = (int)*(old_str + __stady_term_14) == (int)*(
-                                old_substr + __stady_term_15);
-               __gmpz_add_ui(__q_j,__q_j,1);
-               __stady_term_13 = __gmpz_cmp(__q_j,__stady_gmp_25); 
-                ;
+            while(__stady_term_13 < 0 && __stady_pred_6) {
+              mpz_t __stady_gmp_26;
+              __gmpz_init_set_si(__stady_gmp_26,__retres);
+              mpz_t __stady_gmp_27;
+              __gmpz_init_set(__stady_gmp_27,__q_j);
+              mpz_t __stady_gmp_28;
+              __gmpz_init(__stady_gmp_28);
+              __gmpz_add(__stady_gmp_28,__stady_gmp_26,__stady_gmp_27);
+              __gmpz_clear(__stady_gmp_26);
+              __gmpz_clear(__stady_gmp_27);
+              int __stady_term_14;
+              __stady_term_14 = (int)__gmpz_get_si(__stady_gmp_28);
+              __gmpz_clear(__stady_gmp_28);
+              mpz_t __stady_gmp_29;
+              __gmpz_init_set(__stady_gmp_29,__q_j);
+              int __stady_term_15;
+              __stady_term_15 = (int)__gmpz_get_si(__stady_gmp_29);
+              __gmpz_clear(__stady_gmp_29);
+              __stady_pred_6 = (int)*(old_str + __stady_term_14) == (int)*(
+                               old_substr + __stady_term_15);
+              __gmpz_add_ui(__q_j,__q_j,1);
+              __stady_term_13 = __gmpz_cmp(__q_j,__stady_gmp_25);
             }
             __gmpz_clear(__q_j);
             __gmpz_clear(__stady_gmp_24);
@@ -805,52 +787,48 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           __gmpz_init_set(__q_i,__stady_gmp_30);
           int __stady_term_16;
           __stady_term_16 = __gmpz_cmp(__q_i,__stady_gmp_33);
-          ;
-           while(__stady_term_16 < 0 && __stady_pred_7) {
-             int __stady_pred_8;
-             __stady_pred_8 = 0;
-             {
-               mpz_t __q_j;
-               mpz_t __stady_gmp_34;
-               __gmpz_init_set_str(__stady_gmp_34,"0",10);
-               mpz_t __stady_gmp_35;
-               __gmpz_init_set_si(__stady_gmp_35,sublen);
-               __gmpz_init_set(__q_j,__stady_gmp_34);
-               int __stady_term_17;
-               __stady_term_17 = __gmpz_cmp(__q_j,__stady_gmp_35);
-               ;
-                while(__stady_term_17 < 0 && ! __stady_pred_8) {
-                  mpz_t __stady_gmp_36;
-                  __gmpz_init_set(__stady_gmp_36,__q_i);
-                  mpz_t __stady_gmp_37;
-                  __gmpz_init_set(__stady_gmp_37,__q_j);
-                  mpz_t __stady_gmp_38;
-                  __gmpz_init(__stady_gmp_38);
-                  __gmpz_add(__stady_gmp_38,__stady_gmp_36,__stady_gmp_37);
-                  __gmpz_clear(__stady_gmp_36);
-                  __gmpz_clear(__stady_gmp_37);
-                  int __stady_term_18;
-                  __stady_term_18 = (int)__gmpz_get_si(__stady_gmp_38);
-                  __gmpz_clear(__stady_gmp_38);
-                  mpz_t __stady_gmp_39;
-                  __gmpz_init_set(__stady_gmp_39,__q_j);
-                  int __stady_term_19;
-                  __stady_term_19 = (int)__gmpz_get_si(__stady_gmp_39);
-                  __gmpz_clear(__stady_gmp_39);
-                  __stady_pred_8 = (int)*(str + __stady_term_18) != (int)*(
-                                   substr + __stady_term_19);
-                  __gmpz_add_ui(__q_j,__q_j,1);
-                  __stady_term_17 = __gmpz_cmp(__q_j,__stady_gmp_35); 
-                   ;
-               }
-               __gmpz_clear(__q_j);
-               __gmpz_clear(__stady_gmp_34);
-               __gmpz_clear(__stady_gmp_35);
-             }
-             __stady_pred_7 = __stady_pred_8;
-             __gmpz_add_ui(__q_i,__q_i,1);
-             __stady_term_16 = __gmpz_cmp(__q_i,__stady_gmp_33); 
-              ;
+          while(__stady_term_16 < 0 && __stady_pred_7) {
+            int __stady_pred_8;
+            __stady_pred_8 = 0;
+            {
+              mpz_t __q_j;
+              mpz_t __stady_gmp_34;
+              __gmpz_init_set_str(__stady_gmp_34,"0",10);
+              mpz_t __stady_gmp_35;
+              __gmpz_init_set_si(__stady_gmp_35,sublen);
+              __gmpz_init_set(__q_j,__stady_gmp_34);
+              int __stady_term_17;
+              __stady_term_17 = __gmpz_cmp(__q_j,__stady_gmp_35);
+              while(__stady_term_17 < 0 && ! __stady_pred_8) {
+                mpz_t __stady_gmp_36;
+                __gmpz_init_set(__stady_gmp_36,__q_i);
+                mpz_t __stady_gmp_37;
+                __gmpz_init_set(__stady_gmp_37,__q_j);
+                mpz_t __stady_gmp_38;
+                __gmpz_init(__stady_gmp_38);
+                __gmpz_add(__stady_gmp_38,__stady_gmp_36,__stady_gmp_37);
+                __gmpz_clear(__stady_gmp_36);
+                __gmpz_clear(__stady_gmp_37);
+                int __stady_term_18;
+                __stady_term_18 = (int)__gmpz_get_si(__stady_gmp_38);
+                __gmpz_clear(__stady_gmp_38);
+                mpz_t __stady_gmp_39;
+                __gmpz_init_set(__stady_gmp_39,__q_j);
+                int __stady_term_19;
+                __stady_term_19 = (int)__gmpz_get_si(__stady_gmp_39);
+                __gmpz_clear(__stady_gmp_39);
+                __stady_pred_8 = (int)*(str + __stady_term_18) != (int)*(
+                                 substr + __stady_term_19);
+                __gmpz_add_ui(__q_j,__q_j,1);
+                __stady_term_17 = __gmpz_cmp(__q_j,__stady_gmp_35);
+              }
+              __gmpz_clear(__q_j);
+              __gmpz_clear(__stady_gmp_34);
+              __gmpz_clear(__stady_gmp_35);
+            }
+            __stady_pred_7 = __stady_pred_8;
+            __gmpz_add_ui(__q_i,__q_i,1);
+            __stady_term_16 = __gmpz_cmp(__q_i,__stady_gmp_33);
           }
           __gmpz_clear(__q_i);
           __gmpz_clear(__stady_gmp_30);
@@ -899,9 +877,9 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
   old_ptr_str = (char *)malloc(__stady_term_65 * (unsigned long)sizeof(char));
   __stady_term_65 = __gmpz_get_ui(__stady_gmp_155);
   __stady_term_64 = 0;
-   while(__stady_term_64 < __stady_term_65) {
-     *(old_ptr_str + __stady_term_64) = *(str + __stady_term_64); 
-      __stady_term_64 ++;
+  while(__stady_term_64 < __stady_term_65) {
+    *(old_ptr_str + __stady_term_64) = *(str + __stady_term_64);
+    __stady_term_64 ++;
   }
   __gmpz_clear(__stady_gmp_155);
   int old_strlen;
@@ -917,9 +895,9 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
   old_ptr_substr = (char *)malloc(__stady_term_67 * (unsigned long)sizeof(char));
   __stady_term_67 = __gmpz_get_ui(__stady_gmp_156);
   __stady_term_66 = 0;
-   while(__stady_term_66 < __stady_term_67) {
-     *(old_ptr_substr + __stady_term_66) = *(substr + __stady_term_66); 
-      __stady_term_66 ++;
+  while(__stady_term_66 < __stady_term_67) {
+    *(old_ptr_substr + __stady_term_66) = *(substr + __stady_term_66);
+    __stady_term_66 ++;
   }
   __gmpz_clear(__stady_gmp_156);
   int old_sublen;
@@ -935,9 +913,9 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
   old_ptr_dest = (char *)malloc(__stady_term_69 * (unsigned long)sizeof(char));
   __stady_term_69 = __gmpz_get_ui(__stady_gmp_157);
   __stady_term_68 = 0;
-   while(__stady_term_68 < __stady_term_69) {
-     *(old_ptr_dest + __stady_term_68) = *(dest + __stady_term_68); 
-      __stady_term_68 ++;
+  while(__stady_term_68 < __stady_term_69) {
+    *(old_ptr_dest + __stady_term_68) = *(dest + __stady_term_68);
+    __stady_term_68 ++;
   }
   __gmpz_clear(__stady_gmp_157);
   {
@@ -963,23 +941,21 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           __gmpz_init_set(__q_m,__stady_gmp_158);
           int __stady_term_70;
           __stady_term_70 = __gmpz_cmp(__q_m,__stady_gmp_159);
-          ;
-           while(__stady_term_70 < 0 && __stady_pred_26) {
-             mpz_t __stady_gmp_160;
-             __gmpz_init_set(__stady_gmp_160,__q_m);
-             int __stady_term_71;
-             __stady_term_71 = (int)__gmpz_get_si(__stady_gmp_160);
-             __gmpz_clear(__stady_gmp_160);
-             mpz_t __stady_gmp_161;
-             __gmpz_init_set(__stady_gmp_161,__q_m);
-             int __stady_term_72;
-             __stady_term_72 = (int)__gmpz_get_si(__stady_gmp_161);
-             __gmpz_clear(__stady_gmp_161);
-             __stady_pred_26 = (int)*(dest + __stady_term_71) == (int)*(
-                               old_ptr_str + __stady_term_72);
-             __gmpz_add_ui(__q_m,__q_m,1);
-             __stady_term_70 = __gmpz_cmp(__q_m,__stady_gmp_159); 
-              ;
+          while(__stady_term_70 < 0 && __stady_pred_26) {
+            mpz_t __stady_gmp_160;
+            __gmpz_init_set(__stady_gmp_160,__q_m);
+            int __stady_term_71;
+            __stady_term_71 = (int)__gmpz_get_si(__stady_gmp_160);
+            __gmpz_clear(__stady_gmp_160);
+            mpz_t __stady_gmp_161;
+            __gmpz_init_set(__stady_gmp_161,__q_m);
+            int __stady_term_72;
+            __stady_term_72 = (int)__gmpz_get_si(__stady_gmp_161);
+            __gmpz_clear(__stady_gmp_161);
+            __stady_pred_26 = (int)*(dest + __stady_term_71) == (int)*(
+                              old_ptr_str + __stady_term_72);
+            __gmpz_add_ui(__q_m,__q_m,1);
+            __stady_term_70 = __gmpz_cmp(__q_m,__stady_gmp_159);
           }
           __gmpz_clear(__q_m);
           __gmpz_clear(__stady_gmp_158);
@@ -1048,23 +1024,21 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
             __gmpz_init_set(__q_m,__stady_gmp_162);
             int __stady_term_73;
             __stady_term_73 = __gmpz_cmp(__q_m,__stady_gmp_163);
-            ;
-             while(__stady_term_73 < 0 && __stady_pred_27) {
-               mpz_t __stady_gmp_164;
-               __gmpz_init_set(__stady_gmp_164,__q_m);
-               int __stady_term_74;
-               __stady_term_74 = (int)__gmpz_get_si(__stady_gmp_164);
-               __gmpz_clear(__stady_gmp_164);
-               mpz_t __stady_gmp_165;
-               __gmpz_init_set(__stady_gmp_165,__q_m);
-               int __stady_term_75;
-               __stady_term_75 = (int)__gmpz_get_si(__stady_gmp_165);
-               __gmpz_clear(__stady_gmp_165);
-               __stady_pred_27 = (int)*(dest + __stady_term_74) == (int)*(
-                                 old_ptr_str + __stady_term_75);
-               __gmpz_add_ui(__q_m,__q_m,1);
-               __stady_term_73 = __gmpz_cmp(__q_m,__stady_gmp_163); 
-                ;
+            while(__stady_term_73 < 0 && __stady_pred_27) {
+              mpz_t __stady_gmp_164;
+              __gmpz_init_set(__stady_gmp_164,__q_m);
+              int __stady_term_74;
+              __stady_term_74 = (int)__gmpz_get_si(__stady_gmp_164);
+              __gmpz_clear(__stady_gmp_164);
+              mpz_t __stady_gmp_165;
+              __gmpz_init_set(__stady_gmp_165,__q_m);
+              int __stady_term_75;
+              __stady_term_75 = (int)__gmpz_get_si(__stady_gmp_165);
+              __gmpz_clear(__stady_gmp_165);
+              __stady_pred_27 = (int)*(dest + __stady_term_74) == (int)*(
+                                old_ptr_str + __stady_term_75);
+              __gmpz_add_ui(__q_m,__q_m,1);
+              __stady_term_73 = __gmpz_cmp(__q_m,__stady_gmp_163);
             }
             __gmpz_clear(__q_m);
             __gmpz_clear(__stady_gmp_162);
@@ -1157,52 +1131,48 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           __gmpz_init_set(__q_i,__stady_gmp_115);
           int __stady_term_47;
           __stady_term_47 = __gmpz_cmp(__q_i,__stady_gmp_118);
-          ;
-           while(__stady_term_47 < 0 && ! __stady_pred_19) {
-             int __stady_pred_20;
-             __stady_pred_20 = 1;
-             {
-               mpz_t __q_j;
-               mpz_t __stady_gmp_119;
-               __gmpz_init_set_str(__stady_gmp_119,"0",10);
-               mpz_t __stady_gmp_120;
-               __gmpz_init_set_si(__stady_gmp_120,sublen);
-               __gmpz_init_set(__q_j,__stady_gmp_119);
-               int __stady_term_48;
-               __stady_term_48 = __gmpz_cmp(__q_j,__stady_gmp_120);
-               ;
-                while(__stady_term_48 < 0 && __stady_pred_20) {
-                  mpz_t __stady_gmp_121;
-                  __gmpz_init_set(__stady_gmp_121,__q_i);
-                  mpz_t __stady_gmp_122;
-                  __gmpz_init_set(__stady_gmp_122,__q_j);
-                  mpz_t __stady_gmp_123;
-                  __gmpz_init(__stady_gmp_123);
-                  __gmpz_add(__stady_gmp_123,__stady_gmp_121,__stady_gmp_122);
-                  __gmpz_clear(__stady_gmp_121);
-                  __gmpz_clear(__stady_gmp_122);
-                  int __stady_term_49;
-                  __stady_term_49 = (int)__gmpz_get_si(__stady_gmp_123);
-                  __gmpz_clear(__stady_gmp_123);
-                  mpz_t __stady_gmp_124;
-                  __gmpz_init_set(__stady_gmp_124,__q_j);
-                  int __stady_term_50;
-                  __stady_term_50 = (int)__gmpz_get_si(__stady_gmp_124);
-                  __gmpz_clear(__stady_gmp_124);
-                  __stady_pred_20 = (int)*(str + __stady_term_49) == (int)*(
-                                    substr + __stady_term_50);
-                  __gmpz_add_ui(__q_j,__q_j,1);
-                  __stady_term_48 = __gmpz_cmp(__q_j,__stady_gmp_120); 
-                   ;
-               }
-               __gmpz_clear(__q_j);
-               __gmpz_clear(__stady_gmp_119);
-               __gmpz_clear(__stady_gmp_120);
-             }
-             __stady_pred_19 = __stady_pred_20;
-             __gmpz_add_ui(__q_i,__q_i,1);
-             __stady_term_47 = __gmpz_cmp(__q_i,__stady_gmp_118); 
-              ;
+          while(__stady_term_47 < 0 && ! __stady_pred_19) {
+            int __stady_pred_20;
+            __stady_pred_20 = 1;
+            {
+              mpz_t __q_j;
+              mpz_t __stady_gmp_119;
+              __gmpz_init_set_str(__stady_gmp_119,"0",10);
+              mpz_t __stady_gmp_120;
+              __gmpz_init_set_si(__stady_gmp_120,sublen);
+              __gmpz_init_set(__q_j,__stady_gmp_119);
+              int __stady_term_48;
+              __stady_term_48 = __gmpz_cmp(__q_j,__stady_gmp_120);
+              while(__stady_term_48 < 0 && __stady_pred_20) {
+                mpz_t __stady_gmp_121;
+                __gmpz_init_set(__stady_gmp_121,__q_i);
+                mpz_t __stady_gmp_122;
+                __gmpz_init_set(__stady_gmp_122,__q_j);
+                mpz_t __stady_gmp_123;
+                __gmpz_init(__stady_gmp_123);
+                __gmpz_add(__stady_gmp_123,__stady_gmp_121,__stady_gmp_122);
+                __gmpz_clear(__stady_gmp_121);
+                __gmpz_clear(__stady_gmp_122);
+                int __stady_term_49;
+                __stady_term_49 = (int)__gmpz_get_si(__stady_gmp_123);
+                __gmpz_clear(__stady_gmp_123);
+                mpz_t __stady_gmp_124;
+                __gmpz_init_set(__stady_gmp_124,__q_j);
+                int __stady_term_50;
+                __stady_term_50 = (int)__gmpz_get_si(__stady_gmp_124);
+                __gmpz_clear(__stady_gmp_124);
+                __stady_pred_20 = (int)*(str + __stady_term_49) == (int)*(
+                                  substr + __stady_term_50);
+                __gmpz_add_ui(__q_j,__q_j,1);
+                __stady_term_48 = __gmpz_cmp(__q_j,__stady_gmp_120);
+              }
+              __gmpz_clear(__q_j);
+              __gmpz_clear(__stady_gmp_119);
+              __gmpz_clear(__stady_gmp_120);
+            }
+            __stady_pred_19 = __stady_pred_20;
+            __gmpz_add_ui(__q_i,__q_i,1);
+            __stady_term_47 = __gmpz_cmp(__q_i,__stady_gmp_118);
           }
           __gmpz_clear(__q_i);
           __gmpz_clear(__stady_gmp_115);
@@ -1220,23 +1190,21 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
             __gmpz_init_set(__q_k,__stady_gmp_125);
             int __stady_term_51;
             __stady_term_51 = __gmpz_cmp(__q_k,__stady_gmp_126);
-            ;
-             while(__stady_term_51 < 0 && __stady_pred_21) {
-               mpz_t __stady_gmp_127;
-               __gmpz_init_set(__stady_gmp_127,__q_k);
-               int __stady_term_52;
-               __stady_term_52 = (int)__gmpz_get_si(__stady_gmp_127);
-               __gmpz_clear(__stady_gmp_127);
-               mpz_t __stady_gmp_128;
-               __gmpz_init_set(__stady_gmp_128,__q_k);
-               int __stady_term_53;
-               __stady_term_53 = (int)__gmpz_get_si(__stady_gmp_128);
-               __gmpz_clear(__stady_gmp_128);
-               __stady_pred_21 = (int)*(old_ptr_str + __stady_term_52) == (int)*(
-                                 old_dest + __stady_term_53);
-               __gmpz_add_ui(__q_k,__q_k,1);
-               __stady_term_51 = __gmpz_cmp(__q_k,__stady_gmp_126); 
-                ;
+            while(__stady_term_51 < 0 && __stady_pred_21) {
+              mpz_t __stady_gmp_127;
+              __gmpz_init_set(__stady_gmp_127,__q_k);
+              int __stady_term_52;
+              __stady_term_52 = (int)__gmpz_get_si(__stady_gmp_127);
+              __gmpz_clear(__stady_gmp_127);
+              mpz_t __stady_gmp_128;
+              __gmpz_init_set(__stady_gmp_128,__q_k);
+              int __stady_term_53;
+              __stady_term_53 = (int)__gmpz_get_si(__stady_gmp_128);
+              __gmpz_clear(__stady_gmp_128);
+              __stady_pred_21 = (int)*(old_ptr_str + __stady_term_52) == (int)*(
+                                old_dest + __stady_term_53);
+              __gmpz_add_ui(__q_k,__q_k,1);
+              __stady_term_51 = __gmpz_cmp(__q_k,__stady_gmp_126);
             }
             __gmpz_clear(__q_k);
             __gmpz_clear(__stady_gmp_125);
@@ -1275,52 +1243,48 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           __gmpz_init_set(__q_i,__stady_gmp_131);
           int __stady_term_55;
           __stady_term_55 = __gmpz_cmp(__q_i,__stady_gmp_134);
-          ;
-           while(__stady_term_55 < 0 && ! __stady_pred_22) {
-             int __stady_pred_23;
-             __stady_pred_23 = 1;
-             {
-               mpz_t __q_j;
-               mpz_t __stady_gmp_135;
-               __gmpz_init_set_str(__stady_gmp_135,"0",10);
-               mpz_t __stady_gmp_136;
-               __gmpz_init_set_si(__stady_gmp_136,sublen);
-               __gmpz_init_set(__q_j,__stady_gmp_135);
-               int __stady_term_56;
-               __stady_term_56 = __gmpz_cmp(__q_j,__stady_gmp_136);
-               ;
-                while(__stady_term_56 < 0 && __stady_pred_23) {
-                  mpz_t __stady_gmp_137;
-                  __gmpz_init_set(__stady_gmp_137,__q_i);
-                  mpz_t __stady_gmp_138;
-                  __gmpz_init_set(__stady_gmp_138,__q_j);
-                  mpz_t __stady_gmp_139;
-                  __gmpz_init(__stady_gmp_139);
-                  __gmpz_add(__stady_gmp_139,__stady_gmp_137,__stady_gmp_138);
-                  __gmpz_clear(__stady_gmp_137);
-                  __gmpz_clear(__stady_gmp_138);
-                  int __stady_term_57;
-                  __stady_term_57 = (int)__gmpz_get_si(__stady_gmp_139);
-                  __gmpz_clear(__stady_gmp_139);
-                  mpz_t __stady_gmp_140;
-                  __gmpz_init_set(__stady_gmp_140,__q_j);
-                  int __stady_term_58;
-                  __stady_term_58 = (int)__gmpz_get_si(__stady_gmp_140);
-                  __gmpz_clear(__stady_gmp_140);
-                  __stady_pred_23 = (int)*(str + __stady_term_57) == (int)*(
-                                    substr + __stady_term_58);
-                  __gmpz_add_ui(__q_j,__q_j,1);
-                  __stady_term_56 = __gmpz_cmp(__q_j,__stady_gmp_136); 
-                   ;
-               }
-               __gmpz_clear(__q_j);
-               __gmpz_clear(__stady_gmp_135);
-               __gmpz_clear(__stady_gmp_136);
-             }
-             __stady_pred_22 = __stady_pred_23;
-             __gmpz_add_ui(__q_i,__q_i,1);
-             __stady_term_55 = __gmpz_cmp(__q_i,__stady_gmp_134); 
-              ;
+          while(__stady_term_55 < 0 && ! __stady_pred_22) {
+            int __stady_pred_23;
+            __stady_pred_23 = 1;
+            {
+              mpz_t __q_j;
+              mpz_t __stady_gmp_135;
+              __gmpz_init_set_str(__stady_gmp_135,"0",10);
+              mpz_t __stady_gmp_136;
+              __gmpz_init_set_si(__stady_gmp_136,sublen);
+              __gmpz_init_set(__q_j,__stady_gmp_135);
+              int __stady_term_56;
+              __stady_term_56 = __gmpz_cmp(__q_j,__stady_gmp_136);
+              while(__stady_term_56 < 0 && __stady_pred_23) {
+                mpz_t __stady_gmp_137;
+                __gmpz_init_set(__stady_gmp_137,__q_i);
+                mpz_t __stady_gmp_138;
+                __gmpz_init_set(__stady_gmp_138,__q_j);
+                mpz_t __stady_gmp_139;
+                __gmpz_init(__stady_gmp_139);
+                __gmpz_add(__stady_gmp_139,__stady_gmp_137,__stady_gmp_138);
+                __gmpz_clear(__stady_gmp_137);
+                __gmpz_clear(__stady_gmp_138);
+                int __stady_term_57;
+                __stady_term_57 = (int)__gmpz_get_si(__stady_gmp_139);
+                __gmpz_clear(__stady_gmp_139);
+                mpz_t __stady_gmp_140;
+                __gmpz_init_set(__stady_gmp_140,__q_j);
+                int __stady_term_58;
+                __stady_term_58 = (int)__gmpz_get_si(__stady_gmp_140);
+                __gmpz_clear(__stady_gmp_140);
+                __stady_pred_23 = (int)*(str + __stady_term_57) == (int)*(
+                                  substr + __stady_term_58);
+                __gmpz_add_ui(__q_j,__q_j,1);
+                __stady_term_56 = __gmpz_cmp(__q_j,__stady_gmp_136);
+              }
+              __gmpz_clear(__q_j);
+              __gmpz_clear(__stady_gmp_135);
+              __gmpz_clear(__stady_gmp_136);
+            }
+            __stady_pred_22 = __stady_pred_23;
+            __gmpz_add_ui(__q_i,__q_i,1);
+            __stady_term_55 = __gmpz_cmp(__q_i,__stady_gmp_134);
           }
           __gmpz_clear(__q_i);
           __gmpz_clear(__stady_gmp_131);
@@ -1345,60 +1309,55 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
             __gmpz_init_set(__q_i,__stady_gmp_141);
             int __stady_term_59;
             __stady_term_59 = __gmpz_cmp(__q_i,__stady_gmp_144);
-            ;
-             while(__stady_term_59 < 0 && ! __stady_pred_24) {
-               int __stady_pred_25;
-               __stady_pred_25 = 1;
-               {
-                 mpz_t __q_l;
-                 mpz_t __stady_gmp_145;
-                 __gmpz_init_set(__stady_gmp_145,__q_i);
-                 mpz_t __stady_gmp_146;
-                 __gmpz_init_set_si(__stady_gmp_146,old_strlen);
-                 mpz_t __stady_gmp_147;
-                 __gmpz_init_set_si(__stady_gmp_147,old_sublen);
-                 mpz_t __stady_gmp_148;
-                 __gmpz_init(__stady_gmp_148);
-                 __gmpz_sub(__stady_gmp_148,__stady_gmp_146,__stady_gmp_147);
-                 __gmpz_clear(__stady_gmp_146);
-                 __gmpz_clear(__stady_gmp_147);
-                 __gmpz_init_set(__q_l,__stady_gmp_145);
-                 int __stady_term_60;
-                 __stady_term_60 = __gmpz_cmp(__q_l,__stady_gmp_148);
-                 ;
-                  while(__stady_term_60 < 0 && __stady_pred_25) {
-                    mpz_t __stady_gmp_149;
-                    __gmpz_init_set(__stady_gmp_149,__q_l);
-                    mpz_t __stady_gmp_150;
-                    __gmpz_init_set_si(__stady_gmp_150,old_sublen);
-                    mpz_t __stady_gmp_151;
-                    __gmpz_init(__stady_gmp_151);
-                    __gmpz_add(__stady_gmp_151,__stady_gmp_149,
-                               __stady_gmp_150);
-                    __gmpz_clear(__stady_gmp_149);
-                    __gmpz_clear(__stady_gmp_150);
-                    int __stady_term_61;
-                    __stady_term_61 = (int)__gmpz_get_si(__stady_gmp_151);
-                    __gmpz_clear(__stady_gmp_151);
-                    mpz_t __stady_gmp_152;
-                    __gmpz_init_set(__stady_gmp_152,__q_l);
-                    int __stady_term_62;
-                    __stady_term_62 = (int)__gmpz_get_si(__stady_gmp_152);
-                    __gmpz_clear(__stady_gmp_152);
-                    __stady_pred_25 = (int)*(old_ptr_str + __stady_term_61) == (int)*(
-                                      old_dest + __stady_term_62);
-                    __gmpz_add_ui(__q_l,__q_l,1);
-                    __stady_term_60 = __gmpz_cmp(__q_l,__stady_gmp_148); 
-                     ;
-                 }
-                 __gmpz_clear(__q_l);
-                 __gmpz_clear(__stady_gmp_145);
-                 __gmpz_clear(__stady_gmp_148);
-               }
-               __stady_pred_24 = __stady_pred_25;
-               __gmpz_add_ui(__q_i,__q_i,1);
-               __stady_term_59 = __gmpz_cmp(__q_i,__stady_gmp_144); 
-                ;
+            while(__stady_term_59 < 0 && ! __stady_pred_24) {
+              int __stady_pred_25;
+              __stady_pred_25 = 1;
+              {
+                mpz_t __q_l;
+                mpz_t __stady_gmp_145;
+                __gmpz_init_set(__stady_gmp_145,__q_i);
+                mpz_t __stady_gmp_146;
+                __gmpz_init_set_si(__stady_gmp_146,old_strlen);
+                mpz_t __stady_gmp_147;
+                __gmpz_init_set_si(__stady_gmp_147,old_sublen);
+                mpz_t __stady_gmp_148;
+                __gmpz_init(__stady_gmp_148);
+                __gmpz_sub(__stady_gmp_148,__stady_gmp_146,__stady_gmp_147);
+                __gmpz_clear(__stady_gmp_146);
+                __gmpz_clear(__stady_gmp_147);
+                __gmpz_init_set(__q_l,__stady_gmp_145);
+                int __stady_term_60;
+                __stady_term_60 = __gmpz_cmp(__q_l,__stady_gmp_148);
+                while(__stady_term_60 < 0 && __stady_pred_25) {
+                  mpz_t __stady_gmp_149;
+                  __gmpz_init_set(__stady_gmp_149,__q_l);
+                  mpz_t __stady_gmp_150;
+                  __gmpz_init_set_si(__stady_gmp_150,old_sublen);
+                  mpz_t __stady_gmp_151;
+                  __gmpz_init(__stady_gmp_151);
+                  __gmpz_add(__stady_gmp_151,__stady_gmp_149,__stady_gmp_150);
+                  __gmpz_clear(__stady_gmp_149);
+                  __gmpz_clear(__stady_gmp_150);
+                  int __stady_term_61;
+                  __stady_term_61 = (int)__gmpz_get_si(__stady_gmp_151);
+                  __gmpz_clear(__stady_gmp_151);
+                  mpz_t __stady_gmp_152;
+                  __gmpz_init_set(__stady_gmp_152,__q_l);
+                  int __stady_term_62;
+                  __stady_term_62 = (int)__gmpz_get_si(__stady_gmp_152);
+                  __gmpz_clear(__stady_gmp_152);
+                  __stady_pred_25 = (int)*(old_ptr_str + __stady_term_61) == (int)*(
+                                    old_dest + __stady_term_62);
+                  __gmpz_add_ui(__q_l,__q_l,1);
+                  __stady_term_60 = __gmpz_cmp(__q_l,__stady_gmp_148);
+                }
+                __gmpz_clear(__q_l);
+                __gmpz_clear(__stady_gmp_145);
+                __gmpz_clear(__stady_gmp_148);
+              }
+              __stady_pred_24 = __stady_pred_25;
+              __gmpz_add_ui(__q_i,__q_i,1);
+              __stady_term_59 = __gmpz_cmp(__q_i,__stady_gmp_144);
             }
             __gmpz_clear(__q_i);
             __gmpz_clear(__stady_gmp_141);

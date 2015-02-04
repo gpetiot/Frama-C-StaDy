@@ -531,9 +531,9 @@ int alt_sep_test(void)
   old_ptr_Positive_RA_Alt_Thresh = (int *)malloc(__stady_term_23 * (unsigned long)sizeof(int));
   __stady_term_23 = __gmpz_get_ui(__stady_gmp_34);
   __stady_term_22 = 0;
-   while(__stady_term_22 < __stady_term_23) {
-     *(old_ptr_Positive_RA_Alt_Thresh + __stady_term_22) = *(Positive_RA_Alt_Thresh + __stady_term_22); 
-      __stady_term_22 ++;
+  while(__stady_term_22 < __stady_term_23) {
+    *(old_ptr_Positive_RA_Alt_Thresh + __stady_term_22) = *(Positive_RA_Alt_Thresh + __stady_term_22);
+    __stady_term_22 ++;
   }
   __gmpz_clear(__stady_gmp_34);
   int old_Alt_Layer_Value;

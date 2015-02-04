@@ -18,7 +18,7 @@ type insertion =
 | Decl of varinfo
 | Block of insertion list
 | IIf of exp * insertion list * insertion list
-| IFor of instr * exp * instr * insertion list
+| ILoop of exp * insertion list
 
 (* alternate type 'fundec' using insertions instead of stmts *)
 type func = {
@@ -113,7 +113,7 @@ end
 let decl_varinfo v = Decl v
 let ins_ret a = IRet a
 let ins_if  a b c = IIf(a,b,c)
-let ins_for a b c d = IFor(a,b,c,d)
+let ins_loop a b = ILoop(a,b)
 
 class gather_insertions props spec_insuf = object(self)
   inherit Visitor.frama_c_inplace
@@ -417,7 +417,7 @@ class gather_insertions props spec_insuf = object(self)
     let ii_2 = Instru(F.cmp (Cil.var tmp) e_iter up) in
     let ii_3 = Instru(F.cmp (Cil.var tmp) e_iter up) in
     let ins_b = ins_b_0 @ ins_b_1 :: ins_b_2 :: ii_3 :: clear_lambda in
-    let i_7 = ins_for instru_skip (cmp Rle e_tmp zero) instru_skip ins_b in
+    let i_7 = ins_loop (cmp Rle e_tmp zero) ins_b in
     let i_8 = Instru(F.clear e_iter) in
     let i_9 = Instru(F.clear low) in
     let i_10 = Instru(F.clear up) in
@@ -792,7 +792,7 @@ class gather_insertions props spec_insuf = object(self)
     let ins_b_0, goal_var = self#translate_pnamed goal in
     let ins_b_1 = Instru(instru_affect lvar goal_var) in
     let i_inside = ins_b_0 @ ins_b_1 :: i_inside in
-    let i_loop = ins_for instru_skip e_cond instru_skip i_inside in
+    let i_loop = ins_loop e_cond i_inside in
     [i_0; i_1; Block (i_before @ i_loop :: i_after)], e_var
 
   method private translate_predicate = function
@@ -985,9 +985,9 @@ class gather_insertions props spec_insuf = object(self)
 	    let cond = cmp Rlt e_iterator e_tmp in
 	    let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
 	    let step = instru_affect lmy_iterator e3 in
-	    let insert_3 = ins_for init cond step inserts_block in
+	    let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
 	    let insert_4 = Instru(F.clear h') in
-	    inserts_0 @ [insert_1; i_1;i_2; insert_2; i_3; insert_3; insert_4]
+	    inserts_0 @ [insert_1; i_1;i_2; insert_2; i_3; Instru init; insert_3; insert_4]
 	  | Lreal -> assert false (* TODO: reals *)
 	  | _ ->
 	    let e1 = Cil.new_exp ~loc (SizeOf ty) in
@@ -1000,8 +1000,8 @@ class gather_insertions props spec_insuf = object(self)
 	    let cond = cmp Rlt e_iterator h' in
 	    let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
 	    let step = instru_affect lmy_iterator e3 in
-	    let insert_3 = ins_for init cond step inserts_block in
-	    inserts_0 @ [insert_1; insert_2; insert_3]
+	    let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
+	    inserts_0 @ [insert_1; insert_2; Instru init; insert_3]
 	  end
 	| [] ->
 	  let e = Cil.new_exp ~loc (Lval my_ptr) in
@@ -1039,8 +1039,8 @@ class gather_insertions props spec_insuf = object(self)
 	      let cond = cmp Rlt e_iterator e_tmp in
 	      let e1 = Cil.mkBinOp ~loc PlusA e_iterator one in
 	      let step = instru_affect lmy_iterator e1 in
-	      let insert_2 = ins_for init cond step inserts_block in
-	      [i_1; i_2; insert_2; Instru(F.clear h')]
+	      let insert_2 = ins_loop cond (inserts_block @ [Instru step]) in
+	      [i_1; i_2; Instru init; insert_2; Instru(F.clear h')]
 	    | Lreal -> assert false (* TODO: reals *)
 	    | _ ->
 	      let aux = addoffset my_old_ptr (Cil.evar my_iterator) in
@@ -1049,7 +1049,7 @@ class gather_insertions props spec_insuf = object(self)
 	      let cond = cmp Rlt e_iterator h' in
 	      let e1 = Cil.mkBinOp ~loc PlusA e_iterator one in
 	      let step = instru_affect lmy_iterator e1 in
-	      [ins_for init cond step inserts_block]
+	      [Instru init; ins_loop cond (inserts_block @ [Instru step])]
 	  in
 	  let e = Cil.new_exp ~loc (Lval my_old_ptr) in
 	  insert_0 :: inserts_1 @ inserts' @ [Instru(F.free e)]
@@ -1315,8 +1315,7 @@ class gather_insertions props spec_insuf = object(self)
 	let i_f_1 = Instru(instru_affect x y) in
 	let i_f_2 = Instru(F.binop_ui PlusA e_it e_it one) in
 	let i_f_3 = Instru(F.cmp (Cil.var tmp) e_it e_t2) in
-	let i_7 =
-	  ins_for instru_skip cond instru_skip [i_f_0; i_f_1; i_f_2; i_f_3] in
+	let i_7 = ins_loop cond [i_f_0; i_f_1; i_f_2; i_f_3] in
 	let i_8 = Instru(F.clear e_it) in
 	let i_9 = Instru(F.clear e_t1) in
 	let i_10 = Instru(F.clear e_t2) in

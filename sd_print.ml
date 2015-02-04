@@ -26,19 +26,18 @@ let rec pp_insertion ?(line_break = true) fmt ins =
   | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a@]" pp_instr i
   | Sd_insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" pp_exp e
   | Sd_insertions.Decl v ->
-    let ty = Cil.stripConstLocalType v.vtype in
-    let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
-    let ty = array_to_ptr ty in
-    let v' = {v with vtype = ty} in
-    Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v'
+     let ty = Cil.stripConstLocalType v.vtype in
+     let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
+     let ty = array_to_ptr ty in
+     let v' = {v with vtype = ty} in
+     Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v'
   | Sd_insertions.Block b ->
-    if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
+     if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
   | Sd_insertions.IIf (e,b1,b2) ->
-    Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_exp e aux b1;
-    if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
-  | Sd_insertions.IFor (i1,e,i2,b) ->
-    Format.fprintf fmt "@[%a@]@\n @[<hov 2>while(%a) {@\n%a @\n @[%a@]@]@\n}"
-      pp_instr i1 pp_exp e aux b pp_instr i2
+     Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_exp e aux b1;
+     if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
+  | Sd_insertions.ILoop (e,b) ->
+     Format.fprintf fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" pp_exp e aux b
   end;
   if line_break then Format.fprintf fmt "@\n"
 
@@ -232,8 +231,7 @@ class print_insertions insertions functions spec_insuf () = object(self)
   | Sd_insertions.Block i -> List.iter self#insertion i
   | Sd_insertions.IIf(_,i1,i2) ->
     List.iter self#insertion i1; List.iter self#insertion i2
-  | Sd_insertions.IFor(i1,_,i2,i3) ->
-    self#instru i1; self#instru i2; List.iter self#insertion i3
+  | Sd_insertions.ILoop(_,i) -> List.iter self#insertion i
 
   method private headers fmt =
     Hashtbl.iter (fun _ q -> Queue.iter self#insertion q) insertions;

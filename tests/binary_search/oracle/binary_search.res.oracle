@@ -83,29 +83,27 @@ int binary_search_precond(int *arr, int length, int query)
     __gmpz_init_set(__q_j,__stady_gmp_0);
     int __stady_term_0;
     __stady_term_0 = __gmpz_cmp(__q_j,__stady_gmp_3);
-    ;
-     while(__stady_term_0 < 0 && __stady_pred_0) {
-       mpz_t __stady_gmp_4;
-       __gmpz_init_set(__stady_gmp_4,__q_j);
-       int __stady_term_1;
-       __stady_term_1 = (int)__gmpz_get_si(__stady_gmp_4);
-       __gmpz_clear(__stady_gmp_4);
-       mpz_t __stady_gmp_5;
-       __gmpz_init_set(__stady_gmp_5,__q_j);
-       mpz_t __stady_gmp_6;
-       __gmpz_init_set_str(__stady_gmp_6,"1",10);
-       mpz_t __stady_gmp_7;
-       __gmpz_init(__stady_gmp_7);
-       __gmpz_add(__stady_gmp_7,__stady_gmp_5,__stady_gmp_6);
-       __gmpz_clear(__stady_gmp_5);
-       __gmpz_clear(__stady_gmp_6);
-       int __stady_term_2;
-       __stady_term_2 = (int)__gmpz_get_si(__stady_gmp_7);
-       __gmpz_clear(__stady_gmp_7);
-       __stady_pred_0 = *(arr + __stady_term_1) <= *(arr + __stady_term_2);
-       __gmpz_add_ui(__q_j,__q_j,1);
-       __stady_term_0 = __gmpz_cmp(__q_j,__stady_gmp_3); 
-        ;
+    while(__stady_term_0 < 0 && __stady_pred_0) {
+      mpz_t __stady_gmp_4;
+      __gmpz_init_set(__stady_gmp_4,__q_j);
+      int __stady_term_1;
+      __stady_term_1 = (int)__gmpz_get_si(__stady_gmp_4);
+      __gmpz_clear(__stady_gmp_4);
+      mpz_t __stady_gmp_5;
+      __gmpz_init_set(__stady_gmp_5,__q_j);
+      mpz_t __stady_gmp_6;
+      __gmpz_init_set_str(__stady_gmp_6,"1",10);
+      mpz_t __stady_gmp_7;
+      __gmpz_init(__stady_gmp_7);
+      __gmpz_add(__stady_gmp_7,__stady_gmp_5,__stady_gmp_6);
+      __gmpz_clear(__stady_gmp_5);
+      __gmpz_clear(__stady_gmp_6);
+      int __stady_term_2;
+      __stady_term_2 = (int)__gmpz_get_si(__stady_gmp_7);
+      __gmpz_clear(__stady_gmp_7);
+      __stady_pred_0 = *(arr + __stady_term_1) <= *(arr + __stady_term_2);
+      __gmpz_add_ui(__q_j,__q_j,1);
+      __stady_term_0 = __gmpz_cmp(__q_j,__stady_gmp_3);
     }
     __gmpz_clear(__q_j);
     __gmpz_clear(__stady_gmp_0);
@@ -130,9 +128,9 @@ int binary_search(int *arr, int length, int query)
   old_ptr_arr = (int *)malloc(__stady_term_10 * (unsigned long)sizeof(int));
   __stady_term_10 = __gmpz_get_ui(__stady_gmp_20);
   __stady_term_9 = 0;
-   while(__stady_term_9 < __stady_term_10) {
-     *(old_ptr_arr + __stady_term_9) = *(arr + __stady_term_9); 
-      __stady_term_9 ++;
+  while(__stady_term_9 < __stady_term_10) {
+    *(old_ptr_arr + __stady_term_9) = *(arr + __stady_term_9);
+    __stady_term_9 ++;
   }
   __gmpz_clear(__stady_gmp_20);
   int old_length;
@@ -273,17 +271,15 @@ int binary_search(int *arr, int length, int query)
                   __gmpz_init_set(__q_x,__stady_gmp_21);
                   int __stady_term_11;
                   __stady_term_11 = __gmpz_cmp_si(__q_x,low);
-                  ;
-                   while(__stady_term_11 < 0 && __stady_pred_7) {
-                     mpz_t __stady_gmp_22;
-                     __gmpz_init_set_si(__stady_gmp_22,__q_x);
-                     int __stady_term_12;
-                     __stady_term_12 = (int)__gmpz_get_si(__stady_gmp_22);
-                     __gmpz_clear(__stady_gmp_22);
-                     __stady_pred_7 = *(arr + __stady_term_12) != query;
-                     __gmpz_add_ui(__q_x,__q_x,1);
-                     __stady_term_11 = __gmpz_cmp_si(__q_x,low); 
-                      ;
+                  while(__stady_term_11 < 0 && __stady_pred_7) {
+                    mpz_t __stady_gmp_22;
+                    __gmpz_init_set_si(__stady_gmp_22,__q_x);
+                    int __stady_term_12;
+                    __stady_term_12 = (int)__gmpz_get_si(__stady_gmp_22);
+                    __gmpz_clear(__stady_gmp_22);
+                    __stady_pred_7 = *(arr + __stady_term_12) != query;
+                    __gmpz_add_ui(__q_x,__q_x,1);
+                    __stady_term_11 = __gmpz_cmp_si(__q_x,low);
                   }
                   __gmpz_clear(__q_x);
                   __gmpz_clear(__stady_gmp_21);
@@ -319,16 +315,14 @@ int binary_search(int *arr, int length, int query)
                 {
                   int __q_x;
                   __q_x = high + 1;
-                  ;
-                   while(__q_x < length && __stady_pred_9) {
-                     mpz_t __stady_gmp_27;
-                     __gmpz_init_set_si(__stady_gmp_27,__q_x);
-                     int __stady_term_14;
-                     __stady_term_14 = (int)__gmpz_get_si(__stady_gmp_27);
-                     __gmpz_clear(__stady_gmp_27);
-                     __stady_pred_9 = *(arr + __stady_term_14) != query;
-                     __q_x ++; 
-                      ;
+                  while(__q_x < length && __stady_pred_9) {
+                    mpz_t __stady_gmp_27;
+                    __gmpz_init_set_si(__stady_gmp_27,__q_x);
+                    int __stady_term_14;
+                    __stady_term_14 = (int)__gmpz_get_si(__stady_gmp_27);
+                    __gmpz_clear(__stady_gmp_27);
+                    __stady_pred_9 = *(arr + __stady_term_14) != query;
+                    __q_x ++;
                   }
                 }
                 __stady_pred_8 = __stady_pred_9;
@@ -494,17 +488,15 @@ int binary_search(int *arr, int length, int query)
             __gmpz_init_set(__q_i,__stady_gmp_14);
             int __stady_term_5;
             __stady_term_5 = __gmpz_cmp(__q_i,__stady_gmp_15);
-            ;
-             while(__stady_term_5 < 0 && __stady_pred_3) {
-               mpz_t __stady_gmp_16;
-               __gmpz_init_set(__stady_gmp_16,__q_i);
-               int __stady_term_6;
-               __stady_term_6 = (int)__gmpz_get_si(__stady_gmp_16);
-               __gmpz_clear(__stady_gmp_16);
-               __stady_pred_3 = *(old_arr + __stady_term_6) != old_query;
-               __gmpz_add_ui(__q_i,__q_i,1);
-               __stady_term_5 = __gmpz_cmp(__q_i,__stady_gmp_15); 
-                ;
+            while(__stady_term_5 < 0 && __stady_pred_3) {
+              mpz_t __stady_gmp_16;
+              __gmpz_init_set(__stady_gmp_16,__q_i);
+              int __stady_term_6;
+              __stady_term_6 = (int)__gmpz_get_si(__stady_gmp_16);
+              __gmpz_clear(__stady_gmp_16);
+              __stady_pred_3 = *(old_arr + __stady_term_6) != old_query;
+              __gmpz_add_ui(__q_i,__q_i,1);
+              __stady_term_5 = __gmpz_cmp(__q_i,__stady_gmp_15);
             }
             __gmpz_clear(__q_i);
             __gmpz_clear(__stady_gmp_14);
