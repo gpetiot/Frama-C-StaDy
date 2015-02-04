@@ -58,7 +58,6 @@ let my_pred_varinfo s = my_varinfo Cil.intType s
 let zero = Cil.zero ~loc
 let one = Cil.one ~loc
 let cmp rel e1 e2 = Cil.mkBinOp ~loc (relation_to_binop rel) e1 e2
-let get = Sd_states.Externals.find
 
 (* instructions *)
 let instru_affect a b = Set(a,b,loc)
@@ -73,6 +72,7 @@ let binop_to_fname = function
   | _ -> assert false
 
 module F = struct
+  let get = Sd_states.Externals.find
   let call fct ret args = let vi = get fct in Call(ret, Cil.evar vi, args, loc)
   let malloc x y = call "malloc" (Some x) [y]
   let free x = call "free" None [x]
