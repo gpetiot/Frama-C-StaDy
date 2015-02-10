@@ -115,8 +115,9 @@ class print_insertions insertions functions spec_insuf () = object(self)
 	  self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
 	  Format.fprintf fmt "}@\n @]"
 	end
-      | Instr(Call(_,{enode=Lval(Var _,NoOffset)},_,_))
-	  when spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid ->()
+      | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
+	  when (spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid)
+	       || List.mem vi.vname (Sd_options.Simulate_Functions.get()) -> ()
       | Return _ ->
 	let f = Kernel_function.get_name kf in
 	self#insertions_at fmt (Sd_insertions.EndFunc f);

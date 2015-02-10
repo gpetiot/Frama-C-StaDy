@@ -1303,12 +1303,12 @@ class gather_insertions props spec_insuf = object(self)
 	let cond = cmp Rle e_tmp zero in
 	let i_f_0 = Instru(F.get_si (Cil.var i_it) e_it) in
 	let e = Cil.new_exp ~loc (BinOp(op, (Cil.evar vi), e_i_it, ty)) in
-	let x = Mem e, NoOffset in
+	let x = Cil.new_exp ~loc (Lval(Mem e, NoOffset)) in
 	let ll, e_op1 = self#translate_term op1 in
 	assert (ll = []);
 	let e = Cil.new_exp ~loc (BinOp(op, e_op1, e_i_it, ty)) in
-	let y = Cil.new_exp ~loc (Lval(Mem e, NoOffset)) in
-	let i_f_1 = Instru(instru_affect x y) in
+	let y = Mem e, NoOffset in
+	let i_f_1 = Instru(instru_affect y x) in
 	let i_f_2 = Instru(F.binop_ui PlusA e_it e_it one) in
 	let i_f_3 = Instru(F.cmp (Cil.var tmp) e_it e_t2) in
 	let i_7 = ins_loop cond [i_f_0; i_f_1; i_f_2; i_f_3] in
@@ -1340,6 +1340,7 @@ class gather_insertions props spec_insuf = object(self)
 	self#insert (BegStmt stmt.sid) (Instru(self#pc_to_fc str))
       end;
     let kf = Kernel_function.find_englobing_kf stmt in
+    let sim_funcs = Sd_options.Simulate_Functions.get() in
     match stmt.skind with
     | If(_exp,b1,b2,_loc) ->
       let add_block_reachability b = match b.bstmts with
@@ -1395,60 +1396,63 @@ class gather_insertions props spec_insuf = object(self)
 	Cil.SkipChildren
       else Cil.DoChildren
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
-	when spec_insuf <> None ->
-      if (Extlib.the spec_insuf).sid = stmt.sid then
-	let kf = Globals.Functions.get fct_varinfo in
-	let formals = Kernel_function.get_formals kf in
-	let locals = [] in
-	let ty = match fct_varinfo.vtype with
-	  | TFun(_, a, _, _) -> TFun(TVoid [], a, false, [])
-	  | _ -> assert false
-	in
-	let vi = self#fresh_fct_varinfo ty in
-	let on_bhv _ bhv (ins_glob, ins) =
-	  let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
-	  (* if the function called returns a value (into a variable r),
-	   * we declare a fresh global variable (new input)
-	   * we affect the value of this new input to the variable r *)
-	  let decl_ret, ins_ret = match ret with
-	    | Some r ->
-	      let vi = self#fresh_ctype_varinfo (Cil.typeOfLval r) in
-	      new_globals <- vi :: new_globals;
-	      let aff = Instru(instru_affect r (Cil.evar vi)) in
-	      [decl_varinfo vi], [aff]
-	    | None -> [], []
-	  in
-	  (* we create variables old_* to save the values of globals and
-	   * formal parameters before function call *)
-	  let save v (a,b,c) =let d,e,f=self#save_varinfo kf v in d@a,e@b,f@c in
-	  let save_global v _ l = save v l in
-	  let save_formal l v = save v l in
-	  let i1,i2,i3 = Globals.Vars.fold save_global ([],[],[]) in
-	  let i1,i2,i3 = List.fold_left save_formal (i1,i2,i3) formals in
-	  let begin_save = i1 @ i2 and end_save = i3 in
-	  let globals, affects = self#assigns_swd [bhv.b_assigns] in
-	  let globals, affects = globals @ decl_ret, affects @ ins_ret in
-	  let ensures = bhv.b_post_cond in
-	  let on_post ins (_,{ip_content=p}) =
-	    let p = match ret with
-	      (* we substitute \result with the lvalue r in p *)
-	      | Some r -> (new Sd_subst.subst ~subst_result:r ())#pred p[][][][]
-	      | None -> p
-	    in
-	    ins @ (self#pc_assume p)
-	  in
-	  let posts = List.fold_left on_post [] ensures in
-	  let ins_bhv =
-	    ins_if e_assumes (begin_save @ affects @ posts @ end_save) [] in
-	  ins_glob @ globals, ins @ ins_assumes @ [ins_bhv]
-	in
-	let ins_glob,ins_h = Annotations.fold_behaviors on_bhv kf ([],[]) in
-	List.iter (self#insert Glob) ins_glob;
-	let new_f = mk_func vi formals locals ins_h in
-	functions <- new_f :: functions;
-	self#insert (EndStmt stmt.sid)(Instru(Call(None,Cil.evar vi,args,loc)));
-	Cil.SkipChildren
-      else Cil.DoChildren
+	when (spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid)
+	     || (List.mem fct_varinfo.vname sim_funcs) ->
+       let kf = Globals.Functions.get fct_varinfo in
+       let formals = Kernel_function.get_formals kf in
+       let locals = [] in
+       let new_f_vi = self#fresh_fct_varinfo fct_varinfo.vtype in
+       let on_bhv _ bhv (ins_glob, ins) =
+	 let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
+	 (* we create variables old_* to save the values of globals and
+	  * formal parameters before function call *)
+	 let save v (a,b,c) =let d,e,f=self#save_varinfo kf v in d@a,e@b,f@c in
+	 let save_global v _ l = save v l in
+	 let save_formal l v = save v l in
+	 let i1,i2,i3 = Globals.Vars.fold save_global ([],[],[]) in
+	 let i1,i2,i3 = List.fold_left save_formal (i1,i2,i3) formals in
+	 let begin_save = i1 @ i2 and end_save = i3 in
+	 let globals, affects = self#assigns_swd [bhv.b_assigns] in
+	 let globals, affects = globals, affects in
+	 let ensures = bhv.b_post_cond in
+	 let on_post ins (_,{ip_content=p}) =
+	   let p = match ret with
+	     | Some r ->
+		let ty = Cil.typeOfLval r in
+		let subst_result = Cil.var (my_varinfo ty "__retres") in
+		(new Sd_subst.subst ~subst_result ())#pred p[][][][]
+	     | None -> p
+	   in
+	   ins @ (self#pc_assume p)
+	 in
+	 let posts = List.fold_left on_post [] ensures in
+	 let ins_bhv =
+	   ins_if e_assumes (begin_save @ affects @ posts @ end_save) [] in
+	 ins_glob @ globals, ins @ ins_assumes @ [ins_bhv]
+       in
+       let ins_glob,ins_body = Annotations.fold_behaviors on_bhv kf ([],[]) in
+       (* if the function called returns a value (into a variable r),
+	* we declare a fresh global variable (new input)
+	* we affect the value of this new input to the variable __retres *)
+       let decl_ret, decl_retres, aff_retres, ret_retres = match ret with
+	 | Some r ->
+	    let ty = Cil.typeOfLval r in
+	    let vi = self#fresh_ctype_varinfo ty in
+	    let retres = my_varinfo ty "__retres" in
+	    let e_retres = Cil.evar retres in
+	    new_globals <- vi :: new_globals;
+	    let aff = Instru(instru_affect (Cil.var retres) (Cil.evar vi)) in
+	    [decl_varinfo vi], [decl_varinfo retres], [aff], [ins_ret e_retres]
+	 | None -> [], [], [], []
+       in
+       List.iter (self#insert Glob) ins_glob;
+       List.iter (self#insert Glob) decl_ret;
+       let ins_full_body = decl_retres @ aff_retres @ ins_body @ ret_retres in
+       let new_f = mk_func new_f_vi formals locals ins_full_body in
+       functions <- new_f :: functions;
+       let i_call = Instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
+       self#insert (EndStmt stmt.sid) i_call;
+       Cil.SkipChildren
     | _ -> Cil.DoChildren
 
   method! vglob_aux = function
