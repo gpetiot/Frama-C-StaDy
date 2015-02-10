@@ -271,7 +271,7 @@ void __stady_fct_0(int *A, int n) {
     __stady_term_17 = __gmpz_cmp(__stady_gmp_13,__stady_gmp_17);
     while(__stady_term_17 <= 0) {
       __stady_term_16 = (int)__gmpz_get_si(__stady_gmp_13);
-      *(__stady_term_12 + __stady_term_16) = *(A + __stady_term_16);
+      *(A + __stady_term_16) = *(__stady_term_12 + __stady_term_16);
       __gmpz_add_ui(__stady_gmp_13,__stady_gmp_13,1);
       __stady_term_17 = __gmpz_cmp(__stady_gmp_13,__stady_gmp_17);
     }
@@ -300,17 +300,17 @@ void __stady_fct_0(int *A, int n) {
 [stady] all-paths: false
 [stady] 20 test cases
 [stady]  Counter-example for ensures *(\old(t)+0) ≤ *(\old(t)+1)
-[stady]  testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_3.c
+[stady]  testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_2.c
 [stady]           variable|            input|  concrete output|  symbolic output
-[stady]  __stady...m_12[0]|            35317|                0|             t[0]
-[stady]  __stady...m_12[1]|           132958|      -1073722085|             t[1]
-[stady]  __stady...m_12[2]|             5031|           161763|             t[2]
-[stady]  __stady...m_12[3]|           212637|            97157|             t[3]
+[stady]  __stady...m_12[0]|           200986|                 |
+[stady]  __stady...m_12[1]|             6432|                 |
+[stady]  __stady...m_12[2]|          -101831|                 |
+[stady]  __stady...m_12[3]|          -176288|                 |
 [stady]                  k|                4|                 |
-[stady]               t[0]|                0|                 |
-[stady]               t[1]|      -1073722085|                 |
-[stady]               t[2]|           161763|                 |
-[stady]               t[3]|            97157|                 |
+[stady]               t[0]|          -133277|           200986|__stady...m_12[0]
+[stady]               t[1]|           -43805|             6432|__stady...m_12[1]
+[stady]               t[2]|           104588|          -101831|__stady...m_12[2]
+[stady]               t[3]|            25937|          -176288|__stady...m_12[3]
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

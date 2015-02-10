@@ -326,7 +326,7 @@ void __stady_fct_0(int *A, int n) {
     __stady_term_21 = __gmpz_cmp(__stady_gmp_19,__stady_gmp_23);
     while(__stady_term_21 <= 0) {
       __stady_term_20 = (int)__gmpz_get_si(__stady_gmp_19);
-      *(__stady_term_16 + __stady_term_20) = *(A + __stady_term_20);
+      *(A + __stady_term_20) = *(__stady_term_16 + __stady_term_20);
       __gmpz_add_ui(__stady_gmp_19,__stady_gmp_19,1);
       __stady_term_21 = __gmpz_cmp(__stady_gmp_19,__stady_gmp_23);
     }
@@ -407,7 +407,7 @@ void __stady_fct_0(int *A, int n) {
 [pc] Unexpected failure of goal write_status_prefix_and_path(2).
 [pc] Please report this bug.
 [pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(4).
+[pc] Unexpected failure of goal write_status_prefix_and_path(3).
 [pc] Please report this bug.
 [pc] TEST GENERATION WARNING!!!
 [pc] Unexpected failure of goal write_status_prefix_and_path(5).
