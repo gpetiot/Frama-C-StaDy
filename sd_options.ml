@@ -58,6 +58,14 @@ module Spec_Insuf = Self.Int (struct
   let default = -500
 end)
 
+module Simulate_Functions =
+  Self.String_list
+    (struct
+      let option_name = "-stady-sim-fct"
+      let arg_name = "f,..."
+      let help = "simulate a function execution based on its postcondition"
+    end)
+
 
 (* Debug Keys *)
 
