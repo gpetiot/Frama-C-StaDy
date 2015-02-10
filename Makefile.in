@@ -32,6 +32,7 @@ PLUGIN_GUI_CMO 	:= sd_register_gui
 PLUGIN_HAS_MLI:= yes
 PLUGIN_DEPENDENCIES:=PathCrawler
 PLUGIN_TESTS_DIRS:= \
+	simulate_rand \
 	inv_insuf_ok \
 	inv_insuf_ko \
 	spec_insuf_ok \
