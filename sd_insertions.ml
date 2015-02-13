@@ -1354,8 +1354,12 @@ class gather_insertions props spec_insuf = object(self)
       add_block_reachability b1;
       add_block_reachability b2;
       Cil.DoChildren
-    | Loop (_,b,_,_,_) when spec_insuf <> None ->
-      if (Extlib.the spec_insuf).sid = stmt.sid then
+    | Loop (_,b,_,_,_)
+	 when spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid ->
+       if Sd_options.Invariant_Preservation.get() then
+	 (* TODO *)
+	 Cil.SkipChildren
+       else
 	let kf = Kernel_function.find_englobing_kf stmt in
 	let ca_l = Annotations.code_annot stmt in
 	let ca_l = List.map (fun x -> x.annot_content) ca_l in
@@ -1394,7 +1398,6 @@ class gather_insertions props spec_insuf = object(self)
 	let ins_ass = Instru(self#pc_ass "" 0) in
 	self#insert (EndStmt stmt.sid) (ins_if loop_cond [ins_ass] []);
 	Cil.SkipChildren
-      else Cil.DoChildren
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
 	when (spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid)
 	     || (List.mem fct_varinfo.vname sim_funcs) ->
