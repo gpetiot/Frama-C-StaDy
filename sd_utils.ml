@@ -168,7 +168,7 @@ let mpz_t() =
 
 let print_counter_examples
       gui (pprint:('a, Format.formatter, unit) format -> 'a) prop =
-  let file_tbl = Sd_states.TestFailures.find prop in
+  let file_tbl = Sd_states.Counter_examples.find prop in
   let print x = if gui then pprint "%s@.@\n" x else pprint " %s@\n" x in
   let n_chars n str =
     let size = let s = n - (String.length str) in if s < 0 then 0 else s in

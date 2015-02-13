@@ -1,5 +1,5 @@
 
-module TestFailures =
+module Counter_examples =
   State_builder.Hashtbl
     (Property.Hashtbl)
     (Datatype.String.Hashtbl.Make
@@ -8,7 +8,7 @@ module TestFailures =
 	  (Datatype.Triple (Datatype.String) (Datatype.String) (Datatype.String)
     )))
     (struct
-      let name = "PathCrawler.TestFailures"
+      let name = "PathCrawler.Counter_examples"
       let dependencies = [Ast.self]
       let size = 64
      end)

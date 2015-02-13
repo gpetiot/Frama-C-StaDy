@@ -31,7 +31,7 @@ let process_test_case s =
   let f = Filename.concat f "testdrivers" in
   let f = Filename.concat f ("TC_" ^ str_tc ^ ".c") in
   let file_tbl =
-    try Sd_states.TestFailures.find prop
+    try Sd_states.Counter_examples.find prop
     with Not_found -> Datatype.String.Hashtbl.create 32
   in
   let var_tbl =
@@ -52,7 +52,7 @@ let process_test_case s =
   in
   List.iter on_pair list_entries;
   Datatype.String.Hashtbl.replace file_tbl f var_tbl;
-  Sd_states.TestFailures.replace prop file_tbl
+  Sd_states.Counter_examples.replace prop file_tbl
 
 
 let process_nb_test_cases s = Sd_states.NbCases.set (int_of_string s)
