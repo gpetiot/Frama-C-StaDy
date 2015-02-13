@@ -13,9 +13,9 @@ module Counter_examples =
       let size = 64
      end)
 
-module NbCases = State_builder.Zero_ref
+module Nb_test_cases = State_builder.Zero_ref
   (struct
-    let name = "PathCrawler.NbCases"
+    let name = "PathCrawler.Nb_test_cases"
     let dependencies = [Ast.self]
    end)
 

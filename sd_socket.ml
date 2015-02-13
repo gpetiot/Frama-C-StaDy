@@ -55,7 +55,7 @@ let process_test_case s =
   Sd_states.Counter_examples.replace prop file_tbl
 
 
-let process_nb_test_cases s = Sd_states.NbCases.set (int_of_string s)
+let process_nb_test_cases s = Sd_states.Nb_test_cases.set (int_of_string s)
 
 let process_final_status () = Sd_states.All_Paths.set true
     

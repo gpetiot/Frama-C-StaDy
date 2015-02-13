@@ -264,11 +264,11 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
       let ret = Unix.close_process_in chan in
       Sd_socket.print_exit_code ret
   end;
-  Sd_states.NbCases.mark_as_computed();
+  Sd_states.Nb_test_cases.mark_as_computed();
   Sd_states.Counter_examples.mark_as_computed();
   Sd_states.Unreachable_Stmts.mark_as_computed();
   Sd_options.Self.result "all-paths: %b" (Sd_states.All_Paths.get());
-  Sd_options.Self.result "%i test cases" (Sd_states.NbCases.get());
+  Sd_options.Self.result "%i test cases" (Sd_states.Nb_test_cases.get());
   let distinct = true in
   let strengthened_precond =
     try
