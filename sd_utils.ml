@@ -200,7 +200,15 @@ let print_counter_examples
 	       (n_chars "concrete output") (n_chars "symbolic output"));
     Datatype.String.Hashtbl.iter_sorted on_var var_tbl
   in
-  Datatype.String.Hashtbl.iter_sorted on_file file_tbl
+  let to_list t = Datatype.String.Hashtbl.fold (fun k v l -> (k,v)::l) t [] in
+  let only i to_do l =
+    let rec aux cpt = function
+      | (k,v) :: t when cpt < i -> to_do k v; aux (cpt+1) t
+      | _ -> ()
+    in
+    aux 0 l
+  in
+  only 1 on_file (to_list file_tbl)
 
 (* unused: interpreting string as precondition predicates *)
 (* let type_str_precond kf pred_as_string = *)

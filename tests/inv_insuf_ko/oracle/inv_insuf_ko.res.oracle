@@ -211,20 +211,6 @@ void f(int *t, int x)
 [stady]  Counter-example for assert
                             found ≢ 0 ⇔
                             (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x);
-[stady]  testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_10.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]     __stady_term_2|                0|                 |
-[stady]     __stady_term_3|                5|                 |
-[stady]              found|           211444|                0|                0
-[stady]               t[0]|      -1073725276|                 |
-[stady]               t[1]|      -1073699192|                 |
-[stady]               t[2]|                0|                 |
-[stady]               t[3]|           -70932|                 |
-[stady]               t[4]|          -144344|                 |
-[stady]                  x|                0|                 |
-[stady]  Counter-example for assert
-                            found ≢ 0 ⇔
-                            (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x);
 [stady]  testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_12.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]     __stady_term_2|                0|                 |
@@ -235,62 +221,6 @@ void f(int *t, int x)
 [stady]               t[2]|            74781|                 |
 [stady]               t[3]|          -174629|                 |
 [stady]               t[4]|            33937|                 |
-[stady]                  x|                0|                 |
-[stady]  Counter-example for assert
-                            found ≢ 0 ⇔
-                            (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x);
-[stady]  testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_14.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]     __stady_term_2|                0|                 |
-[stady]     __stady_term_3|                5|                 |
-[stady]              found|          -165973|                0|                0
-[stady]               t[0]|           159188|                 |
-[stady]               t[1]|            74154|                 |
-[stady]               t[2]|            48982|                 |
-[stady]               t[3]|            37669|                 |
-[stady]               t[4]|            52506|                 |
-[stady]                  x|           159188|                 |
-[stady]  Counter-example for assert
-                            found ≢ 0 ⇔
-                            (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x);
-[stady]  testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_3.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]     __stady_term_2|           172458|                 |
-[stady]     __stady_term_3|                5|                 |
-[stady]              found|           212637|           172458|   __stady_term_2
-[stady]               t[0]|           200408|                 |
-[stady]               t[1]|           -31761|                 |
-[stady]               t[2]|           171583|                 |
-[stady]               t[3]|            65712|                 |
-[stady]               t[4]|           -87144|                 |
-[stady]                  x|            97157|                 |
-[stady]  Counter-example for assert
-                            found ≢ 0 ⇔
-                            (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x);
-[stady]  testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_6.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]     __stady_term_2|                0|                 |
-[stady]     __stady_term_3|                5|                 |
-[stady]              found|            19015|                0|                0
-[stady]               t[0]|      -1073721980|                 |
-[stady]               t[1]|      -1073829092|                 |
-[stady]               t[2]|      -1073718312|                 |
-[stady]               t[3]|      -1073756371|                 |
-[stady]               t[4]|                0|                 |
-[stady]                  x|                0|                 |
-[stady]  Counter-example for assert
-                            found ≢ 0 ⇔
-                            (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x);
-[stady]  testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_8.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]     __stady_term_2|                0|                 |
-[stady]     __stady_term_3|                5|                 |
-[stady]              found|          -118710|                0|                0
-[stady]               t[0]|      -1073681616|                 |
-[stady]               t[1]|      -1073810255|                 |
-[stady]               t[2]|      -1073716763|                 |
-[stady]               t[3]|                0|                 |
-[stady]               t[4]|          -178685|                 |
 [stady]                  x|                0|                 |
 [report] Computing properties status...
 
