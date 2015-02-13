@@ -4,7 +4,7 @@ let () = Plugin.is_share_visible ()
 module Self = Plugin.Register (struct
   let name = "StaDy"
   let shortname = "stady"
-  let help = ""
+  let help = "Counter-Example Generation by Dynamic Analysis"
 end)
   
 module Enabled = Self.False (struct
