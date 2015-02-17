@@ -1356,48 +1356,47 @@ class gather_insertions props spec_insuf = object(self)
       Cil.DoChildren
     | Loop (_,b,_,_,_)
 	 when spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid ->
-       if Sd_options.Invariant_Preservation.get() then
-	 (* TODO *)
-	 Cil.SkipChildren
-       else
-	let kf = Kernel_function.find_englobing_kf stmt in
-	let ca_l = Annotations.code_annot stmt in
-	let ca_l = List.map (fun x -> x.annot_content) ca_l in
-	let if_stmt = List.hd b.bstmts in
-	let loop_cond = match if_stmt.skind with
-	  | If(e,_,_,_) -> e
-	  | _ ->
+       let kf = Kernel_function.find_englobing_kf stmt in
+       let ca_l = Annotations.code_annot stmt in
+       let ca_l = List.map (fun x -> x.annot_content) ca_l in
+       let if_stmt = List.hd b.bstmts in
+       let loop_cond = match if_stmt.skind with
+	 | If(e,_,_,_) -> e
+	 | _ ->
 	    Sd_options.Self.warning ~current:true ~once:true
-	      "loop condition not found";
+				    "loop condition not found";
 	    zero
-	in
-	let on_bhv _ bhv (ins_glob, ins) =
-	  let bname = bhv.b_name in
-	  let bhv_in l =
-	    List.mem bname l || (Cil.is_default_behavior bhv && l = []) in
-	  let f_assigns ret = function
-	    | AAssigns (l, a) when bhv_in l -> a :: ret
-	    | _ -> ret
-	  in
-	  let f_linvs ret = function
-	    | AInvariant(l, _, p) when bhv_in l -> p :: ret
-	    | _ -> ret
-	  in
-	  let assigns = List.fold_left f_assigns [] ca_l in
-	  let linvs = List.fold_left f_linvs [] ca_l in
-	  let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
-	  let globals, affects = self#assigns_swd assigns in
-	  let on_inv ret p = ret @ (self#pc_assume p.content) in
-	  let ins_block = List.fold_left on_inv affects linvs in
-	  let ins_bhv = ins_if e_assumes ins_block [] in
-	  ins_glob @ globals, ins @ ins_assumes @ [ins_bhv]
-	in
-	let ins_glob, ins_h = Annotations.fold_behaviors on_bhv kf ([],[]) in
-	List.iter (self#insert Glob) ins_glob;
-	List.iter (self#insert (EndStmt stmt.sid)) ins_h;
-	let ins_ass = Instru(self#pc_ass "" 0) in
-	self#insert (EndStmt stmt.sid) (ins_if loop_cond [ins_ass] []);
-	Cil.SkipChildren
+       in
+       let on_bhv _ bhv (ins_glob, ins) =
+	 let bname = bhv.b_name in
+	 let bhv_in l =
+	   List.mem bname l || (Cil.is_default_behavior bhv && l = []) in
+	 let f_assigns ret = function
+	   | AAssigns (l, a) when bhv_in l -> a :: ret
+	   | _ -> ret
+	 in
+	 let f_linvs ret = function
+	   | AInvariant(l, _, p) when bhv_in l -> p :: ret
+	   | _ -> ret
+	 in
+	 let assigns = List.fold_left f_assigns [] ca_l in
+	 let linvs = List.fold_left f_linvs [] ca_l in
+	 let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
+	 let globals, affects = self#assigns_swd assigns in
+	 let on_inv ret p = ret @ (self#pc_assume p.content) in
+	 let ins_block = List.fold_left on_inv affects linvs in
+	 let ins_bhv = ins_if e_assumes ins_block [] in
+	 ins_glob @ globals, ins @ ins_assumes @ [ins_bhv]
+       in
+       let ins_glob, ins_h = Annotations.fold_behaviors on_bhv kf ([],[]) in
+       List.iter (self#insert Glob) ins_glob;
+       List.iter (self#insert (BegStmt stmt.sid)) ins_h;
+       if Sd_options.Invariant_Preservation.get() then
+	 Cil.DoChildren
+       else
+	 let ins_ass = Instru(self#pc_ass "" 0) in
+	 self#insert (BegStmt stmt.sid) (ins_if loop_cond [ins_ass] []);
+	 Cil.SkipChildren
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
 	when (spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid)
 	     || (List.mem fct_varinfo.vname sim_funcs) ->

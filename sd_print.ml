@@ -105,7 +105,8 @@ class print_insertions insertions functions spec_insuf () = object(self)
     begin
       match stmt.skind with
       | Loop(_,b,l,_,_) ->
-	if spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid then
+	if spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid &&
+	     not (Sd_options.Invariant_Preservation.get()) then
 	  ()
 	else begin
 	  Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
