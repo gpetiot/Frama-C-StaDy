@@ -33,6 +33,7 @@ PLUGIN_HAS_MLI:= yes
 PLUGIN_DEPENDENCIES:=PathCrawler
 PLUGIN_TESTS_DIRS:= \
 	simulate_rand \
+	inv_preserved \
 	inv_insuf_ok \
 	inv_insuf_ko \
 	spec_insuf_ok \
