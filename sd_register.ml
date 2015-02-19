@@ -192,7 +192,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   let insertions, functions, translated_props, new_globals =
     translate props spec_insuf in
   let test_params =
-    if native_precond_generated then
+    if native_precond_generated || new_globals <> [] then
       begin
 	let add_global d v = Sd_native_precond.add_global v d in
 	let domains = List.fold_left add_global domains new_globals in
