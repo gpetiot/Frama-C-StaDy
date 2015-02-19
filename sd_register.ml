@@ -277,6 +277,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
   in
+  let no_CE = Sd_states.Counter_examples.length() = 0 in
   let emit_status prop =
     try
       Sd_utils.print_counter_examples false Sd_options.Self.result prop;
@@ -286,7 +287,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
     | Not_found ->
       let status = Property_status.True in
       let hyps = strengthened_precond in
-      if Sd_states.All_Paths.get() then
+      if Sd_states.All_Paths.get() && no_CE then
 	Property_status.emit emitter ~hyps prop ~distinct status
   in
   List.iter emit_status translated_props;

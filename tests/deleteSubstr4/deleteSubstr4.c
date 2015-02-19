@@ -75,13 +75,14 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest) {
     for( k = 0; k < strlen; k ++ ) dest[k] = str[k];
     return 0;
   }
+  j = 0;
   //@ assert 0 <= j <= start;
 
   /*@ loop invariant \forall integer m; 0 <= m < j ==> dest[m] == \at(str[m],Pre);
     @ loop invariant 0 <= j <= start;
     @ loop assigns j, dest[0..start-1];
     @ loop variant start-j; */
-  for( j = 0; j < start; j ++ ) dest[j] = str[j];
+  for( ; j < start; j ++ ) dest[j] = str[j];
   /*@ loop invariant \forall integer m; start <= m < j ==> \at(str[m+sublen],Pre) == dest[m];
     @ loop invariant start <= j <= strlen-sublen;
     @ loop assigns dest[start .. strlen-sublen-1], j;

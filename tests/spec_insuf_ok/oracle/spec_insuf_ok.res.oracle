@@ -400,30 +400,9 @@ void __stady_fct_0(int *A, int n) {
 [pc] generating tests...
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(1).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(2).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(3).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(5).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(6).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(7).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(8).
-[pc] Please report this bug.
 [pc] generation finished
 [stady] all-paths: true
-[stady] 85 test cases
+[stady] 92 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

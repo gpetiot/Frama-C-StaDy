@@ -207,7 +207,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
         __stady_pred_12 = __stady_term_33 <= 0;
       }
       if(! __stady_pred_12) {
-        pathcrawler_assert_exception("Loop invariant not established!",10);
+        pathcrawler_assert_exception("Loop invariant not established!",12);
       }
       int __stady_pred_14;
       __stady_pred_14 = 1;
@@ -535,7 +535,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           __stady_pred_13 = __stady_term_35 <= 0;
         }
         if(! __stady_pred_13) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",10);
+          pathcrawler_assert_exception("Loop invariant not preserved!",12);
         }
         int __stady_pred_16;
         __stady_pred_16 = 1;
@@ -735,7 +735,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
             __gmpz_clear(__stady_gmp_19);
           }
           if(! __stady_pred_5) {
-            pathcrawler_assert_exception("Post-condition!",11);
+            pathcrawler_assert_exception("Post-condition!",13);
           }
         }
         int __stady_pred_6;
@@ -817,7 +817,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           __gmpz_clear(__stady_gmp_34);
           __gmpz_clear(__stady_gmp_36);
           if(! (__stady_term_18 == 0)) {
-            pathcrawler_assert_exception("Post-condition!",23);
+            pathcrawler_assert_exception("Post-condition!",24);
           }
         }
       }
@@ -947,7 +947,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           __stady_pred_27 = k <= strlen;
         }
         if(! __stady_pred_27) {
-          pathcrawler_assert_exception("Loop invariant not established!",5);
+          pathcrawler_assert_exception("Loop invariant not established!",7);
         }
         mpz_t __stady_gmp_164;
         __gmpz_init_set_si(__stady_gmp_164,strlen);
@@ -1030,7 +1030,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
             __stady_pred_28 = k <= strlen;
           }
           if(! __stady_pred_28) {
-            pathcrawler_assert_exception("Loop invariant not preserved!",5);
+            pathcrawler_assert_exception("Loop invariant not preserved!",7);
           }
           mpz_t __stady_gmp_171;
           __gmpz_init_set_si(__stady_gmp_171,strlen);
@@ -1057,6 +1057,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
       __retres = 0;
       goto return_label;
     }
+    j = 0;
     {
       mpz_t __stady_gmp_174;
       __gmpz_init_set_str(__stady_gmp_174,"0",10);
@@ -1076,7 +1077,6 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
       }
       ;
     }
-    j = 0;
     {
       int __stady_pred_30;
       __stady_pred_30 = 1;
@@ -1126,7 +1126,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
         __stady_pred_32 = j <= start;
       }
       if(! __stady_pred_32) {
-        pathcrawler_assert_exception("Loop invariant not established!",14);
+        pathcrawler_assert_exception("Loop invariant not established!",15);
       }
       mpz_t __stady_gmp_188;
       __gmpz_init_set_si(__stady_gmp_188,start);
@@ -1140,7 +1140,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
       int __stady_term_86;
       __stady_term_86 = __gmpz_cmp_ui(__stady_gmp_190,0);
       if(__stady_term_86 < 0) {
-        pathcrawler_assert_exception("Variant non positive",28);
+        pathcrawler_assert_exception("Variant non positive",5);
       }
       while (1) {
         mpz_t __stady_gmp_191;
@@ -1156,7 +1156,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
         __gmpz_init_set(__stady_gmp_194,__stady_gmp_193);
         {
           if (! (j < start)) {
-                               pathcrawler_to_framac("@FC:REACHABLE_STMT:46");
+                               pathcrawler_to_framac("@FC:REACHABLE_STMT:45");
                                break;
                              }
           *(dest + j) = *(str + j);
@@ -1209,7 +1209,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           __stady_pred_33 = j <= start;
         }
         if(! __stady_pred_33) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",14);
+          pathcrawler_assert_exception("Loop invariant not preserved!",15);
         }
         mpz_t __stady_gmp_195;
         __gmpz_init_set_si(__stady_gmp_195,start);
@@ -1222,11 +1222,11 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
         __gmpz_clear(__stady_gmp_196);
         __stady_term_86 = __gmpz_cmp_ui(__stady_gmp_194,0);
         if(__stady_term_86 < 0) {
-          pathcrawler_assert_exception("Variant non positive",28);
+          pathcrawler_assert_exception("Variant non positive",5);
         }
         __stady_term_86 = __gmpz_cmp(__stady_gmp_197,__stady_gmp_194);
         if(__stady_term_86 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing",28);
+          pathcrawler_assert_exception("Variant non decreasing",5);
         }
         __gmpz_clear(__stady_gmp_194);
         }
@@ -1297,7 +1297,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
         __stady_pred_36 = __stady_term_93 <= 0;
       }
       if(! __stady_pred_36) {
-        pathcrawler_assert_exception("Loop invariant not established!",7);
+        pathcrawler_assert_exception("Loop invariant not established!",9);
       }
       mpz_t __stady_gmp_218;
       __gmpz_init_set_si(__stady_gmp_218,strlen);
@@ -1318,7 +1318,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
       int __stady_term_95;
       __stady_term_95 = __gmpz_cmp_ui(__stady_gmp_222,0);
       if(__stady_term_95 < 0) {
-        pathcrawler_assert_exception("Variant non positive",26);
+        pathcrawler_assert_exception("Variant non positive",22);
       }
       while (1) {
         mpz_t __stady_gmp_223;
@@ -1341,7 +1341,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
         __gmpz_init_set(__stady_gmp_228,__stady_gmp_227);
         {
           if (! (j < strlen - sublen)) {
-                                         pathcrawler_to_framac("@FC:REACHABLE_STMT:53");
+                                         pathcrawler_to_framac("@FC:REACHABLE_STMT:52");
                                          break;
                                        }
           *(dest + j) = *(str + (j + sublen));
@@ -1408,7 +1408,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           __stady_pred_37 = __stady_term_94 <= 0;
         }
         if(! __stady_pred_37) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",7);
+          pathcrawler_assert_exception("Loop invariant not preserved!",9);
         }
         mpz_t __stady_gmp_229;
         __gmpz_init_set_si(__stady_gmp_229,strlen);
@@ -1428,11 +1428,11 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
         __gmpz_clear(__stady_gmp_232);
         __stady_term_95 = __gmpz_cmp_ui(__stady_gmp_228,0);
         if(__stady_term_95 < 0) {
-          pathcrawler_assert_exception("Variant non positive",26);
+          pathcrawler_assert_exception("Variant non positive",22);
         }
         __stady_term_95 = __gmpz_cmp(__stady_gmp_233,__stady_gmp_228);
         if(__stady_term_95 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing",26);
+          pathcrawler_assert_exception("Variant non decreasing",22);
         }
         __gmpz_clear(__stady_gmp_228);
         }
@@ -1540,7 +1540,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
             __gmpz_clear(__stady_gmp_120);
           }
           if(! __stady_pred_20) {
-            pathcrawler_assert_exception("Post-condition!",6);
+            pathcrawler_assert_exception("Post-condition!",8);
           }
           mpz_t __stady_gmp_123;
           __gmpz_init_set_si(__stady_gmp_123,__retres);
@@ -1726,16 +1726,9 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [pc] generating tests...
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] Starting lanceur_pathcrawler__delete_substr_precond (isc version)
-[pc] Starting lanceur_delete_substr (isc version)
-[pc] TEST GENERATION WARNING!!!
-[pc] Bad projection on input values of expression j__delete_substr in the assignment  at line number 1006 of file __sd_instru_deleteSubstr4_delete_substr.c.
-[pc] Please check your test context and source code for uninitialised variables.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(3) in the assignment  at line number 1006 of file __sd_instru_deleteSubstr4_delete_substr.c.
-[pc] Please report this bug.
 [pc] generation finished
 [stady] all-paths: true
-[stady] 313 test cases
+[stady] 371 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
@@ -1801,10 +1794,10 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 75)
             By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
-[ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 84)
+[ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 85)
             By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
-[ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 89)
+[ Partial ] Loop variant at loop (file tests/deleteSubstr4/deleteSubstr4.c, line 90)
             By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 71)
@@ -1813,19 +1806,19 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 72)
             By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
-[ Partial ] Assertion (file tests/deleteSubstr4/deleteSubstr4.c, line 78)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
-[ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 80)
+[ Partial ] Assertion (file tests/deleteSubstr4/deleteSubstr4.c, line 79)
             By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 81)
             By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
-[ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 85)
+[ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 82)
             By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 86)
+            By StaDy, with pending:
+             - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
+[ Partial ] Invariant (file tests/deleteSubstr4/deleteSubstr4.c, line 87)
             By StaDy, with pending:
              - Pre-condition (file tests/deleteSubstr4/deleteSubstr4.c, line 53)
 [ Partial ] Behavior 'not_present'

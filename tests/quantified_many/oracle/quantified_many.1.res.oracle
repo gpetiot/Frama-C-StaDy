@@ -209,7 +209,7 @@ void f(int default_value)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
 [pc] Starting lanceur_f (isc version)
 [pc] generation finished
-[stady] all-paths: false
+[stady] all-paths: true
 [stady] 295 test cases
 [stady]  Counter-example for assert
                             A4:

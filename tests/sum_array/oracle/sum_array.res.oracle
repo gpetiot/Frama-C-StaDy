@@ -360,7 +360,7 @@ int sum_array(int *t, int n)
 [pc] Starting lanceur_sum_array (isc version)
 [pc] Starting lanceur_sum_array (isc version)
 [pc] generation finished
-[stady] all-paths: false
+[stady] all-paths: true
 [stady] 135 test cases
 [stady]  Counter-example for assert rte: signed_overflow: -2147483648 ≤ s+*(t+i);
 [stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_4.c

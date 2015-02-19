@@ -964,7 +964,7 @@ int alt_sep_test(void)
 [pc] Starting lanceur_alt_sep_test (isc version)
 [pc] Starting lanceur_alt_sep_test (isc version)
 [pc] generation finished
-[stady] all-paths: false
+[stady] all-paths: true
 [stady] 1224 test cases
 [stady]  Counter-example for ensures \result ≢ 2
 [stady]  testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_80.c

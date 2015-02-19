@@ -58,7 +58,7 @@ void f(int x)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
 [pc] Starting lanceur_f (isc version)
 [pc] generation finished
-[stady] all-paths: false
+[stady] all-paths: true
 [stady] 2 test cases
 [stady]  Counter-example for assert x+1 ≤ 2147483647;
 [stady]  testcases___sd_instru_overflow_should_crash_f/f/testdrivers/TC_2.c

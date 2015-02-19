@@ -1401,7 +1401,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] generation finished
-[stady] all-paths: false
+[stady] all-paths: true
 [stady] 289 test cases
 [stady]  Counter-example for loop invariant 0 ≤ k < strlen;
 [stady]  testcases___sd_instru_deleteSubstr2b_delete_substr/delete_substr/testdrivers/TC_4.c

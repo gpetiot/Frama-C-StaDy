@@ -63,7 +63,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen) {
   @   ensures \exists integer i; 0 <= i < strlen-sublen &&
   @     (( \forall integer j; 0 <= j < sublen ==> \old(str[i+j]) == \old(substr[j]) ) &&
   @     ( \forall integer k; 0 <= k < i ==> \old(str[k]) == dest[k] ) &&
-  @     ( \forall integer l; i <= l < strlen ==> \old(str[l+sublen]) == dest[l] ) );
+  @     ( \forall integer l; i <= l < strlen ==> (\valid(str+(l+sublen)) && \old(str[l+sublen]) == dest[l] ) ));
   @   ensures \result == 1; */
 int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest) {
   int start = find_substr(str, strlen, substr, sublen), j, k;

@@ -869,55 +869,55 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
   char *old_str;
   char *old_ptr_str;
   old_str = str;
-  mpz_t __stady_gmp_153;
-  __gmpz_init_set_si(__stady_gmp_153,strlen);
-  unsigned long __stady_term_64;
-  unsigned long __stady_term_65;
-  __stady_term_65 = __gmpz_get_ui(__stady_gmp_153);
-  old_ptr_str = (char *)malloc(__stady_term_65 * (unsigned long)sizeof(char));
-  __stady_term_65 = __gmpz_get_ui(__stady_gmp_153);
-  __stady_term_64 = 0;
-  while(__stady_term_64 < __stady_term_65) {
-    *(old_ptr_str + __stady_term_64) = *(str + __stady_term_64);
-    __stady_term_64 ++;
+  mpz_t __stady_gmp_156;
+  __gmpz_init_set_si(__stady_gmp_156,strlen);
+  unsigned long __stady_term_67;
+  unsigned long __stady_term_68;
+  __stady_term_68 = __gmpz_get_ui(__stady_gmp_156);
+  old_ptr_str = (char *)malloc(__stady_term_68 * (unsigned long)sizeof(char));
+  __stady_term_68 = __gmpz_get_ui(__stady_gmp_156);
+  __stady_term_67 = 0;
+  while(__stady_term_67 < __stady_term_68) {
+    *(old_ptr_str + __stady_term_67) = *(str + __stady_term_67);
+    __stady_term_67 ++;
   }
-  __gmpz_clear(__stady_gmp_153);
+  __gmpz_clear(__stady_gmp_156);
   int old_strlen;
   old_strlen = strlen;
   char *old_substr;
   char *old_ptr_substr;
   old_substr = substr;
-  mpz_t __stady_gmp_154;
-  __gmpz_init_set_si(__stady_gmp_154,sublen);
-  unsigned long __stady_term_66;
-  unsigned long __stady_term_67;
-  __stady_term_67 = __gmpz_get_ui(__stady_gmp_154);
-  old_ptr_substr = (char *)malloc(__stady_term_67 * (unsigned long)sizeof(char));
-  __stady_term_67 = __gmpz_get_ui(__stady_gmp_154);
-  __stady_term_66 = 0;
-  while(__stady_term_66 < __stady_term_67) {
-    *(old_ptr_substr + __stady_term_66) = *(substr + __stady_term_66);
-    __stady_term_66 ++;
+  mpz_t __stady_gmp_157;
+  __gmpz_init_set_si(__stady_gmp_157,sublen);
+  unsigned long __stady_term_69;
+  unsigned long __stady_term_70;
+  __stady_term_70 = __gmpz_get_ui(__stady_gmp_157);
+  old_ptr_substr = (char *)malloc(__stady_term_70 * (unsigned long)sizeof(char));
+  __stady_term_70 = __gmpz_get_ui(__stady_gmp_157);
+  __stady_term_69 = 0;
+  while(__stady_term_69 < __stady_term_70) {
+    *(old_ptr_substr + __stady_term_69) = *(substr + __stady_term_69);
+    __stady_term_69 ++;
   }
-  __gmpz_clear(__stady_gmp_154);
+  __gmpz_clear(__stady_gmp_157);
   int old_sublen;
   old_sublen = sublen;
   char *old_dest;
   char *old_ptr_dest;
   old_dest = dest;
-  mpz_t __stady_gmp_155;
-  __gmpz_init_set_si(__stady_gmp_155,strlen);
-  unsigned long __stady_term_68;
-  unsigned long __stady_term_69;
-  __stady_term_69 = __gmpz_get_ui(__stady_gmp_155);
-  old_ptr_dest = (char *)malloc(__stady_term_69 * (unsigned long)sizeof(char));
-  __stady_term_69 = __gmpz_get_ui(__stady_gmp_155);
-  __stady_term_68 = 0;
-  while(__stady_term_68 < __stady_term_69) {
-    *(old_ptr_dest + __stady_term_68) = *(dest + __stady_term_68);
-    __stady_term_68 ++;
+  mpz_t __stady_gmp_158;
+  __gmpz_init_set_si(__stady_gmp_158,strlen);
+  unsigned long __stady_term_71;
+  unsigned long __stady_term_72;
+  __stady_term_72 = __gmpz_get_ui(__stady_gmp_158);
+  old_ptr_dest = (char *)malloc(__stady_term_72 * (unsigned long)sizeof(char));
+  __stady_term_72 = __gmpz_get_ui(__stady_gmp_158);
+  __stady_term_71 = 0;
+  while(__stady_term_71 < __stady_term_72) {
+    *(old_ptr_dest + __stady_term_71) = *(dest + __stady_term_71);
+    __stady_term_71 ++;
   }
-  __gmpz_clear(__stady_gmp_155);
+  __gmpz_clear(__stady_gmp_158);
   {
     int __retres;
     int start;
@@ -1185,16 +1185,41 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
                   __gmpz_add(__stady_gmp_149,__stady_gmp_147,__stady_gmp_148);
                   __gmpz_clear(__stady_gmp_147);
                   __gmpz_clear(__stady_gmp_148);
+                  int __stady_pred_27;
                   int __stady_term_61;
-                  __stady_term_61 = (int)__gmpz_get_si(__stady_gmp_149);
-                  __gmpz_clear(__stady_gmp_149);
-                  mpz_t __stady_gmp_150;
-                  __gmpz_init_set(__stady_gmp_150,__q_l);
+                  __stady_term_61 = __gmpz_cmp_ui(__stady_gmp_149,0);
                   int __stady_term_62;
-                  __stady_term_62 = (int)__gmpz_get_si(__stady_gmp_150);
-                  __gmpz_clear(__stady_gmp_150);
-                  __stady_pred_25 = (int)*(old_ptr_str + __stady_term_61) == (int)*(
-                                    old_dest + __stady_term_62);
+                  __stady_term_62 = pathcrawler_dimension(old_str);
+                  int __stady_term_63;
+                  __stady_term_63 = __gmpz_cmp_ui(__stady_gmp_149,
+                                                  __stady_term_62);
+                  __stady_pred_27 = __stady_term_61 >= 0 && __stady_term_63 < 0;
+                  __gmpz_clear(__stady_gmp_149);
+                  int __stady_pred_26;
+                  __stady_pred_26 = __stady_pred_27;
+                  if(__stady_pred_26) {
+                    mpz_t __stady_gmp_150;
+                    __gmpz_init_set(__stady_gmp_150,__q_l);
+                    mpz_t __stady_gmp_151;
+                    __gmpz_init_set_si(__stady_gmp_151,old_sublen);
+                    mpz_t __stady_gmp_152;
+                    __gmpz_init(__stady_gmp_152);
+                    __gmpz_add(__stady_gmp_152,__stady_gmp_150,
+                               __stady_gmp_151);
+                    __gmpz_clear(__stady_gmp_150);
+                    __gmpz_clear(__stady_gmp_151);
+                    int __stady_term_64;
+                    __stady_term_64 = (int)__gmpz_get_si(__stady_gmp_152);
+                    __gmpz_clear(__stady_gmp_152);
+                    mpz_t __stady_gmp_153;
+                    __gmpz_init_set(__stady_gmp_153,__q_l);
+                    int __stady_term_65;
+                    __stady_term_65 = (int)__gmpz_get_si(__stady_gmp_153);
+                    __gmpz_clear(__stady_gmp_153);
+                    __stady_pred_26 = (int)*(old_ptr_str + __stady_term_64) == (int)*(
+                                      old_dest + __stady_term_65);
+                  }
+                  __stady_pred_25 = __stady_pred_26;
                   __gmpz_add_ui(__q_l,__q_l,1);
                   __stady_term_60 = __gmpz_cmp(__q_l,__stady_gmp_146);
                 }
@@ -1213,15 +1238,15 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           if(! __stady_pred_24) {
             pathcrawler_assert_exception("Post-condition!",11);
           }
-          mpz_t __stady_gmp_151;
-          __gmpz_init_set_si(__stady_gmp_151,__retres);
-          mpz_t __stady_gmp_152;
-          __gmpz_init_set_str(__stady_gmp_152,"1",10);
-          int __stady_term_63;
-          __stady_term_63 = __gmpz_cmp(__stady_gmp_151,__stady_gmp_152);
-          __gmpz_clear(__stady_gmp_151);
-          __gmpz_clear(__stady_gmp_152);
-          if(! (__stady_term_63 == 0)) {
+          mpz_t __stady_gmp_154;
+          __gmpz_init_set_si(__stady_gmp_154,__retres);
+          mpz_t __stady_gmp_155;
+          __gmpz_init_set_str(__stady_gmp_155,"1",10);
+          int __stady_term_66;
+          __stady_term_66 = __gmpz_cmp(__stady_gmp_154,__stady_gmp_155);
+          __gmpz_clear(__stady_gmp_154);
+          __gmpz_clear(__stady_gmp_155);
+          if(! (__stady_term_66 == 0)) {
             pathcrawler_assert_exception("Post-condition!",18);
           }
         }
@@ -1245,90 +1270,48 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] Starting lanceur_pathcrawler__delete_substr_precond (isc version)
 [pc] Starting lanceur_delete_substr (isc version)
-[pc] TEST GENERATION WARNING!!!
-[pc] Bad projection on input values of expression old_ptr_str__delete_substr[__stady_term_61__delete_substr] in the constraint corresponding to the 1st subcondition (or only condition) at line number 1138 of file __sd_instru_deleteSubstr1c_delete_substr.c.
-[pc] Please check your test context and source code for uninitialised variables.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(3) in the constraint corresponding to the 1st subcondition (or only condition) at line number 1138 of file __sd_instru_deleteSubstr1c_delete_substr.c.
-[pc] Please report this bug.
 [pc] generation finished
 [stady] all-paths: true
-[stady] 261 test cases
+[stady] 271 test cases
+[stady]  Counter-example for ensures
+                            ∃ ℤ i;
+                              0 ≤ i < \old(strlen)-\old(sublen) ∧
+                              (∀ ℤ j;
+                                 0 ≤ j < \old(sublen) ⇒
+                                 \old(*(str+(i+j))) ≡ \old(*(substr+j))) ∧
+                              (∀ ℤ k;
+                                 0 ≤ k < i ⇒ \old(*(str+k)) ≡ *(\old(dest)+k)) ∧
+                              (∀ ℤ l;
+                                 i ≤ l < \old(strlen) ⇒
+                                 \valid(\old(str)+(l+\old(sublen))) ∧
+                                 \old(*(str+(l+sublen))) ≡ *(\old(dest)+l))
+[stady]  testcases___sd_instru_deleteSubstr1c_delete_substr/delete_substr/testdrivers/TC_3.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]            dest[0]|               15|             -106|           str[1]
+[stady]            dest[1]|              -61|                 |
+[stady]       return value|                 |                0|                0
+[stady]             str[0]|               62|                 |
+[stady]             str[1]|             -106|                 |
+[stady]             strlen|                2|                 |
+[stady]             sublen|                1|                 |
+[stady]          substr[0]|               62|                 |
 [report] Computing properties status...
-
---------------------------------------------------------------------------------
---- Properties of Function 'find_substr'
---------------------------------------------------------------------------------
-
-[ Partial ] Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 6)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 7)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 8)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Post-condition for 'present' (file tests/deleteSubstr1c/deleteSubstr1c.c, line 13)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Post-condition for 'present' (file tests/deleteSubstr1c/deleteSubstr1c.c, line 14)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Post-condition for 'not_present' (file tests/deleteSubstr1c/deleteSubstr1c.c, line 18)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Loop variant at loop (file tests/deleteSubstr1c/deleteSubstr1c.c, line 28)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Loop variant at loop (file tests/deleteSubstr1c/deleteSubstr1c.c, line 35)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Invariant (file tests/deleteSubstr1c/deleteSubstr1c.c, line 22)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Invariant (file tests/deleteSubstr1c/deleteSubstr1c.c, line 23)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Invariant (file tests/deleteSubstr1c/deleteSubstr1c.c, line 30)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Invariant (file tests/deleteSubstr1c/deleteSubstr1c.c, line 31)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Behavior 'not_present'
-            By Frama-C kernel, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
-[ Partial ] Behavior 'present'
-            By Frama-C kernel, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53) of 'delete_substr'
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'delete_substr'
 --------------------------------------------------------------------------------
 
-[ Partial ] Post-condition for 'not_present' (file tests/deleteSubstr1c/deleteSubstr1c.c, line 58)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53)
-[ Partial ] Post-condition for 'not_present' (file tests/deleteSubstr1c/deleteSubstr1c.c, line 59)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53)
-[ Partial ] Post-condition for 'present' (file tests/deleteSubstr1c/deleteSubstr1c.c, line 63)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53)
-[ Partial ] Post-condition for 'present' (file tests/deleteSubstr1c/deleteSubstr1c.c, line 67)
-            By StaDy, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53)
-[ Partial ] Behavior 'not_present'
-            By Frama-C kernel, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53)
-[ Partial ] Behavior 'present'
-            By Frama-C kernel, with pending:
-             - Pre-condition (file tests/deleteSubstr1c/deleteSubstr1c.c, line 53)
+[   Bug   ] Post-condition for 'present' (file tests/deleteSubstr1c/deleteSubstr1c.c, line 63)
+            by StaDy.
+[  Dead   ] Behavior 'present'
+            Locally invalid, but unreachable.
+            By Frama-C kernel because:
+             - Post-condition for 'present' (file tests/deleteSubstr1c/deleteSubstr1c.c, line 63)
 
 --------------------------------------------------------------------------------
 --- Status Report Summary
 --------------------------------------------------------------------------------
-    20 Locally validated
-    20 Total
+     1 Bugs found
+     1 Dead property
+     2 Total
 --------------------------------------------------------------------------------

@@ -272,87 +272,9 @@ void f(int n, int *t)
 [pc] generating tests...
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(1).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(2).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(4).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(5).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(6).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(8).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(9).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(10).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(11).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(12).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(14).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(15).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(16).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(18).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(19).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(20).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(21).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(22).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(23).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(24).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(27).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(28).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(29).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(30).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(32).
-[pc] Please report this bug.
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(33).
-[pc] Please report this bug.
 [pc] generation finished
 [stady] all-paths: true
-[stady] 129 test cases
+[stady] 155 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

@@ -292,13 +292,10 @@ void __stady_fct_0(int *A, int n) {
 [pc] generating tests...
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
-[pc] TEST GENERATION WARNING!!!
-[pc] Unexpected failure of goal write_status_prefix_and_path(1).
-[pc] Please report this bug.
 [pc] Starting lanceur_f (isc version)
 [pc] generation finished
-[stady] all-paths: false
-[stady] 20 test cases
+[stady] all-paths: true
+[stady] 21 test cases
 [stady]  Counter-example for ensures *(\old(t)+0) ≤ *(\old(t)+1)
 [stady]  testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_2.c
 [stady]           variable|            input|  concrete output|  symbolic output

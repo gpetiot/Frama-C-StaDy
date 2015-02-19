@@ -117,7 +117,7 @@ int __stady_fct_0() {
 [pc] Starting lanceur_main (isc version)
 [pc] Starting lanceur_main (isc version)
 [pc] generation finished
-[stady] all-paths: false
+[stady] all-paths: true
 [stady] 3 test cases
 [stady]  Counter-example for assert x ≡ y;
 [stady]  testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_1.c
