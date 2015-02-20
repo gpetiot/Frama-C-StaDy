@@ -258,7 +258,7 @@ let rec valid_to_prolog term =
 	let i' = Integer.add i Integer.one in
 	[ PLDomain (PLIntDom (PLDim t', Some i', Some maxuint)) ]
       | _ ->
-	[ PLDomain (PLIntDom (PLDim t', Some (Integer.one), Some maxuint));
+	[ PLDomain (PLIntDom (PLDim t', Some (Integer.zero), Some maxuint));
 	  PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
     end
   | _ -> Sd_utils.error_term term
