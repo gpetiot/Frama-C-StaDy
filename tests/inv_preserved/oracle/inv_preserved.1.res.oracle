@@ -14,14 +14,14 @@ dom(0,0,0,0).
 dom('f', cont('__stady_term_3',_), [], int([-2147483648..2147483647])).
 dom('f', dim('__stady_term_3'), [], int([0..4294967295])).
 dom('f', cont('t',_), [], int([-2147483648..2147483647])).
-dom('f', dim('t'), [], int([1..4294967295])).
+dom('f', dim('t'), [], int([0..4294967295])).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
   create_input_val('__stady_term_2', int([-2147483648..2147483647]),Ins),
   create_input_val(dim('__stady_term_3'), int([0..4294967295]),Ins),
   create_input_val('n', int([3..5]),Ins),
-  create_input_val(dim('t'), int([1..4294967295]),Ins),
+  create_input_val(dim('t'), int([0..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).

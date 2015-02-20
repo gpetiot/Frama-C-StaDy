@@ -27,76 +27,60 @@ void f(int default_value)
     int j;
     i = 0;
     while (1) {
-      {
-        if (! (i < 5)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:5");
-                         break;
-                       }
-        j = 0;
-        while (1) {
-          {
-            if (! (j < 5)) {
-                             pathcrawler_to_framac("@FC:REACHABLE_STMT:10");
-                             break;
-                           }
-            t[i][j] = i + j;
-            j ++;
-          }}
-           
-        i ++;
-      }}
+      if (! (i < 5)) {
+                       pathcrawler_to_framac("@FC:REACHABLE_STMT:5");
+                       break;
+                     }j = 0;
+                      while (1) {
+                        if (! (j < 5)) {
+                                         pathcrawler_to_framac("@FC:REACHABLE_STMT:10");
+                                         break;
+                                       }t[i][j] = i + j;
+                                        j ++;}
+                         
+                      i ++;}
        
     min = t[0][0];
     i = 0;
     while (1) {
-      {
-        if (! (i < 5)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:19");
-                         break;
-                       }
-        j = 0;
-        while (1) {
-          {
-            if (! (j < 5)) {
-                             pathcrawler_to_framac("@FC:REACHABLE_STMT:25");
-                             break;
-                           }
-            if (t[i][j] < min) {
-                                 pathcrawler_to_framac("@FC:REACHABLE_STMT:29");
-                                 min = t[i][j];
-                               }
-            j ++;
-          }}
-           
-        i ++;
-      }}
+      if (! (i < 5)) {
+                       pathcrawler_to_framac("@FC:REACHABLE_STMT:19");
+                       break;
+                     }j = 0;
+                      while (1) {
+                        if (! (j < 5)) {
+                                         pathcrawler_to_framac("@FC:REACHABLE_STMT:25");
+                                         break;
+                                       }if (t[i][j] < min) {
+                                                             pathcrawler_to_framac
+                                                             ("@FC:REACHABLE_STMT:29");
+                                                             min = t[i][j];
+                                                           }
+                                        j ++;}
+                         
+                      i ++;}
        
     ;
     ;
     min = default_value;
     i = 0;
     while (1) {
-      {
-        if (! (i < 5)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:40");
-                         break;
-                       }
-        j = 0;
-        while (1) {
-          {
-            if (! (j < 5)) {
-                             pathcrawler_to_framac("@FC:REACHABLE_STMT:46");
-                             break;
-                           }
-            if (t[i][j] < min) {
-                                 pathcrawler_to_framac("@FC:REACHABLE_STMT:50");
-                                 min = t[i][j];
-                               }
-            j ++;
-          }}
-           
-        i ++;
-      }}
+      if (! (i < 5)) {
+                       pathcrawler_to_framac("@FC:REACHABLE_STMT:40");
+                       break;
+                     }j = 0;
+                      while (1) {
+                        if (! (j < 5)) {
+                                         pathcrawler_to_framac("@FC:REACHABLE_STMT:46");
+                                         break;
+                                       }if (t[i][j] < min) {
+                                                             pathcrawler_to_framac
+                                                             ("@FC:REACHABLE_STMT:50");
+                                                             min = t[i][j];
+                                                           }
+                                        j ++;}
+                         
+                      i ++;}
        
     {
       int __stady_pred_0;

@@ -121,41 +121,36 @@ void sort(int *A, int n)
     int position;
     c = 0;
     while (1) {
-      {
-        if (! (c < n - 1)) {
-                             pathcrawler_to_framac("@FC:REACHABLE_STMT:5");
-                             break;
-                           }
-        {
-          int d;
-          position = c;
-          d = c + 1;
-          while (1) {
-            {
-              if (! (d < n)) {
-                               pathcrawler_to_framac("@FC:REACHABLE_STMT:12");
-                               break;
-                             }
-              if (*(A + position) > *(A + d)) {
-                                                pathcrawler_to_framac
-                                                ("@FC:REACHABLE_STMT:16");
-                                                position = d;
-                                              }
-              d ++;
-            }}
-             
-          if (position != c) {
-            int swap;
-            {
-              pathcrawler_to_framac("@FC:REACHABLE_STMT:21");
-              swap = *(A + c);
-            }
-            *(A + c) = *(A + position);
-            *(A + position) = swap;
-          }
-        }
-        c ++;
-      }}
+      if (! (c < n - 1)) {
+                           pathcrawler_to_framac("@FC:REACHABLE_STMT:5");
+                           break;
+                         }{
+                            int d;
+                            position = c;
+                            d = c + 1;
+                            while (1) {
+                              if (! (d < n)) {
+                                               pathcrawler_to_framac("@FC:REACHABLE_STMT:12");
+                                               break;
+                                             }if (*(A + position) > *(A + d)) 
+                                                {
+                                                  pathcrawler_to_framac
+                                                  ("@FC:REACHABLE_STMT:16");
+                                                  position = d;
+                                                }
+                                              d ++;}
+                               
+                            if (position != c) {
+                              int swap;
+                              {
+                                pathcrawler_to_framac("@FC:REACHABLE_STMT:21");
+                                swap = *(A + c);
+                              }
+                              *(A + c) = *(A + position);
+                              *(A + position) = swap;
+                            }
+                          }
+                          c ++;}
        
     free(old_ptr_A);
     return;

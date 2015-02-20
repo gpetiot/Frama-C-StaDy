@@ -11,13 +11,13 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('firstSubset', dim('s'), [], int([1..4294967295])).
+dom('firstSubset', dim('s'), [], int([0..4294967295])).
 dom('firstSubset', cont('s',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__firstSubset_precond',A,B,C) :-
   dom('firstSubset',A,B,C).
 create_input_vals('firstSubset', Ins):-
   create_input_val('n', int([0..3]),Ins),
-  create_input_val(dim('s'), int([1..4294967295]),Ins),
+  create_input_val(dim('s'), int([0..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__firstSubset_precond',Ins) :-
   create_input_vals('firstSubset',Ins).
@@ -159,40 +159,28 @@ void firstSubset(int *s, int n)
       if(! __stady_pred_4) {
         pathcrawler_assert_exception("Loop invariant not established!",7);
       }
-      mpz_t __stady_gmp_29;
-      __gmpz_init_set_si(__stady_gmp_29,n);
-      mpz_t __stady_gmp_30;
-      __gmpz_init_set_si(__stady_gmp_30,k);
-      mpz_t __stady_gmp_31;
-      __gmpz_init(__stady_gmp_31);
-      __gmpz_sub(__stady_gmp_31,__stady_gmp_29,__stady_gmp_30);
-      __gmpz_clear(__stady_gmp_29);
-      __gmpz_clear(__stady_gmp_30);
-      int __stady_term_19;
-      __stady_term_19 = __gmpz_cmp_ui(__stady_gmp_31,0);
-      if(__stady_term_19 < 0) {
-        pathcrawler_assert_exception("Variant non positive",4);
-      }
       while (1) {
+        if (! (k < n)) {
+                         pathcrawler_to_framac("@FC:REACHABLE_STMT:5");
+                         break;
+                       }mpz_t __stady_gmp_29;
+        __gmpz_init_set_si(__stady_gmp_29,n);
+        mpz_t __stady_gmp_30;
+        __gmpz_init_set_si(__stady_gmp_30,k);
+        mpz_t __stady_gmp_31;
+        __gmpz_init(__stady_gmp_31);
+        __gmpz_sub(__stady_gmp_31,__stady_gmp_29,__stady_gmp_30);
+        __gmpz_clear(__stady_gmp_29);
+        __gmpz_clear(__stady_gmp_30);
+        int __stady_term_19;
+        __stady_term_19 = __gmpz_cmp_ui(__stady_gmp_31,0);
+        if(__stady_term_19 < 0) {
+          pathcrawler_assert_exception("Variant non positive",4);
+        }
         mpz_t __stady_gmp_32;
-        __gmpz_init_set_si(__stady_gmp_32,n);
-        mpz_t __stady_gmp_33;
-        __gmpz_init_set_si(__stady_gmp_33,k);
-        mpz_t __stady_gmp_34;
-        __gmpz_init(__stady_gmp_34);
-        __gmpz_sub(__stady_gmp_34,__stady_gmp_32,__stady_gmp_33);
-        __gmpz_clear(__stady_gmp_32);
-        __gmpz_clear(__stady_gmp_33);
-        mpz_t __stady_gmp_35;
-        __gmpz_init_set(__stady_gmp_35,__stady_gmp_34);
-        {
-          if (! (k < n)) {
-                           pathcrawler_to_framac("@FC:REACHABLE_STMT:5");
-                           break;
-                         }
-          *(s + k) = 0;
-          k ++;
-        }mpz_t __stady_gmp_11;
+        __gmpz_init_set(__stady_gmp_32,__stady_gmp_31);
+        *(s + k) = 0;
+        k ++;mpz_t __stady_gmp_11;
         __gmpz_init_set_str(__stady_gmp_11,"0",10);
         mpz_t __stady_gmp_12;
         __gmpz_init_set_si(__stady_gmp_12,k);
@@ -265,27 +253,23 @@ void firstSubset(int *s, int n)
         if(! __stady_pred_6) {
           pathcrawler_assert_exception("Loop invariant not preserved!",7);
         }
-        mpz_t __stady_gmp_36;
-        __gmpz_init_set_si(__stady_gmp_36,n);
-        mpz_t __stady_gmp_37;
-        __gmpz_init_set_si(__stady_gmp_37,k);
-        mpz_t __stady_gmp_38;
-        __gmpz_init(__stady_gmp_38);
-        __gmpz_sub(__stady_gmp_38,__stady_gmp_36,__stady_gmp_37);
-        __gmpz_clear(__stady_gmp_36);
-        __gmpz_clear(__stady_gmp_37);
-        __stady_term_19 = __gmpz_cmp_ui(__stady_gmp_35,0);
-        if(__stady_term_19 < 0) {
-          pathcrawler_assert_exception("Variant non positive",4);
-        }
-        __stady_term_19 = __gmpz_cmp(__stady_gmp_38,__stady_gmp_35);
-        if(__stady_term_19 >= 0) {
+        mpz_t __stady_gmp_33;
+        __gmpz_init_set_si(__stady_gmp_33,n);
+        mpz_t __stady_gmp_34;
+        __gmpz_init_set_si(__stady_gmp_34,k);
+        mpz_t __stady_gmp_35;
+        __gmpz_init(__stady_gmp_35);
+        __gmpz_sub(__stady_gmp_35,__stady_gmp_33,__stady_gmp_34);
+        __gmpz_clear(__stady_gmp_33);
+        __gmpz_clear(__stady_gmp_34);
+        int __stady_term_20;
+        __stady_term_20 = __gmpz_cmp(__stady_gmp_35,__stady_gmp_32);
+        if(__stady_term_20 >= 0) {
           pathcrawler_assert_exception("Variant non decreasing",4);
         }
-        __gmpz_clear(__stady_gmp_35);
+        __gmpz_clear(__stady_gmp_32);
         }
-         __gmpz_clear(__stady_gmp_31);
-      
+         
     }
     {
       int __stady_pred_0;
@@ -364,7 +348,7 @@ void firstSubset(int *s, int n)
 [pc] Starting lanceur_pathcrawler__firstSubset_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 153 test cases
+[stady] 159 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

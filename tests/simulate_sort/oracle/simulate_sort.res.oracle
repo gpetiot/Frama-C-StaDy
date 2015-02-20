@@ -91,15 +91,12 @@ void main(void)
     n = 4;
     i = 0;
     while (1) {
-      {
-        if (! (i < n)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:6");
-                         break;
-                       }
-        t[i] = (13 - i) * ((i % 2) * 2 - 1);
-        t_before[i] = t[i];
-        i ++;
-      }}
+      if (! (i < n)) {
+                       pathcrawler_to_framac("@FC:REACHABLE_STMT:6");
+                       break;
+                     }t[i] = (13 - i) * ((i % 2) * 2 - 1);
+                      t_before[i] = t[i];
+                      i ++;}
        
     {
       __stady_fct_0(t,n);
@@ -108,14 +105,11 @@ void main(void)
     printf("before:\t after:\n");
     i = 0;
     while (1) {
-      {
-        if (! (i < n)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:17");
-                         break;
-                       }
-        printf("%i \t %i\n",t_before[i],t[i]);
-        i ++;
-      }}
+      if (! (i < n)) {
+                       pathcrawler_to_framac("@FC:REACHABLE_STMT:17");
+                       break;
+                     }printf("%i \t %i\n",t_before[i],t[i]);
+                      i ++;}
        
     printf("\n");
     return;
