@@ -1193,61 +1193,62 @@ class gather_insertions props spec_insuf = object(self)
       let prop = Property.ip_of_code_annot_single kf stmt ca in
       if List.mem prop props then
 	let id = Sd_utils.to_id prop in
+	let beg_label = BegIter stmt.sid and end_label = EndIter stmt.sid in
 	begin match term.term_type with
 	| Linteger ->
-	  let inserts_0, term' = self#translate_term term in
-	  List.iter (self#insert (BegStmt stmt.sid)) inserts_0;
-	  let tmp = self#fresh_ctype_varinfo Cil.intType in
-	  let e_tmp = Cil.evar tmp in
-	  let i_1 = decl_varinfo tmp in
-	  let ltmp = Cil.var tmp in
-	  let i_2 = Instru(F.cmp_ui ltmp term' zero) in
+	  (* at BegIter *)
+	  let inserts_1, beg_variant = self#translate_term term in
+	  List.iter (self#insert beg_label) inserts_1;
+	  let cmp_variant_zero = self#fresh_ctype_varinfo Cil.intType in
+	  let e_cmp_variant_zero = Cil.evar cmp_variant_zero in
+	  let l_cmp_variant_zero = Cil.var cmp_variant_zero in
 	  let instr = Instru(self#pc_exc "Variant non positive" id) in
-	  self#insert (BegStmt stmt.sid) i_1;
-	  self#insert (BegStmt stmt.sid) i_2;
-	  self#insert (BegStmt stmt.sid) (ins_if (cmp Rlt e_tmp zero)[instr][]);
-	  self#insert (EndStmt stmt.sid) (Instru(F.clear term'));
-	  let inserts_1, term' = self#translate_term term in
-	  List.iter (self#insert (BegIter stmt.sid)) inserts_1;
-	  let fresh_variant = self#fresh_Z_varinfo() in
-	  let insert_2 = decl_varinfo fresh_variant in
-	  self#insert (BegIter stmt.sid) insert_2;
-	  let e_variant  = Cil.evar fresh_variant in
-	  let insert_3 = Instru(F.init_set e_variant term')in
-	  self#insert (BegIter stmt.sid) insert_3;
-	  let inserts_4, term' = self#translate_term term in
-	  List.iter (self#insert (EndIter stmt.sid)) inserts_4;
-	  let i_3 = Instru(F.cmp_ui ltmp e_variant zero) in
-	  let instr = Instru(self#pc_exc "Variant non positive" id) in
-	  self#insert (EndIter stmt.sid) i_3;
-	  self#insert (EndIter stmt.sid) (ins_if(cmp Rlt e_tmp zero) [instr][]);
-	  let i_4 = Instru(F.cmp ltmp term' e_variant) in
+	  self#insert beg_label (decl_varinfo cmp_variant_zero);
+	  let i_2 = Instru(F.cmp_ui l_cmp_variant_zero beg_variant zero) in
+	  self#insert beg_label i_2;
+	  let cond = cmp Rlt e_cmp_variant_zero zero in
+	  self#insert beg_label (ins_if cond [instr] []);
+	  let save_variant = self#fresh_Z_varinfo() in
+	  let insert_2 = decl_varinfo save_variant in
+	  self#insert beg_label insert_2;
+	  let e_save_variant  = Cil.evar save_variant in
+	  let insert_3 = Instru(F.init_set e_save_variant beg_variant) in
+	  self#insert beg_label insert_3;
+
+	  (* at EndIter *)
+	  let inserts_4, end_variant = self#translate_term term in
+	  List.iter (self#insert end_label) inserts_4;
+	  let cmp_variants = self#fresh_ctype_varinfo Cil.intType in
+	  let e_cmp_variants = Cil.evar cmp_variants in
+	  let l_cmp_variants = Cil.var cmp_variants in
 	  let instr = Instru(self#pc_exc "Variant non decreasing" id) in
-	  self#insert (EndIter stmt.sid) i_4;
-	  self#insert (EndIter stmt.sid) (ins_if(cmp Rge e_tmp zero) [instr][]);
-	  self#insert (EndIter stmt.sid) (Instru(F.clear e_variant))
+	  self#insert end_label (decl_varinfo cmp_variants);
+	  let i_4 = Instru(F.cmp l_cmp_variants end_variant e_save_variant) in
+	  self#insert end_label i_4;
+	  let cond = cmp Rge e_cmp_variants zero in
+	  self#insert end_label (ins_if cond [instr] []);
+	  self#insert end_label (Instru(F.clear e_save_variant))
 	| Lreal -> assert false (* TODO: reals *)
 	| _ ->
-	  let inserts_0, term' = self#translate_term term in
-	  List.iter (self#insert (BegStmt stmt.sid)) inserts_0;
-	  let cond = cmp Rlt term' zero in
+	  (* at BegIter *)
+	  let inserts_1, beg_variant = self#translate_term term in
+	  List.iter (self#insert beg_label) inserts_1;
+	  let cond = cmp Rlt beg_variant zero in
 	  let instr = Instru(self#pc_exc "Variant non positive" id) in
-	  self#insert (BegStmt stmt.sid) (ins_if cond [instr] []);
-	  let inserts_1, term' = self#translate_term term in
-	  List.iter (self#insert (BegIter stmt.sid)) inserts_1;
-	  let variant = self#fresh_ctype_varinfo Cil.intType in
-	  let lvariant = Cil.var variant in
-	  self#insert (BegIter stmt.sid) (decl_varinfo variant);
-	  self#insert (BegIter stmt.sid) (Instru(instru_affect lvariant term'));
-	  let inserts_2, term' = self#translate_term term in
-	  List.iter (self#insert (EndIter stmt.sid)) inserts_2;
-	  let e_variant = Cil.evar variant in
-	  let cond = cmp Rlt e_variant zero in
-	  let instr = Instru(self#pc_exc "Variant non positive" id) in
-	  self#insert (EndIter stmt.sid) (ins_if cond [instr] []);
-	  let cond = cmp Rge term' e_variant in
+	  self#insert beg_label (ins_if cond [instr] []);
+	  let save_variant = self#fresh_ctype_varinfo Cil.intType in
+	  let l_save_variant = Cil.var save_variant in
+	  let e_save_variant = Cil.evar save_variant in
+	  self#insert beg_label (decl_varinfo save_variant);
+	  let insert = Instru(instru_affect l_save_variant beg_variant) in
+	  self#insert beg_label insert;
+
+	  (* at EndIter *)
+	  let inserts_2, end_variant = self#translate_term term in
+	  List.iter (self#insert end_label) inserts_2;
+	  let cond = cmp Rge end_variant e_save_variant in
 	  let instr = Instru(self#pc_exc "Variant non decreasing" id) in
-	  self#insert (EndIter stmt.sid) (ins_if cond [instr] [])
+	  self#insert end_label (ins_if cond [instr] [])
 	end;
 	translated_properties <- prop :: translated_properties
     | _ -> ()

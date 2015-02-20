@@ -111,8 +111,13 @@ class print_insertions insertions functions spec_insuf () = object(self)
 	else begin
 	  Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
 	    (fun fmt -> self#line_directive fmt) l;
+	  let new_b = {b with bstmts = [List.hd b.bstmts]} in
+	  let braces = false in
+	  Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
 	  self#insertions_at fmt (Sd_insertions.BegIter stmt.sid);
-	  Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b;
+	  let new_b = {b with bstmts = List.tl b.bstmts} in
+	  let new_b = {new_b with blocals = []} in
+	  Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
 	  self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
 	  Format.fprintf fmt "}@\n @]"
 	end
