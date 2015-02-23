@@ -95,13 +95,20 @@ int f_precond(int **t, int n)
       __gmpz_clear(__stady_gmp_3);
       __gmpz_clear(__stady_gmp_4);
       int __stady_pred_1;
-      int __stady_term_2;
-      __stady_term_2 = __gmpz_cmp_ui(__stady_gmp_5,0);
-      int __stady_term_3;
-      __stady_term_3 = pathcrawler_dimension(*(t + __stady_term_1));
-      int __stady_term_4;
-      __stady_term_4 = __gmpz_cmp_ui(__stady_gmp_5,__stady_term_3);
-      __stady_pred_1 = __stady_term_2 >= 0 && __stady_term_4 < 0;
+      int __stady_pred_2;
+      __stady_pred_2 = __gmpz_cmp_ui(__stady_gmp_5,0);
+      if(__stady_pred_2 >= 0) {
+        int __stady_term_2;
+        __stady_term_2 = pathcrawler_dimension(*(t + __stady_term_1));
+        int __stady_term_3;
+        __stady_term_3 = __gmpz_cmp_ui(__stady_gmp_5,__stady_term_2);
+        int __stady_term_4;
+        __stady_term_4 = __gmpz_cmp_ui(__stady_gmp_5,0);
+        __stady_pred_1 = __stady_term_4 >= 0 && __stady_term_3 < 0;
+      }
+      else {
+        __stady_pred_1 = 1;
+      }
       __gmpz_clear(__stady_gmp_5);
       __stady_pred_0 = __stady_pred_1;
       __gmpz_add_ui(__q_i,__q_i,1);
@@ -114,8 +121,8 @@ int f_precond(int **t, int n)
   if(! __stady_pred_0) {
     return 0;
   }
-  int __stady_pred_2;
-  __stady_pred_2 = 1;
+  int __stady_pred_3;
+  __stady_pred_3 = 1;
   {
     mpz_t __q_i;
     mpz_t __stady_gmp_6;
@@ -125,9 +132,9 @@ int f_precond(int **t, int n)
     __gmpz_init_set(__q_i,__stady_gmp_6);
     int __stady_term_5;
     __stady_term_5 = __gmpz_cmp(__q_i,__stady_gmp_7);
-    while(__stady_term_5 < 0 && __stady_pred_2) {
-      int __stady_pred_3;
-      __stady_pred_3 = 0;
+    while(__stady_term_5 < 0 && __stady_pred_3) {
+      int __stady_pred_4;
+      __stady_pred_4 = 0;
       {
         mpz_t __q_j;
         mpz_t __stady_gmp_8;
@@ -137,9 +144,9 @@ int f_precond(int **t, int n)
         __gmpz_init_set(__q_j,__stady_gmp_8);
         int __stady_term_6;
         __stady_term_6 = __gmpz_cmp(__q_j,__stady_gmp_9);
-        while(__stady_term_6 < 0 && ! __stady_pred_3) {
-          int __stady_pred_4;
-          __stady_pred_4 = 1;
+        while(__stady_term_6 < 0 && ! __stady_pred_4) {
+          int __stady_pred_5;
+          __stady_pred_5 = 1;
           {
             mpz_t __q_k;
             mpz_t __stady_gmp_10;
@@ -149,9 +156,9 @@ int f_precond(int **t, int n)
             __gmpz_init_set(__q_k,__stady_gmp_10);
             int __stady_term_7;
             __stady_term_7 = __gmpz_cmp(__q_k,__stady_gmp_11);
-            while(__stady_term_7 < 0 && __stady_pred_4) {
-              int __stady_pred_5;
-              __stady_pred_5 = 1;
+            while(__stady_term_7 < 0 && __stady_pred_5) {
+              int __stady_pred_6;
+              __stady_pred_6 = 1;
               mpz_t __stady_gmp_12;
               __gmpz_init_set(__stady_gmp_12,__q_k);
               mpz_t __stady_gmp_13;
@@ -180,9 +187,9 @@ int f_precond(int **t, int n)
                 __stady_term_11 = __gmpz_cmp(__stady_gmp_16,__stady_gmp_17);
                 __gmpz_clear(__stady_gmp_16);
                 __gmpz_clear(__stady_gmp_17);
-                __stady_pred_5 = __stady_term_11 == 0;
+                __stady_pred_6 = __stady_term_11 == 0;
               }
-              __stady_pred_4 = __stady_pred_5;
+              __stady_pred_5 = __stady_pred_6;
               __gmpz_add_ui(__q_k,__q_k,1);
               __stady_term_7 = __gmpz_cmp(__q_k,__stady_gmp_11);
             }
@@ -190,7 +197,7 @@ int f_precond(int **t, int n)
             __gmpz_clear(__stady_gmp_10);
             __gmpz_clear(__stady_gmp_11);
           }
-          __stady_pred_3 = __stady_pred_4;
+          __stady_pred_4 = __stady_pred_5;
           __gmpz_add_ui(__q_j,__q_j,1);
           __stady_term_6 = __gmpz_cmp(__q_j,__stady_gmp_9);
         }
@@ -198,7 +205,7 @@ int f_precond(int **t, int n)
         __gmpz_clear(__stady_gmp_8);
         __gmpz_clear(__stady_gmp_9);
       }
-      __stady_pred_2 = __stady_pred_3;
+      __stady_pred_3 = __stady_pred_4;
       __gmpz_add_ui(__q_i,__q_i,1);
       __stady_term_5 = __gmpz_cmp(__q_i,__stady_gmp_7);
     }
@@ -206,7 +213,7 @@ int f_precond(int **t, int n)
     __gmpz_clear(__stady_gmp_6);
     __gmpz_clear(__stady_gmp_7);
   }
-  if(! __stady_pred_2) {
+  if(! __stady_pred_3) {
     return 0;
   }
   return 1;

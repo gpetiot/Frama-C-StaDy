@@ -146,13 +146,20 @@ void __stady_fct_0(int *a, int n) {
     __gmpz_clear(__stady_gmp_1);
     __gmpz_clear(__stady_gmp_2);
     int __stady_pred_0;
-    int __stady_term_3;
-    __stady_term_3 = __gmpz_cmp_ui(__stady_gmp_3,0);
-    int __stady_term_4;
-    __stady_term_4 = pathcrawler_dimension(__stady_term_2);
-    int __stady_term_5;
-    __stady_term_5 = __gmpz_cmp_ui(__stady_gmp_3,__stady_term_4);
-    __stady_pred_0 = __stady_term_3 >= 0 && __stady_term_5 < 0;
+    int __stady_pred_1;
+    __stady_pred_1 = __gmpz_cmp_ui(__stady_gmp_3,0);
+    if(__stady_pred_1 >= 0) {
+      int __stady_term_3;
+      __stady_term_3 = pathcrawler_dimension(__stady_term_2);
+      int __stady_term_4;
+      __stady_term_4 = __gmpz_cmp_ui(__stady_gmp_3,__stady_term_3);
+      int __stady_term_5;
+      __stady_term_5 = __gmpz_cmp_ui(__stady_gmp_3,0);
+      __stady_pred_0 = __stady_term_5 >= 0 && __stady_term_4 < 0;
+    }
+    else {
+      __stady_pred_0 = 1;
+    }
     __gmpz_clear(__stady_gmp_3);
     if(! __stady_pred_0) {
       pathcrawler_assume_exception("",0);
@@ -182,8 +189,8 @@ void __stady_fct_0(int *a, int n) {
     __gmpz_clear(__stady_gmp_4);
     __gmpz_clear(__stady_gmp_5);
     __gmpz_clear(__stady_gmp_8);
-    int __stady_pred_1;
-    __stady_pred_1 = 1;
+    int __stady_pred_2;
+    __stady_pred_2 = 1;
     {
       mpz_t __q_i;
       mpz_t __stady_gmp_9;
@@ -200,7 +207,7 @@ void __stady_fct_0(int *a, int n) {
       __gmpz_init_set(__q_i,__stady_gmp_9);
       int __stady_term_8;
       __stady_term_8 = __gmpz_cmp(__q_i,__stady_gmp_12);
-      while(__stady_term_8 < 0 && __stady_pred_1) {
+      while(__stady_term_8 < 0 && __stady_pred_2) {
         mpz_t __stady_gmp_13;
         __gmpz_init_set(__stady_gmp_13,__q_i);
         int __stady_term_9;
@@ -218,7 +225,7 @@ void __stady_fct_0(int *a, int n) {
         int __stady_term_10;
         __stady_term_10 = (int)__gmpz_get_si(__stady_gmp_16);
         __gmpz_clear(__stady_gmp_16);
-        __stady_pred_1 = *(old_a + __stady_term_9) <= *(old_a + __stady_term_10);
+        __stady_pred_2 = *(old_a + __stady_term_9) <= *(old_a + __stady_term_10);
         __gmpz_add_ui(__q_i,__q_i,1);
         __stady_term_8 = __gmpz_cmp(__q_i,__stady_gmp_12);
       }
@@ -226,11 +233,11 @@ void __stady_fct_0(int *a, int n) {
       __gmpz_clear(__stady_gmp_9);
       __gmpz_clear(__stady_gmp_12);
     }
-    if(! __stady_pred_1) {
+    if(! __stady_pred_2) {
       pathcrawler_assume_exception("",0);
     }
-    int __stady_pred_2;
-    __stady_pred_2 = 1;
+    int __stady_pred_3;
+    __stady_pred_3 = 1;
     {
       mpz_t __q_i;
       mpz_t __stady_gmp_17;
@@ -240,7 +247,7 @@ void __stady_fct_0(int *a, int n) {
       __gmpz_init_set(__q_i,__stady_gmp_17);
       int __stady_term_11;
       __stady_term_11 = __gmpz_cmp(__q_i,__stady_gmp_18);
-      while(__stady_term_11 < 0 && __stady_pred_2) {
+      while(__stady_term_11 < 0 && __stady_pred_3) {
         mpz_t __stady_gmp_19;
         __gmpz_init_set_si(__stady_gmp_19,0);
         {
@@ -323,7 +330,7 @@ void __stady_fct_0(int *a, int n) {
         __stady_term_18 = __gmpz_cmp(__stady_gmp_19,__stady_gmp_26);
         __gmpz_clear(__stady_gmp_19);
         __gmpz_clear(__stady_gmp_26);
-        __stady_pred_2 = __stady_term_18 == 0;
+        __stady_pred_3 = __stady_term_18 == 0;
         __gmpz_add_ui(__q_i,__q_i,1);
         __stady_term_11 = __gmpz_cmp(__q_i,__stady_gmp_18);
       }
@@ -331,7 +338,7 @@ void __stady_fct_0(int *a, int n) {
       __gmpz_clear(__stady_gmp_17);
       __gmpz_clear(__stady_gmp_18);
     }
-    if(! __stady_pred_2) {
+    if(! __stady_pred_3) {
       pathcrawler_assume_exception("",0);
     }
     free(old_ptr_a);
@@ -356,4 +363,4 @@ before:	 after:
 [pc] Starting lanceur_pathcrawler__main_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 1256 test cases
+[stady] 1257 test cases

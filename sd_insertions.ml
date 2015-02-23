@@ -670,7 +670,16 @@ class gather_insertions props spec_insuf = object(self)
       Printer.pp_predicate p;
     [], one
 
-  method private translate_valid term =
+  method private translate_valid term = match term.term_node with
+    | Tempty_set -> [], one
+    | Tunion _ -> assert false (* TODO *)
+    | Tinter _ -> assert false (* TODO *)
+    | Tcomprehension _ -> assert false (* TODO *)
+    | _ -> self#translate_valid_singleton term
+
+  (* if (lower_bound <= upper_bound) ret = 0 <= upper_bound < dim(p)
+     else ret = 1 *)
+  method private translate_valid_singleton term =
     let loc = term.term_loc in
     let pointer, offset = match term.term_node with
       | TLval _ -> term, Cil.lzero ~loc ()
@@ -681,37 +690,61 @@ class gather_insertions props spec_insuf = object(self)
 	x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
       | _ -> Sd_utils.error_term term
     in
+    let lower_bound = zero (* TODO: use lower bound of the range instead *) in
     let inserts_0, x' = self#translate_term pointer in
     let inserts_1, y' = self#translate_term offset in
     let inserts, ret = match offset.term_type with
       | Linteger ->
-	let var = self#fresh_pred_varinfo() in
-	let i_0 = decl_varinfo var in
-	let tmp' = self#fresh_ctype_varinfo Cil.intType in
-	let i_1 = decl_varinfo tmp' in
-	let i_2 = Instru(F.cmp_ui (Cil.var tmp') y' zero) in
-	let tmp = self#fresh_ctype_varinfo Cil.intType in
-	let i_3 = decl_varinfo tmp in
-	let ltmp = Cil.var tmp in
-	let i_4 = Instru(F.pc_dim ltmp x') in
-	let tmp'' = self#fresh_ctype_varinfo Cil.intType in
-	let i_5 = decl_varinfo tmp'' in
-	let i_6 = Instru(F.cmp_ui (Cil.var tmp'') y' (Cil.evar tmp)) in
-	let e1 = cmp Rge (Cil.evar tmp') zero in
-	let e2 = cmp Rlt (Cil.evar tmp'') zero in
-	let e3 = Cil.mkBinOp ~loc LAnd e1 e2 in
-	let lvar = Cil.var var in
-	let i_7 = Instru(instru_affect lvar e3) in
-	let i_8 = Instru(F.clear y') in
-	[i_0; i_1; i_2; i_3; i_4; i_5; i_6; i_7; i_8], Cil.evar var
+	 let ret = self#fresh_pred_varinfo () in
+	 let l_ret = Cil.var ret in
+	 let e_ret = Cil.evar ret in
+	 let i_0 = decl_varinfo ret in
+	 let nonempty_set = self#fresh_pred_varinfo () in
+	 let i_0' = decl_varinfo nonempty_set in
+	 let l_nonempty_set = Cil.var nonempty_set in
+	 let e_nonempty_set = Cil.evar nonempty_set in
+	 let i_cond = Instru(F.cmp_ui l_nonempty_set y' lower_bound) in
+	 let cond = cmp Rge e_nonempty_set zero in
+	 (* then branch *)
+	 let dim = self#fresh_ctype_varinfo Cil.intType in
+	 let l_dim = Cil.var dim in
+	 let e_dim = Cil.evar dim in
+	 let i_1 = decl_varinfo dim in
+	 let i_2 = Instru(F.pc_dim l_dim x') in
+	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType in
+	 let l_cmp_dim_off = Cil.var cmp_dim_off in
+	 let e_cmp_dim_off = Cil.evar cmp_dim_off in
+	 let i_3 = decl_varinfo cmp_dim_off in
+	 let i_4 = Instru(F.cmp_ui l_cmp_dim_off y' e_dim) in
+	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType in
+	 let l_cmp_off_zero = Cil.var cmp_off_zero in
+	 let e_cmp_off_zero = Cil.evar cmp_off_zero in
+	 let i_5 = decl_varinfo cmp_off_zero in
+	 let i_6 = Instru(F.cmp_ui l_cmp_off_zero y' zero) in
+	 let e1 = cmp Rge e_cmp_off_zero zero in
+	 let e2 = cmp Rlt e_cmp_dim_off zero in
+	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+	 (* else branch *)
+	 let i_8 = Instru(instru_affect l_ret one) in
+	 let i_if = ins_if cond [i_1; i_2; i_3; i_4; i_5; i_6; i_7] [i_8] in
+	 let i_clear = Instru(F.clear y') in
+	 [i_0; i_0'; i_cond; i_if; i_clear], e_ret
       | Ctype (TInt _) ->
-	let tmp = self#fresh_ctype_varinfo Cil.intType in
-	let i_1 = decl_varinfo tmp in
-	let ltmp = Cil.var tmp in
-	let i_2 = Instru(F.pc_dim ltmp x') in
-	let e1 = cmp Rge y' zero in
-	let e2 = cmp Rgt (Cil.evar tmp) y' in
-	[i_1; i_2], Cil.mkBinOp ~loc LAnd e1 e2
+	 let ret = self#fresh_pred_varinfo () in
+	 let l_ret = Cil.var ret in
+	 let e_ret = Cil.evar ret in
+	 let i_0 = decl_varinfo ret in
+	 (* then branch *)
+	 let dim = self#fresh_ctype_varinfo Cil.intType in
+	 let l_dim = Cil.var dim in
+	 let i_1 = decl_varinfo dim in
+	 let i_2 = Instru(F.pc_dim l_dim x') in
+	 let e1 = cmp Rge y' zero in
+	 let e2 = cmp Rgt (Cil.evar dim) y' in
+	 let i_3 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+	 (* else branch *)
+	 let i_4 = Instru(instru_affect l_ret one) in
+	 [i_0; ins_if (cmp Rle lower_bound y') [i_1; i_2; i_3] [i_4]], e_ret
       | _ -> assert false (* unreachable *)
     in
     inserts_0 @ inserts_1 @ inserts, ret

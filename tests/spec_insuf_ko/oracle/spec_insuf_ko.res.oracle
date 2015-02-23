@@ -87,13 +87,20 @@ void sort(int *A, int n)
   __gmpz_clear(__stady_gmp_2);
   __gmpz_clear(__stady_gmp_3);
   int __stady_pred_0;
-  int __stady_term_1;
-  __stady_term_1 = __gmpz_cmp_ui(__stady_gmp_4,0);
-  int __stady_term_2;
-  __stady_term_2 = pathcrawler_dimension(A);
-  int __stady_term_3;
-  __stady_term_3 = __gmpz_cmp_ui(__stady_gmp_4,__stady_term_2);
-  __stady_pred_0 = __stady_term_1 >= 0 && __stady_term_3 < 0;
+  int __stady_pred_1;
+  __stady_pred_1 = __gmpz_cmp_ui(__stady_gmp_4,0);
+  if(__stady_pred_1 >= 0) {
+    int __stady_term_1;
+    __stady_term_1 = pathcrawler_dimension(A);
+    int __stady_term_2;
+    __stady_term_2 = __gmpz_cmp_ui(__stady_gmp_4,__stady_term_1);
+    int __stady_term_3;
+    __stady_term_3 = __gmpz_cmp_ui(__stady_gmp_4,0);
+    __stady_pred_0 = __stady_term_3 >= 0 && __stady_term_2 < 0;
+  }
+  else {
+    __stady_pred_0 = 1;
+  }
   __gmpz_clear(__stady_gmp_4);
   if(! __stady_pred_0) {
     pathcrawler_assert_exception("Pre-condition!",8);
@@ -236,16 +243,23 @@ void __stady_fct_0(int *A, int n) {
     __gmpz_sub(__stady_gmp_12,__stady_gmp_10,__stady_gmp_11);
     __gmpz_clear(__stady_gmp_10);
     __gmpz_clear(__stady_gmp_11);
-    int __stady_pred_1;
-    int __stady_term_13;
-    __stady_term_13 = __gmpz_cmp_ui(__stady_gmp_12,0);
-    int __stady_term_14;
-    __stady_term_14 = pathcrawler_dimension(__stady_term_12);
-    int __stady_term_15;
-    __stady_term_15 = __gmpz_cmp_ui(__stady_gmp_12,__stady_term_14);
-    __stady_pred_1 = __stady_term_13 >= 0 && __stady_term_15 < 0;
+    int __stady_pred_2;
+    int __stady_pred_3;
+    __stady_pred_3 = __gmpz_cmp_ui(__stady_gmp_12,0);
+    if(__stady_pred_3 >= 0) {
+      int __stady_term_13;
+      __stady_term_13 = pathcrawler_dimension(__stady_term_12);
+      int __stady_term_14;
+      __stady_term_14 = __gmpz_cmp_ui(__stady_gmp_12,__stady_term_13);
+      int __stady_term_15;
+      __stady_term_15 = __gmpz_cmp_ui(__stady_gmp_12,0);
+      __stady_pred_2 = __stady_term_15 >= 0 && __stady_term_14 < 0;
+    }
+    else {
+      __stady_pred_2 = 1;
+    }
     __gmpz_clear(__stady_gmp_12);
-    if(! __stady_pred_1) {
+    if(! __stady_pred_2) {
       pathcrawler_assume_exception("",0);
     }
     mpz_t __stady_gmp_13;
@@ -290,7 +304,7 @@ void __stady_fct_0(int *A, int n) {
 [pc] Starting lanceur_f (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 21 test cases
+[stady] 22 test cases
 [stady]  Counter-example for ensures *(\old(t)+0) ≤ *(\old(t)+1)
 [stady]  testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_2.c
 [stady]           variable|            input|  concrete output|  symbolic output

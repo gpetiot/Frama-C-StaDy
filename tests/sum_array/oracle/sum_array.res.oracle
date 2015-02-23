@@ -61,12 +61,12 @@ int sum_array(int *t, int n)
       __stady_term_9 = __gmpz_cmp(__stady_gmp_21,__stady_gmp_22);
       __gmpz_clear(__stady_gmp_21);
       __gmpz_clear(__stady_gmp_22);
-      int __stady_pred_0;
-      __stady_pred_0 = __stady_term_9 <= 0;
-      if(__stady_pred_0) {
-        __stady_pred_0 = i <= n;
+      int __stady_pred_1;
+      __stady_pred_1 = __stady_term_9 <= 0;
+      if(__stady_pred_1) {
+        __stady_pred_1 = i <= n;
       }
-      if(! __stady_pred_0) {
+      if(! __stady_pred_1) {
         pathcrawler_assert_exception("Loop invariant not established!",2);
       }
       mpz_t __stady_gmp_25;
@@ -170,9 +170,16 @@ int sum_array(int *t, int n)
           if(! (__stady_term_6 <= 0)) {
             pathcrawler_assert_exception("Assert!",5);
           }
-          int __stady_term_7;
-          __stady_term_7 = pathcrawler_dimension(t);
-          if(! (i >= 0 && __stady_term_7 > i)) {
+          int __stady_pred_0;
+          if(0 <= i) {
+            int __stady_term_7;
+            __stady_term_7 = pathcrawler_dimension(t);
+            __stady_pred_0 = i >= 0 && __stady_term_7 > i;
+          }
+          else {
+            __stady_pred_0 = 1;
+          }
+          if(! __stady_pred_0) {
             pathcrawler_assert_exception("Assert!",6);
           }
           s += *(t + i);
@@ -205,12 +212,12 @@ int sum_array(int *t, int n)
         __stady_term_10 = __gmpz_cmp(__stady_gmp_23,__stady_gmp_24);
         __gmpz_clear(__stady_gmp_23);
         __gmpz_clear(__stady_gmp_24);
-        int __stady_pred_1;
-        __stady_pred_1 = __stady_term_10 <= 0;
-        if(__stady_pred_1) {
-          __stady_pred_1 = i <= n;
+        int __stady_pred_2;
+        __stady_pred_2 = __stady_term_10 <= 0;
+        if(__stady_pred_2) {
+          __stady_pred_2 = i <= n;
         }
-        if(! __stady_pred_1) {
+        if(! __stady_pred_2) {
           pathcrawler_assert_exception("Loop invariant not preserved!",2);
         }
         mpz_t __stady_gmp_33;
@@ -345,7 +352,7 @@ int sum_array(int *t, int n)
 [pc] Starting lanceur_sum_array (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 141 test cases
+[stady] 153 test cases
 [stady]  Counter-example for assert rte: signed_overflow: -2147483648 ≤ s+*(t+i);
 [stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_8.c
 [stady]           variable|            input|  concrete output|  symbolic output
