@@ -161,5 +161,7 @@ class subst ?subst_result () = object(self)
 
   method term t ll vt vv = {t with term_node=self#tnode t.term_node ll vt vv}
   method pnamed p ll vt vp vv = {p with content=self#pred p.content ll vt vp vv}
+  method id_pred p ll vt vp vv =
+    {p with ip_content=self#pred p.ip_content ll vt vp vv}
   method label l ll = if List.mem_assoc l ll then List.assoc l ll else l
 end
