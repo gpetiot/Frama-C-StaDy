@@ -962,16 +962,18 @@ class gather_insertions props spec_insuf = object(self)
 
   (* alloc and dealloc variables for \at terms *)
   method private save_varinfo kf vi =
+    let rec dig_type = function
+      | TPtr (ty, _) -> Cil.stripConstLocalType ty
+      | TArray (ty, _, _, _) -> Cil.stripConstLocalType ty
+      | TNamed (ty, _) -> dig_type ty.ttype
+      | ty ->
+	 Sd_options.Self.abort ~current:true "dig_type %a" Printer.pp_typ ty
+    in
     let rec strip_const = function
       | TPtr (t, att) -> Cil.stripConstLocalType (TPtr(strip_const t, att))
       | TArray (t,a,b,c) -> Cil.stripConstLocalType(TArray(strip_const t,a,b,c))
       | ty -> Cil.stripConstLocalType ty
     in
-    let dig_type = function
-      | TPtr(ty,_) | TArray(ty,_,_,_) -> ty
-      | ty -> Sd_options.Self.abort "dig_type %a" Printer.pp_typ ty
-    in
-    let dig_type x = dig_type (Cil.unrollTypeDeep x) in
     let addoffset lval exp =
       let ty = Cil.typeOfLval lval in
       if Cil.isPointerType ty then
