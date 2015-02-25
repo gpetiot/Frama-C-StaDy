@@ -132,6 +132,10 @@ let lengths_from_requires kf =
   let kf_tbl = Cil_datatype.Varinfo.Hashtbl.create 32 in
   let o = object
     inherit Visitor.frama_c_inplace
+
+    method! vpredicate_named p =
+      if List.mem "rte" p.name then Cil.SkipChildren else Cil.DoChildren
+
     method! vpredicate = function
     | Pvalid(_, t) | Pvalid_read(_, t) ->
       begin
@@ -150,14 +154,11 @@ let lengths_from_requires kf =
   end
   in
   let on_requires p =
-    let p' = (new Sd_subst.subst ())#pred p.ip_content [][][][] in
-    ignore (Visitor.visitFramacPredicate o p')
+    let p' = (new Sd_subst.subst ())#id_pred p [][][][] in
+    ignore (Visitor.visitFramacIdPredicate o p')
   in
   let on_bhv _ bhv = List.iter on_requires bhv.b_requires in
-  if not (Cil.is_unused_builtin vi) then
-    (* TODO: handle arrays with constant size *)
-    (*Globals.Vars.iter (fun vi _ -> () );*)
-    Annotations.iter_behaviors on_bhv kf;
+  if not (Cil.is_unused_builtin vi) then Annotations.iter_behaviors on_bhv kf;
   kf_tbl
 
 let mpz_t() =
