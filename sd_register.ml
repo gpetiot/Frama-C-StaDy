@@ -202,15 +202,23 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
     else ""
   in
   print_translation instru_fname insertions functions spec_insuf;
+  let stop_when_assert_violated =
+    if Sd_options.Stop_When_Assert_Violated.get() then
+      "-pc-stop-when-assert-violated"
+    else ""
+  in
   let cmd =
     Printf.sprintf
       "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -lib-entry \
- -pc -pc-gmp -pc-validate-asserts %s -pc-com %s -pc-no-xml %s -pc-deter"
+       -pc -pc-gmp -pc-validate-asserts %s -pc-com %s -pc-no-xml %s -pc-deter \
+       -pc-session-timeout=%i %s"
       instru_fname
       entry_point
       test_params
       (Sd_options.Socket_Type.get())
       (Sd_options.PathCrawler_Options.get())
+      (Sd_options.Timeout.get())
+      stop_when_assert_violated
   in
   Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "cmd: %s" cmd;
   (* open socket with the generator *)

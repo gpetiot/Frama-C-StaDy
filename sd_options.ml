@@ -75,6 +75,22 @@ module Simulate_Functions =
       let help = "simulate a function execution based on its postcondition"
     end)
 
+module Timeout =
+  Self.Int
+    (struct
+      let option_name = "-stady-timeout"
+      let help = "timeout for the test generator (in seconds), \
+		  no timeout if n <= 0 (default: no timeout)"
+      let arg_name = "n"
+      let default = 0
+    end)
+
+module Stop_When_Assert_Violated =
+  Self.False
+    (struct
+      let option_name = "-stady-stop-when-assert-violated"
+      let help = "stop the test generation at the first violated assertion"
+    end)
 
 (* Debug Keys *)
 
