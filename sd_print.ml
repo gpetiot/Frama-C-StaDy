@@ -317,7 +317,8 @@ typedef __mpz_struct mpz_t[1];";
 	   fundec.svar.vattr <- oldattr;
 	   Format.fprintf fmt "@\n"
 	 end
-    | GVarDecl (_, vi, _) -> if print_var vi then super#global fmt g
+    | GVarDecl (vi, _)
+    | GFunDecl (_, vi, _) -> if print_var vi then super#global fmt g
     | GVar (vi,_,_) ->
       let old_vghost = vi.vghost in
       vi.vghost <- false;
