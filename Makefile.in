@@ -22,7 +22,7 @@ PLUGIN_CMO := \
 	debug \
 	states \
 	subst \
-	sd_utils \
+	utils \
 	sd_socket \
 	sd_native_precond \
 	sd_insertions \

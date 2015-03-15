@@ -37,7 +37,7 @@ let to_do_on_select
 	   if nb > 0 then
 	     begin
 	       main_ui#pretty_information "%i Counter-Example(s)@." nb;
-	       Sd_utils.print_counter_examples
+	       Utils.print_counter_examples
 		 true main_ui#pretty_information prop
 	     end
 	 with

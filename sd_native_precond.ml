@@ -148,9 +148,9 @@ class to_pl = object(self)
   method term_offset ret = function
   | TNoOffset -> List.rev ret
   | TField (fi, tof) ->
-    let i = PLConst (PLInt (Sd_utils.fieldinfo_to_int fi)) in
+    let i = PLConst (PLInt (Utils.fieldinfo_to_int fi)) in
     self#term_offset (i :: ret) tof
-  | TModel _ as t -> Sd_utils.error_toffset t
+  | TModel _ as t -> Utils.error_toffset t
   | TIndex (t, tof) -> self#term_offset ((self#term t) :: ret) tof
 	  
   method term_lhost = function
@@ -179,18 +179,18 @@ class to_pl = object(self)
     begin
       match (self#term term) with
       | PLConst (PLInt i) -> PLConst (PLInt (Integer.neg i))
-      | _ -> Sd_utils.error_term t
+      | _ -> Utils.error_term t
     end
   | Tat(t',LogicLabel(_,l)) when l = "Here" || l = "Old" -> self#term t'
-  | _ -> Sd_utils.error_term t
+  | _ -> Utils.error_term t
 end
 
-let term_to_pl t = try (new to_pl)#term t with _ -> Sd_utils.error_term t
+let term_to_pl t = try (new to_pl)#term t with _ -> Utils.error_term t
 
 let rec input_from_type domains ty t =
-  let maxuint = Cil.max_unsigned_number (Sd_utils.machdep()) in
-  let maxint = Cil.max_signed_number (Sd_utils.machdep()) in
-  let minint = Cil.min_signed_number (Sd_utils.machdep()) in
+  let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
+  let maxint = Cil.max_signed_number (Utils.machdep()) in
+  let minint = Cil.min_signed_number (Utils.machdep()) in
   let ibounds = function
     | IBool -> Integer.zero, Integer.one
     | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
@@ -238,7 +238,7 @@ let rec input_from_type domains ty t =
       Printer.pp_typ ty (new pl_printer)#term t
 
 let rec valid_to_prolog term =
-  let maxuint = Cil.max_unsigned_number (Sd_utils.machdep()) in
+  let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
   match term.term_node with
   | TLval _ ->
     let t = term_to_pl term in
@@ -261,7 +261,7 @@ let rec valid_to_prolog term =
 	[ PLDomain (PLIntDom (PLDim t', Some (Integer.zero), Some maxuint));
 	  PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
     end
-  | _ -> Sd_utils.error_term term
+  | _ -> Utils.error_term term
 
 let rel_to_prolog rel term1 term2 =
   let var1 = term_to_pl term1 in
@@ -318,10 +318,10 @@ let rec requires_to_prolog constraints pred = match pred.content with
 
 let compute_constraints() =
   let kf = fst (Globals.entry_point()) in
-  let bhv = Sd_utils.default_behavior kf in
+  let bhv = Utils.default_behavior kf in
   let subst pred = (new Subst.subst ())#pnamed pred [] [] [] [] in
   let requires_preds = bhv.b_requires in
-  let typically_preds = Sd_utils.typically_preds bhv in
+  let typically_preds = Utils.typically_preds bhv in
   let f constraints id_pred =
     let pnamed = Logic_const.pred_of_id_pred id_pred in
     let pnamed = subst pnamed in

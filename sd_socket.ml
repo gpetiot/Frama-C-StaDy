@@ -19,7 +19,7 @@ let process_test_case s =
     in
     if s = "" then [] else aux [] s
   in
-  let prop = Sd_utils.to_prop id_prop in
+  let prop = Utils.to_prop id_prop in
   let func = Kernel_function.get_name (fst (Globals.entry_point ())) in
   let instru_file_name =
     Printf.sprintf "__sd_instru_%s_%s.c"

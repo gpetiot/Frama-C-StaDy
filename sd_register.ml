@@ -111,8 +111,8 @@ let setup_props_bijection () =
   let kf = fst (Globals.entry_point()) in
   let strengthened_precond =
     try
-      let bhv = Sd_utils.default_behavior kf in
-      let typically_preds = Sd_utils.typically_preds bhv in
+      let bhv = Utils.default_behavior kf in
+      let typically_preds = Utils.typically_preds bhv in
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
   in
@@ -280,15 +280,15 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   let distinct = true in
   let strengthened_precond =
     try
-      let bhv = Sd_utils.default_behavior kf in
-      let typically_preds = Sd_utils.typically_preds bhv in
+      let bhv = Utils.default_behavior kf in
+      let typically_preds = Utils.typically_preds bhv in
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
   in
   let no_CE = States.Counter_examples.length() = 0 in
   let emit_status prop =
     try
-      Sd_utils.print_counter_examples false Options.Self.result prop;
+      Utils.print_counter_examples false Options.Self.result prop;
       let status = Property_status.False_and_reachable in
       Property_status.emit emitter ~hyps:[] prop ~distinct status
     with

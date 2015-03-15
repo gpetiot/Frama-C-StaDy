@@ -51,7 +51,7 @@ let loc = Cil_datatype.Location.unknown
 
 (* varinfos *)
 let my_varinfo ty varname = Cil.makeVarinfo false false varname ty
-let my_Z_varinfo s = my_varinfo (Sd_utils.mpz_t()) s
+let my_Z_varinfo s = my_varinfo (Utils.mpz_t()) s
 let my_pred_varinfo s = my_varinfo Cil.intType s
 
 (* expressions *)
@@ -171,7 +171,7 @@ class gather_insertions props spec_insuf = object(self)
     let varname = "__stady_fct_" ^ (string_of_int last_fct_id) in
     my_varinfo ty varname
 
-  method translated_properties() = Sd_utils.no_repeat translated_properties
+  method translated_properties() = Utils.no_repeat translated_properties
 
   method private translate_constant ty = function
     | Integer (i, str_opt) ->
@@ -680,7 +680,7 @@ class gather_insertions props spec_insuf = object(self)
        let x = Cil.term_of_exp_info loc (TUnOp(Neg,x)) einfo in
        self#translate_valid_ptr_offset p x
     | TLval _ -> self#translate_valid_ptr term
-    | _ -> Sd_utils.error_term term
+    | _ -> Utils.error_term term
 
   method private translate_valid_ptr_range pointer min_off max_off =
     let inserts_0, x' = self#translate_term pointer in
@@ -834,7 +834,7 @@ class gather_insertions props spec_insuf = object(self)
       else Cil.new_exp ~loc (UnOp(LNot,e_var,Cil.intType))
     in
     let on_lvar (i_b,e_c,i_i,i_a) lvar =
-      let t1,r1,r2,t2 = Sd_utils.extract_guards lvar hyps in
+      let t1,r1,r2,t2 = Utils.extract_guards lvar hyps in
       let iter_name = lvar.lv_name in
       let i_before, e_cond, i_inside, i_after = match t1.term_type with
 	| Linteger ->
@@ -970,7 +970,7 @@ class gather_insertions props spec_insuf = object(self)
     in
     let do_behavior ins b =
       let requires = List.filter not_translated b.b_requires in
-      let typically = List.filter not_translated (Sd_utils.typically_preds b) in
+      let typically = List.filter not_translated (Utils.typically_preds b) in
       let to_prop = Property.ip_of_requires kf kloc b in
       let in_props p = List.mem (to_prop p) props in
       let requires, typically =
@@ -1054,7 +1054,7 @@ class gather_insertions props spec_insuf = object(self)
 	Cil.addOffsetLval (Index(exp, NoOffset)) lval
       else assert false
     in
-    let lengths = Sd_utils.lengths_from_requires kf in
+    let lengths = Utils.lengths_from_requires kf in
     let terms = try Cil_datatype.Varinfo.Hashtbl.find lengths vi with _ -> [] in
     let do_varinfo v =
       let my_old_v = my_varinfo (strip_const v.vtype) ("old_" ^ v.vname) in
@@ -1228,7 +1228,7 @@ class gather_insertions props spec_insuf = object(self)
   method private pc_assert_exception pred msg prop =
     let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
     let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
-    let id = Sd_utils.to_id prop in
+    let id = Utils.to_id prop in
     let insert_1 = ins_if e [Instru(self#pc_exc msg id)] [] in
     translated_properties <- prop :: translated_properties;
     inserts_0 @ [insert_1]
@@ -1298,7 +1298,7 @@ class gather_insertions props spec_insuf = object(self)
 
       let prop = Property.ip_of_code_annot_single kf stmt ca in
       if List.mem prop props then
-	let id = Sd_utils.to_id prop in
+	let id = Utils.to_id prop in
 	let beg_label = BegIter stmt.sid and end_label = EndIter stmt.sid in
 	begin match term.term_type with
 	| Linteger ->
