@@ -3,13 +3,13 @@ open Cil_types
 
 
 let pp_label fmt = function
-  | Sd_insertions.BegStmt s -> Format.fprintf fmt "BegStmt %i" s
-  | Sd_insertions.EndStmt s -> Format.fprintf fmt "EndStmt %i" s
-  | Sd_insertions.BegFunc s -> Format.fprintf fmt "BegFunc %s" s
-  | Sd_insertions.EndFunc s -> Format.fprintf fmt "EndFunc %s" s
-  | Sd_insertions.BegIter s -> Format.fprintf fmt "BegIter %i" s
-  | Sd_insertions.EndIter s -> Format.fprintf fmt "EndIter %i" s
-  | Sd_insertions.Glob -> Format.fprintf fmt "Global"
+  | Insertions.BegStmt s -> Format.fprintf fmt "BegStmt %i" s
+  | Insertions.EndStmt s -> Format.fprintf fmt "EndStmt %i" s
+  | Insertions.BegFunc s -> Format.fprintf fmt "BegFunc %s" s
+  | Insertions.EndFunc s -> Format.fprintf fmt "EndFunc %s" s
+  | Insertions.BegIter s -> Format.fprintf fmt "BegIter %i" s
+  | Insertions.EndIter s -> Format.fprintf fmt "EndIter %i" s
+  | Insertions.Glob -> Format.fprintf fmt "Global"
 
 let pp_lval = Printer.pp_lval
 let pp_exp = Printer.pp_exp
@@ -23,20 +23,20 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     | h :: t -> pp_insertion ~line_break:true fmt h; aux fmt t
   in
   begin match ins with
-  | Sd_insertions.Instru i -> Format.fprintf fmt "@[%a@]" pp_instr i
-  | Sd_insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" pp_exp e
-  | Sd_insertions.Decl v ->
+  | Insertions.Instru i -> Format.fprintf fmt "@[%a@]" pp_instr i
+  | Insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" pp_exp e
+  | Insertions.Decl v ->
      let ty = Cil.stripConstLocalType v.vtype in
      let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
      let ty = array_to_ptr ty in
      let v' = {v with vtype = ty} in
      Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v'
-  | Sd_insertions.Block b ->
+  | Insertions.Block b ->
      if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
-  | Sd_insertions.IIf (e,b1,b2) ->
+  | Insertions.IIf (e,b1,b2) ->
      Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_exp e aux b1;
      if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
-  | Sd_insertions.ILoop (e,b) ->
+  | Insertions.ILoop (e,b) ->
      Format.fprintf fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" pp_exp e aux b
   end;
   if line_break then Format.fprintf fmt "@\n"
@@ -72,7 +72,7 @@ class print_insertions insertions functions spec_insuf () = object(self)
       Format.fprintf fmt "%a@ @[<hov 2>{@\n"
 	(self#typ (Some (fun fmt -> Format.fprintf fmt "%s" precond)))
 	(TFun(Cil.intType,x,y,z));
-      self#insertions_at fmt (Sd_insertions.BegFunc precond);
+      self#insertions_at fmt (Insertions.BegFunc precond);
       Format.fprintf fmt "@[return 1;@]";
       Format.fprintf fmt "@]@\n}@\n@\n"
     end;
@@ -80,7 +80,7 @@ class print_insertions insertions functions spec_insuf () = object(self)
     Format.fprintf fmt "@[%t%a@\n@[<v 2>" ignore self#vdecl f.svar;
     (* body. *)
     Format.fprintf fmt "@[<hov 2>{@\n";
-    self#insertions_at fmt (Sd_insertions.BegFunc f.svar.vname);
+    self#insertions_at fmt (Insertions.BegFunc f.svar.vname);
     self#block ~braces:true fmt f.sbody;
     Format.fprintf fmt "@.}";
     Format.fprintf fmt "@]%t@]@." ignore;
@@ -94,14 +94,14 @@ class print_insertions insertions functions spec_insuf () = object(self)
     let kf = Kernel_function.find_englobing_kf stmt in
     let insert_something =
       (try not (Queue.is_empty
-		  (Hashtbl.find insertions (Sd_insertions.BegStmt stmt.sid)))
+		  (Hashtbl.find insertions (Insertions.BegStmt stmt.sid)))
        with _ -> false)
       || (try not (Queue.is_empty
-		     (Hashtbl.find insertions (Sd_insertions.EndStmt stmt.sid)))
+		     (Hashtbl.find insertions (Insertions.EndStmt stmt.sid)))
 	with _ -> false)
     in
     if insert_something then Format.fprintf fmt "@[<hov 2>{@\n";
-    self#insertions_at fmt (Sd_insertions.BegStmt stmt.sid);
+    self#insertions_at fmt (Insertions.BegStmt stmt.sid);
     begin
       match stmt.skind with
       | Loop(_,b,l,_,_) ->
@@ -110,36 +110,36 @@ class print_insertions insertions functions spec_insuf () = object(self)
 	 let new_b = {b with bstmts = [List.hd b.bstmts]} in
 	 let braces = false in
 	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
-	 self#insertions_at fmt (Sd_insertions.BegIter stmt.sid);
+	 self#insertions_at fmt (Insertions.BegIter stmt.sid);
 	 let new_b = {b with bstmts = List.tl b.bstmts} in
 	 let new_b = {new_b with blocals = []} in
 	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
-	 self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
+	 self#insertions_at fmt (Insertions.EndIter stmt.sid);
 	 Format.fprintf fmt "}@\n @]"
       | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
 	  when (spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid)
 	       || List.mem vi.vname (Options.Simulate_Functions.get()) -> ()
       | Return _ ->
 	let f = Kernel_function.get_name kf in
-	self#insertions_at fmt (Sd_insertions.EndFunc f);
+	self#insertions_at fmt (Insertions.EndFunc f);
 	self#stmtkind next fmt stmt.skind
       | _ -> self#stmtkind next fmt stmt.skind
     end;
-    self#insertions_at fmt (Sd_insertions.EndStmt stmt.sid);
+    self#insertions_at fmt (Insertions.EndStmt stmt.sid);
     if insert_something then Format.fprintf fmt "@]@\n}";
     Format.pp_close_box fmt ();
     Format.pp_close_box fmt ()
   (* end of annotated_stmt *)
 
   method private func_header fmt f =
-    let ty = f.Sd_insertions.func_var.vtype in
-    let vname = f.Sd_insertions.func_var.vname in
+    let ty = f.Insertions.func_var.vtype in
+    let vname = f.Insertions.func_var.vname in
     Format.fprintf fmt "@[%a;@\n@]"
       (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" vname))) ty
 
   method private func fmt f =
-    let ty = f.Sd_insertions.func_var.vtype in
-    let vname = f.Sd_insertions.func_var.vname in
+    let ty = f.Insertions.func_var.vtype in
+    let vname = f.Insertions.func_var.vname in
     Format.fprintf fmt "@[<v 2>%a {@\n"
       (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" vname))) ty;
     let rec aux = function
@@ -147,7 +147,7 @@ class print_insertions insertions functions spec_insuf () = object(self)
       | [h] -> Format.fprintf fmt "%a" (pp_insertion ~line_break:false) h
       | h::t -> Format.fprintf fmt "%a" (pp_insertion ~line_break:true) h; aux t
     in
-    aux f.Sd_insertions.func_stmts;
+    aux f.Insertions.func_stmts;
     Format.fprintf fmt "@]@\n}@\n"
 
   method! file fmt f =
@@ -226,26 +226,26 @@ class print_insertions insertions functions spec_insuf () = object(self)
   | _ -> ()
 
   method private insertion = function
-  | Sd_insertions.Instru i -> self#instru i
-  | Sd_insertions.IRet _ -> ()
-  | Sd_insertions.Decl _ -> ()
-  | Sd_insertions.Block i -> List.iter self#insertion i
-  | Sd_insertions.IIf(_,i1,i2) ->
-    List.iter self#insertion i1; List.iter self#insertion i2
-  | Sd_insertions.ILoop(_,i) -> List.iter self#insertion i
+  | Insertions.Instru i -> self#instru i
+  | Insertions.IRet _ -> ()
+  | Insertions.Decl _ -> ()
+  | Insertions.Block i -> List.iter self#insertion i
+  | Insertions.IIf(_,i1,i2) ->
+     List.iter self#insertion i1; List.iter self#insertion i2
+  | Insertions.ILoop(_,i) -> List.iter self#insertion i
 
   method private headers fmt =
     Hashtbl.iter (fun _ q -> Queue.iter self#insertion q) insertions;
-    let on_func f = List.iter self#insertion f.Sd_insertions.func_stmts in
+    let on_func f = List.iter self#insertion f.Insertions.func_stmts in
     List.iter on_func functions;
     let headers = [
       gmp, "struct __anonstruct___mpz_struct_1 {\
-   int _mp_alloc ;\
-   int _mp_size ;\
-   unsigned long *_mp_d ;\
-};\
-typedef struct __anonstruct___mpz_struct_1 __mpz_struct;\
-typedef __mpz_struct mpz_t[1];";
+	    int _mp_alloc ;\
+	    int _mp_size ;\
+	    unsigned long *_mp_d ;\
+	    };\
+	    typedef struct __anonstruct___mpz_struct_1 __mpz_struct;\
+	    typedef __mpz_struct mpz_t[1];";
       gmpz_get_ui, "extern unsigned long int __gmpz_get_ui(mpz_t);";
       gmpz_get_si, "extern signed long int __gmpz_get_si(mpz_t);";
       gmpz_cmp_ui, "extern int __gmpz_cmp_ui(mpz_t, unsigned long int);";
@@ -289,9 +289,8 @@ typedef __mpz_struct mpz_t[1];";
       malloc, "extern void* malloc(unsigned long);";
       free, "extern void free(void*);";
     ] in
-    List.iter (fun (must_print, str) ->
-      if must_print then Format.fprintf fmt "%s@\n" str
-    ) headers
+    let do_header (print, s) = if print then Format.fprintf fmt "%s@\n" s in
+    List.iter do_header headers
 
   val mutable first_global = true
 
@@ -302,7 +301,7 @@ typedef __mpz_struct mpz_t[1];";
 	   if first_global then
 	     begin
 	       List.iter (fun x -> self#func_header fmt x) functions;
-	       self#insertions_at fmt (Sd_insertions.Glob);
+	       self#insertions_at fmt (Insertions.Glob);
 	       first_global <- false
 	     end;
 	   let oldattr = fundec.svar.vattr in

@@ -15,7 +15,7 @@ let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
 let translate props spec_insuf =
-  let gatherer = new Sd_insertions.gather_insertions props spec_insuf in
+  let gatherer = new Insertions.gather_insertions props spec_insuf in
   Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
   let insertions = gatherer#get_insertions()
   and functions = gatherer#get_functions()
