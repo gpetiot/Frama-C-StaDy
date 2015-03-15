@@ -28,7 +28,7 @@ PLUGIN_CMO := \
 	insertions \
 	print \
 	register
-PLUGIN_GUI_CMO 	:= sd_register_gui 
+PLUGIN_GUI_CMO 	:= register_gui 
 PLUGIN_HAS_MLI:= yes
 PLUGIN_DEPENDENCIES:=PathCrawler
 PLUGIN_TESTS_DIRS:= \
