@@ -235,8 +235,8 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
 	  let rec aux cpt =
 	    if cpt < 3 then
 	      let client, _ = Unix.accept socket in
-	      Sd_socket.process_socket client;
-	      Sd_socket.print_exit_code ret;
+	      Socket.process_socket client;
+	      Socket.print_exit_code ret;
 	      aux (cpt+1)
 	  in
 	  aux 0
@@ -256,8 +256,8 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
 	  let rec aux cpt =
 	    if cpt < 3 then
               let client, _ = Unix.accept socket in
-	      Sd_socket.process_socket client;
-	      Sd_socket.print_exit_code ret;
+	      Socket.process_socket client;
+	      Socket.print_exit_code ret;
 	      aux (cpt+1)
 	  in
 	  aux 0
@@ -268,9 +268,9 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
       Unix.close socket
     | _ (* stdio *) ->
       let chan = Unix.open_process_in cmd in
-      Sd_socket.process_channel chan;
+      Socket.process_channel chan;
       let ret = Unix.close_process_in chan in
-      Sd_socket.print_exit_code ret
+      Socket.print_exit_code ret
   end;
   States.Nb_test_cases.mark_as_computed();
   States.Counter_examples.mark_as_computed();
