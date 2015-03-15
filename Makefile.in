@@ -26,7 +26,7 @@ PLUGIN_CMO := \
 	socket \
 	native_precond \
 	insertions \
-	sd_print \
+	print \
 	sd_register
 PLUGIN_GUI_CMO 	:= sd_register_gui 
 PLUGIN_HAS_MLI:= yes

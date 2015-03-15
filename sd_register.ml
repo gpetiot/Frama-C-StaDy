@@ -25,7 +25,7 @@ let translate props spec_insuf =
     let dkey = Options.dkey_insertions in
     let f ins =
       Options.Self.feedback ~dkey "/* %a */ %a"
-	Sd_print.pp_label lab Sd_print.pp_insertion_lb ins
+	Print.pp_label lab Print.pp_insertion_lb ins
     in
     Queue.iter f insertions;
     Options.Self.feedback ~dkey "--------------------"
@@ -37,7 +37,7 @@ let translate props spec_insuf =
 let print_translation filename insertions fcts spec_insuf =
   let old_unicode = Kernel.Unicode.get() in
   Kernel.Unicode.set false;
-  let printer = new Sd_print.print_insertions insertions fcts spec_insuf () in
+  let printer = new Print.print_insertions insertions fcts spec_insuf () in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
