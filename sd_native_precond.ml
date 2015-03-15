@@ -234,7 +234,7 @@ let rec input_from_type domains ty t =
       let d = PLIntDom (PLDim t, Some Integer.zero, Some maxuint) in
       input_from_type (d :: domains) ty' (PLContAll t)
   | _ ->
-    Sd_options.Self.abort "input_from_type (%a) (%a)"
+    Options.Self.abort "input_from_type (%a) (%a)"
       Printer.pp_typ ty (new pl_printer)#term t
 
 let rec valid_to_prolog term =
@@ -328,7 +328,7 @@ let compute_constraints() =
     try requires_to_prolog constraints pnamed
     with
     | _ ->
-      Sd_options.Self.warning ~current:true
+      Options.Self.warning ~current:true
 	"Native Precondition:@\n%a unsupported"
 	Printer.pp_predicate_named pnamed;
       (* this predicate has not been translated in Prolog, we must translate it
@@ -338,8 +338,8 @@ let compute_constraints() =
   in
   let constraints = List.fold_left f [] typically_preds in
   let constraints = List.fold_left f constraints requires_preds in
-  let dkey = Sd_options.dkey_native_precond in
-  Sd_options.Self.feedback ~dkey "non-default behaviors ignored!";
+  let dkey = Options.dkey_native_precond in
+  Options.Self.feedback ~dkey "non-default behaviors ignored!";
   let split_constraints (d,q,uq) c = match c with
     | PLUnquantif x -> d, q, x::uq
     | PLQuantif x -> d, x::q, uq
@@ -450,10 +450,10 @@ let translate precond_file_name domains unquantifs quantifs =
   same_constraint_for_precond "strategy" "A";
   Format.fprintf fmt "precondition_of('%s','%s').\n" func_name precond_name;
   (* END OF PRINTING *)
-  let dkey = Sd_options.dkey_generated_pl in
+  let dkey = Options.dkey_generated_pl in
   let out_file = open_out precond_file_name in
-  Sd_options.Self.debug ~dkey "generated Prolog precondition:";
-  let dkeys = Sd_options.Self.Debug_category.get() in
+  Options.Self.debug ~dkey "generated Prolog precondition:";
+  let dkeys = Options.Self.Debug_category.get() in
   if Datatype.String.Set.mem "generated-pl" dkeys then
     Buffer.output_buffer stdout buf;
   Buffer.output_buffer out_file buf;

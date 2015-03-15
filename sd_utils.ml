@@ -67,9 +67,9 @@ let extract_guards var p =
   Extlib.the a, Extlib.the b, Extlib.the c, Extlib.the d
 
 
-let error_term t = Sd_options.Self.abort "term: %a" Sd_debug.pp_term t
-let error_toffset t = Sd_options.Self.abort "toffset: %a" Sd_debug.pp_toffset t
-let error_pred p = Sd_options.Self.abort "pred: %a" Sd_debug.pp_pred p
+let error_term t = Options.Self.abort "term: %a" Sd_debug.pp_term t
+let error_toffset t = Options.Self.abort "toffset: %a" Sd_debug.pp_toffset t
+let error_pred p = Options.Self.abort "pred: %a" Sd_debug.pp_pred p
 
 let is_one = function
   | {term_node=TConst(Integer(i,_))} when Integer.equal i Integer.one -> true
@@ -119,7 +119,7 @@ let rec extract_from_valid t =
   | TLval (TMem m, TNoOffset) ->
     let varinfo, _ = extract_from_valid m in
     varinfo, Cil.lone ~loc ()
-  | _ -> Sd_options.Self.debug "\\valid(%a)" Sd_debug.pp_term t; assert false
+  | _ -> Options.Self.debug "\\valid(%a)" Sd_debug.pp_term t; assert false
 
 
 (* Computes and returns a hashtable such that :
@@ -162,7 +162,7 @@ let lengths_from_requires kf =
   kf_tbl
 
 let mpz_t() =
-  let ty = Sd_options.mpz_t in
+  let ty = Options.mpz_t in
   let ty = !ty in
   let ty = Extlib.the ty in
   ty

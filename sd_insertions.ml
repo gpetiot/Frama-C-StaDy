@@ -194,7 +194,7 @@ class gather_insertions props spec_insuf = object(self)
     | LChr c -> [], Cil.new_exp ~loc (Const(CChr c))
     | LReal {r_literal=s; r_nearest=f; r_lower=l; r_upper=u} ->
       if l <> u then
-	Sd_options.Self.warning ~current:true ~once:true
+	Options.Self.warning ~current:true ~once:true
 	  "approximating a real number by a float";
       [], Cil.new_exp ~loc (Const(CReal(f, FLongDouble, Some s)))
     | LEnum e -> [], Cil.new_exp ~loc (Const(CEnum e))
@@ -341,7 +341,7 @@ class gather_insertions props spec_insuf = object(self)
 	let ins, v = self#translate_term t in
 	ins, v.enode
       else
-	Sd_options.Self.not_yet_implemented
+	Options.Self.not_yet_implemented
 	  "Sd_insertions.gather_insertions#term_node \\at(%a,%s)"
 	  Sd_debug.pp_term t stringlabel
   | _ -> assert false
@@ -666,7 +666,7 @@ class gather_insertions props spec_insuf = object(self)
     inserts_0 @ ii @ insert_1 :: insert_2 :: insert_3, Cil.evar res_var
 
   method private unsupported_predicate p =
-    Sd_options.Self.warning ~current:true "%a unsupported"
+    Options.Self.warning ~current:true "%a unsupported"
       Printer.pp_predicate p;
     [], one
 
@@ -915,18 +915,18 @@ class gather_insertions props spec_insuf = object(self)
   | Plet _ as p -> self#unsupported_predicate p
   | Pforall(vars,{content=Pimplies(h,g)}) -> self#translate_forall vars h g
   | Pforall _ as p ->
-    Sd_options.Self.warning ~current:true
+    Options.Self.warning ~current:true
       "%a not of the form \\forall ...; a ==> b" Printer.pp_predicate p;
     self#unsupported_predicate p
   | Pexists(vars,{content=Pand(h,g)}) -> self#translate_exists vars h g
   | Pexists _ as p ->
-    Sd_options.Self.warning ~current:true
+    Options.Self.warning ~current:true
       "%a not of the form \\exists ...; a && b" Printer.pp_predicate p;
     self#unsupported_predicate p
   | Pat (p, LogicLabel(_,l)) when l = "Here" -> self#translate_pnamed p
   | Pat _ as p -> self#unsupported_predicate p
   | Pvalid_read (_,t) ->
-    Sd_options.Self.warning ~once:true
+    Options.Self.warning ~once:true
       "\\valid_read(%a) is interpreted as \\valid(%a)"
       Printer.pp_term t Printer.pp_term t;
     self#translate_valid t
@@ -1010,11 +1010,11 @@ class gather_insertions props spec_insuf = object(self)
       let str = Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
       let to_reach =
 	not (Cil.is_default_behavior b)
-	&& (Sd_options.Behavior_Reachability.get())
+	&& (Options.Behavior_Reachability.get())
       in
       Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt (kf,b,false);
       bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-      if post <> [] || (Sd_options.Behavior_Reachability.get()) then
+      if post <> [] || (Options.Behavior_Reachability.get()) then
 	begin
 	  if b.b_assumes <> [] then
 	    let i_0, exp = self#cond_of_assumes b.b_assumes in
@@ -1038,7 +1038,7 @@ class gather_insertions props spec_insuf = object(self)
       | TArray (ty, _, _, _) -> Cil.stripConstLocalType ty
       | TNamed (ty, _) -> dig_type ty.ttype
       | ty ->
-	 Sd_options.Self.abort ~current:true "dig_type %a" Printer.pp_typ ty
+	 Options.Self.abort ~current:true "dig_type %a" Printer.pp_typ ty
     in
     let rec strip_const = function
       | TPtr (t, att) -> Cil.stripConstLocalType (TPtr(strip_const t, att))
@@ -1176,7 +1176,7 @@ class gather_insertions props spec_insuf = object(self)
     let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
     List.iter (self#insert label_pre) inserts_pre;
     if (self#at_least_one_prop kf behaviors Kglobal)
-      || (Sd_options.Behavior_Reachability.get()) then
+      || (Options.Behavior_Reachability.get()) then
       begin
 	let inserts = self#post kf behaviors Kglobal in
 	self#insert (EndFunc f.svar.vname) (Block inserts)
@@ -1260,7 +1260,7 @@ class gather_insertions props spec_insuf = object(self)
     | AStmtSpec (_,bhvs) ->
 
       if (self#at_least_one_prop kf bhvs.spec_behavior (Kstmt stmt))
-	|| (Sd_options.Behavior_Reachability.get()) then
+	|| (Options.Behavior_Reachability.get()) then
 	begin
 	  let stmt_bhvs = bhvs.spec_behavior in
 	  let ins = self#pre ~pre_entry_point:false kf stmt_bhvs (Kstmt stmt) in
@@ -1365,7 +1365,7 @@ class gather_insertions props spec_insuf = object(self)
   method private assigns_swd assigns =
     let merge_assigns ret = function
       | WritesAny ->
-	Sd_options.Self.warning ~current:true ~once:true
+	Options.Self.warning ~current:true ~once:true
 	  "assigns clause not precise enough";
 	ret
       | Writes froms -> (List.map fst froms) @ ret
@@ -1433,7 +1433,7 @@ class gather_insertions props spec_insuf = object(self)
 	let aff = Instru(instru_affect e (Cil.evar vi)) in
 	(decl_varinfo vi)::ret1, ins @ aff :: ret2
       | _ ->
-	Sd_options.Self.warning ~current:true ~once:true
+	Options.Self.warning ~current:true ~once:true
 	  "term %a in assigns clause unsupported"
 	  Printer.pp_term t;
 	ret1, ret2
@@ -1447,13 +1447,13 @@ class gather_insertions props spec_insuf = object(self)
 	self#insert (BegStmt stmt.sid) (Instru(self#pc_to_fc str))
       end;
     let kf = Kernel_function.find_englobing_kf stmt in
-    let sim_funcs = Sd_options.Simulate_Functions.get() in
+    let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
     | If(_exp,b1,b2,_loc) ->
       let add_block_reachability b = match b.bstmts with
 	| first_stmt :: _ ->
-	  let dkey = Sd_options.dkey_reach in
-      	  Sd_options.Self.debug ~dkey "stmt %i to reach" first_stmt.sid;
+	  let dkey = Options.dkey_reach in
+      	  Options.Self.debug ~dkey "stmt %i to reach" first_stmt.sid;
 	  Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
       	  stmts_to_reach <- first_stmt.sid :: stmts_to_reach
       	| _ -> ()

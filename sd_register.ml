@@ -22,13 +22,13 @@ let translate props spec_insuf =
   and props = gatherer#translated_properties()
   and globals = gatherer#get_new_globals() in
   let print_insertions_at_label lab insertions =
-    let dkey = Sd_options.dkey_insertions in
+    let dkey = Options.dkey_insertions in
     let f ins =
-      Sd_options.Self.feedback ~dkey "/* %a */ %a"
+      Options.Self.feedback ~dkey "/* %a */ %a"
 	Sd_print.pp_label lab Sd_print.pp_insertion_lb ins
     in
     Queue.iter f insertions;
-    Sd_options.Self.feedback ~dkey "--------------------"
+    Options.Self.feedback ~dkey "--------------------"
   in
   Hashtbl.iter print_insertions_at_label insertions;
   insertions, functions, props, globals
@@ -41,10 +41,10 @@ let print_translation filename insertions fcts spec_insuf =
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
-  let dkey = Sd_options.dkey_generated_c in
+  let dkey = Options.dkey_generated_c in
   let out_file = open_out filename in
-  Sd_options.Self.debug ~dkey "generated C file:";
-  let dkeys = Sd_options.Self.Debug_category.get() in
+  Options.Self.debug ~dkey "generated C file:";
+  let dkeys = Options.Self.Debug_category.get() in
   if Datatype.String.Set.mem "generated-c" dkeys then
     Buffer.output_buffer stdout buf;
   Buffer.output_buffer out_file buf;
@@ -67,7 +67,7 @@ let do_externals() =
   let mpz_t, externals = Project.on p' (fun () ->
     let old_verbose = Kernel.Verbose.get() in
     Kernel.GeneralVerbose.set 0;
-    let file = Sd_options.Self.Share.file ~error:true "externals.c" in
+    let file = Options.Self.Share.file ~error:true "externals.c" in
     let mpz_t_file = File.from_filename file in
     File.init_from_c_files [mpz_t_file];
     let tmp_mpz_t = ref None in
@@ -88,7 +88,7 @@ let do_externals() =
     !tmp_mpz_t, !externals
   ) () in
   Project.remove ~project:p' ();
-  Sd_options.mpz_t := mpz_t;
+  Options.mpz_t := mpz_t;
   List.iter (fun(a,b) -> Sd_states.Externals.add a b) externals
 
 
@@ -154,9 +154,9 @@ let properties_of_name name =
 
 
 let selected_props() =
-  let properties = Sd_options.Properties.get () in
-  let behaviors = Sd_options.Behaviors.get () in
-  let functions = Sd_options.Functions.get () in
+  let properties = Options.Properties.get () in
+  let behaviors = Options.Behaviors.get () in
+  let functions = Options.Functions.get () in
   let gather p b = List.rev_append (properties_of_behavior b) p in
   let props = List.fold_left gather [] behaviors in
   let gather p f = List.rev_append (properties_of_function f) p in
@@ -171,7 +171,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   let spec_insuf = match spec_insuf with
     | Some x -> Some x
     | None ->
-      let sid = Sd_options.Spec_Insuf.get() in
+      let sid = Options.Spec_Insuf.get() in
       try let stmt, _ = Kernel_function.find_from_sid sid in Some stmt
       with _ -> None
   in
@@ -186,7 +186,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
     try let a,b,c = Sd_native_precond.compute_constraints() in true, a, b, c
     with _ -> false, [], [], []
   in
-  Sd_options.Self.feedback ~dkey:Sd_options.dkey_native_precond
+  Options.Self.feedback ~dkey:Options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
   let insertions, functions, translated_props, new_globals =
@@ -203,7 +203,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   in
   print_translation instru_fname insertions functions spec_insuf;
   let stop_when_assert_violated =
-    if Sd_options.Stop_When_Assert_Violated.get() then
+    if Options.Stop_When_Assert_Violated.get() then
       "-pc-stop-when-assert-violated"
     else ""
   in
@@ -215,15 +215,15 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
       instru_fname
       entry_point
       test_params
-      (Sd_options.Socket_Type.get())
-      (Sd_options.PathCrawler_Options.get())
-      (Sd_options.Timeout.get())
+      (Options.Socket_Type.get())
+      (Options.PathCrawler_Options.get())
+      (Options.Timeout.get())
       stop_when_assert_violated
   in
-  Sd_options.Self.debug ~dkey:Sd_options.dkey_socket "cmd: %s" cmd;
+  Options.Self.debug ~dkey:Options.dkey_socket "cmd: %s" cmd;
   (* open socket with the generator *)
   begin
-    match Sd_options.Socket_Type.get() with
+    match Options.Socket_Type.get() with
     | s when s = "unix" ->
       let socket = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
       let name = "Pc2FcSocket" in
@@ -242,7 +242,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
 	  aux 0
 	with _ ->
 	  Unix.close socket;
-	  Sd_options.Self.abort "unix socket now closed!"
+	  Options.Self.abort "unix socket now closed!"
       end;
       Unix.close socket;
       Sys.remove name
@@ -263,7 +263,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
 	  aux 0
 	with _ ->
 	  Unix.close socket;
-	  Sd_options.Self.abort "internet socket now closed!"
+	  Options.Self.abort "internet socket now closed!"
       end;
       Unix.close socket
     | _ (* stdio *) ->
@@ -275,8 +275,8 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   Sd_states.Nb_test_cases.mark_as_computed();
   Sd_states.Counter_examples.mark_as_computed();
   Sd_states.Unreachable_Stmts.mark_as_computed();
-  Sd_options.Self.result "all-paths: %b" (Sd_states.All_Paths.get());
-  Sd_options.Self.result "%i test cases" (Sd_states.Nb_test_cases.get());
+  Options.Self.result "all-paths: %b" (Sd_states.All_Paths.get());
+  Options.Self.result "%i test cases" (Sd_states.Nb_test_cases.get());
   let distinct = true in
   let strengthened_precond =
     try
@@ -288,7 +288,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   let no_CE = Sd_states.Counter_examples.length() = 0 in
   let emit_status prop =
     try
-      Sd_utils.print_counter_examples false Sd_options.Self.result prop;
+      Sd_utils.print_counter_examples false Options.Self.result prop;
       let status = Property_status.False_and_reachable in
       Property_status.emit emitter ~hyps:[] prop ~distinct status
     with
@@ -299,13 +299,13 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
 	Property_status.emit emitter ~hyps prop ~distinct status
   in
   List.iter emit_status translated_props;
-  let dkey = Sd_options.dkey_reach in
+  let dkey = Options.dkey_reach in
   let add_assert_false sid (stmt, kf) =
-    Sd_options.Self.feedback ~dkey "stmt %i unreachable" sid;
+    Options.Self.feedback ~dkey "stmt %i unreachable" sid;
     Annotations.add_assert ~kf emitter stmt Logic_const.pfalse
   in
   let info_reachability _ (kf,bhv,is_reachable) =
-    Sd_options.Self.feedback ~dkey "behavior '%s' of function '%s' %s"
+    Options.Self.feedback ~dkey "behavior '%s' of function '%s' %s"
       bhv.b_name
       (Kernel_function.get_name kf)
       (if is_reachable then "reachable" else "not reachable")
@@ -313,13 +313,13 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   if Sd_states.All_Paths.get() && strengthened_precond = [] then
     begin
       Sd_states.Unreachable_Stmts.iter add_assert_false;
-      if Sd_options.Behavior_Reachability.get() then
+      if Options.Behavior_Reachability.get() then
 	Sd_states.Behavior_Reachability.iter info_reachability
     end
 
 
 let run() =
-  if Sd_options.Enabled.get() then
+  if Options.Enabled.get() then
     begin
       setup_props_bijection();
       do_externals();
@@ -328,13 +328,13 @@ let run() =
       Sd_states.Property_To_Id.clear();
       Sd_states.Not_Translated_Predicates.clear();
       Sd_states.Behavior_Reachability.clear();
-      Sd_options.mpz_t := None;
+      Options.mpz_t := None;
       Sd_states.Externals.clear()
     end
 
 
 let extern_run () =
-  Sd_options.Enabled.set true;
+  Options.Enabled.set true;
   run ()
 
 let extern_run = Dynamic.register ~plugin:"stady" ~journalize:true "run_stady"
@@ -342,7 +342,7 @@ let extern_run = Dynamic.register ~plugin:"stady" ~journalize:true "run_stady"
 
 
 let run =
-  let deps = [Ast.self; Sd_options.Enabled.self] in
+  let deps = [Ast.self; Options.Enabled.self] in
   let f, _self = State_builder.apply_once "stady" deps run in
   f
     

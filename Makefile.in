@@ -18,7 +18,7 @@ PLUGIN_DIR ?=.
 PLUGIN_NAME := StaDy
 PLUGIN_CMO := \
 	local_config \
-	sd_options \
+	options \
 	sd_debug \
 	sd_states \
 	sd_subst \
