@@ -1,6 +1,8 @@
 
 open Cil_types
 
+exception Unreachable
+exception Unsupported
 
 type label =
 | BegStmt of int
@@ -37,7 +39,7 @@ let binop_to_relation = function
   | Ge -> Rge
   | Eq -> Req
   | Ne -> Rneq
-  | _ -> assert false
+  | _ -> raise Unreachable
 
 let relation_to_binop = function
   | Rlt -> Lt
@@ -69,7 +71,7 @@ let binop_to_fname = function
   | Mult -> "mul"
   | Div -> "tdiv_q"
   | Mod -> "tdiv_r"
-  | _ -> assert false
+  | _ -> raise Unreachable
 
 module F = struct
   let get = States.Externals.find
@@ -187,7 +189,7 @@ class gather_insertions props spec_insuf = object(self)
 	    let insert_1 = Instru(F.init_set_str e_fresh_var str e_ten) in
 	    [insert_0; insert_1], Cil.evar fresh_var
 	 | Ctype(TInt(ik,_)) ->[],Cil.new_exp ~loc (Const(CInt64(i,ik,str_opt)))
-	 | _ -> assert false (* unreachable *)
+	 | _ -> raise Unreachable
        end
     | LStr str -> [], Cil.new_exp ~loc (Const(CStr str))
     | LWStr i64_l -> [], Cil.new_exp ~loc (Const(CWStr i64_l))
@@ -216,9 +218,9 @@ class gather_insertions props spec_insuf = object(self)
     in
     match lv.lv_type with
     | Linteger -> my_Z_varinfo varname
-    | Lreal -> assert false (* TODO: reals *)
+    | Lreal -> raise Unsupported
     | Ctype ty -> my_varinfo ty varname
-    | _ -> assert false
+    | _ -> raise Unreachable
 
   method private translate_unop op t = match t.term_type with
     | Linteger ->
@@ -231,7 +233,7 @@ class gather_insertions props spec_insuf = object(self)
        let i_3 = Instru(F.ui_sub e_ret zero e) in
        let i_4 = Instru(F.clear e) in
        i_0 @ [i_1; i_2; i_3; i_4], Lval(Cil.var ret)
-    | Lreal -> assert false (* TODO: reals *)
+    | Lreal -> raise Unsupported
     | _ -> let ins, e = self#translate_term t in ins, UnOp(op,e,(Cil.typeOf e))
 
   method private translate_binop ty op a b = match op with
@@ -278,10 +280,10 @@ class gather_insertions props spec_insuf = object(self)
 	       let i_9 = Instru(F.clear e_v_1) in
 	       let i_10 = Instru(F.clear e_v_2) in
 	       [i_4; i_5; i_6; i_7; i_8; i_9; i_10]
-	    | _ -> assert false
+	    | _ -> raise Unreachable
 	  in
 	  i_0 @ i_1 @ i_2 :: i_3 :: inserts, e_ret.enode
-       | Lreal -> assert false (* TODO: reals *)
+       | Lreal -> raise Unsupported
        | Ltype _ as lt when Logic_const.is_boolean_type lt ->
 	  begin
 	    match a.term_type, b.term_type with
@@ -300,7 +302,7 @@ class gather_insertions props spec_insuf = object(self)
 	       i_0 @ i_1 @ [i_2; i_3; i_4; i_5; i_6; i_7], (Cil.evar var).enode
 	    | _ -> i_0 @ i_1, (Cil.mkBinOp ~loc op x y).enode
 	  end
-       | _ -> assert false
+       | _ -> raise Unreachable
 
   method private translate_tif cond then_b else_b = match then_b.term_type with
     | Linteger ->
@@ -324,8 +326,8 @@ class gather_insertions props spec_insuf = object(self)
        let i_5 = ins_if (cmp Rneq e_tmp zero) inserts_then inserts_else in
        let i_6 = Instru(F.clear cond') in
        i_0 :: i_1 :: i_2 @ [i_3; i_4; i_5; i_6], e_ret.enode
-    | Lreal -> assert false (* TODO: reals *)
-    | _ -> assert false (* unreachable *)
+    | Lreal -> raise Unsupported
+    | _ -> raise Unreachable
 
   method private translate_at t = function
     | LogicLabel(_,stringlabel) ->
@@ -348,7 +350,7 @@ class gather_insertions props spec_insuf = object(self)
 	     Options.Self.not_yet_implemented
 	       "Sd_insertions.gather_insertions#term_node \\at(%a,%s)"
 	       Debug.pp_term t stringlabel
-    | _ -> assert false
+    | _ -> raise Unsupported
 
   (* C type -> logic type *)
   method private translate_logic_coerce lt t = match lt with
@@ -363,13 +365,13 @@ class gather_insertions props spec_insuf = object(self)
        let init_set = match ty with
 	 | Ctype x when Cil.isUnsignedInteger x -> F.init_set_ui
 	 | Ctype x when Cil.isSignedInteger x -> F.init_set_si
-	 | _ -> assert false
+	 | _ -> raise Unsupported
        in
        let e_ret = Cil.evar ret in
        let i_2 = Instru(init_set e_ret v) in
        i_0 @ [i_1; i_2], e_ret.enode
-    | Lreal -> assert false (* TODO: reals *)
-    | _ -> assert false (* unreachable *)
+    | Lreal -> raise Unsupported
+    | _ -> raise Unreachable
 
   (* logic type -> C type *)
   method private translate_coerce t ty = match t.term_type with
@@ -380,13 +382,13 @@ class gather_insertions props spec_insuf = object(self)
        let get = match ty with
 	 | x when Cil.isUnsignedInteger x -> F.get_ui
 	 | x when Cil.isSignedInteger x -> F.get_si
-	 | _ -> assert false
+	 | _ -> raise Unsupported
        in
        let i_2 = Instru(get (Cil.var ret) v) in
        let i_3 = Instru(F.clear v) in
        i_0 @ [i_1; i_2; i_3], (Cil.evar ret).enode
-    | Lreal -> assert false (* TODO: reals *)
-    | _ -> assert false (* unreachable *)
+    | Lreal -> raise Unsupported
+    | _ -> raise Unreachable
 
   method private translate_lambda li lower upper q t =
     assert(lower.term_type = Linteger && upper.term_type = Linteger);
@@ -412,7 +414,7 @@ class gather_insertions props spec_insuf = object(self)
 	 let cond = cmp Rneq lambda_t zero in
 	 let instr = Instru(F.binop_ui PlusA e_ret e_ret one) in
 	 ins_if cond [instr] [], []
-      | _ -> assert false
+      | _ -> raise Unsupported
     in
     let ins_b_2 = Instru(F.binop_ui PlusA e_iter e_iter one) in
     let tmp = self#fresh_ctype_varinfo Cil.intType in
@@ -447,10 +449,10 @@ class gather_insertions props spec_insuf = object(self)
        else if s = "\\sum" || s = "\\product" || s = "\\numof" then
 	 match params with
 	 | [l;u;{term_node=Tlambda([q],t)}]-> self#translate_lambda li l u q t
-	 | _ -> assert false
-       else assert false
-    | Lreal -> assert false (* TODO: reals *)
-    | _ -> assert false (* unreachable *)
+	 | _ -> raise Unsupported
+       else raise Unsupported
+    | Lreal -> raise Unsupported
+    | _ -> raise Unreachable
 
   method private translate_cast ty t = match t.term_type with (* source type *)
     | Linteger ->
@@ -460,14 +462,14 @@ class gather_insertions props spec_insuf = object(self)
        let get = match ty with (* dest type *)
 	 | x when Cil.isUnsignedInteger x -> F.get_ui
 	 | x when Cil.isSignedInteger x -> F.get_si
-	 | _ -> assert false (* unreachable *)
+	 | _ -> raise Unsupported
        in
        let i_2 = Instru(get (Cil.var ret) e) in
        let i_3 = Instru(F.clear e) in
        i_0 @ [i_1; i_2; i_3], (Cil.evar ret).enode
-    | Lreal -> assert false (* reals *)
+    | Lreal -> raise Unsupported
     | Ctype _ -> let ins, e = self#translate_term t in ins, CastE (ty, e)
-    | _ -> assert false (* unreachable *)
+    | _ -> raise Unreachable
 
   method private translate_term_node t = match t.term_node with
     | TConst c -> let i, e = self#translate_constant t.term_type c in i, e.enode
@@ -503,7 +505,7 @@ class gather_insertions props spec_insuf = object(self)
     | Tinter _
     | Tcomprehension _
     | Trange _
-    | Tlet _ -> assert false
+    | Tlet _ -> raise Unsupported
 
   method private translate_term t =
     let ins, enode = self#translate_term_node t in
@@ -517,7 +519,7 @@ class gather_insertions props spec_insuf = object(self)
   method private translate_offset = function
     | TNoOffset -> [], NoOffset
     | TField(fi,o) -> let ins, o' = self#translate_offset o in ins, Field(fi,o')
-    | TModel _ -> assert false (* TODO *)
+    | TModel _ -> raise Unsupported
     | TIndex(t,o) ->
        let ins, e = self#translate_term t in
        let ins, e = match t.term_type with
@@ -526,7 +528,7 @@ class gather_insertions props spec_insuf = object(self)
   	    let i_1 = decl_varinfo tmp in
 	    let i_2 = Instru(F.get_si (Cil.var tmp) e) in
 	    ins @ [i_1; i_2], Cil.evar tmp
-	 | Lreal -> assert false (* unreachable *)
+	 | Lreal -> raise Unreachable
 	 | _ -> ins, e
        in
        let ins', o' = self#translate_offset o in
@@ -547,7 +549,7 @@ class gather_insertions props spec_insuf = object(self)
       let e_fresh_var = Cil.evar fresh_var in
       let ins_2 = Instru(F.init_set e_fresh_var e_t') in
       ins_0 @ [ins_1; ins_2], Cil.var fresh_var
-    | Lreal -> assert false (* TODO *)
+    | Lreal -> raise Unsupported
     | _ -> aux()
 
   method private translate_pnamed p = self#translate_predicate p.content
@@ -569,11 +571,11 @@ class gather_insertions props spec_insuf = object(self)
 	let zcmp =
 	  if Cil.isUnsignedInteger x then F.cmp_ui
 	  else if Cil.isSignedInteger x then F.cmp_si
-	  else assert false
+	  else raise Unsupported
 	in
 	let i_3 = Instru(zcmp (Cil.var var) t1' t2') in
 	[i_2; i_3; clear_t1], cmp rel (Cil.evar var) zero
-      | Lreal, Lreal -> assert false (* TODO: reals *)
+      | Lreal, Lreal -> raise Unsupported
       | Ctype x, Linteger ->
 	let var = self#fresh_ctype_varinfo Cil.intType in
 	let fresh_var' = self#fresh_Z_varinfo() in
@@ -581,7 +583,7 @@ class gather_insertions props spec_insuf = object(self)
 	let init_set =
 	  if Cil.isUnsignedInteger x then F.init_set_ui
 	  else if Cil.isSignedInteger x then F.init_set_si
-	  else assert false
+	  else raise Unsupported
 	in
 	let e_fresh_var = Cil.evar fresh_var' in
 	let i_3 = Instru(init_set e_fresh_var t1') in
@@ -651,11 +653,11 @@ class gather_insertions props spec_insuf = object(self)
 	 let i_1 = decl_varinfo tmp in
 	 let i_2 = Instru(F.cmp_si (Cil.var tmp) term_var zero) in
 	 cmp Rneq (Cil.evar tmp) zero, [i_1; i_2], [Instru(F.clear term_var)]
-      | Lreal -> assert false (* unreachable *)
+      | Lreal -> raise Unsupported
       | Ctype (TInt _) -> cmp Rneq term_var zero, [], []
       | Ltype _ as lt when Logic_const.is_boolean_type lt ->
 	 cmp Rneq term_var zero, [], []
-      | _ -> assert false (* unreachable *)
+      | _ -> raise Unreachable
     in
     let inserts_then_0, pred1_var = self#translate_pnamed p in
     let lres_var = Cil.var res_var in
@@ -767,7 +769,7 @@ class gather_insertions props spec_insuf = object(self)
   	 let e2 = cmp Rgt e_dim up_o in
   	 let i_3 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
 	 [], [i_1; i_2; i_3], cmp Rle low_o up_o, []
-      | _ -> assert false (* unreachable *)
+      | _ -> raise Unreachable
     in
     let i_if = ins_if cond i_then [Instru(instru_affect l_ret one)] in
     inserts_0 @ inserts_1 @ inserts_2 @ [i_0] @ i_before @ i_if::i_after, e_ret
@@ -806,7 +808,7 @@ class gather_insertions props spec_insuf = object(self)
   	 let e1 = cmp Rge y' zero in
   	 let e2 = cmp Rgt e_dim y' in
   	 [ Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) ]
-      | _ -> assert false (* unreachable *)
+      | _ -> raise Unreachable
     in
     inserts_0 @ inserts_1 @ [i_0; i_1; i_2] @ inserts, e_ret
 
@@ -857,7 +859,7 @@ class gather_insertions props spec_insuf = object(self)
 	  let i_9 = Instru(F.clear t1') in
 	  let cmp, i_10 = match t2.term_type with
 	    | Linteger -> F.cmp, [Instru(F.clear t2')]
-	    | Lreal -> assert false (* TODO: reals *)
+	    | Lreal -> raise Unsupported
 	    | _ -> F.cmp_si, []
 	  in
 	  let i_6 = Instru(cmp ltmp e_iter t2') in
@@ -866,7 +868,7 @@ class gather_insertions props spec_insuf = object(self)
 	  let i_inside = [ins_b_2; ins_b_3] in
 	  let i_after = i_8 :: i_9 :: i_10 in
 	  i_before, e1, i_inside, i_after
-	| Lreal -> assert false (* TODO: reals *)
+	| Lreal -> raise Unsupported
 	| _ ->
 	  let iter = my_varinfo Cil.intType iter_name in
 	  let insert_0 = decl_varinfo iter in
@@ -876,7 +878,7 @@ class gather_insertions props spec_insuf = object(self)
 	  let init = instru_affect liter (match r1 with
 	    | Rlt -> Cil.mkBinOp ~loc PlusA t1' one
 	    | Rle -> t1'
-	    | _ -> assert false)
+	    | _ -> raise Unsupported)
 	  in
 	  let e_iter = Cil.evar iter in
 	  let e1 = cmp r2 e_iter t2' in
@@ -1049,7 +1051,7 @@ class gather_insertions props spec_insuf = object(self)
 	Mem(Cil.new_exp ~loc (BinOp(IndexPI, base, exp, ty))), NoOffset
       else if Cil.isArrayType ty then
 	Cil.addOffsetLval (Index(exp, NoOffset)) lval
-      else assert false
+      else raise Unreachable
     in
     let lengths = Utils.lengths_from_requires kf in
     let terms = try Cil_datatype.Varinfo.Hashtbl.find lengths vi with _ -> [] in
@@ -1086,7 +1088,7 @@ class gather_insertions props spec_insuf = object(self)
 	       let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
 	       let insert_4 = Instru(F.clear h') in
 	       [i_1; i_2; insert_2; i_3; Instru init; insert_3; insert_4]
-	    | Lreal -> assert false (* TODO: reals *)
+	    | Lreal -> raise Unsupported
 	    | _ ->
 	       let e1 = Cil.new_exp ~loc (SizeOf ty) in
 	       let e2 = Cil.mkBinOp ~loc Mult h' e1 in
@@ -1140,7 +1142,7 @@ class gather_insertions props spec_insuf = object(self)
 	      let step = instru_affect lmy_iterator e1 in
 	      let insert_2 = ins_loop cond (inserts_block @ [Instru step]) in
 	      [i_1; i_2; Instru init; insert_2; Instru(F.clear h')]
-	    | Lreal -> assert false (* TODO: reals *)
+	    | Lreal -> raise Unsupported
 	    | _ ->
 	      let aux = addoffset my_old_ptr (Cil.evar my_iterator) in
 	      let inserts_block = dealloc_aux aux t in
@@ -1316,7 +1318,7 @@ class gather_insertions props spec_insuf = object(self)
 	 let cond = cmp Rge e_cmp_variants zero in
 	 self#insert end_label (ins_if cond [instr] []);
 	 self#insert end_label (Instru(F.clear e_save_variant))
-      | Lreal -> assert false (* TODO: reals *)
+      | Lreal -> raise Unsupported
       | _ ->
 	 (* at BegIter *)
 	 let inserts_1, beg_variant = self#translate_term term in
@@ -1377,7 +1379,8 @@ class gather_insertions props spec_insuf = object(self)
 	      TNoOffset) ->
 	 assert(t1.term_type = Linteger);
 	 assert(t2.term_type = Linteger);
-	 let ty = match op1.term_type with Ctype t -> t | _ -> assert false in
+	 let ty =
+	   match op1.term_type with Ctype t -> t | _ -> raise Unreachable in
 	 let vi = self#fresh_ctype_varinfo ty in
 	 new_globals <- vi :: new_globals;
 	 let range_t = Logic_const.trange (Some t1, Some t2) in
@@ -1419,7 +1422,7 @@ class gather_insertions props spec_insuf = object(self)
 	 i_00 @ i_0 :: i_1 @ i_2 :: i_3 @
 	   i_4 :: i_5 :: i_6 :: i_7 :: i_8 :: i_9 :: i_10 :: ret2
       | TLval lv ->
-	 let ty = match t.term_type with Ctype x -> x | _ -> assert false in
+	 let ty = match t.term_type with Ctype x -> x | _-> raise Unreachable in
 	 let ins, e = self#translate_lval lv in
 	 let vi = self#fresh_ctype_varinfo ty in
 	 new_globals <- vi :: new_globals;
