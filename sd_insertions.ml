@@ -343,7 +343,7 @@ class gather_insertions props spec_insuf = object(self)
       else
 	Options.Self.not_yet_implemented
 	  "Sd_insertions.gather_insertions#term_node \\at(%a,%s)"
-	  Sd_debug.pp_term t stringlabel
+	  Debug.pp_term t stringlabel
   | _ -> assert false
 
   (* C type -> logic type *)

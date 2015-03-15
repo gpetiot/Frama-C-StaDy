@@ -123,8 +123,8 @@ class pl_printer = object(self)
   method quantif fmt (lvars, compo_rels, (x,r,y)) =
     let aux fmt s = Format.fprintf fmt "    %s" (String.uppercase s.lv_name) in
     Format.fprintf fmt "uq_cond(\n  [\n%a\n  ],\n  [\n%a\n  ],\n  %a,%a,%a)"
-      (Sd_debug.pp_list ~sep:",\n" aux) lvars
-      (Sd_debug.pp_list ~sep:",\n" self#cond) compo_rels
+      (Debug.pp_list ~sep:",\n" aux) lvars
+      (Debug.pp_list ~sep:",\n" self#cond) compo_rels
        self#rel r self#term x self#term y
 end
 
@@ -441,10 +441,10 @@ let translate precond_file_name domains unquantifs quantifs =
   let pp_quantif fmt k = Format.fprintf fmt "    %a" printer#quantif k in
   let pp_unquantif fmt k = Format.fprintf fmt "    %a" printer#cond k in
   Format.fprintf fmt "quantif_preconds('%s',\n  [\n%a\n  ]\n).\n"
-    func_name (Sd_debug.pp_list ~sep:"," pp_quantif) quantifs;
+    func_name (Debug.pp_list ~sep:"," pp_quantif) quantifs;
   same_constraint_for_precond "quantif_preconds" "A";
   Format.fprintf fmt "unquantif_preconds('%s',\n  [\n%a\n  ]\n).\n"
-    func_name (Sd_debug.pp_list ~sep:"," pp_unquantif) unquantifs;
+    func_name (Debug.pp_list ~sep:"," pp_unquantif) unquantifs;
   same_constraint_for_precond "unquantif_preconds" "A";
   Format.fprintf fmt "strategy('%s',[]).\n" func_name;
   same_constraint_for_precond "strategy" "A";

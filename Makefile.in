@@ -19,7 +19,7 @@ PLUGIN_NAME := StaDy
 PLUGIN_CMO := \
 	local_config \
 	options \
-	sd_debug \
+	debug \
 	sd_states \
 	sd_subst \
 	sd_utils \
