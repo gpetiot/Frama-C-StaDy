@@ -433,25 +433,21 @@ class gather_insertions props spec_insuf = object(self)
   method private translate_app li _ params =
     let s = li.l_var_info.lv_name in
     let ty = Extlib.the li.l_type in
-    match ty with
-    | Linteger ->
-       if s = "\\abs" then
-	 let param = List.hd params in
-	 assert (List.tl params = []);
-	 let i_0, x = self#translate_term param in
-	 let ret = self#fresh_Z_varinfo() in
-	 let i_1 = decl_varinfo ret in
-	 let e_ret = Cil.evar ret in
-	 let i_2 = Instru(F.init e_ret) in
-	 let i_3 = Instru(F.abs e_ret x) in
-	 let i_4 = Instru(F.clear x) in
-	 i_0 @ [i_1; i_2; i_3; i_4], e_ret.enode
-       else if s = "\\sum" || s = "\\product" || s = "\\numof" then
-	 match params with
-	 | [l;u;{term_node=Tlambda([q],t)}]-> self#translate_lambda li l u q t
-	 | _ -> raise Unsupported
-       else raise Unsupported
-    | Lreal -> raise Unsupported
+    match ty, params with
+    | Linteger, [param] when s = "\\abs" ->
+       let i_0, x = self#translate_term param in
+       let ret = self#fresh_Z_varinfo() in
+       let i_1 = decl_varinfo ret in
+       let e_ret = Cil.evar ret in
+       let i_2 = Instru(F.init e_ret) in
+       let i_3 = Instru(F.abs e_ret x) in
+       let i_4 = Instru(F.clear x) in
+       i_0 @ [i_1; i_2; i_3; i_4], e_ret.enode
+    | Linteger, [l;u;{term_node=Tlambda([q],t)}]
+	 when s = "\\sum" || s = "\\product" || s = "\\numof" ->
+       self#translate_lambda li l u q t
+    | Linteger, _ -> raise Unsupported
+    | Lreal, _ -> raise Unsupported
     | _ -> raise Unreachable
 
   method private translate_cast ty t = match t.term_type with (* source type *)
