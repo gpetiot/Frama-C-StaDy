@@ -1362,7 +1362,7 @@ class gather_insertions props spec_insuf = object(self)
     Cil.DoChildren
   (* end vcode_annot *)
 
-  method private assigns_swd assigns =
+  method private assigns_cwd assigns =
     let merge_assigns ret = function
       | WritesAny ->
 	Options.Self.warning ~current:true ~once:true
@@ -1480,7 +1480,7 @@ class gather_insertions props spec_insuf = object(self)
 	 let assigns = List.fold_left f_assigns [] ca_l in
 	 let linvs = List.fold_left f_linvs [] ca_l in
 	 let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
-	 let globals, affects = self#assigns_swd assigns in
+	 let globals, affects = self#assigns_cwd assigns in
 	 let on_inv ret p = ret @ (self#pc_assume p.content) in
 	 let ins_block = List.fold_left on_inv affects linvs in
 	 let ins_bhv = ins_if e_assumes ins_block [] in
@@ -1507,7 +1507,7 @@ class gather_insertions props spec_insuf = object(self)
 	 let i1,i2,i3 = Globals.Vars.fold save_global ([],[],[]) in
 	 let i1,i2,i3 = List.fold_left save_formal (i1,i2,i3) formals in
 	 let begin_save = i1 @ i2 and end_save = i3 in
-	 let globals, affects = self#assigns_swd [bhv.b_assigns] in
+	 let globals, affects = self#assigns_cwd [bhv.b_assigns] in
 	 let globals, affects = globals, affects in
 	 let ensures = bhv.b_post_cond in
 	 let on_post ins (_,{ip_content=p}) =
