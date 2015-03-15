@@ -672,82 +672,153 @@ class gather_insertions props spec_insuf = object(self)
 
   method private translate_valid term = match term.term_node with
     | Tempty_set -> [], one
-    | Tunion _ -> assert false (* TODO *)
-    | Tinter _ -> assert false (* TODO *)
-    | Tcomprehension _ -> assert false (* TODO *)
-    | _ -> self#translate_valid_singleton term
+    | TBinOp ((PlusPI|IndexPI),p,{term_node = Trange(Some x,Some y)}) ->
+       self#translate_valid_ptr_range p x y
+    | TBinOp ((PlusPI|IndexPI),p,x) -> self#translate_valid_ptr_offset p x
+    | TBinOp (MinusPI,p,x) ->
+       let einfo = {exp_type=x.term_type; exp_name=[]} in
+       let x = Cil.term_of_exp_info loc (TUnOp(Neg,x)) einfo in
+       self#translate_valid_ptr_offset p x
+    | TLval _ -> self#translate_valid_ptr term
+    | _ -> Sd_utils.error_term term
 
-  (* if (lower_bound <= upper_bound) ret = 0 <= upper_bound < dim(p)
-     else ret = 1 *)
-  method private translate_valid_singleton term =
-    let loc = term.term_loc in
-    let pointer, offset = match term.term_node with
-      | TLval _ -> term, Cil.lzero ~loc ()
-      | TBinOp ((PlusPI|IndexPI),x,{term_node = Trange(_,Some y)}) -> x,y
-      | TBinOp ((PlusPI|IndexPI),x,y) -> x,y
-      | TBinOp (MinusPI,x,y) ->
-	let einfo = {exp_type=y.term_type; exp_name=[]} in
-	x, Cil.term_of_exp_info loc (TUnOp(Neg,y)) einfo
-      | _ -> Sd_utils.error_term term
-    in
-    let lower_bound = zero (* TODO: use lower bound of the range instead *) in
+  method private translate_valid_ptr_range pointer min_off max_off =
     let inserts_0, x' = self#translate_term pointer in
-    let inserts_1, y' = self#translate_term offset in
-    let inserts, ret = match offset.term_type with
-      | Linteger ->
-	 let ret = self#fresh_pred_varinfo () in
-	 let l_ret = Cil.var ret in
-	 let e_ret = Cil.evar ret in
-	 let i_0 = decl_varinfo ret in
+    let inserts_1, low_o = self#translate_term min_off in
+    let inserts_2, up_o = self#translate_term max_off in
+    let ret = self#fresh_pred_varinfo () in
+    let l_ret = Cil.var ret in
+    let e_ret = Cil.evar ret in
+    let i_0 = decl_varinfo ret in
+    let dim = self#fresh_ctype_varinfo Cil.intType in
+    let l_dim = Cil.var dim in
+    let e_dim = Cil.evar dim in
+    let i_before, i_then, cond, i_after =
+      match min_off.term_type, max_off.term_type with
+      | Linteger, Linteger ->
+  	 let nonempty_set = self#fresh_pred_varinfo () in
+  	 let i_0' = decl_varinfo nonempty_set in
+  	 let l_nonempty_set = Cil.var nonempty_set in
+  	 let e_nonempty_set = Cil.evar nonempty_set in
+  	 let i_cond = Instru(F.cmp l_nonempty_set low_o up_o) in
+  	 let cond = cmp Rle e_nonempty_set zero in
+  	 let i_1 = decl_varinfo dim in
+  	 let i_2 = Instru(F.pc_dim l_dim x') in
+  	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType in
+  	 let l_cmp_dim_off = Cil.var cmp_dim_off in
+  	 let e_cmp_dim_off = Cil.evar cmp_dim_off in
+  	 let i_3 = decl_varinfo cmp_dim_off in
+  	 let i_4 = Instru(F.cmp_ui l_cmp_dim_off up_o e_dim) in
+  	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType in
+  	 let l_cmp_off_zero = Cil.var cmp_off_zero in
+  	 let e_cmp_off_zero = Cil.evar cmp_off_zero in
+  	 let i_5 = decl_varinfo cmp_off_zero in
+  	 let i_6 = Instru(F.cmp_ui l_cmp_off_zero up_o zero) in
+  	 let e1 = cmp Rge e_cmp_off_zero zero in
+  	 let e2 = cmp Rlt e_cmp_dim_off zero in
+  	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+  	 let i_clear = Instru(F.clear low_o) in
+	 let i_clear2 = Instru(F.clear up_o) in
+  	 [i_0'; i_cond], [i_1; i_2; i_3; i_4; i_5; i_6; i_7], cond,
+	 [i_clear; i_clear2]
+      | Linteger, Ctype (TInt _) ->
+  	 let nonempty_set = self#fresh_pred_varinfo () in
+  	 let i_0' = decl_varinfo nonempty_set in
+  	 let l_nonempty_set = Cil.var nonempty_set in
+  	 let e_nonempty_set = Cil.evar nonempty_set in
+  	 let i_cond = Instru(F.cmp_si l_nonempty_set low_o up_o) in
+  	 let cond = cmp Rle e_nonempty_set zero in
+  	 let i_1 = decl_varinfo dim in
+  	 let i_2 = Instru(F.pc_dim l_dim x') in
+  	 let e1 = cmp Rge up_o zero in
+  	 let e2 = cmp Rgt e_dim up_o in
+  	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+  	 let i_clear = Instru(F.clear low_o) in
+  	 [i_0'; i_cond], [i_1; i_2; i_7], cond, [i_clear]
+      | Ctype (TInt _), Linteger ->
 	 let nonempty_set = self#fresh_pred_varinfo () in
-	 let i_0' = decl_varinfo nonempty_set in
-	 let l_nonempty_set = Cil.var nonempty_set in
-	 let e_nonempty_set = Cil.evar nonempty_set in
-	 let i_cond = Instru(F.cmp_ui l_nonempty_set y' lower_bound) in
-	 let cond = cmp Rge e_nonempty_set zero in
-	 (* then branch *)
-	 let dim = self#fresh_ctype_varinfo Cil.intType in
-	 let l_dim = Cil.var dim in
-	 let e_dim = Cil.evar dim in
-	 let i_1 = decl_varinfo dim in
-	 let i_2 = Instru(F.pc_dim l_dim x') in
-	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType in
-	 let l_cmp_dim_off = Cil.var cmp_dim_off in
-	 let e_cmp_dim_off = Cil.evar cmp_dim_off in
-	 let i_3 = decl_varinfo cmp_dim_off in
-	 let i_4 = Instru(F.cmp_ui l_cmp_dim_off y' e_dim) in
-	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType in
-	 let l_cmp_off_zero = Cil.var cmp_off_zero in
-	 let e_cmp_off_zero = Cil.evar cmp_off_zero in
-	 let i_5 = decl_varinfo cmp_off_zero in
-	 let i_6 = Instru(F.cmp_ui l_cmp_off_zero y' zero) in
-	 let e1 = cmp Rge e_cmp_off_zero zero in
-	 let e2 = cmp Rlt e_cmp_dim_off zero in
-	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
-	 (* else branch *)
-	 let i_8 = Instru(instru_affect l_ret one) in
-	 let i_if = ins_if cond [i_1; i_2; i_3; i_4; i_5; i_6; i_7] [i_8] in
-	 let i_clear = Instru(F.clear y') in
-	 [i_0; i_0'; i_cond; i_if; i_clear], e_ret
-      | Ctype (TInt _) ->
-	 let ret = self#fresh_pred_varinfo () in
-	 let l_ret = Cil.var ret in
-	 let e_ret = Cil.evar ret in
-	 let i_0 = decl_varinfo ret in
-	 (* then branch *)
-	 let dim = self#fresh_ctype_varinfo Cil.intType in
-	 let l_dim = Cil.var dim in
-	 let i_1 = decl_varinfo dim in
-	 let i_2 = Instru(F.pc_dim l_dim x') in
-	 let e1 = cmp Rge y' zero in
-	 let e2 = cmp Rgt (Cil.evar dim) y' in
-	 let i_3 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
-	 (* else branch *)
-	 let i_4 = Instru(instru_affect l_ret one) in
-	 [i_0; ins_if (cmp Rle lower_bound y') [i_1; i_2; i_3] [i_4]], e_ret
+  	 let i_0' = decl_varinfo nonempty_set in
+  	 let l_nonempty_set = Cil.var nonempty_set in
+  	 let e_nonempty_set = Cil.evar nonempty_set in
+  	 let i_cond = Instru(F.cmp_ui l_nonempty_set up_o low_o) in
+  	 let cond = cmp Rge e_nonempty_set zero in
+  	 let i_1 = decl_varinfo dim in
+  	 let i_2 = Instru(F.pc_dim l_dim x') in
+  	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType in
+  	 let l_cmp_dim_off = Cil.var cmp_dim_off in
+  	 let e_cmp_dim_off = Cil.evar cmp_dim_off in
+  	 let i_3 = decl_varinfo cmp_dim_off in
+  	 let i_4 = Instru(F.cmp_ui l_cmp_dim_off up_o e_dim) in
+  	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType in
+  	 let l_cmp_off_zero = Cil.var cmp_off_zero in
+  	 let e_cmp_off_zero = Cil.evar cmp_off_zero in
+  	 let i_5 = decl_varinfo cmp_off_zero in
+  	 let i_6 = Instru(F.cmp_ui l_cmp_off_zero up_o zero) in
+  	 let e1 = cmp Rge e_cmp_off_zero zero in
+  	 let e2 = cmp Rlt e_cmp_dim_off zero in
+  	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+	 let i_clear = Instru(F.clear up_o) in
+  	 [i_0'; i_cond], [i_1; i_2; i_3; i_4; i_5; i_6; i_7], cond, [i_clear]
+      | Ctype (TInt _), Ctype (TInt _) ->
+  	 let i_1 = decl_varinfo dim in
+  	 let i_2 = Instru(F.pc_dim l_dim x') in
+  	 let e1 = cmp Rge up_o zero in
+  	 let e2 = cmp Rgt e_dim up_o in
+  	 let i_3 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+	 [], [i_1; i_2; i_3], cmp Rle low_o up_o, []
       | _ -> assert false (* unreachable *)
     in
-    inserts_0 @ inserts_1 @ inserts, ret
+    let i_if = ins_if cond i_then [Instru(instru_affect l_ret one)] in
+    inserts_0 @ inserts_1 @ inserts_2 @ [i_0] @ i_before @ i_if::i_after, e_ret
+
+  method private translate_valid_ptr_offset pointer offset =
+    let loc = pointer.term_loc in
+    let inserts_0, x' = self#translate_term pointer in
+    let inserts_1, y' = self#translate_term offset in
+    let ret = self#fresh_pred_varinfo () in
+    let l_ret = Cil.var ret in
+    let e_ret = Cil.evar ret in
+    let i_0 = decl_varinfo ret in
+    let dim = self#fresh_ctype_varinfo Cil.intType in
+    let l_dim = Cil.var dim in
+    let e_dim = Cil.evar dim in
+    let i_1 = decl_varinfo dim in
+    let i_2 = Instru(F.pc_dim l_dim x') in
+    let inserts = match offset.term_type with
+      | Linteger ->
+  	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType in
+  	 let l_cmp_dim_off = Cil.var cmp_dim_off in
+  	 let e_cmp_dim_off = Cil.evar cmp_dim_off in
+  	 let i_3 = decl_varinfo cmp_dim_off in
+  	 let i_4 = Instru(F.cmp_ui l_cmp_dim_off y' e_dim) in
+  	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType in
+  	 let l_cmp_off_zero = Cil.var cmp_off_zero in
+  	 let e_cmp_off_zero = Cil.evar cmp_off_zero in
+  	 let i_5 = decl_varinfo cmp_off_zero in
+  	 let i_6 = Instru(F.cmp_ui l_cmp_off_zero y' zero) in
+  	 let e1 = cmp Rge e_cmp_off_zero zero in
+  	 let e2 = cmp Rlt e_cmp_dim_off zero in
+  	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+  	 let i_clear = Instru(F.clear y') in
+  	 [i_3; i_4; i_5; i_6; i_7; i_clear]
+      | Ctype (TInt _) ->
+  	 let e1 = cmp Rge y' zero in
+  	 let e2 = cmp Rgt e_dim y' in
+  	 [ Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) ]
+      | _ -> assert false (* unreachable *)
+    in
+    inserts_0 @ inserts_1 @ [i_0; i_1; i_2] @ inserts, e_ret
+
+  method private translate_valid_ptr pointer =
+    let inserts_0, x' = self#translate_term pointer in
+    let ret = self#fresh_pred_varinfo () in
+    let i_0 = decl_varinfo ret in
+    let dim = self#fresh_ctype_varinfo Cil.intType in
+    let i_1 = decl_varinfo dim in
+    let i_2 = Instru(F.pc_dim (Cil.var dim) x') in
+    let e2 = cmp Rgt (Cil.evar dim) zero in
+    let i_3 = Instru(instru_affect (Cil.var ret) e2) in
+    inserts_0 @ [i_0; i_1; i_2; i_3], (Cil.evar ret)
 
   method private translate_forall = self#translate_quantif ~forall:true
   method private translate_exists = self#translate_quantif ~forall:false

@@ -171,14 +171,9 @@ int sum_array(int *t, int n)
             pathcrawler_assert_exception("Assert!",5);
           }
           int __stady_pred_0;
-          if(0 <= i) {
-            int __stady_term_7;
-            __stady_term_7 = pathcrawler_dimension(t);
-            __stady_pred_0 = i >= 0 && __stady_term_7 > i;
-          }
-          else {
-            __stady_pred_0 = 1;
-          }
+          int __stady_term_7;
+          __stady_term_7 = pathcrawler_dimension(t);
+          __stady_pred_0 = i >= 0 && __stady_term_7 > i;
           if(! __stady_pred_0) {
             pathcrawler_assert_exception("Assert!",6);
           }
@@ -352,7 +347,7 @@ int sum_array(int *t, int n)
 [pc] Starting lanceur_sum_array (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 153 test cases
+[stady] 147 test cases
 [stady]  Counter-example for assert rte: signed_overflow: -2147483648 ≤ s+*(t+i);
 [stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_8.c
 [stady]           variable|            input|  concrete output|  symbolic output
