@@ -154,7 +154,7 @@ let lengths_from_requires kf =
   end
   in
   let on_requires p =
-    let p' = (new Sd_subst.subst ())#id_pred p [][][][] in
+    let p' = (new Subst.subst ())#id_pred p [][][][] in
     ignore (Visitor.visitFramacIdPredicate o p')
   in
   let on_bhv _ bhv = List.iter on_requires bhv.b_requires in

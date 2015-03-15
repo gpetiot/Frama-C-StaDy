@@ -21,7 +21,7 @@ PLUGIN_CMO := \
 	options \
 	debug \
 	states \
-	sd_subst \
+	subst \
 	sd_utils \
 	sd_socket \
 	sd_native_precond \
