@@ -10,7 +10,7 @@ let pc_panel (main_ui:Design.main_window_extension_points) =
   let set = Kernel.MainFunction.set in
   let refresh = Gtk_helper.on_string ~tooltip ~validator box_4 "main" get set in
   let run_button = GButton.button ~label:"Run" ~packing:(vbox#pack) () in
-  let callback() = Sd_register.run(); main_ui#redisplay() in
+  let callback() = Register.run(); main_ui#redisplay() in
   let on_press() = main_ui#protect ~cancelable:true callback in
   ignore(run_button#connect#pressed on_press);
   "stady", vbox#coerce, Some refresh
@@ -75,9 +75,9 @@ let pc_selector
 
 let main main_ui =
   try
-    Sd_register.setup_props_bijection();
-    Sd_register.do_externals();
-    let compute = Sd_register.compute_props in
+    Register.setup_props_bijection();
+    Register.do_externals();
+    let compute = Register.compute_props in
     main_ui#register_panel pc_panel;
     main_ui#register_source_selector (pc_selector compute)
   with _ -> ()

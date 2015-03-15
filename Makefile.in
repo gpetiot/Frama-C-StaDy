@@ -27,7 +27,7 @@ PLUGIN_CMO := \
 	native_precond \
 	insertions \
 	print \
-	sd_register
+	register
 PLUGIN_GUI_CMO 	:= sd_register_gui 
 PLUGIN_HAS_MLI:= yes
 PLUGIN_DEPENDENCIES:=PathCrawler
