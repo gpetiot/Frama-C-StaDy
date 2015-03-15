@@ -24,7 +24,7 @@ PLUGIN_CMO := \
 	subst \
 	utils \
 	socket \
-	sd_native_precond \
+	native_precond \
 	sd_insertions \
 	sd_print \
 	sd_register

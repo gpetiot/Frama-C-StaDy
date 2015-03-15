@@ -183,7 +183,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   let instru_fname = Printf.sprintf "__sd_instru_%s_%s.c" fname entry_point in
   (* Translate some parts of the pre-condition in Prolog *)
   let native_precond_generated, domains, unquantifs, quantifs =
-    try let a,b,c = Sd_native_precond.compute_constraints() in true, a, b, c
+    try let a,b,c = Native_precond.compute_constraints() in true, a, b, c
     with _ -> false, [], [], []
   in
   Options.Self.feedback ~dkey:Options.dkey_native_precond
@@ -194,9 +194,9 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
   let test_params =
     if native_precond_generated || new_globals <> [] then
       begin
-	let add_global d v = Sd_native_precond.add_global v d in
+	let add_global d v = Native_precond.add_global v d in
 	let domains = List.fold_left add_global domains new_globals in
-	Sd_native_precond.translate precond_fname domains unquantifs quantifs;
+	Native_precond.translate precond_fname domains unquantifs quantifs;
 	Printf.sprintf "-pc-test-params %s" precond_fname
       end
     else ""
