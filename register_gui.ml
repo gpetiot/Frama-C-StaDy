@@ -19,57 +19,50 @@ let pc_panel (main_ui:Design.main_window_extension_points) =
 open Cil_types
 
 let to_do_on_select
-    (popup_factory:GMenu.menu GMenu.factory)
-    (main_ui:Design.main_window_extension_points) button_nb selected
-    (compute: ?props:Property.t list -> ?spec_insuf:stmt -> unit -> unit) =
+      (popup_factory:GMenu.menu GMenu.factory)
+      (main_ui:Design.main_window_extension_points) button_nb selected
+      (compute: ?props:Property.t list -> ?spec_insuf:stmt -> unit -> unit) =
   match selected with
-  | Pretty_source.PStmt (_, ({skind=Loop _} as stmt))
-  | Pretty_source.PStmt (_, ({skind=Instr (Call _)} as stmt)) ->
-     if button_nb = 3 then
-       let callback() = compute ~spec_insuf:stmt (); main_ui#redisplay() in
-       ignore (popup_factory#add_item "Check for Spec. Insufficiency" ~callback)
-  | Pretty_source.PIP prop ->
-     if button_nb = 1 then
-       begin
-	 try
-	   let file_tbl = States.Counter_examples.find prop in
-	   let nb = Datatype.String.Hashtbl.length file_tbl in
-	   if nb > 0 then
-	     begin
-	       main_ui#pretty_information "%i Counter-Example(s)@." nb;
-	       Utils.print_counter_examples
-		 true main_ui#pretty_information prop
-	     end
-	 with
-	   Not_found -> ()
-       end
-     else if button_nb = 3 then
-       begin
-	 begin
-	   try
-	     let file_tbl = States.Counter_examples.find prop in
-	     let on_file tc_c _ =
-	       let callback() =
-		 let prj = Project.create tc_c in
-		 let s = State_selection.of_list[Kernel.PreprocessAnnot.self] in
-		 Project.copy ~selection:s prj;
-		 Project.on prj File.init_from_c_files [File.from_filename tc_c]
-	       in
-	       let item_str = Printf.sprintf "_Open %s in new project" tc_c in
-	       ignore (popup_factory#add_item item_str ~callback)
-	     in
-	     Datatype.String.Hashtbl.iter_sorted on_file file_tbl
-	   with
-	     Not_found -> ()
-	 end;
-	 let callback() = compute ~props:[prop] (); main_ui#redisplay() in
-	 ignore(popup_factory#add_item "Validate property with StaDy" ~callback)
-       end
+  | Pretty_source.PStmt(_,({skind=Loop _} as stmt))
+  | Pretty_source.PStmt(_,({skind=Instr(Call _)} as stmt)) when button_nb = 3 ->
+     let callback() = compute ~spec_insuf:stmt (); main_ui#redisplay() in
+     ignore (popup_factory#add_item "Check for Spec. Insufficiency" ~callback)
+  | Pretty_source.PIP prop when button_nb = 1 ->
+     begin
+       try
+	 let file_tbl = States.Counter_examples.find prop in
+	 let nb = Datatype.String.Hashtbl.length file_tbl in
+	 if nb > 0 then
+	   begin
+	     main_ui#pretty_information "%i Counter-Example(s)@." nb;
+	     Utils.print_counter_examples true main_ui#pretty_information prop
+	   end
+       with Not_found -> ()
+     end
+  | Pretty_source.PIP prop when button_nb = 3 ->
+     begin
+       try
+	 let file_tbl = States.Counter_examples.find prop in
+	 let on_file tc_c _ =
+	   let callback() =
+	     let prj = Project.create tc_c in
+	     let s = State_selection.of_list[Kernel.PreprocessAnnot.self] in
+	     Project.copy ~selection:s prj;
+	     Project.on prj File.init_from_c_files [File.from_filename tc_c]
+	   in
+	   let item_str = Printf.sprintf "_Open %s in new project" tc_c in
+	   ignore (popup_factory#add_item item_str ~callback)
+	 in
+	 Datatype.String.Hashtbl.iter_sorted on_file file_tbl
+       with Not_found -> ()
+     end;
+     let callback() = compute ~props:[prop] (); main_ui#redisplay() in
+     ignore(popup_factory#add_item "Validate property with StaDy" ~callback)
   | _ -> ()
 
 
 let pc_selector
-    compute menu (main_ui:Design.main_window_extension_points) ~button loc =
+      compute menu (main_ui:Design.main_window_extension_points) ~button loc =
   to_do_on_select menu main_ui button loc compute
 
 
