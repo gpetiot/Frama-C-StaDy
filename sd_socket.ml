@@ -31,7 +31,7 @@ let process_test_case s =
   let f = Filename.concat f "testdrivers" in
   let f = Filename.concat f ("TC_" ^ str_tc ^ ".c") in
   let file_tbl =
-    try Sd_states.Counter_examples.find prop
+    try States.Counter_examples.find prop
     with Not_found -> Datatype.String.Hashtbl.create 32
   in
   let var_tbl =
@@ -52,20 +52,20 @@ let process_test_case s =
   in
   List.iter on_pair list_entries;
   Datatype.String.Hashtbl.replace file_tbl f var_tbl;
-  Sd_states.Counter_examples.replace prop file_tbl
+  States.Counter_examples.replace prop file_tbl
 
 
-let process_nb_test_cases s = Sd_states.Nb_test_cases.set (int_of_string s)
+let process_nb_test_cases s = States.Nb_test_cases.set (int_of_string s)
 
-let process_final_status () = Sd_states.All_Paths.set true
+let process_final_status () = States.All_Paths.set true
     
 let process_reachable_stmt s =
-  Sd_states.Unreachable_Stmts.remove (int_of_string s)
+  States.Unreachable_Stmts.remove (int_of_string s)
 
 let process_reachable_bhv s =
   let id = int_of_string s in
-  let kf,bhv,_ = Sd_states.Behavior_Reachability.find id in
-  Sd_states.Behavior_Reachability.replace id (kf,bhv,true)
+  let kf,bhv,_ = States.Behavior_Reachability.find id in
+  States.Behavior_Reachability.replace id (kf,bhv,true)
 
 
 (* le mot-clé au début de la chaîne permet de savoir que faire des données

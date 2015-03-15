@@ -33,8 +33,8 @@ let typically_preds bhv =
   let typically = List.map (fun (_,_,pred) -> pred) typically in
   List.fold_left List.rev_append [] typically
 
-let to_id = Sd_states.Property_To_Id.find
-let to_prop = Sd_states.Id_To_Property.find
+let to_id = States.Property_To_Id.find
+let to_prop = States.Id_To_Property.find
 
 
 open Cil_types
@@ -169,7 +169,7 @@ let mpz_t() =
 
 let print_counter_examples
       gui (pprint:('a, Format.formatter, unit) format -> 'a) prop =
-  let file_tbl = Sd_states.Counter_examples.find prop in
+  let file_tbl = States.Counter_examples.find prop in
   let print x = if gui then pprint "%s@.@\n" x else pprint " %s@\n" x in
   let n_chars n str =
     let size = let s = n - (String.length str) in if s < 0 then 0 else s in

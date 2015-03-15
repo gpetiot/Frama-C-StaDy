@@ -333,7 +333,7 @@ let compute_constraints() =
 	Printer.pp_predicate_named pnamed;
       (* this predicate has not been translated in Prolog, we must translate it
 	 in C. *)
-      Sd_states.Not_Translated_Predicates.add id_pred.ip_id;
+      States.Not_Translated_Predicates.add id_pred.ip_id;
       constraints
   in
   let constraints = List.fold_left f [] typically_preds in

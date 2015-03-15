@@ -20,7 +20,7 @@ PLUGIN_CMO := \
 	local_config \
 	options \
 	debug \
-	sd_states \
+	states \
 	sd_subst \
 	sd_utils \
 	sd_socket \

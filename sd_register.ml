@@ -62,7 +62,7 @@ let emitter =
 
 
 let do_externals() =
-  Sd_states.Externals.clear();
+  States.Externals.clear();
   let p' = Project.create "__stady_externals"  in
   let mpz_t, externals = Project.on p' (fun () ->
     let old_verbose = Kernel.Verbose.get() in
@@ -89,12 +89,12 @@ let do_externals() =
   ) () in
   Project.remove ~project:p' ();
   Options.mpz_t := mpz_t;
-  List.iter (fun(a,b) -> Sd_states.Externals.add a b) externals
+  List.iter (fun(a,b) -> States.Externals.add a b) externals
 
 
 let setup_props_bijection () =
-  Sd_states.Id_To_Property.clear();
-  Sd_states.Property_To_Id.clear();
+  States.Id_To_Property.clear();
+  States.Property_To_Id.clear();
   (* Bijection: unique_identifier <--> property *)
   let property_id = ref 0 in
   let fc_builtin = "__fc_builtin_for_normalization.i" in
@@ -102,8 +102,8 @@ let setup_props_bijection () =
     let pos1,_ = Property.location property in
     if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
       begin
-	Sd_states.Property_To_Id.add property !property_id;
-	Sd_states.Id_To_Property.add !property_id property;
+	States.Property_To_Id.add property !property_id;
+	States.Id_To_Property.add !property_id property;
 	property_id := !property_id + 1
       end
   in
@@ -272,11 +272,11 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
       let ret = Unix.close_process_in chan in
       Sd_socket.print_exit_code ret
   end;
-  Sd_states.Nb_test_cases.mark_as_computed();
-  Sd_states.Counter_examples.mark_as_computed();
-  Sd_states.Unreachable_Stmts.mark_as_computed();
-  Options.Self.result "all-paths: %b" (Sd_states.All_Paths.get());
-  Options.Self.result "%i test cases" (Sd_states.Nb_test_cases.get());
+  States.Nb_test_cases.mark_as_computed();
+  States.Counter_examples.mark_as_computed();
+  States.Unreachable_Stmts.mark_as_computed();
+  Options.Self.result "all-paths: %b" (States.All_Paths.get());
+  Options.Self.result "%i test cases" (States.Nb_test_cases.get());
   let distinct = true in
   let strengthened_precond =
     try
@@ -285,7 +285,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
   in
-  let no_CE = Sd_states.Counter_examples.length() = 0 in
+  let no_CE = States.Counter_examples.length() = 0 in
   let emit_status prop =
     try
       Sd_utils.print_counter_examples false Options.Self.result prop;
@@ -295,7 +295,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
     | Not_found ->
       let status = Property_status.True in
       let hyps = strengthened_precond in
-      if Sd_states.All_Paths.get() && no_CE then
+      if States.All_Paths.get() && no_CE then
 	Property_status.emit emitter ~hyps prop ~distinct status
   in
   List.iter emit_status translated_props;
@@ -310,11 +310,11 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
       (Kernel_function.get_name kf)
       (if is_reachable then "reachable" else "not reachable")
   in
-  if Sd_states.All_Paths.get() && strengthened_precond = [] then
+  if States.All_Paths.get() && strengthened_precond = [] then
     begin
-      Sd_states.Unreachable_Stmts.iter add_assert_false;
+      States.Unreachable_Stmts.iter add_assert_false;
       if Options.Behavior_Reachability.get() then
-	Sd_states.Behavior_Reachability.iter info_reachability
+	States.Behavior_Reachability.iter info_reachability
     end
 
 
@@ -324,12 +324,12 @@ let run() =
       setup_props_bijection();
       do_externals();
       compute_props ();
-      Sd_states.Id_To_Property.clear();
-      Sd_states.Property_To_Id.clear();
-      Sd_states.Not_Translated_Predicates.clear();
-      Sd_states.Behavior_Reachability.clear();
+      States.Id_To_Property.clear();
+      States.Property_To_Id.clear();
+      States.Not_Translated_Predicates.clear();
+      States.Behavior_Reachability.clear();
       Options.mpz_t := None;
-      Sd_states.Externals.clear()
+      States.Externals.clear()
     end
 
 

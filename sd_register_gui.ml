@@ -32,7 +32,7 @@ let to_do_on_select
      if button_nb = 1 then
        begin
 	 try
-	   let file_tbl = Sd_states.Counter_examples.find prop in
+	   let file_tbl = States.Counter_examples.find prop in
 	   let nb = Datatype.String.Hashtbl.length file_tbl in
 	   if nb > 0 then
 	     begin
@@ -47,7 +47,7 @@ let to_do_on_select
        begin
 	 begin
 	   try
-	     let file_tbl = Sd_states.Counter_examples.find prop in
+	     let file_tbl = States.Counter_examples.find prop in
 	     let on_file tc_c _ =
 	       let callback() =
 		 let prj = Project.create tc_c in

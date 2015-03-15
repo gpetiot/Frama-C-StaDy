@@ -72,7 +72,7 @@ let binop_to_fname = function
   | _ -> assert false
 
 module F = struct
-  let get = Sd_states.Externals.find
+  let get = States.Externals.find
   let call fct ret args = let vi = get fct in Call(ret, Cil.evar vi, args, loc)
   let malloc x y = call "malloc" (Some x) [y]
   let free x = call "free" None [x]
@@ -957,7 +957,7 @@ class gather_insertions props spec_insuf = object(self)
     let not_translated p =
       if pre_entry_point then
 	let filter ret id = ret || id = p.ip_id in
-	Sd_states.Not_Translated_Predicates.fold_left filter false
+	States.Not_Translated_Predicates.fold_left filter false
       else true
     in
     let translate_as_return pred =
@@ -1012,7 +1012,7 @@ class gather_insertions props spec_insuf = object(self)
 	not (Cil.is_default_behavior b)
 	&& (Options.Behavior_Reachability.get())
       in
-      Sd_states.Behavior_Reachability.replace bhv_to_reach_cpt (kf,b,false);
+      States.Behavior_Reachability.replace bhv_to_reach_cpt (kf,b,false);
       bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
       if post <> [] || (Options.Behavior_Reachability.get()) then
 	begin
@@ -1454,7 +1454,7 @@ class gather_insertions props spec_insuf = object(self)
 	| first_stmt :: _ ->
 	  let dkey = Options.dkey_reach in
       	  Options.Self.debug ~dkey "stmt %i to reach" first_stmt.sid;
-	  Sd_states.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
+	  States.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
       	  stmts_to_reach <- first_stmt.sid :: stmts_to_reach
       	| _ -> ()
       in
