@@ -1246,6 +1246,100 @@ class gather_insertions props spec_insuf = object(self)
     let insert_1 = ins_if cond ins [] in
     inserts_0 @ [insert_1]
 
+  method private translate_stmt_spec kf stmt for_behaviors bhvs =
+    if (self#at_least_one_prop kf bhvs.spec_behavior (Kstmt stmt))
+       || (Options.Behavior_Reachability.get()) then
+      begin
+	let stmt_bhvs = bhvs.spec_behavior in
+	let ins = self#pre ~pre_entry_point:false kf stmt_bhvs (Kstmt stmt) in
+	let ins = self#for_behaviors for_behaviors ins in
+	List.iter (self#insert (BegStmt stmt.sid)) ins;
+	let ins = self#post kf stmt_bhvs (Kstmt stmt) in
+	let ins =
+	  if for_behaviors = [] then ins
+	  else self#for_behaviors for_behaviors ins
+	in
+	List.iter (self#insert (EndStmt stmt.sid)) ins;
+      end
+
+  method private translate_assert kf stmt ca for_behaviors pred =
+    let prop = Property.ip_of_code_annot_single kf stmt ca in
+    if List.mem prop props then
+      let ins = self#pc_assert_exception pred.content "Assert!" prop in
+      let inserts = self#for_behaviors for_behaviors ins in
+      List.iter (self#insert (BegStmt stmt.sid)) inserts
+
+  method private translate_invariant kf stmt ca for_behaviors pred =
+    let prop = Property.ip_of_code_annot_single kf stmt ca in
+    if List.mem prop props then
+      let f label msg =
+	let ins = self#pc_assert_exception pred.content msg prop in
+	let inserts = self#for_behaviors for_behaviors ins in
+	List.iter (self#insert label) inserts
+      in
+      f (BegStmt stmt.sid) "Loop invariant not established!";
+      f (EndIter stmt.sid) "Loop invariant not preserved!"
+
+  method private translate_variant kf stmt ca term =
+    let prop = Property.ip_of_code_annot_single kf stmt ca in
+    translated_properties <- prop :: translated_properties;
+    if List.mem prop props then
+      let id = Utils.to_id prop in
+      let beg_label = BegIter stmt.sid and end_label = EndIter stmt.sid in
+      match term.term_type with
+      | Linteger ->
+	 (* at BegIter *)
+	 let inserts_1, beg_variant = self#translate_term term in
+	 List.iter (self#insert beg_label) inserts_1;
+	 let cmp_variant_zero = self#fresh_ctype_varinfo Cil.intType in
+	 let e_cmp_variant_zero = Cil.evar cmp_variant_zero in
+	 let l_cmp_variant_zero = Cil.var cmp_variant_zero in
+	 let instr = Instru(self#pc_exc "Variant non positive" id) in
+	 self#insert beg_label (decl_varinfo cmp_variant_zero);
+	 let i_2 = Instru(F.cmp_ui l_cmp_variant_zero beg_variant zero) in
+	 self#insert beg_label i_2;
+	 let cond = cmp Rlt e_cmp_variant_zero zero in
+	 self#insert beg_label (ins_if cond [instr] []);
+	 let save_variant = self#fresh_Z_varinfo() in
+	 let insert_2 = decl_varinfo save_variant in
+	 self#insert beg_label insert_2;
+	 let e_save_variant  = Cil.evar save_variant in
+	 let insert_3 = Instru(F.init_set e_save_variant beg_variant) in
+	 self#insert beg_label insert_3;
+	 (* at EndIter *)
+	 let inserts_4, end_variant = self#translate_term term in
+	 List.iter (self#insert end_label) inserts_4;
+	 let cmp_variants = self#fresh_ctype_varinfo Cil.intType in
+	 let e_cmp_variants = Cil.evar cmp_variants in
+	 let l_cmp_variants = Cil.var cmp_variants in
+	 let instr = Instru(self#pc_exc "Variant non decreasing" id) in
+	 self#insert end_label (decl_varinfo cmp_variants);
+	 let i_4 = Instru(F.cmp l_cmp_variants end_variant e_save_variant) in
+	 self#insert end_label i_4;
+	 let cond = cmp Rge e_cmp_variants zero in
+	 self#insert end_label (ins_if cond [instr] []);
+	 self#insert end_label (Instru(F.clear e_save_variant))
+      | Lreal -> assert false (* TODO: reals *)
+      | _ ->
+	 (* at BegIter *)
+	 let inserts_1, beg_variant = self#translate_term term in
+	 List.iter (self#insert beg_label) inserts_1;
+	 let cond = cmp Rlt beg_variant zero in
+	 let instr = Instru(self#pc_exc "Variant non positive" id) in
+	 self#insert beg_label (ins_if cond [instr] []);
+	 let save_variant = self#fresh_ctype_varinfo Cil.intType in
+	 let l_save_variant = Cil.var save_variant in
+	 let e_save_variant = Cil.evar save_variant in
+	 self#insert beg_label (decl_varinfo save_variant);
+	 let insert = Instru(instru_affect l_save_variant beg_variant) in
+	 self#insert beg_label insert;
+	 (* at EndIter *)
+	 let inserts_2, end_variant = self#translate_term term in
+	 List.iter (self#insert end_label) inserts_2;
+	 let cond = cmp Rge end_variant e_save_variant in
+	 let instr = Instru(self#pc_exc "Variant non decreasing" id) in
+	 self#insert end_label (ins_if cond [instr] [])
+
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
     let kf = Kernel_function.find_englobing_kf stmt in
@@ -1257,110 +1351,14 @@ class gather_insertions props spec_insuf = object(self)
     let on_behavior_name s = Annotations.fold_behaviors (on_behavior s) kf [] in
     let for_behaviors = List.map on_behavior_name bhv_names in
     begin match ca.annot_content with
-    | AStmtSpec (_,bhvs) ->
-
-      if (self#at_least_one_prop kf bhvs.spec_behavior (Kstmt stmt))
-	|| (Options.Behavior_Reachability.get()) then
-	begin
-	  let stmt_bhvs = bhvs.spec_behavior in
-	  let ins = self#pre ~pre_entry_point:false kf stmt_bhvs (Kstmt stmt) in
-	  let ins = self#for_behaviors for_behaviors ins in
-	  List.iter (self#insert (BegStmt stmt.sid)) ins;
-	  let ins = self#post kf stmt_bhvs (Kstmt stmt) in
-	  let ins =
-	    if for_behaviors = [] then ins
-	    else self#for_behaviors for_behaviors ins
-	  in
-	  List.iter (self#insert (EndStmt stmt.sid)) ins;
-	end
-
-    | AAssert (_,pred) ->
-
-      let prop = Property.ip_of_code_annot_single kf stmt ca in
-      if List.mem prop props then
-	let ins = self#pc_assert_exception pred.content "Assert!" prop in
-	let inserts = self#for_behaviors for_behaviors ins in
-	List.iter (self#insert (BegStmt stmt.sid)) inserts
-
+    | AStmtSpec (_,bhvs) -> self#translate_stmt_spec kf stmt for_behaviors bhvs
+    | AAssert (_,pred) -> self#translate_assert kf stmt ca for_behaviors pred
     | AInvariant (_,true,pred) ->
-
-      let prop = Property.ip_of_code_annot_single kf stmt ca in
-      if List.mem prop props then
-	let f label msg =
-	  let ins = self#pc_assert_exception pred.content msg prop in
-	  let inserts = self#for_behaviors for_behaviors ins in
-	  List.iter (self#insert label) inserts
-	in
-	f (BegStmt stmt.sid) "Loop invariant not established!";
-	f (EndIter stmt.sid) "Loop invariant not preserved!"
-
-    | AVariant (term,_) ->
-
-      let prop = Property.ip_of_code_annot_single kf stmt ca in
-      if List.mem prop props then
-	let id = Utils.to_id prop in
-	let beg_label = BegIter stmt.sid and end_label = EndIter stmt.sid in
-	begin match term.term_type with
-	| Linteger ->
-	  (* at BegIter *)
-	  let inserts_1, beg_variant = self#translate_term term in
-	  List.iter (self#insert beg_label) inserts_1;
-	  let cmp_variant_zero = self#fresh_ctype_varinfo Cil.intType in
-	  let e_cmp_variant_zero = Cil.evar cmp_variant_zero in
-	  let l_cmp_variant_zero = Cil.var cmp_variant_zero in
-	  let instr = Instru(self#pc_exc "Variant non positive" id) in
-	  self#insert beg_label (decl_varinfo cmp_variant_zero);
-	  let i_2 = Instru(F.cmp_ui l_cmp_variant_zero beg_variant zero) in
-	  self#insert beg_label i_2;
-	  let cond = cmp Rlt e_cmp_variant_zero zero in
-	  self#insert beg_label (ins_if cond [instr] []);
-	  let save_variant = self#fresh_Z_varinfo() in
-	  let insert_2 = decl_varinfo save_variant in
-	  self#insert beg_label insert_2;
-	  let e_save_variant  = Cil.evar save_variant in
-	  let insert_3 = Instru(F.init_set e_save_variant beg_variant) in
-	  self#insert beg_label insert_3;
-
-	  (* at EndIter *)
-	  let inserts_4, end_variant = self#translate_term term in
-	  List.iter (self#insert end_label) inserts_4;
-	  let cmp_variants = self#fresh_ctype_varinfo Cil.intType in
-	  let e_cmp_variants = Cil.evar cmp_variants in
-	  let l_cmp_variants = Cil.var cmp_variants in
-	  let instr = Instru(self#pc_exc "Variant non decreasing" id) in
-	  self#insert end_label (decl_varinfo cmp_variants);
-	  let i_4 = Instru(F.cmp l_cmp_variants end_variant e_save_variant) in
-	  self#insert end_label i_4;
-	  let cond = cmp Rge e_cmp_variants zero in
-	  self#insert end_label (ins_if cond [instr] []);
-	  self#insert end_label (Instru(F.clear e_save_variant))
-	| Lreal -> assert false (* TODO: reals *)
-	| _ ->
-	  (* at BegIter *)
-	  let inserts_1, beg_variant = self#translate_term term in
-	  List.iter (self#insert beg_label) inserts_1;
-	  let cond = cmp Rlt beg_variant zero in
-	  let instr = Instru(self#pc_exc "Variant non positive" id) in
-	  self#insert beg_label (ins_if cond [instr] []);
-	  let save_variant = self#fresh_ctype_varinfo Cil.intType in
-	  let l_save_variant = Cil.var save_variant in
-	  let e_save_variant = Cil.evar save_variant in
-	  self#insert beg_label (decl_varinfo save_variant);
-	  let insert = Instru(instru_affect l_save_variant beg_variant) in
-	  self#insert beg_label insert;
-
-	  (* at EndIter *)
-	  let inserts_2, end_variant = self#translate_term term in
-	  List.iter (self#insert end_label) inserts_2;
-	  let cond = cmp Rge end_variant e_save_variant in
-	  let instr = Instru(self#pc_exc "Variant non decreasing" id) in
-	  self#insert end_label (ins_if cond [instr] [])
-	end;
-	translated_properties <- prop :: translated_properties
+       self#translate_invariant kf stmt ca for_behaviors pred
+    | AVariant (term,_) -> self#translate_variant kf stmt ca term
     | _ -> ()
     end;
     Cil.DoChildren
-  (* end vcode_annot *)
 
   method private assigns_cwd assigns =
     let merge_assigns ret = function
