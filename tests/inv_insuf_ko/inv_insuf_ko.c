@@ -1,6 +1,6 @@
 
 /* run.config
-STDOPT: +"-main f -stady -stady-spec-insuf 3 -stady-msg-key generated-c,generated-pl -then -report"
+STDOPT: +"-main f -stady -stady-spec-insuf 3 -stady-msg-key generated-c,generated-pl -stady-stop-when-assert-violated -then -report"
 */
 
 int found;

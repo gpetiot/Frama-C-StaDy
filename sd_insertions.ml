@@ -1461,19 +1461,10 @@ class gather_insertions props spec_insuf = object(self)
       add_block_reachability b1;
       add_block_reachability b2;
       Cil.DoChildren
-    | Loop (_,b,_,_,_)
-	 when spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid ->
+    | Loop _ when spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid->
        let kf = Kernel_function.find_englobing_kf stmt in
        let ca_l = Annotations.code_annot stmt in
        let ca_l = List.map (fun x -> x.annot_content) ca_l in
-       let if_stmt = List.hd b.bstmts in
-       let loop_cond = match if_stmt.skind with
-	 | If(e,_,_,_) -> e
-	 | _ ->
-	    Sd_options.Self.warning ~current:true ~once:true
-				    "loop condition not found";
-	    zero
-       in
        let on_bhv _ bhv (ins_glob, ins) =
 	 let bname = bhv.b_name in
 	 let bhv_in l =
@@ -1498,12 +1489,7 @@ class gather_insertions props spec_insuf = object(self)
        let ins_glob, ins_h = Annotations.fold_behaviors on_bhv kf ([],[]) in
        List.iter (self#insert Glob) ins_glob;
        List.iter (self#insert (BegStmt stmt.sid)) ins_h;
-       if Sd_options.Invariant_Preservation.get() then
-	 Cil.DoChildren
-       else
-	 let ins_ass = Instru(self#pc_ass "" 0) in
-	 self#insert (BegStmt stmt.sid) (ins_if loop_cond [ins_ass] []);
-	 Cil.SkipChildren
+       Cil.DoChildren
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
 	when (spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid)
 	     || (List.mem fct_varinfo.vname sim_funcs) ->

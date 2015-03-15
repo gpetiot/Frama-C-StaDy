@@ -56,6 +56,7 @@ extern void __gmpz_init_set_str(mpz_t, const char*, int);
 extern void __gmpz_add(mpz_t, const mpz_t, const mpz_t);
 extern void __gmpz_add_ui(mpz_t, const mpz_t, unsigned long int);
 extern int pathcrawler_assert_exception(char*,int);
+extern void pathcrawler_to_framac(char*);
 extern int pathcrawler_assume_exception(char*,int);
 extern void* malloc(unsigned long);
 extern void free(void*);
@@ -129,47 +130,101 @@ void f(int *t, int x)
           pathcrawler_assume_exception("",0);
         }
       }
-      if(i <= 4) {
-        pathcrawler_assume_exception("",0);
-      }
-      
-    }
-    {
       mpz_t __stady_gmp_7;
       __gmpz_init_set_str(__stady_gmp_7,"0",10);
       mpz_t __stady_gmp_8;
-      __gmpz_init_set_si(__stady_gmp_8,found);
+      __gmpz_init_set_si(__stady_gmp_8,i);
       int __stady_term_6;
-      __stady_term_6 = __gmpz_cmp(__stady_gmp_8,__stady_gmp_7);
-      __gmpz_clear(__stady_gmp_8);
+      __stady_term_6 = __gmpz_cmp(__stady_gmp_7,__stady_gmp_8);
       __gmpz_clear(__stady_gmp_7);
+      __gmpz_clear(__stady_gmp_8);
       int __stady_pred_1;
-      __stady_pred_1 = 0;
-      {
-        mpz_t __q_i;
+      __stady_pred_1 = __stady_term_6 <= 0;
+      if(__stady_pred_1) {
         mpz_t __stady_gmp_9;
-        __gmpz_init_set_str(__stady_gmp_9,"0",10);
+        __gmpz_init_set_si(__stady_gmp_9,i);
         mpz_t __stady_gmp_10;
-        __gmpz_init_set_str(__stady_gmp_10,"4",10);
-        __gmpz_init_set(__q_i,__stady_gmp_9);
+        __gmpz_init_set_str(__stady_gmp_10,"5",10);
         int __stady_term_7;
-        __stady_term_7 = __gmpz_cmp(__q_i,__stady_gmp_10);
-        while(__stady_term_7 <= 0 && ! __stady_pred_1) {
-          mpz_t __stady_gmp_11;
-          __gmpz_init_set(__stady_gmp_11,__q_i);
-          int __stady_term_8;
-          __stady_term_8 = (int)__gmpz_get_si(__stady_gmp_11);
-          __gmpz_clear(__stady_gmp_11);
-          __stady_pred_1 = *(t + __stady_term_8) == x;
-          __gmpz_add_ui(__q_i,__q_i,1);
-          __stady_term_7 = __gmpz_cmp(__q_i,__stady_gmp_10);
-        }
-        __gmpz_clear(__q_i);
+        __stady_term_7 = __gmpz_cmp(__stady_gmp_9,__stady_gmp_10);
         __gmpz_clear(__stady_gmp_9);
         __gmpz_clear(__stady_gmp_10);
+        __stady_pred_1 = __stady_term_7 <= 0;
       }
-      if(! ((! (__stady_term_6 != 0) || __stady_pred_1) && (! __stady_pred_1 || 
-                                                            __stady_term_6 != 0))) {
+      if(! __stady_pred_1) {
+        pathcrawler_assert_exception("Loop invariant not established!",2);
+      }
+      while (1) {
+        if (! (i <= 4)) {
+                          pathcrawler_to_framac("@FC:REACHABLE_STMT:6");
+                          break;
+                        }if (*(t + i) == x) {
+                                              pathcrawler_to_framac("@FC:REACHABLE_STMT:10");
+                                              found = 1;
+                                            }
+                         i ++;mpz_t __stady_gmp_11;
+        __gmpz_init_set_str(__stady_gmp_11,"0",10);
+        mpz_t __stady_gmp_12;
+        __gmpz_init_set_si(__stady_gmp_12,i);
+        int __stady_term_8;
+        __stady_term_8 = __gmpz_cmp(__stady_gmp_11,__stady_gmp_12);
+        __gmpz_clear(__stady_gmp_11);
+        __gmpz_clear(__stady_gmp_12);
+        int __stady_pred_2;
+        __stady_pred_2 = __stady_term_8 <= 0;
+        if(__stady_pred_2) {
+          mpz_t __stady_gmp_13;
+          __gmpz_init_set_si(__stady_gmp_13,i);
+          mpz_t __stady_gmp_14;
+          __gmpz_init_set_str(__stady_gmp_14,"5",10);
+          int __stady_term_9;
+          __stady_term_9 = __gmpz_cmp(__stady_gmp_13,__stady_gmp_14);
+          __gmpz_clear(__stady_gmp_13);
+          __gmpz_clear(__stady_gmp_14);
+          __stady_pred_2 = __stady_term_9 <= 0;
+        }
+        if(! __stady_pred_2) {
+          pathcrawler_assert_exception("Loop invariant not preserved!",2);
+        }
+        }
+         
+    }
+    {
+      mpz_t __stady_gmp_15;
+      __gmpz_init_set_str(__stady_gmp_15,"0",10);
+      mpz_t __stady_gmp_16;
+      __gmpz_init_set_si(__stady_gmp_16,found);
+      int __stady_term_10;
+      __stady_term_10 = __gmpz_cmp(__stady_gmp_16,__stady_gmp_15);
+      __gmpz_clear(__stady_gmp_16);
+      __gmpz_clear(__stady_gmp_15);
+      int __stady_pred_3;
+      __stady_pred_3 = 0;
+      {
+        mpz_t __q_i;
+        mpz_t __stady_gmp_17;
+        __gmpz_init_set_str(__stady_gmp_17,"0",10);
+        mpz_t __stady_gmp_18;
+        __gmpz_init_set_str(__stady_gmp_18,"4",10);
+        __gmpz_init_set(__q_i,__stady_gmp_17);
+        int __stady_term_11;
+        __stady_term_11 = __gmpz_cmp(__q_i,__stady_gmp_18);
+        while(__stady_term_11 <= 0 && ! __stady_pred_3) {
+          mpz_t __stady_gmp_19;
+          __gmpz_init_set(__stady_gmp_19,__q_i);
+          int __stady_term_12;
+          __stady_term_12 = (int)__gmpz_get_si(__stady_gmp_19);
+          __gmpz_clear(__stady_gmp_19);
+          __stady_pred_3 = *(t + __stady_term_12) == x;
+          __gmpz_add_ui(__q_i,__q_i,1);
+          __stady_term_11 = __gmpz_cmp(__q_i,__stady_gmp_18);
+        }
+        __gmpz_clear(__q_i);
+        __gmpz_clear(__stady_gmp_17);
+        __gmpz_clear(__stady_gmp_18);
+      }
+      if(! ((! (__stady_term_10 != 0) || __stady_pred_3) && (! __stady_pred_3 || 
+                                                             __stady_term_10 != 0))) {
         pathcrawler_assert_exception("Assert!",1);
       }
       ;
@@ -198,21 +253,21 @@ void f(int *t, int x)
 [pc] Starting lanceur_f (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 73 test cases
+[stady] 53 test cases
 [stady]  Counter-example for assert
                             found ≢ 0 ⇔
                             (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x);
-[stady]  testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_12.c
+[stady]  testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_2.c
 [stady]           variable|            input|  concrete output|  symbolic output
-[stady]     __stady_term_2|                0|                 |
-[stady]     __stady_term_3|                5|                 |
-[stady]              found|             1788|                0|                0
-[stady]               t[0]|      -1073748822|                 |
-[stady]               t[1]|                0|                 |
-[stady]               t[2]|            74781|                 |
-[stady]               t[3]|          -174629|                 |
-[stady]               t[4]|            33937|                 |
-[stady]                  x|                0|                 |
+[stady]     __stady_term_2|           161763|                 |
+[stady]     __stady_term_3|                0|                 |
+[stady]              found|           104588|           161763|   __stady_term_2
+[stady]               t[0]|            25937|                 |
+[stady]               t[1]|           132958|                 |
+[stady]               t[2]|            39479|                 |
+[stady]               t[3]|             5031|                 |
+[stady]               t[4]|            35317|                 |
+[stady]                  x|          -176288|                 |
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

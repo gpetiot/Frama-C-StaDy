@@ -347,15 +347,15 @@ void f(int n, int *t)
 --- Properties of Function 'f'
 --------------------------------------------------------------------------------
 
-[ Partial ] Loop variant at loop (file tests/inv_preserved/inv_preserved.c, line 29)
+[ Partial ] Loop variant at loop (file tests/inv_preserved/inv_preserved.c, line 28)
             By StaDy, with pending:
-             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 14)
+             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 13)
+[ Partial ] Invariant (file tests/inv_preserved/inv_preserved.c, line 22)
+            By StaDy, with pending:
+             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 13)
 [ Partial ] Invariant (file tests/inv_preserved/inv_preserved.c, line 23)
             By StaDy, with pending:
-             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 14)
-[ Partial ] Invariant (file tests/inv_preserved/inv_preserved.c, line 24)
-            By StaDy, with pending:
-             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 14)
+             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 13)
 
 --------------------------------------------------------------------------------
 --- Status Report Summary

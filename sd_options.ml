@@ -58,15 +58,6 @@ module Spec_Insuf = Self.Int (struct
   let default = -500
 end)
 
-module Invariant_Preservation =
-  Self.False
-    (struct
-      let option_name = "-stady-inv-preserv"
-      let help = "use a different program transformation to produce \
-		  counter-examples exhibiting non-preservation of loop \
-		  invariants"
-    end)
-
 module Simulate_Functions =
   Self.String_list
     (struct

@@ -105,22 +105,17 @@ class print_insertions insertions functions spec_insuf () = object(self)
     begin
       match stmt.skind with
       | Loop(_,b,l,_,_) ->
-	if spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid &&
-	     not (Sd_options.Invariant_Preservation.get()) then
-	  ()
-	else begin
-	  Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
-	    (fun fmt -> self#line_directive fmt) l;
-	  let new_b = {b with bstmts = [List.hd b.bstmts]} in
-	  let braces = false in
-	  Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
-	  self#insertions_at fmt (Sd_insertions.BegIter stmt.sid);
-	  let new_b = {b with bstmts = List.tl b.bstmts} in
-	  let new_b = {new_b with blocals = []} in
-	  Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
-	  self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
-	  Format.fprintf fmt "}@\n @]"
-	end
+	 Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
+			(fun fmt -> self#line_directive fmt) l;
+	 let new_b = {b with bstmts = [List.hd b.bstmts]} in
+	 let braces = false in
+	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
+	 self#insertions_at fmt (Sd_insertions.BegIter stmt.sid);
+	 let new_b = {b with bstmts = List.tl b.bstmts} in
+	 let new_b = {new_b with blocals = []} in
+	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
+	 self#insertions_at fmt (Sd_insertions.EndIter stmt.sid);
+	 Format.fprintf fmt "}@\n @]"
       | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
 	  when (spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid)
 	       || List.mem vi.vname (Sd_options.Simulate_Functions.get()) -> ()
