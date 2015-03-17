@@ -20,22 +20,12 @@ let process_test_case s =
     if s = "" then [] else aux [] s
   in
   let prop = Utils.to_prop id_prop in
-  let func = Kernel_function.get_name (fst (Globals.entry_point ())) in
-  let instru_file_name =
-    Printf.sprintf "__sd_instru_%s_%s.c"
-      (Filename.chop_extension(Filename.basename(List.hd (Kernel.Files.get()))))
-      func
-  in
-  let f = "testcases_" ^ (Filename.chop_extension instru_file_name) in
-  let f = Filename.concat f func in
-  let f = Filename.concat f "testdrivers" in
-  let f = Filename.concat f ("TC_" ^ str_tc ^ ".c") in
   let file_tbl =
     try States.Counter_examples.find prop
     with Not_found -> Datatype.String.Hashtbl.create 32
   in
   let var_tbl =
-    try Datatype.String.Hashtbl.find file_tbl f
+    try Datatype.String.Hashtbl.find file_tbl str_tc
     with Not_found -> Datatype.String.Hashtbl.create 32
   in
   let on_pair (var, value) =
@@ -51,7 +41,7 @@ let process_test_case s =
     Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
   in
   List.iter on_pair list_entries;
-  Datatype.String.Hashtbl.replace file_tbl f var_tbl;
+  Datatype.String.Hashtbl.replace file_tbl str_tc var_tbl;
   States.Counter_examples.replace prop file_tbl
 
 
