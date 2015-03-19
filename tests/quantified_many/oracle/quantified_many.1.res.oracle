@@ -198,7 +198,7 @@ void f(int default_value)
 [stady]  Counter-example for assert
                             A4:
                               ∃ ℤ a, ℤ b;
-                                0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b];
+                                0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b]; (tests/quantified_many/quantified_many.c:40)
 [stady]  testcases___sd_instru_quantified_many_f/f/testdrivers/TC_1.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]      default_value|          -214739|                 |

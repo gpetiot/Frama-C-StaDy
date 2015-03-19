@@ -966,7 +966,7 @@ int alt_sep_test(void)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 1224 test cases
-[stady]  Counter-example for ensures \result ≢ 2
+[stady]  Counter-example for ensures \result ≢ 2 (tests/tcas/tcas.c:93)
 [stady]  testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_80.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]    Alt_Layer_Value|                0|                 |
@@ -986,7 +986,7 @@ int alt_sep_test(void)
 [stady]  Two_of_...s_Valid|                1|                 |
 [stady]      Up_Separation|       2147483565|                 |
 [stady]       return value|                 |                1|                1
-[stady]  Counter-example for ensures \result ≢ 1
+[stady]  Counter-example for ensures \result ≢ 1 (tests/tcas/tcas.c:107)
 [stady]  testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_19.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]    Alt_Layer_Value|                0|                 |
@@ -1006,7 +1006,7 @@ int alt_sep_test(void)
 [stady]  Two_of_...s_Valid|                1|                 |
 [stady]      Up_Separation|              -66|                 |
 [stady]       return value|                 |                0|                0
-[stady]  Counter-example for ensures \result ≢ 2
+[stady]  Counter-example for ensures \result ≢ 2 (tests/tcas/tcas.c:112)
 [stady]  testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_37.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]    Alt_Layer_Value|                2|                 |
@@ -1026,7 +1026,7 @@ int alt_sep_test(void)
 [stady]  Two_of_...s_Valid|                1|                 |
 [stady]      Up_Separation|                0|                 |
 [stady]       return value|                 |                1|                1
-[stady]  Counter-example for ensures \result ≢ 1
+[stady]  Counter-example for ensures \result ≢ 1 (tests/tcas/tcas.c:123)
 [stady]  testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_48.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]    Alt_Layer_Value|                1|                 |

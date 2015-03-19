@@ -1079,7 +1079,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [stady]  Counter-example for ensures
                             ∀ ℤ k;
                               0 ≤ k < \old(strlen) ⇒
-                              \old(*(str+k)) ≡ *(\old(dest)+k)
+                              \old(*(str+k)) ≡ *(\old(dest)+k) (tests/deleteSubstr1a/deleteSubstr1a.c:58)
 [stady]  testcases___sd_instru_deleteSubstr1a_delete_substr/delete_substr/testdrivers/TC_3.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]            dest[0]|               15|             -106|           str[1]
@@ -1090,7 +1090,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [stady]             strlen|                2|                 |
 [stady]             sublen|                1|                 |
 [stady]          substr[0]|               62|                 |
-[stady]  Counter-example for ensures \result ≡ 0
+[stady]  Counter-example for ensures \result ≡ 0 (tests/deleteSubstr1a/deleteSubstr1a.c:59)
 [stady]  testcases___sd_instru_deleteSubstr1a_delete_substr/delete_substr/testdrivers/TC_5.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]            dest[0]|               96|                2|          dest[1]

@@ -191,7 +191,9 @@ let print_counter_examples
   in
   let on_file f var_tbl =
     Format.fprintf
-      Format.str_formatter "Counter-example for @[%a@]@." Property.pretty prop;
+      Format.str_formatter "Counter-example for @[%a@] (%a)@."
+      Property.pretty prop
+      Cil_datatype.Location.pretty (Property.location prop);
     print (Format.flush_str_formatter());
     if f <> "" then print (Printf.sprintf "%s\n" f);
     if (Datatype.String.Hashtbl.length var_tbl) > 0 then

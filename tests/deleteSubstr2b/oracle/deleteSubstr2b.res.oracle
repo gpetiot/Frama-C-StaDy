@@ -1362,7 +1362,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 291 test cases
-[stady]  Counter-example for loop invariant 0 ≤ k < strlen;
+[stady]  Counter-example for loop invariant 0 ≤ k < strlen; (tests/deleteSubstr2b/deleteSubstr2b.c:72)
 [stady]  testcases___sd_instru_deleteSubstr2b_delete_substr/delete_substr/testdrivers/TC_4.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]            dest[0]|              126|               79|           str[0]

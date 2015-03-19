@@ -311,7 +311,7 @@ void __stady_fct_0(int *A, int n) {
 [pc] generation finished
 [stady] all-paths: true
 [stady] 22 test cases
-[stady]  Counter-example for ensures *(\old(t)+0) ≤ *(\old(t)+1)
+[stady]  Counter-example for ensures *(\old(t)+0) ≤ *(\old(t)+1) (tests/spec_insuf_ko/spec_insuf_ko.c:34)
 [stady]  testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_2.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]  __stady...m_12[0]|           200986|                 |

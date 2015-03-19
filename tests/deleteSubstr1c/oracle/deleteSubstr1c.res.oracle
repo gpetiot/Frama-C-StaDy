@@ -1256,7 +1256,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
                               (∀ ℤ l;
                                  i ≤ l < \old(strlen) ⇒
                                  \valid(\old(str)+(l+\old(sublen))) ∧
-                                 \old(*(str+(l+sublen))) ≡ *(\old(dest)+l))
+                                 \old(*(str+(l+sublen))) ≡ *(\old(dest)+l)) (tests/deleteSubstr1c/deleteSubstr1c.c:63)
 [stady]  testcases___sd_instru_deleteSubstr1c_delete_substr/delete_substr/testdrivers/TC_3.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]            dest[0]|               15|             -106|           str[1]

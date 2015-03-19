@@ -348,14 +348,14 @@ int sum_array(int *t, int n)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 147 test cases
-[stady]  Counter-example for assert rte: signed_overflow: -2147483648 ≤ s+*(t+i);
+[stady]  Counter-example for assert rte: signed_overflow: -2147483648 ≤ s+*(t+i); (tests/sum_array/sum_array.c:17)
 [stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_8.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]                  n|                3|                 |
 [stady]               t[0]|                0|                 |
 [stady]               t[1]|       -897154901|                 |
 [stady]               t[2]|      -1421176958|                 |
-[stady]  Counter-example for assert rte: signed_overflow: s+*(t+i) ≤ 2147483647;
+[stady]  Counter-example for assert rte: signed_overflow: s+*(t+i) ≤ 2147483647; (tests/sum_array/sum_array.c:17)
 [stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_4.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]                  n|                2|                 |
