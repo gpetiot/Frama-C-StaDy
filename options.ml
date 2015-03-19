@@ -51,9 +51,9 @@ module Behavior_Reachability = Self.False (struct
   let help = "compute reachability of each function's behavior"
 end)
 
-module Spec_Insuf = Self.Int (struct
-  let option_name = "-stady-spec-insuf"
-  let help = "replace a loop or function call by its specification"
+module CWD = Self.Int (struct
+  let option_name = "-stady-cwd"
+  let help = "detect contract weaknesses"
   let arg_name = "i"
   let default = -500
 end)

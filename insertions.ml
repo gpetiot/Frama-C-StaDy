@@ -119,7 +119,7 @@ let ins_ret a = IRet a
 let ins_if  a b c = IIf(a,b,c)
 let ins_loop a b = ILoop(a,b)
 
-class gather_insertions props spec_insuf = object(self)
+class gather_insertions props cwd = object(self)
   inherit Visitor.frama_c_inplace
 
   val insertions : (label, insertion Queue.t) Hashtbl.t = Hashtbl.create 64
@@ -1504,7 +1504,7 @@ class gather_insertions props spec_insuf = object(self)
        add_block_reachability b1;
        add_block_reachability b2;
        Cil.DoChildren
-    | Loop _ when spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid->
+    | Loop _ when cwd <> None && (Extlib.the cwd).sid = stmt.sid->
        let kf = Kernel_function.find_englobing_kf stmt in
        let ca_l = Annotations.code_annot stmt in
        let ca_l = List.map (fun x -> x.annot_content) ca_l in
@@ -1533,7 +1533,7 @@ class gather_insertions props spec_insuf = object(self)
        List.iter (self#insert (BegStmt stmt.sid)) ins_h;
        Cil.DoChildren
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
-	 when (spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid)
+	 when (cwd <> None && (Extlib.the cwd).sid = stmt.sid)
 	      || (List.mem fct_varinfo.vname sim_funcs) ->
        let kf = Globals.Functions.get fct_varinfo in
        let formals = Kernel_function.get_formals kf in

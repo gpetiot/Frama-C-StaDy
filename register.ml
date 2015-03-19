@@ -14,8 +14,8 @@ let typically_typer ~typing_context ~loc bhv = function
 let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
-let translate props spec_insuf =
-  let gatherer = new Insertions.gather_insertions props spec_insuf in
+let translate props cwd =
+  let gatherer = new Insertions.gather_insertions props cwd in
   Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
   let insertions = gatherer#get_insertions()
   and functions = gatherer#get_functions()
@@ -34,10 +34,10 @@ let translate props spec_insuf =
   insertions, functions, props, globals
 
 
-let print_translation filename insertions fcts spec_insuf =
+let print_translation filename insertions fcts cwd =
   let old_unicode = Kernel.Unicode.get() in
   Kernel.Unicode.set false;
-  let printer = new Print.print_insertions insertions fcts spec_insuf () in
+  let printer = new Print.print_insertions insertions fcts cwd () in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
@@ -167,11 +167,11 @@ let selected_props() =
   if props = [] then Property_status.fold app [] else props
 
 
-let compute_props ?(props=selected_props()) ?spec_insuf () =
-  let spec_insuf = match spec_insuf with
+let compute_props ?(props=selected_props()) ?cwd () =
+  let cwd = match cwd with
     | Some x -> Some x
     | None ->
-      let sid = Options.Spec_Insuf.get() in
+      let sid = Options.CWD.get() in
       try let stmt, _ = Kernel_function.find_from_sid sid in Some stmt
       with _ -> None
   in
@@ -190,7 +190,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
   let insertions, functions, translated_props, new_globals =
-    translate props spec_insuf in
+    translate props cwd in
   let test_params =
     if native_precond_generated || new_globals <> [] then
       begin
@@ -201,7 +201,7 @@ let compute_props ?(props=selected_props()) ?spec_insuf () =
       end
     else ""
   in
-  print_translation instru_fname insertions functions spec_insuf;
+  print_translation instru_fname insertions functions cwd;
   let stop_when_assert_violated =
     if Options.Stop_When_Assert_Violated.get() then
       "-pc-stop-when-assert-violated"

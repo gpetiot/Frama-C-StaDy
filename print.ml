@@ -50,7 +50,7 @@ let print_var v =
   not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
 
 
-class print_insertions insertions functions spec_insuf () = object(self)
+class print_insertions insertions functions cwd () = object(self)
   inherit Printer.extensible_printer () as super
 
   method private insertions_at fmt label =
@@ -117,7 +117,7 @@ class print_insertions insertions functions spec_insuf () = object(self)
 	 self#insertions_at fmt (Insertions.EndIter stmt.sid);
 	 Format.fprintf fmt "}@\n @]"
       | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
-	  when (spec_insuf <> None && (Extlib.the spec_insuf).sid = stmt.sid)
+	  when (cwd <> None && (Extlib.the cwd).sid = stmt.sid)
 	       || List.mem vi.vname (Options.Simulate_Functions.get()) -> ()
       | Return _ ->
 	let f = Kernel_function.get_name kf in
