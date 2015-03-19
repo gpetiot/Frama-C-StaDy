@@ -943,46 +943,49 @@ class gather_insertions props spec_insuf = object(self)
     let i_loop = ins_loop e_cond i_inside in
     [i_0; i_1; Block (i_before @ i_loop :: i_after)], e_var
 
-  method private translate_predicate p = match p with
-    | Pfalse -> [], zero
-    | Ptrue -> [], one
-    | Prel (r,t1,t2) -> self#translate_rel r t1 t2
-    | Pand (p,q) -> self#translate_and p q
-    | Por (p,q) -> self#translate_or p q
-    | Pimplies (p,q) -> self#translate_implies p q
-    | Piff(p,q) -> self#translate_equiv p q
-    | Pnot p -> self#translate_not p
-    | Pif(t,p,q) -> self#translate_pif t p q
-    | Pforall(vars,{content=Pimplies(h,g)}) -> self#translate_forall vars h g
-    | Pexists(vars,{content=Pand(h,g)}) -> self#translate_exists vars h g
-    | Pat (p, LogicLabel(_,l)) when l = "Here" -> self#translate_pnamed p
-    | Pvalid (_,t) -> self#translate_valid t
-    | Pvalid_read (_,t) ->
-       Options.Self.warning ~current:true
-			    "\\valid_read(%a) is interpreted as \\valid(%a)"
-			    Printer.pp_term t Printer.pp_term t;
-       self#translate_valid t
-    | Pforall _ ->
-       Options.Self.warning ~current:true
-			    "%a not of the form \\forall ...; a ==> b"
-			    Printer.pp_predicate p;
-       self#unsupported_predicate p
-    | Pexists _ ->
-       Options.Self.warning ~current:true
-			    "%a not of the form \\exists ...; a && b"
-			    Printer.pp_predicate p;
-       self#unsupported_predicate p
-    | Papp _ 
-    | Pseparated _ 
-    | Pxor _
-    | Plet _
-    | Pat _
-    | Pinitialized _
-    | Pfresh _
-    | Pdangling _
-    | Pallocable _
-    | Pfreeable _
-    | Psubtype _ -> self#unsupported_predicate p
+  method private translate_predicate p =
+    try
+      match p with
+      | Pfalse -> [], zero
+      | Ptrue -> [], one
+      | Prel (r,t1,t2) -> self#translate_rel r t1 t2
+      | Pand (p,q) -> self#translate_and p q
+      | Por (p,q) -> self#translate_or p q
+      | Pimplies (p,q) -> self#translate_implies p q
+      | Piff(p,q) -> self#translate_equiv p q
+      | Pnot p -> self#translate_not p
+      | Pif(t,p,q) -> self#translate_pif t p q
+      | Pforall(vars,{content=Pimplies(h,g)}) -> self#translate_forall vars h g
+      | Pexists(vars,{content=Pand(h,g)}) -> self#translate_exists vars h g
+      | Pat (p, LogicLabel(_,l)) when l = "Here" -> self#translate_pnamed p
+      | Pvalid (_,t) -> self#translate_valid t
+      | Pvalid_read (_,t) ->
+	 Options.Self.warning ~current:true
+			      "\\valid_read(%a) is interpreted as \\valid(%a)"
+			      Printer.pp_term t Printer.pp_term t;
+	 self#translate_valid t
+      | Pforall _ ->
+	 Options.Self.warning ~current:true
+			      "%a not of the form \\forall ...; a ==> b"
+			      Printer.pp_predicate p;
+	 self#unsupported_predicate p
+      | Pexists _ ->
+	 Options.Self.warning ~current:true
+			      "%a not of the form \\exists ...; a && b"
+			      Printer.pp_predicate p;
+	 self#unsupported_predicate p
+      | Papp _
+      | Pseparated _
+      | Pxor _
+      | Plet _
+      | Pat _
+      | Pinitialized _
+      | Pfresh _
+      | Pdangling _
+      | Pallocable _
+      | Pfreeable _
+      | Psubtype _ -> self#unsupported_predicate p
+    with Unsupported -> self#unsupported_predicate p
 
   (* modify result_varinfo when the function returns something *)
   method private compute_result_varinfo fct =
