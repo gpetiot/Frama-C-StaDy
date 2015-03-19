@@ -183,6 +183,8 @@ class print_insertions insertions functions spec_insuf () = object(self)
   val mutable gmpz_tdiv_q_ui = false
   val mutable gmpz_tdiv_r = false
   val mutable gmpz_tdiv_r_ui = false
+  val mutable gmpz_mul_2exp = false
+  val mutable gmpz_fdiv_q_2exp = false
   val mutable pc_assert_exc = false
   val mutable pc_dim = false
   val mutable pc_to_fc = false
@@ -223,6 +225,8 @@ class print_insertions insertions functions spec_insuf () = object(self)
     else if v.vname = "__gmpz_cmp" then gmpz_cmp <- true
     else if v.vname = "__gmpz_cmp_ui" then gmpz_cmp_ui <- true
     else if v.vname = "__gmpz_cmp_si" then gmpz_cmp_si <- true
+    else if v.vname = "__gmpz_mul_2exp" then gmpz_mul_2exp <- true
+    else if v.vname = "__gmpz_fdiv_q_2exp" then gmpz_fdiv_q_2exp <- true
   | _ -> ()
 
   method private insertion = function
@@ -238,6 +242,7 @@ class print_insertions insertions functions spec_insuf () = object(self)
     Hashtbl.iter (fun _ q -> Queue.iter self#insertion q) insertions;
     let on_func f = List.iter self#insertion f.Insertions.func_stmts in
     List.iter on_func functions;
+    let bitcnt = "unsigned long long" (*"mp_bitcnt_t"*) in
     let headers = [
       gmp, "struct __anonstruct___mpz_struct_1 {\
 	    int _mp_alloc ;\
@@ -282,6 +287,10 @@ class print_insertions insertions functions spec_insuf () = object(self)
       "extern void __gmpz_tdiv_r(mpz_t, const mpz_t, const mpz_t);";
       gmpz_tdiv_r_ui,
       "extern void __gmpz_tdiv_r_ui(mpz_t, const mpz_t, unsigned long int);";
+      gmpz_mul_2exp,
+      "extern void __gmpz_mul_2exp(mpz_t rop, const mpz_t op1,"^bitcnt^" op2);";
+      gmpz_fdiv_q_2exp,
+      "extern void __gmpz_fdiv_q_2exp(mpz_t q, const mpz_t n,"^bitcnt^" b);";
       pc_assert_exc, "extern int pathcrawler_assert_exception(char*,int);";
       pc_dim, "extern int pathcrawler_dimension(void*);";
       pc_to_fc, "extern void pathcrawler_to_framac(char*);";
