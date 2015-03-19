@@ -109,6 +109,8 @@ module F = struct
   let cmp x y z = call "__gmpz_cmp" (Some x) [y;z]
   let cmp_ui x y z = call "__gmpz_cmp_ui" (Some x) [y;z]
   let cmp_si x y z = call "__gmpz_cmp_si" (Some x) [y;z]
+  let mul_2exp x y z = call "__gmpz_mul_2exp" None [x;y;z]
+  let fdiv_q_2exp x y z = call "__gmpz_fdiv_q_2exp" None [x;y;z]
 end
 
 (* insertions *)
@@ -236,6 +238,42 @@ class gather_insertions props spec_insuf = object(self)
     | Lreal -> raise Unsupported
     | _ -> let ins, e = self#translate_term t in ins, UnOp(op,e,(Cil.typeOf e))
 
+  method private translate_shift ty shift a b = match ty with
+    | Linteger ->
+       let ret = self#fresh_Z_varinfo() in
+       let e_ret = Cil.evar ret in
+       let i_2 = decl_varinfo ret in
+       let i_3 = Instru(F.init e_ret) in
+       let i_0, x = self#translate_term a in
+       let i_1, y = self#translate_term b in
+       let b0, a0, e0 = match a.term_type with
+	 | Linteger -> [], [Instru(F.clear x)], x
+	 | Ctype ty ->
+	    let init_set = match Cil.isUnsignedInteger ty with
+	      | true -> F.init_set_ui
+	      | false -> F.init_set_si
+	    in
+	    let v_1 = self#fresh_Z_varinfo() in
+	    let i_4 = decl_varinfo v_1 in
+	    let e_v_1 = Cil.evar v_1 in
+	    let i_6 = Instru(init_set e_v_1 x) in
+	    [i_4; i_6], [Instru(F.clear e_v_1)], e_v_1
+	 | _ -> raise Unreachable
+       in
+       let b1, e1 = match b.term_type with
+	 | Linteger ->
+	    let v = self#fresh_ctype_varinfo Cil.ulongLongType in
+	    let i_1 = decl_varinfo v in
+	    let i_2 = Instru(F.get_ui (Cil.var v) y) in
+	    let i_3 = Instru(F.clear y) in
+	    [i_1; i_2; i_3], (Cil.evar v)
+	 | Ctype _ -> [], y
+	 | _ -> raise Unreachable
+       in
+       i_2 :: i_3 :: i_0 @ i_1 @ b0 @ b1 @ Instru(shift e_ret e0 e1) :: a0,
+       e_ret.enode
+    | _ -> raise Unreachable
+
   method private translate_binop ty op a b = match op with
     | IndexPI
     | PlusPI
@@ -253,6 +291,8 @@ class gather_insertions props spec_insuf = object(self)
        in
        let e' = Cil.new_exp ~loc (BinOp(op,a',e,(Cil.typeOf a'))) in
        i_0 @ i_1 @ i_2, e'.enode
+    | Shiftlt -> self#translate_shift ty F.mul_2exp a b
+    | Shiftrt -> self#translate_shift ty F.fdiv_q_2exp a b
     | _ ->
        let i_0, x = self#translate_term a in
        let i_1, y = self#translate_term b in
