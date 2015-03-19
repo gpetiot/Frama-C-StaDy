@@ -311,8 +311,7 @@ class print_insertions insertions functions spec_insuf () = object(self)
 	   fundec.svar.vattr <- oldattr;
 	   Format.fprintf fmt "@\n"
 	 end
-    | GVarDecl (vi, _)
-    | GFunDecl (_, vi, _) -> if print_var vi then super#global fmt g
+    | GVarDecl (_, vi, _) -> if print_var vi then super#global fmt g
     | GVar (vi,_,_) ->
       let old_vghost = vi.vghost in
       vi.vghost <- false;

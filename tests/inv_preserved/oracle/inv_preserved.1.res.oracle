@@ -501,7 +501,7 @@ void f(int n, int *t)
 [stady]  Counter-example for loop invariant
                               ∀ ℤ k;
                                 2 ≤ k < i-1 ⇒
-                                *(t+k) ≡ *(t+(k-1)) ∨ *(t+k) ≡ *(t+(k-2)); (tests/inv_preserved/inv_preserved.c:23)
+                                *(t+k) ≡ *(t+(k-1)) ∨ *(t+k) ≡ *(t+(k-2)); (tests/inv_preserved/inv_preserved.c:28)
 [stady]  testcases___sd_instru_inv_preserved_f/f/testdrivers/TC_20.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]     __stady_term_2|                4|                 |
