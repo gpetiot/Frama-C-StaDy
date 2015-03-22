@@ -24,17 +24,18 @@ AC_MSG_RESULT($FRAMAC_VERSION)
 
 DEV_VERSION_NUMBER=`echo $FRAMAC_VERSION | sed -e 's/.*-\(.*\)/\1/' `
 VERSION_NUMBER=`echo $DEV_VERSION_NUMBER | sed -e 's/\(.*\)+dev/\1/' `
-REQUIRED_NUMBER=20140301
+REQUIRED_NUMBER=20150201
 
 case $FRAMAC_VERSION in
-  Neon-$REQUIRED_NUMBER+dev*)
+  Sodium-$REQUIRED_NUMBER*) ;;
+  Sodium-$REQUIRED_NUMBER+dev*)
     # at the time being, must use the Frama-C development version
     ;;
   *)
     if test $VERSION_NUMBER -lt $REQUIRED_NUMBER; then
-      AC_MSG_ERROR(Frama-C version must be at least Neon-$REQUIRED_NUMBER.)
+      AC_MSG_ERROR(Frama-C version must be at least Sodium-$REQUIRED_NUMBER.)
     else
-      AC_MSG_WARN(Frama-C version is more recent than Neon: \
+      AC_MSG_WARN(Frama-C version is more recent than Sodium: \
 use it at your own risk)
     fi;;
 esac
