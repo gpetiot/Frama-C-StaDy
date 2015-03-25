@@ -1,10 +1,10 @@
 
 #define __NONDET(TYPE,TYPENAME) \
-TYPE* nondet_##TYPENAME##_values; \
+TYPE* nondet_##TYPENAME##_val; \
 static unsigned nondet_##TYPENAME##_cpt;	\
 TYPE nondet_##TYPENAME() { \
-  if(pathcrawler_dimension(nondet_##TYPENAME##_values) <= nondet_##TYPENAME##_cpt) { pathcrawler_assume_exception("nondet.c: Need more nondet values",0); } \
-  return nondet_##TYPENAME##_values[nondet_##TYPENAME##_cpt++]; \
+  if(pathcrawler_dimension(nondet_##TYPENAME##_val) <= nondet_##TYPENAME##_cpt) { pathcrawler_assume_exception("nondet.c: Need more nondet values",0); } \
+  return nondet_##TYPENAME##_val[nondet_##TYPENAME##_cpt++]; \
 }
 
 __NONDET(_Bool,bool)
