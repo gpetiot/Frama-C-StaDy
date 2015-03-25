@@ -11,16 +11,17 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('f', cont('__stady_term_12',_), [], int([-2147483648..2147483647])).
-dom('f', dim('__stady_term_12'), [], int([0..4294967295])).
-dom('f', dim('t'), [], int([4..4])).
+dom('f', cont('nondet_sint_val',_), [], int([-2147483648..2147483647])).
+dom('f', dim('nondet_sint_val'), [], int([0..4294967295])).
+dom('f', dim('t'), [], int([4])).
 dom('f', cont('t',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
-  create_input_val(dim('__stady_term_12'), int([0..4294967295]),Ins),
-  create_input_val(dim('t'), int([4..4]),Ins),
-  create_input_val('k', int([4..4]),Ins),
+  create_input_val('nondet_sint_cpt', int([0]),Ins),
+  create_input_val(dim('nondet_sint_val'), int([0..4294967295]),Ins),
+  create_input_val(dim('t'), int([4]),Ins),
+  create_input_val('k', int([4]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
@@ -62,8 +63,8 @@ extern void pathcrawler_to_framac(char*);
 extern int pathcrawler_assume_exception(char*,int);
 extern void* malloc(unsigned long);
 extern void free(void*);
+#include "/usr/local/share/frama-c/stady/nondet.c"
 void __stady_fct_0(int *A, int n);
-int *__stady_term_12;
 void sort(int *A, int n)
 {
   mpz_t __stady_gmp_0;
@@ -238,61 +239,30 @@ void __stady_fct_0(int *A, int n) {
     }
     __gmpz_clear(__stady_gmp_10);
     mpz_t __stady_gmp_11;
-    __gmpz_init_set_str(__stady_gmp_11,"0",10);
     mpz_t __stady_gmp_12;
-    __gmpz_init_set_si(__stady_gmp_12,n);
+    __gmpz_init_set_str(__stady_gmp_12,"0",10);
+    __gmpz_init_set(__stady_gmp_11,__stady_gmp_12);
     mpz_t __stady_gmp_13;
-    __gmpz_init_set_str(__stady_gmp_13,"1",10);
+    __gmpz_init_set_si(__stady_gmp_13,n);
     mpz_t __stady_gmp_14;
-    __gmpz_init(__stady_gmp_14);
-    __gmpz_sub(__stady_gmp_14,__stady_gmp_12,__stady_gmp_13);
-    __gmpz_clear(__stady_gmp_12);
+    __gmpz_init_set_str(__stady_gmp_14,"1",10);
+    mpz_t __stady_gmp_15;
+    __gmpz_init(__stady_gmp_15);
+    __gmpz_sub(__stady_gmp_15,__stady_gmp_13,__stady_gmp_14);
     __gmpz_clear(__stady_gmp_13);
-    int __stady_pred_2;
-    int __stady_pred_3;
-    __stady_pred_3 = __gmpz_cmp(__stady_gmp_11,__stady_gmp_14);
-    if(__stady_pred_3 <= 0) {
-      int __stady_term_13;
-      __stady_term_13 = pathcrawler_dimension(__stady_term_12);
-      int __stady_term_14;
-      __stady_term_14 = __gmpz_cmp_ui(__stady_gmp_14,__stady_term_13);
-      int __stady_term_15;
-      __stady_term_15 = __gmpz_cmp_ui(__stady_gmp_14,0);
-      __stady_pred_2 = __stady_term_15 >= 0 && __stady_term_14 < 0;
-    }
-    else {
-      __stady_pred_2 = 1;
+    __gmpz_clear(__stady_gmp_14);
+    int __stady_term_12;
+    int __stady_term_13;
+    __stady_term_13 = __gmpz_cmp(__stady_gmp_11,__stady_gmp_15);
+    while(__stady_term_13 <= 0) {
+      __stady_term_12 = (int)__gmpz_get_si(__stady_gmp_11);
+      *(A + __stady_term_12) = nondet_sint();
+      __gmpz_add_ui(__stady_gmp_11,__stady_gmp_11,1);
+      __stady_term_13 = __gmpz_cmp(__stady_gmp_11,__stady_gmp_15);
     }
     __gmpz_clear(__stady_gmp_11);
-    __gmpz_clear(__stady_gmp_14);
-    if(! __stady_pred_2) {
-      pathcrawler_assume_exception("",0);
-    }
-    mpz_t __stady_gmp_15;
-    mpz_t __stady_gmp_16;
-    __gmpz_init_set_str(__stady_gmp_16,"0",10);
-    __gmpz_init_set(__stady_gmp_15,__stady_gmp_16);
-    mpz_t __stady_gmp_17;
-    __gmpz_init_set_si(__stady_gmp_17,n);
-    mpz_t __stady_gmp_18;
-    __gmpz_init_set_str(__stady_gmp_18,"1",10);
-    mpz_t __stady_gmp_19;
-    __gmpz_init(__stady_gmp_19);
-    __gmpz_sub(__stady_gmp_19,__stady_gmp_17,__stady_gmp_18);
-    __gmpz_clear(__stady_gmp_17);
-    __gmpz_clear(__stady_gmp_18);
-    int __stady_term_16;
-    int __stady_term_17;
-    __stady_term_17 = __gmpz_cmp(__stady_gmp_15,__stady_gmp_19);
-    while(__stady_term_17 <= 0) {
-      __stady_term_16 = (int)__gmpz_get_si(__stady_gmp_15);
-      *(A + __stady_term_16) = *(__stady_term_12 + __stady_term_16);
-      __gmpz_add_ui(__stady_gmp_15,__stady_gmp_15,1);
-      __stady_term_17 = __gmpz_cmp(__stady_gmp_15,__stady_gmp_19);
-    }
+    __gmpz_clear(__stady_gmp_12);
     __gmpz_clear(__stady_gmp_15);
-    __gmpz_clear(__stady_gmp_16);
-    __gmpz_clear(__stady_gmp_19);
     free(old_ptr_A);
   }
 }
@@ -310,19 +280,19 @@ void __stady_fct_0(int *A, int n) {
 [pc] Starting lanceur_f (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 22 test cases
+[stady] 21 test cases
 [stady]  Counter-example for ensures *(\old(t)+0) ≤ *(\old(t)+1) (tests/spec_insuf_ko/spec_insuf_ko.c:34)
-[stady]  testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_2.c
+[stady]  testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_5.c
 [stady]           variable|            input|  concrete output|  symbolic output
-[stady]  __stady...m_12[0]|           200986|                 |
-[stady]  __stady...m_12[1]|             6432|                 |
-[stady]  __stady...m_12[2]|          -101831|                 |
-[stady]  __stady...m_12[3]|          -176288|                 |
 [stady]                  k|                4|                 |
-[stady]               t[0]|          -133277|           200986|__stady...m_12[0]
-[stady]               t[1]|           -43805|             6432|__stady...m_12[1]
-[stady]               t[2]|           104588|          -101831|__stady...m_12[2]
-[stady]               t[3]|            25937|          -176288|__stady...m_12[3]
+[stady]  nondet_..._val[0]|           174739|                 |
+[stady]  nondet_..._val[1]|           171583|                 |
+[stady]  nondet_..._val[2]|           172458|                 |
+[stady]  nondet_..._val[3]|          -144005|                 |
+[stady]               t[0]|            65712|           174739|nondet_..._val[0]
+[stady]               t[1]|           198227|           171583|nondet_..._val[1]
+[stady]               t[2]|           153754|           172458|nondet_..._val[2]
+[stady]               t[3]|           -88465|          -144005|nondet_..._val[3]
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

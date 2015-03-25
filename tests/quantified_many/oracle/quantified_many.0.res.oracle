@@ -85,10 +85,12 @@ void f(int default_value)
           __gmpz_init_set(__stady_gmp_4,__q_a);
           int __stady_term_2;
           __stady_term_2 = (int)__gmpz_get_si(__stady_gmp_4);
+          __gmpz_clear(__stady_gmp_4);
           mpz_t __stady_gmp_5;
           __gmpz_init_set(__stady_gmp_5,__q_b);
           int __stady_term_3;
           __stady_term_3 = (int)__gmpz_get_si(__stady_gmp_5);
+          __gmpz_clear(__stady_gmp_5);
           __stady_pred_0 = min <= t[__stady_term_2][__stady_term_3];
           __gmpz_add_ui(__q_b,__q_b,1);
           __stady_term_0 = __gmpz_cmp(__q_b,__stady_gmp_1);
@@ -132,10 +134,12 @@ void f(int default_value)
           __gmpz_init_set(__stady_gmp_10,__q_a);
           int __stady_term_6;
           __stady_term_6 = (int)__gmpz_get_si(__stady_gmp_10);
+          __gmpz_clear(__stady_gmp_10);
           mpz_t __stady_gmp_11;
           __gmpz_init_set(__stady_gmp_11,__q_b);
           int __stady_term_7;
           __stady_term_7 = (int)__gmpz_get_si(__stady_gmp_11);
+          __gmpz_clear(__stady_gmp_11);
           __stady_pred_1 = min == t[__stady_term_6][__stady_term_7];
           __gmpz_add_ui(__q_b,__q_b,1);
           __stady_term_4 = __gmpz_cmp(__q_b,__stady_gmp_7);
