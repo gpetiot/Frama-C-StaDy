@@ -9,7 +9,6 @@ let pp_label fmt = function
   | Insertions.EndFunc s -> Format.fprintf fmt "EndFunc %s" s
   | Insertions.BegIter s -> Format.fprintf fmt "BegIter %i" s
   | Insertions.EndIter s -> Format.fprintf fmt "EndIter %i" s
-  | Insertions.Glob -> Format.fprintf fmt "Global"
 
 let pp_lval = Printer.pp_lval
 let pp_exp = Printer.pp_exp
@@ -191,6 +190,7 @@ class print_insertions insertions functions cwd () = object(self)
   val mutable pc_assume = false
   val mutable malloc = false
   val mutable free = false
+  val mutable nondet = false
 
   method private instru = function
   | Call (_,{enode=Lval(Var v,_)},_,_) ->
@@ -227,6 +227,10 @@ class print_insertions insertions functions cwd () = object(self)
     else if v.vname = "__gmpz_cmp_si" then gmpz_cmp_si <- true
     else if v.vname = "__gmpz_mul_2exp" then gmpz_mul_2exp <- true
     else if v.vname = "__gmpz_fdiv_q_2exp" then gmpz_fdiv_q_2exp <- true
+    else if (String.sub v.vname 0 7) = "nondet_" then
+      begin
+	nondet <- true; pc_dim <- true; pc_assume <- true
+      end
   | _ -> ()
 
   method private insertion = function
@@ -242,6 +246,7 @@ class print_insertions insertions functions cwd () = object(self)
     Hashtbl.iter (fun _ q -> Queue.iter self#insertion q) insertions;
     let on_func f = List.iter self#insertion f.Insertions.func_stmts in
     List.iter on_func functions;
+    let nondet_file = Options.Self.Share.file ~error:true "nondet.c" in
     let bitcnt = "unsigned long long" (*"mp_bitcnt_t"*) in
     let headers = [
       gmp, "struct __anonstruct___mpz_struct_1 {\
@@ -297,6 +302,7 @@ class print_insertions insertions functions cwd () = object(self)
       pc_assume, "extern int pathcrawler_assume_exception(char*,int);";
       malloc, "extern void* malloc(unsigned long);";
       free, "extern void free(void*);";
+      nondet, ("#include \""^nondet_file^"\"");
     ] in
     let do_header (print, s) = if print then Format.fprintf fmt "%s@\n" s in
     List.iter do_header headers
@@ -310,7 +316,6 @@ class print_insertions insertions functions cwd () = object(self)
 	   if first_global then
 	     begin
 	       List.iter (fun x -> self#func_header fmt x) functions;
-	       self#insertions_at fmt (Insertions.Glob);
 	       first_global <- false
 	     end;
 	   let oldattr = fundec.svar.vattr in

@@ -20,7 +20,8 @@ let translate props cwd =
   let insertions = gatherer#get_insertions()
   and functions = gatherer#get_functions()
   and props = gatherer#translated_properties()
-  and globals = gatherer#get_new_globals() in
+  and globals = gatherer#get_new_globals()
+  and init_globals = gatherer#get_new_init_globals() in
   let print_insertions_at_label lab insertions =
     let dkey = Options.dkey_insertions in
     let f ins =
@@ -31,7 +32,7 @@ let translate props cwd =
     Options.Self.feedback ~dkey "--------------------"
   in
   Hashtbl.iter print_insertions_at_label insertions;
-  insertions, functions, props, globals
+  insertions, functions, props, globals, init_globals
 
 
 let print_translation filename insertions fcts cwd =
@@ -189,13 +190,16 @@ let compute_props ?(props=selected_props()) ?cwd () =
   Options.Self.feedback ~dkey:Options.dkey_native_precond
     "Prolog pre-condition %s generated"
     (if native_precond_generated then "successfully" else "not");
-  let insertions, functions, translated_props, new_globals =
+  let insertions, functions, translated_props, new_globals, new_init_globals =
     translate props cwd in
   let test_params =
-    if native_precond_generated || new_globals <> [] then
+    if native_precond_generated || new_globals <> [] ||
+	 new_init_globals <> [] then
       begin
-	let add_global d v = Native_precond.add_global v d in
+	let add_global = Native_precond.add_global in
+	let add_init_global = Native_precond.add_init_global in 
 	let domains = List.fold_left add_global domains new_globals in
+	let domains = List.fold_left add_init_global domains new_init_globals in
 	Native_precond.translate precond_fname domains unquantifs quantifs;
 	Printf.sprintf "-pc-test-params %s" precond_fname
       end

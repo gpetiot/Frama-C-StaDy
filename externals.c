@@ -40,3 +40,18 @@ void pathcrawler_to_framac(char* x){}
 int pathcrawler_assume_exception(char* x,int y){return 0;}
 void* malloc(unsigned long x){return 0;}
 void free(void* x){}
+_Bool nondet_bool() {return 0;}
+char nondet_char() {return 0;}
+signed char nondet_schar() {return 0;}
+unsigned char nondet_uchar() {return 0;}
+signed short nondet_sshort() {return 0;}
+unsigned short nondet_ushort() {return 0;}
+signed int nondet_sint() {return 0;}
+unsigned int nondet_uint() {return 0;}
+signed long nondet_slong() {return 0;}
+unsigned long nondet_ulong() {return 0;}
+signed long long nondet_slonglong() {return 0;}
+unsigned long long nondet_ulonglong() {return 0;}
+float nondet_float() {return 0;}
+double nondet_double() {return 0;}
+//long double nondet_longdouble() {return 0;}
