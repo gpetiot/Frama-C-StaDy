@@ -90,6 +90,8 @@ class pl_printer = object(self)
   | None -> Format.fprintf fmt "?"
 
   method domain fmt = function
+  | PLIntDom (t',Some a,Some b) when Integer.equal a b ->
+    Format.fprintf fmt "%a, int([%a])" self#term t' self#integer a
   | PLIntDom (t',a,b) ->
     Format.fprintf fmt "%a, int([%a..%a])"
       self#term t' (self#integer_opt false) a (self#integer_opt true) b
@@ -100,6 +102,8 @@ class pl_printer = object(self)
       (try Extlib.the str2 with _ -> "?")
 
   method complex_domain fmt = function
+  | PLIntDom (t',Some a,Some b) when Integer.equal a b ->
+    Format.fprintf fmt "%a, [], int([%a])" self#term t' self#integer a
   | PLIntDom (t',a,b) ->
     Format.fprintf fmt "%a, [], int([%a..%a])"
       self#term t' (self#integer_opt false) a (self#integer_opt true) b
@@ -407,9 +411,11 @@ let compute_constraints() =
   let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
   domains, unquantifs, quantifs
 
+let add_global domains v = input_from_type domains v.vtype (PLCVar v)
 
-let add_global v domains = input_from_type domains v.vtype (PLCVar v)
-
+let add_init_global domains v = match v.vtype with
+  | TInt _ -> PLIntDom (PLCVar v, Some Integer.zero, Some Integer.zero)::domains
+  | _ -> assert false
 
 let translate precond_file_name domains unquantifs quantifs =
   let buf = Buffer.create 512 in
