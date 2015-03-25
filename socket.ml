@@ -28,6 +28,12 @@ let process_test_case s =
     try Datatype.String.Hashtbl.find file_tbl str_tc
     with Not_found -> Datatype.String.Hashtbl.create 32
   in
+  let ignore_var v =
+    try
+      (String.sub v 0 7) = "nondet_"
+      && (String.sub v (String.rindex v '_') 4) = "_cpt"
+    with _ -> false
+  in
   let on_pair (var, value) =
     let i, c, s =
       try Datatype.String.Hashtbl.find var_tbl var
@@ -38,7 +44,8 @@ let process_test_case s =
       else if kind = "OUTCONC" then i,value,s
       else i,c,value
     in
-    Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
+    if ignore_var var then ()
+    else Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
   in
   List.iter on_pair list_entries;
   Datatype.String.Hashtbl.replace file_tbl str_tc var_tbl;
