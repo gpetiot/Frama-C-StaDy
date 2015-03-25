@@ -181,7 +181,7 @@ class gather_insertions props cwd = object(self)
     let on_varinfo ret v =
       try
 	if (String.sub v.vname 0 7) = "nondet_" then
-	  let vname1 = v.vname ^ "_values" in
+	  let vname1 = v.vname ^ "_val" in
 	  let ty1 = TPtr(Cil.getReturnType v.vtype,[]) in
 	  let vi1 = Cil.makeVarinfo false false vname1 ty1 in
 	  vi1 :: ret
