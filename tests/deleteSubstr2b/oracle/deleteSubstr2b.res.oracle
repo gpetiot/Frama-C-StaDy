@@ -76,6 +76,29 @@ extern int pathcrawler_dimension(void*);
 extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
+/*@ requires 0 < sublen <= strlen;
+    requires \valid(str+(0 .. strlen-1));
+    requires \valid(substr+(0 .. sublen-1));
+    assigns \nothing;
+    
+    behavior present:
+      assumes
+        \exists integer i;
+          0 <= i < strlen-sublen &&
+          (\forall integer j; 0 <= j < sublen ==> *(str+(i+j)) == *(substr+j));
+      ensures 0 <= \result < \old(strlen)-\old(sublen);
+      ensures
+        \forall integer j;
+          0 <= j < \old(sublen) ==>
+          *(\old(str)+(\result+j)) == *(\old(substr)+j);
+    
+    behavior not_present:
+      assumes
+        \forall integer i;
+          0 <= i < strlen-sublen ==>
+          (\exists integer j; 0 <= j < sublen && *(str+(i+j)) != *(substr+j));
+      ensures \result == -1;
+ */
 int find_substr(char *str, int strlen, char *substr, int sublen)
 {
   mpz_t __stady_gmp_0;
@@ -1362,7 +1385,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 291 test cases
-[stady]  Counter-example for loop invariant 0 ≤ k < strlen; (tests/deleteSubstr2b/deleteSubstr2b.c:72)
+[stady]  Counter-example for loop invariant 0 ≤ k < strlen; (tests/deleteSubstr2b/deleteSubstr2b.c:75)
 [stady]  testcases___sd_instru_deleteSubstr2b_delete_substr/delete_substr/testdrivers/TC_4.c
 [stady]           variable|            input|  concrete output|  symbolic output
 [stady]            dest[0]|              126|               79|           str[0]

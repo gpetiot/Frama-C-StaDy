@@ -76,6 +76,29 @@ extern int pathcrawler_dimension(void*);
 extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
+/*@ requires 0 < sublen <= strlen;
+    requires \valid(str+(0 .. strlen-1));
+    requires \valid(substr+(0 .. sublen-1));
+    assigns \nothing;
+    
+    behavior present:
+      assumes
+        \exists integer i;
+          0 <= i < strlen-sublen &&
+          (\forall integer j; 0 <= j < sublen ==> *(str+(i+j)) == *(substr+j));
+      ensures 0 <= \result < \old(strlen)-\old(sublen);
+      ensures
+        \forall integer j;
+          0 <= j < \old(sublen) ==>
+          *(\old(str)+(\result+j)) == *(\old(substr)+j);
+    
+    behavior not_present:
+      assumes
+        \forall integer i;
+          0 <= i < strlen-sublen ==>
+          (\exists integer j; 0 <= j < sublen && *(str+(i+j)) != *(substr+j));
+      ensures \result == -1;
+ */
 int find_substr(char *str, int strlen, char *substr, int sublen)
 {
   mpz_t __stady_gmp_0;

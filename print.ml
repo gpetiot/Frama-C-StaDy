@@ -43,12 +43,6 @@ let rec pp_insertion ?(line_break = true) fmt ins =
 let pp_insertion_lb = pp_insertion ~line_break:true
 
 
-let debug_builtins = Kernel.register_category "printer:builtins"
-
-let print_var v =
-  not (Cil.is_unused_builtin v) || Kernel.is_debug_key_enabled debug_builtins
-
-
 class print_insertions insertions functions cwd () = object(self)
   inherit Printer.extensible_printer () as super
 
@@ -311,22 +305,17 @@ class print_insertions insertions functions cwd () = object(self)
 
   method! global fmt g = match g with
     | GFun (fundec, l) ->
-       if print_var fundec.svar then
+       if first_global then
 	 begin
-	   if first_global then
-	     begin
-	       List.iter (fun x -> self#func_header fmt x) functions;
-	       first_global <- false
-	     end;
-	   let oldattr = fundec.svar.vattr in
-	   fundec.svar.vattr <- [];
-	   self#line_directive ~forcefile:true fmt l;
-	   self#fundecl fmt fundec;
-	   fundec.svar.vattr <- oldattr;
-	   Format.fprintf fmt "@\n"
-	 end
-    | GVarDecl (vi, _)
-    | GFunDecl (_, vi, _) -> if print_var vi then super#global fmt g
+	   List.iter (fun x -> self#func_header fmt x) functions;
+	   first_global <- false
+	 end;
+       let oldattr = fundec.svar.vattr in
+       fundec.svar.vattr <- [];
+       self#line_directive ~forcefile:true fmt l;
+       self#fundecl fmt fundec;
+       fundec.svar.vattr <- oldattr;
+       Format.fprintf fmt "@\n"
     | GVar (vi,_,_) ->
       let old_vghost = vi.vghost in
       vi.vghost <- false;

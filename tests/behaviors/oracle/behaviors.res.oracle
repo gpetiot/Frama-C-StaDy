@@ -8,6 +8,30 @@ int f_precond(int x, int y, int z)
   return 1;
 }
 
+/*@ behavior X:
+      assumes x >= y;
+      assumes x >= z;
+      requires x >= 0;
+      requires y >= 0;
+      requires z >= 0;
+      ensures \old(y) <= \old(x) && \old(z) <= \old(x);
+    
+    behavior Y:
+      assumes y >= x;
+      assumes y >= z;
+      requires x >= 0;
+      requires y >= 0;
+      requires z >= 0;
+      ensures \old(x) <= \old(y) && \old(z) <= \old(y);
+    
+    behavior Z:
+      assumes z >= x;
+      assumes z >= y;
+      requires x >= 0;
+      requires y >= 0;
+      requires z >= 0;
+      ensures \old(x) <= \old(z) && \old(y) <= \old(z);
+ */
 void f(int x, int y, int z)
 {
   int old_x;

@@ -134,6 +134,15 @@ int nextSubset_precond(int *s, int n)
   return 1;
 }
 
+/*@ requires n >= 0 && n <= 3 && \valid(s+(0 .. n-1));
+    requires is_dset(s, n);
+    ensures is_dset(\old(s), \old(n));
+    ensures -1 <= \result < \old(n);
+    ensures \result == -1 ==> is_eq{Pre, Post}(\old(s), \old(n));
+    ensures \result != -1 ==> is_eq{Pre, Post}(\old(s), \result);
+    ensures \result != -1 ==> lt{Pre, Post}(\old(s), \result);
+    assigns *(s+(0 .. n-1));
+ */
 int nextSubset(int *s, int n)
 {
   int *old_s;

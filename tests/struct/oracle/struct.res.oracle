@@ -70,6 +70,13 @@ int f_precond(struct S *s, struct S *s2, int n)
   return 1;
 }
 
+/*@ requires \valid(s);
+    requires 0 <= n <= 5;
+    requires 0 <= s->i <= 10;
+    requires \valid(s->p);
+    requires \valid(s2);
+    requires \valid(s2->p+(0 .. 9));
+ */
 int f(struct S *s, struct S *s2, int n)
 {
   struct S *old_s;

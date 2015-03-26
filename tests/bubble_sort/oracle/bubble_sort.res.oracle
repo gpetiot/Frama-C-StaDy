@@ -63,6 +63,13 @@ int bubble_sort_precond(int *A, int n)
   return 1;
 }
 
+/*@ requires 0 < n <= 3;
+    requires \valid(A+(0 .. n-1));
+    ensures
+      \forall integer i;
+        0 <= i < \old(n)-1 ==> *(\old(A)+i) <= *(\old(A)+(i+1));
+    assigns *(A+(0 .. n-1));
+ */
 void bubble_sort(int *A, int n)
 {
   int *old_A;

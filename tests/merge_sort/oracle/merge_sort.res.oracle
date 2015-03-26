@@ -67,6 +67,9 @@ extern int pathcrawler_dimension(void*);
 extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
+/*@ requires \valid(A+(iLeft .. iRight-1));
+    requires \valid(B+(iLeft .. iEnd-1));
+ */
 void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
 {
   mpz_t __stady_gmp_0;

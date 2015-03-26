@@ -62,6 +62,12 @@ int firstSubset_precond(int *s, int n)
   return 1;
 }
 
+/*@ requires n >= 0 && n <= 3 && \valid(s+(0 .. n-1));
+    ensures
+      \forall integer i;
+        0 <= i < \old(n) ==> *(\old(s)+i) == 0 || *(\old(s)+i) == 1;
+    assigns *(s+(0 .. n-1));
+ */
 void firstSubset(int *s, int n)
 {
   int *old_s;
