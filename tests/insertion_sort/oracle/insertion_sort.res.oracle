@@ -63,6 +63,13 @@ int insertion_sort_precond(int *t, int n)
   return 1;
 }
 
+/*@ requires 1 <= n <= 3;
+    requires \valid(t+(0 .. n-1));
+    ensures
+      \forall integer x;
+        0 <= x < \old(n)-1 ==> *(\old(t)+x) <= *(\old(t)+(x+1));
+    assigns *(t+(0 .. n-1));
+ */
 void insertion_sort(int *t, int n)
 {
   int *old_t;

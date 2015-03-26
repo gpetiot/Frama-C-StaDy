@@ -69,6 +69,16 @@ int quick_sort_precond(int *arr, int elements, int *beg, int *end)
   return 1;
 }
 
+/*@ requires 0 <= elements;
+    requires \valid(arr+(0 .. elements-1));
+    requires \valid(beg+(0 .. 99));
+    requires \valid(end+(0 .. 99));
+    ensures
+      \forall integer i;
+        0 <= i < \old(elements)-1 ==> *(\old(arr)+i) <= *(\old(arr)+(i+1));
+    ensures \result == 0;
+    typically elements <= 3;
+ */
 int quick_sort(int *arr, int elements, int *beg, int *end)
 {
   int *old_arr;

@@ -65,6 +65,14 @@ extern void* malloc(unsigned long);
 extern void free(void*);
 #include "/usr/local/share/frama-c/stady/nondet.c"
 void __stady_fct_0(int *A, int n);
+/*@ requires n == 4;
+    requires \valid(A+(0 .. n-1));
+    ensures
+      \forall integer i;
+        0 <= i < \old(n) ==>
+        (\forall integer j; i <= j < \old(n) ==> *(\old(A)+i) <= *(\old(A)+j));
+    assigns *(A+(0 .. n-1));
+ */
 void sort(int *A, int n)
 {
   mpz_t __stady_gmp_0;

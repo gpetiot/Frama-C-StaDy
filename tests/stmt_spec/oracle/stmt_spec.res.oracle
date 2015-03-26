@@ -15,6 +15,14 @@ int f_precond(int x)
   return 1;
 }
 
+/*@ requires -100 <= x <= 100;
+    
+    behavior pos:
+      assumes 0 <= x <= 100;
+    
+    behavior neg:
+      assumes -100 <= x < 0;
+ */
 void f(int x)
 {
   int old_x;

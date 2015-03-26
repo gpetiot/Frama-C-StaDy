@@ -62,6 +62,13 @@ int num_of_precond(int n, int *t)
   return 1;
 }
 
+/*@ requires n > 0;
+    requires \valid(t+(0 .. n-1));
+    ensures
+      \result == \numof(0, \old(n)-1, \lambda integer k; *(\old(t)+k)==0);
+    typically n <= 3;
+    assigns \nothing;
+ */
 int num_of(int n, int *t)
 {
   int old_n;

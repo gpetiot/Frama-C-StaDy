@@ -170,6 +170,19 @@ int merge_arrays_precond(int *t1, int *t2, int *t3, int l1, int l2)
   return 1;
 }
 
+/*@ requires 0 <= l1;
+    requires 0 <= l2;
+    requires \valid_read(t1+(0 .. l1-1));
+    requires \valid_read(t2+(0 .. l2-1));
+    requires \valid(t3+(0 .. (l1+l2)-1));
+    requires \forall integer i; 0 <= i < l1-1 ==> *(t1+i) <= *(t1+(i+1));
+    requires \forall integer i; 0 <= i < l2-1 ==> *(t2+i) <= *(t2+(i+1));
+    ensures
+      \forall integer i;
+        0 <= i < (\old(l1)+\old(l2))-1 ==> *(\old(t3)+i) <= *(\old(t3)+(i+1));
+    typically l2 <= 3;
+    typically l1 <= 3;
+ */
 void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
 {
   int *old_t1;

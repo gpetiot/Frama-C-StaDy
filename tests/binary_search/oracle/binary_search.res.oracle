@@ -115,6 +115,18 @@ int binary_search_precond(int *arr, int length, int query)
   return 1;
 }
 
+/*@ requires 0 < length <= 3;
+    requires \valid(arr+(0 .. length-1));
+    requires
+      \forall integer j; 0 <= j < length-1 ==> *(arr+j) <= *(arr+(j+1));
+    ensures -1 <= \result < \old(length);
+    ensures
+      \result == -1 ==>
+      (\forall integer i;
+         0 <= i < \old(length) ==> *(\old(arr)+i) != \old(query));
+    ensures \result >= 0 ==> *(\old(arr)+\result) == \old(query);
+    assigns \nothing;
+ */
 int binary_search(int *arr, int length, int query)
 {
   int *old_arr;
