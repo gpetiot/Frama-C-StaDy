@@ -60,6 +60,28 @@ void f(int default_value)
                          
                       i ++;}
        
+    ;
+    ;
+    min = default_value;
+    i = 0;
+    while (1) {
+      if (! (i < 5)) {
+                       pathcrawler_to_framac("@FC:REACHABLE_STMT:40");
+                       break;
+                     }j = 0;
+                      while (1) {
+                        if (! (j < 5)) {
+                                         pathcrawler_to_framac("@FC:REACHABLE_STMT:46");
+                                         break;
+                                       }if (t[i][j] < min) {
+                                                             pathcrawler_to_framac
+                                                             ("@FC:REACHABLE_STMT:50");
+                                                             min = t[i][j];
+                                                           }
+                                        j ++;}
+                         
+                      i ++;}
+       
     {
       int __stady_pred_0;
       __stady_pred_0 = 1;
@@ -105,7 +127,7 @@ void f(int default_value)
         __gmpz_clear(__stady_gmp_3);
       }
       if(! __stady_pred_0) {
-        pathcrawler_assert_exception("Assert!",1);
+        pathcrawler_assert_exception("Assert!",0);
       }
       ;
     }
@@ -154,32 +176,10 @@ void f(int default_value)
         __gmpz_clear(__stady_gmp_9);
       }
       if(! __stady_pred_1) {
-        pathcrawler_assert_exception("Assert!",3);
+        pathcrawler_assert_exception("Assert!",2);
       }
       ;
     }
-    min = default_value;
-    i = 0;
-    while (1) {
-      if (! (i < 5)) {
-                       pathcrawler_to_framac("@FC:REACHABLE_STMT:40");
-                       break;
-                     }j = 0;
-                      while (1) {
-                        if (! (j < 5)) {
-                                         pathcrawler_to_framac("@FC:REACHABLE_STMT:46");
-                                         break;
-                                       }if (t[i][j] < min) {
-                                                             pathcrawler_to_framac
-                                                             ("@FC:REACHABLE_STMT:50");
-                                                             min = t[i][j];
-                                                           }
-                                        j ++;}
-                         
-                      i ++;}
-       
-    ;
-    ;
     return;
   }
 }
@@ -195,23 +195,29 @@ void f(int default_value)
 [pc] generating tests...
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
+[pc] Starting lanceur_f (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 247 test cases
+[stady] 295 test cases
+[stady]  Counter-example for assert
+                            A4:
+                              ∃ ℤ a, ℤ b;
+                                0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b]; (tests/quantified_many/quantified_many.c:39)
+[stady]  testcases___sd_instru_quantified_many_f/f/testdrivers/TC_1.c
+[stady]           variable|            input|  concrete output|  symbolic output
+[stady]      default_value|          -214739|                 |
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'f'
 --------------------------------------------------------------------------------
 
-[  Valid  ] Assertion 'A1' (file tests/quantified_many/quantified_many.c, line 22)
-            by StaDy.
-[  Valid  ] Assertion 'A2' (file tests/quantified_many/quantified_many.c, line 25)
+[   Bug   ] Assertion 'A4' (file tests/quantified_many/quantified_many.c, line 39)
             by StaDy.
 
 --------------------------------------------------------------------------------
 --- Status Report Summary
 --------------------------------------------------------------------------------
-     2 Completely validated
-     2 Total
+     1 Bugs found
+     1 Total
 --------------------------------------------------------------------------------

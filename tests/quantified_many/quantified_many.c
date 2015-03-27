@@ -1,5 +1,4 @@
 /* run.config
-STDOPT: +"-main f -stady -stady-msg-key generated-c,generated-pl -stady-prop A1,A2 -then -report"
 STDOPT: +"-main f -stady -stady-msg-key generated-c,generated-pl -stady-prop A3,A4 -then -report"
 */
 
