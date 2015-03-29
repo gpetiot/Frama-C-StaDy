@@ -1090,7 +1090,7 @@ class gather_insertions props cwd = object(self)
 	if pre_entry_point then ins @ (translate_as_return pred)
 	else
 	  let prop = to_prop pred in
-	  ins @ (self#pc_assert_exception pred.ip_content "Pre-condition!" prop)
+	  ins @ (self#pc_assert_exception pred.ip_content "" prop)
       in
       let do_typically ins pred =
 	if pre_entry_point then ins @ (translate_as_return pred) else ins
@@ -1114,7 +1114,7 @@ class gather_insertions props cwd = object(self)
       let post = List.filter (fun x -> List.mem (to_prop x) props) post in
       let do_postcond ins (tk,pred) =
 	let prop = to_prop (tk,pred) in
-	ins @ (self#pc_assert_exception pred.ip_content "Post-condition!" prop)
+	ins @ (self#pc_assert_exception pred.ip_content "" prop)
       in
       let str = Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
       let to_reach =
@@ -1320,7 +1320,11 @@ class gather_insertions props cwd = object(self)
     aux [] zero pred_lists
 
   method private pc_exc str i =
-    let str = Cil.mkString ~loc str in
+    let cwd_str = match cwd with
+      | None -> ""
+      | Some x -> Format.sprintf "%i$" x.sid
+    in
+    let str = Cil.mkString ~loc (cwd_str ^ str) in
     let const = CInt64(Integer.of_int i, IInt, Some(string_of_int i)) in
     self#cpc_exc str (Cil.new_exp ~loc (Const const))
 
@@ -1371,7 +1375,7 @@ class gather_insertions props cwd = object(self)
   method private translate_assert kf stmt ca for_behaviors pred =
     let prop = Property.ip_of_code_annot_single kf stmt ca in
     if List.mem prop props then
-      let ins = self#pc_assert_exception pred.content "Assert!" prop in
+      let ins = self#pc_assert_exception pred.content "" prop in
       let inserts = self#for_behaviors for_behaviors ins in
       List.iter (self#insert (BegStmt stmt.sid)) inserts
 
@@ -1383,8 +1387,8 @@ class gather_insertions props cwd = object(self)
 	let inserts = self#for_behaviors for_behaviors ins in
 	List.iter (self#insert label) inserts
       in
-      f (BegStmt stmt.sid) "Loop invariant not established!";
-      f (EndIter stmt.sid) "Loop invariant not preserved!"
+      f (BegStmt stmt.sid) "not established";
+      f (EndIter stmt.sid) "not preserved"
 
   method private translate_variant kf stmt ca term =
     let prop = Property.ip_of_code_annot_single kf stmt ca in
@@ -1400,7 +1404,7 @@ class gather_insertions props cwd = object(self)
 	 let cmp_variant_zero = self#fresh_ctype_varinfo Cil.intType in
 	 let e_cmp_variant_zero = Cil.evar cmp_variant_zero in
 	 let l_cmp_variant_zero = Cil.var cmp_variant_zero in
-	 let instr = Instru(self#pc_exc "Variant non positive" id) in
+	 let instr = Instru(self#pc_exc "non positive" id) in
 	 self#insert beg_label (decl_varinfo cmp_variant_zero);
 	 let i_2 = Instru(self#ccmp_ui l_cmp_variant_zero beg_variant zero) in
 	 self#insert beg_label i_2;
@@ -1418,7 +1422,7 @@ class gather_insertions props cwd = object(self)
 	 let cmp_variants = self#fresh_ctype_varinfo Cil.intType in
 	 let e_cmp_variants = Cil.evar cmp_variants in
 	 let l_cmp_variants = Cil.var cmp_variants in
-	 let instr = Instru(self#pc_exc "Variant non decreasing" id) in
+	 let instr = Instru(self#pc_exc "non decreasing" id) in
 	 self#insert end_label (decl_varinfo cmp_variants);
 	 let i_4 = Instru(self#ccmp l_cmp_variants end_variant e_save_variant)in
 	 self#insert end_label i_4;
@@ -1431,7 +1435,7 @@ class gather_insertions props cwd = object(self)
 	 let inserts_1, beg_variant = self#translate_term term in
 	 List.iter (self#insert beg_label) inserts_1;
 	 let cond = cmp Rlt beg_variant zero in
-	 let instr = Instru(self#pc_exc "Variant non positive" id) in
+	 let instr = Instru(self#pc_exc "non positive" id) in
 	 self#insert beg_label (ins_if cond [instr] []);
 	 let save_variant = self#fresh_ctype_varinfo Cil.intType in
 	 let l_save_variant = Cil.var save_variant in
@@ -1443,7 +1447,7 @@ class gather_insertions props cwd = object(self)
 	 let inserts_2, end_variant = self#translate_term term in
 	 List.iter (self#insert end_label) inserts_2;
 	 let cond = cmp Rge end_variant e_save_variant in
-	 let instr = Instru(self#pc_exc "Variant non decreasing" id) in
+	 let instr = Instru(self#pc_exc "non decreasing" id) in
 	 self#insert end_label (ins_if cond [instr] [])
 
   method! vcode_annot ca =
