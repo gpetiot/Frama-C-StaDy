@@ -37,7 +37,7 @@ void f(int x)
       __gmpz_clear(__stady_gmp_2);
       __gmpz_clear(__stady_gmp_3);
       if(! (__stady_term_0 <= 0)) {
-        pathcrawler_assert_exception("Assert!",0);
+        pathcrawler_assert_exception("",0);
       }
       ;
     }
@@ -60,10 +60,10 @@ void f(int x)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 2 test cases
-[stady]  Counter-example for assert x+1 ≤ 2147483647; (tests/overflow_should_crash/overflow_should_crash.c:9)
-[stady]  testcases___sd_instru_overflow_should_crash_f/f/testdrivers/TC_2.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]                  x|       2147483647|                 |
+[stady] NC of assert x+1 ≤ 2147483647; 
+        LOCATION: tests/overflow_should_crash/overflow_should_crash.c:9
+        TEST DRIVER: testcases___sd_instru_overflow_should_crash_f/f/testdrivers/TC_2.c
+        x = 2147483647
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

@@ -749,7 +749,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_2);
         __gmpz_clear(__stady_gmp_3);
         if(! (__stady_term_2 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",41);
+          pathcrawler_assert_exception("",41);
         }
       }
       mpz_t __stady_gmp_4;
@@ -773,7 +773,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_6);
         __gmpz_clear(__stady_gmp_7);
         if(! (__stady_term_5 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",19);
+          pathcrawler_assert_exception("",19);
         }
       }
       mpz_t __stady_gmp_8;
@@ -798,7 +798,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_10);
         __gmpz_clear(__stady_gmp_11);
         if(! (__stady_term_8 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",46);
+          pathcrawler_assert_exception("",46);
         }
       }
       mpz_t __stady_gmp_12;
@@ -823,7 +823,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_14);
         __gmpz_clear(__stady_gmp_15);
         if(! (__stady_term_11 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",7);
+          pathcrawler_assert_exception("",7);
         }
       }
       mpz_t __stady_gmp_16;
@@ -848,7 +848,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_18);
         __gmpz_clear(__stady_gmp_19);
         if(! (__stady_term_14 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",33);
+          pathcrawler_assert_exception("",33);
         }
       }
       mpz_t __stady_gmp_20;
@@ -873,7 +873,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_22);
         __gmpz_clear(__stady_gmp_23);
         if(! (__stady_term_17 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",13);
+          pathcrawler_assert_exception("",13);
         }
       }
       if(Own_Tracked_Alt > Other_Tracked_Alt) {
@@ -886,7 +886,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_24);
         __gmpz_clear(__stady_gmp_25);
         if(! (__stady_term_18 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",0);
+          pathcrawler_assert_exception("",0);
         }
       }
       if(Own_Tracked_Alt < Other_Tracked_Alt) {
@@ -899,7 +899,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_26);
         __gmpz_clear(__stady_gmp_27);
         if(! (__stady_term_19 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",22);
+          pathcrawler_assert_exception("",22);
         }
       }
       if(Up_Separation > Down_Separation) {
@@ -912,7 +912,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_28);
         __gmpz_clear(__stady_gmp_29);
         if(! (__stady_term_20 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",30);
+          pathcrawler_assert_exception("",30);
         }
       }
       if(Up_Separation < Down_Separation) {
@@ -925,7 +925,7 @@ int alt_sep_test(void)
         __gmpz_clear(__stady_gmp_30);
         __gmpz_clear(__stady_gmp_31);
         if(! (__stady_term_21 != 0)) {
-          pathcrawler_assert_exception("Post-condition!",15);
+          pathcrawler_assert_exception("",15);
         }
       }
     }
@@ -966,86 +966,86 @@ int alt_sep_test(void)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 1224 test cases
-[stady]  Counter-example for ensures \result ≢ 2 (tests/tcas/tcas.c:93)
-[stady]  testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_80.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]    Alt_Layer_Value|                0|                 |
-[stady]      Climb_Inhibit|                1|                 |
-[stady]   Cur_Vertical_Sep|            16684|                 |
-[stady]    Down_Separation|                0|                 |
-[stady]    High_Confidence|            32464|                 |
-[stady]   Other_Capability|                0|                 |
-[stady]          Other_RAC|                0|                 |
-[stady]  Other_Tracked_Alt|              427|                 |
-[stady]    Own_Tracked_Alt|              976|                 |
-[stady]  Own_Tra...lt_Rate|              450|                 |
-[stady]  Positiv...resh[0]|            16434|                 |
-[stady]  Positiv...resh[1]|                0|                 |
-[stady]  Positiv...resh[2]|                0|                 |
-[stady]  Positiv...resh[3]|                0|                 |
-[stady]  Two_of_...s_Valid|                1|                 |
-[stady]      Up_Separation|       2147483565|                 |
-[stady]       return value|                 |                1|                1
-[stady]  Counter-example for ensures \result ≢ 1 (tests/tcas/tcas.c:107)
-[stady]  testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_19.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]    Alt_Layer_Value|                0|                 |
-[stady]      Climb_Inhibit|                1|                 |
-[stady]   Cur_Vertical_Sep|            16684|                 |
-[stady]    Down_Separation|                0|                 |
-[stady]    High_Confidence|            32464|                 |
-[stady]   Other_Capability|                0|                 |
-[stady]          Other_RAC|                2|                 |
-[stady]  Other_Tracked_Alt|              620|                 |
-[stady]    Own_Tracked_Alt|              324|                 |
-[stady]  Own_Tra...lt_Rate|              450|                 |
-[stady]  Positiv...resh[0]|            16434|                 |
-[stady]  Positiv...resh[1]|                0|                 |
-[stady]  Positiv...resh[2]|                0|                 |
-[stady]  Positiv...resh[3]|                0|                 |
-[stady]  Two_of_...s_Valid|                1|                 |
-[stady]      Up_Separation|              -66|                 |
-[stady]       return value|                 |                0|                0
-[stady]  Counter-example for ensures \result ≢ 2 (tests/tcas/tcas.c:112)
-[stady]  testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_37.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]    Alt_Layer_Value|                2|                 |
-[stady]      Climb_Inhibit|                1|                 |
-[stady]   Cur_Vertical_Sep|            16684|                 |
-[stady]    Down_Separation|       1073812406|                 |
-[stady]    High_Confidence|            32464|                 |
-[stady]   Other_Capability|                0|                 |
-[stady]          Other_RAC|                2|                 |
-[stady]  Other_Tracked_Alt|              523|                 |
-[stady]    Own_Tracked_Alt|              896|                 |
-[stady]  Own_Tra...lt_Rate|              450|                 |
-[stady]  Positiv...resh[0]|            16434|                 |
-[stady]  Positiv...resh[1]|                0|                 |
-[stady]  Positiv...resh[2]|                0|                 |
-[stady]  Positiv...resh[3]|                0|                 |
-[stady]  Two_of_...s_Valid|                1|                 |
-[stady]      Up_Separation|                0|                 |
-[stady]       return value|                 |                1|                1
-[stady]  Counter-example for ensures \result ≢ 1 (tests/tcas/tcas.c:123)
-[stady]  testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_48.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]    Alt_Layer_Value|                1|                 |
-[stady]      Climb_Inhibit|                1|                 |
-[stady]   Cur_Vertical_Sep|            16684|                 |
-[stady]    Down_Separation|      -1073645382|                 |
-[stady]    High_Confidence|            32464|                 |
-[stady]   Other_Capability|                0|                 |
-[stady]          Other_RAC|                0|                 |
-[stady]  Other_Tracked_Alt|              687|                 |
-[stady]    Own_Tracked_Alt|              506|                 |
-[stady]  Own_Tra...lt_Rate|              450|                 |
-[stady]  Positiv...resh[0]|            16434|                 |
-[stady]  Positiv...resh[1]|                0|                 |
-[stady]  Positiv...resh[2]|                0|                 |
-[stady]  Positiv...resh[3]|                0|                 |
-[stady]  Two_of_...s_Valid|                1|                 |
-[stady]      Up_Separation|                0|                 |
-[stady]       return value|                 |                0|                0
+[stady] NC of ensures \result ≢ 1 
+        LOCATION: tests/tcas/tcas.c:107
+        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_46.c
+        Alt_Layer_Value = 0
+        Climb_Inhibit = 1
+        Cur_Vertical_Sep = 16684
+        Down_Separation = 0
+        High_Confidence = 32464
+        Other_Capability = 0
+        Other_RAC = 0
+        Other_Tracked_Alt = 989
+        Own_Tracked_Alt = 722
+        Own_Tracked_Alt_Rate = 450
+        Positive_RA_Alt_Thresh[0] = 16434
+        Positive_RA_Alt_Thresh[1] = 0
+        Positive_RA_Alt_Thresh[2] = 0
+        Positive_RA_Alt_Thresh[3] = 0
+        Two_of_Three_Reports_Valid = 1
+        Up_Separation = -56
+        return value =  -- OUTPUT: 0 (0)
+[stady] NC of ensures \result ≢ 1 
+        LOCATION: tests/tcas/tcas.c:123
+        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_20.c
+        Alt_Layer_Value = 0
+        Climb_Inhibit = 1
+        Cur_Vertical_Sep = 16684
+        Down_Separation = 0
+        High_Confidence = 32464
+        Other_Capability = 0
+        Other_RAC = 2
+        Other_Tracked_Alt = 423
+        Own_Tracked_Alt = 304
+        Own_Tracked_Alt_Rate = 450
+        Positive_RA_Alt_Thresh[0] = 16434
+        Positive_RA_Alt_Thresh[1] = 0
+        Positive_RA_Alt_Thresh[2] = 0
+        Positive_RA_Alt_Thresh[3] = 0
+        Two_of_Three_Reports_Valid = 1
+        Up_Separation = 7260
+        return value =  -- OUTPUT: 0 (0)
+[stady] NC of ensures \result ≢ 2 
+        LOCATION: tests/tcas/tcas.c:112
+        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_79.c
+        Alt_Layer_Value = 3
+        Climb_Inhibit = 1
+        Cur_Vertical_Sep = 16684
+        Down_Separation = 1073836762
+        High_Confidence = 32464
+        Other_Capability = 0
+        Other_RAC = 0
+        Other_Tracked_Alt = 890
+        Own_Tracked_Alt = 913
+        Own_Tracked_Alt_Rate = 450
+        Positive_RA_Alt_Thresh[0] = 16434
+        Positive_RA_Alt_Thresh[1] = 0
+        Positive_RA_Alt_Thresh[2] = 0
+        Positive_RA_Alt_Thresh[3] = 0
+        Two_of_Three_Reports_Valid = 1
+        Up_Separation = 0
+        return value =  -- OUTPUT: 1 (1)
+[stady] NC of ensures \result ≢ 2 
+        LOCATION: tests/tcas/tcas.c:93
+        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_38.c
+        Alt_Layer_Value = 0
+        Climb_Inhibit = 1
+        Cur_Vertical_Sep = 16684
+        Down_Separation = 0
+        High_Confidence = 32464
+        Other_Capability = 0
+        Other_RAC = 2
+        Other_Tracked_Alt = 854
+        Own_Tracked_Alt = 994
+        Own_Tracked_Alt_Rate = 450
+        Positive_RA_Alt_Thresh[0] = 16434
+        Positive_RA_Alt_Thresh[1] = 0
+        Positive_RA_Alt_Thresh[2] = 0
+        Positive_RA_Alt_Thresh[3] = 0
+        Two_of_Three_Reports_Valid = 1
+        Up_Separation = 2147483606
+        return value =  -- OUTPUT: 1 (1)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

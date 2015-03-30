@@ -106,7 +106,7 @@ void firstSubset(int *s, int n)
         __stady_pred_2 = k <= n;
       }
       if(! __stady_pred_2) {
-        pathcrawler_assert_exception("Loop invariant not established!",2);
+        pathcrawler_assert_exception("not established",2);
       }
       int __stady_pred_4;
       __stady_pred_4 = 1;
@@ -163,7 +163,7 @@ void firstSubset(int *s, int n)
         __gmpz_clear(__stady_gmp_14);
       }
       if(! __stady_pred_4) {
-        pathcrawler_assert_exception("Loop invariant not established!",7);
+        pathcrawler_assert_exception("not established",7);
       }
       while (1) {
         if (! (k < n)) {
@@ -181,7 +181,7 @@ void firstSubset(int *s, int n)
         int __stady_term_19;
         __stady_term_19 = __gmpz_cmp_ui(__stady_gmp_31,0);
         if(__stady_term_19 < 0) {
-          pathcrawler_assert_exception("Variant non positive",4);
+          pathcrawler_assert_exception("non positive",4);
         }
         mpz_t __stady_gmp_32;
         __gmpz_init_set(__stady_gmp_32,__stady_gmp_31);
@@ -200,7 +200,7 @@ void firstSubset(int *s, int n)
           __stady_pred_3 = k <= n;
         }
         if(! __stady_pred_3) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",2);
+          pathcrawler_assert_exception("not preserved",2);
         }
         int __stady_pred_6;
         __stady_pred_6 = 1;
@@ -257,7 +257,7 @@ void firstSubset(int *s, int n)
           __gmpz_clear(__stady_gmp_22);
         }
         if(! __stady_pred_6) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",7);
+          pathcrawler_assert_exception("not preserved",7);
         }
         mpz_t __stady_gmp_33;
         __gmpz_init_set_si(__stady_gmp_33,n);
@@ -271,7 +271,7 @@ void firstSubset(int *s, int n)
         int __stady_term_20;
         __stady_term_20 = __gmpz_cmp(__stady_gmp_35,__stady_gmp_32);
         if(__stady_term_20 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing",4);
+          pathcrawler_assert_exception("non decreasing",4);
         }
         __gmpz_clear(__stady_gmp_32);
         }
@@ -333,7 +333,7 @@ void firstSubset(int *s, int n)
         __gmpz_clear(__stady_gmp_1);
       }
       if(! __stady_pred_0) {
-        pathcrawler_assert_exception("Post-condition!",5);
+        pathcrawler_assert_exception("",5);
       }
     }
     free(old_ptr_s);

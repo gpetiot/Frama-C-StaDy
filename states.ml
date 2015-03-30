@@ -1,27 +1,50 @@
 
-module Counter_examples =
+(* input, concrete output, symbolic output *)
+module Var_state =
+  Datatype.Triple (Datatype.String) (Datatype.String) (Datatype.String)
+
+module Var_states = Datatype.String.Hashtbl.Make (Var_state)
+
+module NC_counter_examples =
   State_builder.Hashtbl
     (Property.Hashtbl)
-    (Datatype.String.Hashtbl.Make
-       (Datatype.String.Hashtbl.Make
-	  (* input, concrete output, symbolic output *)
-	  (Datatype.Triple (Datatype.String) (Datatype.String) (Datatype.String)
-    )))
+    (Datatype.String.Hashtbl.Make (* file *)
+       (Datatype.Pair
+	  (Datatype.String) (* msg *)
+	  (Var_states)
+       )
+    )
     (struct
-      let name = "PathCrawler.Counter_examples"
+      let name = "NC_counter_examples"
+      let dependencies = [Ast.self]
+      let size = 64
+     end)
+
+module CW_counter_examples =
+  State_builder.Hashtbl
+    (Property.Hashtbl)
+    (Datatype.String.Hashtbl.Make (* file *)
+       (Datatype.Triple
+	  (Datatype.String) (* msg *)
+	  (Cil_datatype.Stmt) (* statement whose contract is too weak *)
+	  (Var_states)
+       )
+    )
+    (struct
+      let name = "CW_counter_examples"
       let dependencies = [Ast.self]
       let size = 64
      end)
 
 module Nb_test_cases = State_builder.Zero_ref
   (struct
-    let name = "PathCrawler.Nb_test_cases"
+    let name = "Nb_test_cases"
     let dependencies = [Ast.self]
    end)
 
 module All_Paths = State_builder.False_ref
   (struct
-    let name = "PathCrawler.All_Paths"
+    let name = "All_Paths"
     let dependencies = [Ast.self]
    end)
 

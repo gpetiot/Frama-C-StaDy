@@ -154,7 +154,7 @@ void f(int *t, int x)
         __stady_pred_1 = __stady_term_5 <= 0;
       }
       if(! __stady_pred_1) {
-        pathcrawler_assert_exception("Loop invariant not established!",2);
+        pathcrawler_assert_exception("3$not established",2);
       }
       while (1) {
         if (! (i <= 4)) {
@@ -186,7 +186,7 @@ void f(int *t, int x)
           __stady_pred_2 = __stady_term_7 <= 0;
         }
         if(! __stady_pred_2) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",2);
+          pathcrawler_assert_exception("3$not preserved",2);
         }
         }
          
@@ -227,7 +227,7 @@ void f(int *t, int x)
       }
       if(! ((! (__stady_term_8 != 0) || __stady_pred_3) && (! __stady_pred_3 || 
                                                             __stady_term_8 != 0))) {
-        pathcrawler_assert_exception("Assert!",1);
+        pathcrawler_assert_exception("3$",1);
       }
       ;
     }
@@ -256,27 +256,28 @@ void f(int *t, int x)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 55 test cases
-[stady]  Counter-example for assert
-                            found ≢ 0 ⇔
-                            (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x); (tests/inv_insuf_ko/inv_insuf_ko.c:23)
-[stady]  testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_4.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]              found|           198227|           172458|nondet_..._val[1]
-[stady]  nondet_..._val[0]|                0|                 |
-[stady]  nondet_..._val[1]|           172458|                 |
-[stady]               t[0]|           153754|                 |
-[stady]               t[1]|           -88465|                 |
-[stady]               t[2]|           187365|                 |
-[stady]               t[3]|           -36660|                 |
-[stady]               t[4]|           174739|                 |
-[stady]                  x|          -144005|                 |
+[stady] CW of stmt 3 for assert
+                         found ≢ 0 ⇔ (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x); 
+        LOCATION: tests/inv_insuf_ko/inv_insuf_ko.c:18
+        TEST DRIVER: testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_4.c
+        found = 198227 -- OUTPUT: 172458 (nondet_sint_val[1])
+        nondet_sint_val[0] = 0
+        nondet_sint_val[1] = 172458
+        t[0] = 153754
+        t[1] = -88465
+        t[2] = 187365
+        t[3] = -36660
+        t[4] = 174739
+        x = -144005
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'f'
 --------------------------------------------------------------------------------
 
-[   Bug   ] Assertion (file tests/inv_insuf_ko/inv_insuf_ko.c, line 23)
+[  Valid  ] Invariant (file tests/inv_insuf_ko/inv_insuf_ko.c, line 14)
+            by StaDy.
+[  Valid  ] Assertion (file tests/inv_insuf_ko/inv_insuf_ko.c, line 23)
             by StaDy.
 [  Valid  ] Default behavior
             by Frama-C kernel.
@@ -284,7 +285,6 @@ void f(int *t, int x)
 --------------------------------------------------------------------------------
 --- Status Report Summary
 --------------------------------------------------------------------------------
-     1 Completely validated
-     1 Bugs found
-     2 Total
+     3 Completely validated
+     3 Total
 --------------------------------------------------------------------------------

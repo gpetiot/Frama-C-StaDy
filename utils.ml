@@ -167,51 +167,46 @@ let mpz_t() =
   let ty = Extlib.the ty in
   ty
 
-let print_counter_examples
-      gui (pprint:('a, Format.formatter, unit) format -> 'a) prop =
-  let file_tbl = States.Counter_examples.find prop in
-  let print x = if gui then pprint "%s@.@\n" x else pprint " %s@\n" x in
-  let n_chars n str =
-    let size = let s = n - (String.length str) in if s < 0 then 0 else s in
-    if (String.length str > n) then
-      let size_1, size_2 =
-	if n mod 2 = 0 then (n - 3) / 2 + 1, (n - 3) / 2
-	else (n - 3) / 2, (n - 3) / 2
-      in
-      (String.sub str 0 size_1)^"..."
-      ^(String.sub str ((String.length str) - size_2) size_2)
-    else (String.make size ' ') ^ str
+let pp_ce fmt p =
+  let pp_msg fmt = function "" -> () | x -> Format.fprintf fmt "(%s)" x in
+  let pp_loc = Cil_datatype.Location.pretty in
+  let pp_prop = Property.pretty in
+  let pp_stmt fmt s = match s.skind with
+    | Instr(Call _) -> Printer.pp_stmt fmt s
+    | _ -> Format.fprintf fmt "stmt %i" s.sid
   in
-  let n_chars = n_chars 17 in
-  let on_var var (input,conc,symb) =
-    print
-      (Printf.sprintf
-	 "%s|%s|%s|%s"
-	 (n_chars var) (n_chars input) (n_chars conc) (n_chars symb))
+  let on_var var (inp, con, sym) =
+    match con, sym with
+    | "", "" -> Format.fprintf fmt "%s = %s@\n" var inp
+    | "", x
+    | x, "" -> Format.fprintf fmt "%s = %s -- OUTPUT: %s@\n" var inp x
+    | x, y -> Format.fprintf fmt "%s = %s -- OUTPUT: %s (%s)@\n" var inp x y
   in
-  let on_file f var_tbl =
-    Format.fprintf
-      Format.str_formatter "Counter-example for @[%a@] (%a)@."
-      Property.pretty prop
-      Cil_datatype.Location.pretty (Property.location prop);
-    print (Format.flush_str_formatter());
-    if f <> "" then print (Printf.sprintf "%s\n" f);
-    if (Datatype.String.Hashtbl.length var_tbl) > 0 then
-      print (Printf.sprintf
-	       "%s|%s|%s|%s"
-	       (n_chars "variable") (n_chars "input")
-	       (n_chars "concrete output") (n_chars "symbolic output"));
-    Datatype.String.Hashtbl.iter_sorted on_var var_tbl
+  let on_nc f (msg, var_states) = function
+    | 0 -> 0
+    | n ->
+       Format.fprintf fmt "NC of @[%a@] %a@\n" pp_prop p pp_msg msg;
+       Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Property.location p);
+       Format.fprintf fmt "TEST DRIVER: %s@\n" f;
+       Datatype.String.Hashtbl.iter_sorted on_var var_states;
+       n-1
   in
-  let to_list t = Datatype.String.Hashtbl.fold (fun k v l -> (k,v)::l) t [] in
-  let only i to_do l =
-    let rec aux cpt = function
-      | (k,v) :: t when cpt < i -> to_do k v; aux (cpt+1) t
-      | _ -> ()
-    in
-    aux 0 l
+  let on_cw f (msg, stmt, var_states) = function
+    | 0 -> 0
+    | n ->
+       Format.fprintf
+	 fmt "CW of @[%a@] for @[%a@] %a@\n" pp_stmt stmt pp_prop p pp_msg msg;
+       Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Cil_datatype.Stmt.loc stmt);
+       Format.fprintf fmt "TEST DRIVER: %s@\n" f;
+       Datatype.String.Hashtbl.iter_sorted on_var var_states;
+       n-1
   in
-  only 1 on_file (to_list file_tbl)
+  let on_tbl find f =
+    try let t = find p in ignore (Datatype.String.Hashtbl.fold f t 1)
+    with Not_found -> ()
+  in
+  on_tbl States.NC_counter_examples.find on_nc;
+  on_tbl States.CW_counter_examples.find on_cw
 
 (* unused: interpreting string as precondition predicates *)
 (* let type_str_precond kf pred_as_string = *)

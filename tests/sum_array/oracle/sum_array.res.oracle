@@ -71,7 +71,7 @@ int sum_array(int *t, int n)
         __stady_pred_1 = i <= n;
       }
       if(! __stady_pred_1) {
-        pathcrawler_assert_exception("Loop invariant not established!",2);
+        pathcrawler_assert_exception("not established",2);
       }
       mpz_t __stady_gmp_25;
       __gmpz_init_set_si(__stady_gmp_25,s);
@@ -115,7 +115,7 @@ int sum_array(int *t, int n)
       __gmpz_clear(__stady_gmp_25);
       __gmpz_clear(__stady_gmp_26);
       if(! (__stady_term_13 == 0)) {
-        pathcrawler_assert_exception("Loop invariant not established!",9);
+        pathcrawler_assert_exception("not established",9);
       }
       while (1) {
         if (! (i < n)) {
@@ -133,7 +133,7 @@ int sum_array(int *t, int n)
         int __stady_term_17;
         __stady_term_17 = __gmpz_cmp_ui(__stady_gmp_43,0);
         if(__stady_term_17 < 0) {
-          pathcrawler_assert_exception("Variant non positive",0);
+          pathcrawler_assert_exception("non positive",0);
         }
         mpz_t __stady_gmp_44;
         __gmpz_init_set(__stady_gmp_44,__stady_gmp_43);
@@ -154,7 +154,7 @@ int sum_array(int *t, int n)
           __gmpz_clear(__stady_gmp_9);
           __gmpz_clear(__stady_gmp_10);
           if(! (__stady_term_5 <= 0)) {
-            pathcrawler_assert_exception("Assert!",4);
+            pathcrawler_assert_exception("",4);
           }
           mpz_t __stady_gmp_13;
           __gmpz_init(__stady_gmp_13);
@@ -172,14 +172,14 @@ int sum_array(int *t, int n)
           __gmpz_clear(__stady_gmp_13);
           __gmpz_clear(__stady_gmp_16);
           if(! (__stady_term_6 <= 0)) {
-            pathcrawler_assert_exception("Assert!",5);
+            pathcrawler_assert_exception("",5);
           }
           int __stady_pred_0;
           int __stady_term_7;
           __stady_term_7 = pathcrawler_dimension(t);
           __stady_pred_0 = i >= 0 && __stady_term_7 > i;
           if(! __stady_pred_0) {
-            pathcrawler_assert_exception("Assert!",6);
+            pathcrawler_assert_exception("",6);
           }
           s += *(t + i);
         }
@@ -200,7 +200,7 @@ int sum_array(int *t, int n)
           __gmpz_clear(__stady_gmp_17);
           __gmpz_clear(__stady_gmp_20);
           if(! (__stady_term_8 <= 0)) {
-            pathcrawler_assert_exception("Assert!",3);
+            pathcrawler_assert_exception("",3);
           }
           i ++;
         }mpz_t __stady_gmp_23;
@@ -217,7 +217,7 @@ int sum_array(int *t, int n)
           __stady_pred_2 = i <= n;
         }
         if(! __stady_pred_2) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",2);
+          pathcrawler_assert_exception("not preserved",2);
         }
         mpz_t __stady_gmp_33;
         __gmpz_init_set_si(__stady_gmp_33,s);
@@ -261,7 +261,7 @@ int sum_array(int *t, int n)
         __gmpz_clear(__stady_gmp_33);
         __gmpz_clear(__stady_gmp_34);
         if(! (__stady_term_16 == 0)) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",9);
+          pathcrawler_assert_exception("not preserved",9);
         }
         mpz_t __stady_gmp_45;
         __gmpz_init_set_si(__stady_gmp_45,n);
@@ -275,7 +275,7 @@ int sum_array(int *t, int n)
         int __stady_term_18;
         __stady_term_18 = __gmpz_cmp(__stady_gmp_47,__stady_gmp_44);
         if(__stady_term_18 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing",0);
+          pathcrawler_assert_exception("non decreasing",0);
         }
         __gmpz_clear(__stady_gmp_44);
         }
@@ -324,7 +324,7 @@ int sum_array(int *t, int n)
       __gmpz_clear(__stady_gmp_0);
       __gmpz_clear(__stady_gmp_1);
       if(! (__stady_term_2 == 0)) {
-        pathcrawler_assert_exception("Post-condition!",7);
+        pathcrawler_assert_exception("",7);
       }
     }
     free(old_ptr_t);
@@ -352,19 +352,20 @@ int sum_array(int *t, int n)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 147 test cases
-[stady]  Counter-example for assert rte: signed_overflow: -2147483648 ≤ s+*(t+i); (tests/sum_array/sum_array.c:17)
-[stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_8.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]                  n|                3|                 |
-[stady]               t[0]|                0|                 |
-[stady]               t[1]|       -897154901|                 |
-[stady]               t[2]|      -1421176958|                 |
-[stady]  Counter-example for assert rte: signed_overflow: s+*(t+i) ≤ 2147483647; (tests/sum_array/sum_array.c:17)
-[stady]  testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_4.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]                  n|                2|                 |
-[stady]               t[0]|       1914720638|                 |
-[stady]               t[1]|       2086127769|                 |
+[stady] NC of assert rte: signed_overflow: -2147483648 ≤ s+*(t+i); 
+        LOCATION: tests/sum_array/sum_array.c:17
+        TEST DRIVER: testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_10.c
+        n = 3
+        t[0] = -10555854
+        t[1] = -2139817863
+        t[2] = 200408
+[stady] NC of assert rte: signed_overflow: s+*(t+i) ≤ 2147483647; 
+        LOCATION: tests/sum_array/sum_array.c:17
+        TEST DRIVER: testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_7.c
+        n = 3
+        t[0] = 0
+        t[1] = 192302372
+        t[2] = 2062945588
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

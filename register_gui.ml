@@ -28,21 +28,11 @@ let to_do_on_select
      let callback() = compute ~cwd:stmt (); main_ui#redisplay() in
      ignore (popup_factory#add_item "Check for Spec. Weakness" ~callback)
   | Pretty_source.PIP prop when button_nb = 1 ->
-     begin
-       try
-	 let file_tbl = States.Counter_examples.find prop in
-	 let nb = Datatype.String.Hashtbl.length file_tbl in
-	 if nb > 0 then
-	   begin
-	     main_ui#pretty_information "%i Counter-Example(s)@." nb;
-	     Utils.print_counter_examples true main_ui#pretty_information prop
-	   end
-       with Not_found -> ()
-     end
+     main_ui#pretty_information "%a" Utils.pp_ce prop
   | Pretty_source.PIP prop when button_nb = 3 ->
      begin
        try
-	 let file_tbl = States.Counter_examples.find prop in
+	 let nc_tbl = States.NC_counter_examples.find prop in
 	 let on_file tc_c _ =
 	   let callback() =
 	     let prj = Project.create tc_c in
@@ -53,7 +43,7 @@ let to_do_on_select
 	   let item_str = Printf.sprintf "_Open %s in new project" tc_c in
 	   ignore (popup_factory#add_item item_str ~callback)
 	 in
-	 Datatype.String.Hashtbl.iter_sorted on_file file_tbl
+	 Datatype.String.Hashtbl.iter_sorted on_file nc_tbl
        with Not_found -> ()
      end;
      let callback() = compute ~props:[prop] (); main_ui#redisplay() in

@@ -75,13 +75,13 @@ void main(void)
     }
     {
       if(! (x == y)) {
-        pathcrawler_assert_exception("Assert!",0);
+        pathcrawler_assert_exception("",0);
       }
       ;
     }
     {
       if(! (x != z)) {
-        pathcrawler_assert_exception("Assert!",1);
+        pathcrawler_assert_exception("",1);
       }
       ;
     }
@@ -120,18 +120,18 @@ int __stady_fct_0() {
 [pc] generation finished
 [stady] all-paths: true
 [stady] 6 test cases
-[stady]  Counter-example for assert x ≡ y; (tests/simulate_rand/simulate_rand.c:13)
-[stady]  testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_4.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]  nondet_..._val[0]|          -133277|                 |
-[stady]  nondet_..._val[1]|           168196|                 |
-[stady]  nondet_..._val[2]|           200986|                 |
-[stady]  Counter-example for assert x ≢ z; (tests/simulate_rand/simulate_rand.c:15)
-[stady]  testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_6.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]  nondet_..._val[0]|          -101831|                 |
-[stady]  nondet_..._val[1]|          -101831|                 |
-[stady]  nondet_..._val[2]|          -101831|                 |
+[stady] NC of assert x ≡ y; 
+        LOCATION: tests/simulate_rand/simulate_rand.c:13
+        TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_4.c
+        nondet_sint_val[0] = -133277
+        nondet_sint_val[1] = 168196
+        nondet_sint_val[2] = 200986
+[stady] NC of assert x ≢ z; 
+        LOCATION: tests/simulate_rand/simulate_rand.c:15
+        TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_6.c
+        nondet_sint_val[0] = -101831
+        nondet_sint_val[1] = -101831
+        nondet_sint_val[2] = -101831
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

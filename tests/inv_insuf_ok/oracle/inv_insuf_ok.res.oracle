@@ -191,7 +191,7 @@ void f(int *t, int x)
         __stady_pred_2 = __stady_term_8 <= 0;
       }
       if(! __stady_pred_2) {
-        pathcrawler_assert_exception("Loop invariant not established!",1);
+        pathcrawler_assert_exception("3$not established",1);
       }
       mpz_t __stady_gmp_20;
       __gmpz_init_set_str(__stady_gmp_20,"0",10);
@@ -228,7 +228,7 @@ void f(int *t, int x)
       }
       if(! ((! (__stady_term_11 != 0) || __stady_pred_4) && (! __stady_pred_4 || 
                                                              __stady_term_11 != 0))) {
-        pathcrawler_assert_exception("Loop invariant not established!",5);
+        pathcrawler_assert_exception("3$not established",5);
       }
       while (1) {
         if (! (i <= 4)) {
@@ -260,7 +260,7 @@ void f(int *t, int x)
           __stady_pred_3 = __stady_term_10 <= 0;
         }
         if(! __stady_pred_3) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",1);
+          pathcrawler_assert_exception("3$not preserved",1);
         }
         mpz_t __stady_gmp_25;
         __gmpz_init_set_str(__stady_gmp_25,"0",10);
@@ -297,7 +297,7 @@ void f(int *t, int x)
         }
         if(! ((! (__stady_term_14 != 0) || __stady_pred_5) && (! __stady_pred_5 || 
                                                                __stady_term_14 != 0))) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",5);
+          pathcrawler_assert_exception("3$not preserved",5);
         }
         }
          
@@ -338,7 +338,7 @@ void f(int *t, int x)
       }
       if(! ((! (__stady_term_17 != 0) || __stady_pred_6) && (! __stady_pred_6 || 
                                                              __stady_term_17 != 0))) {
-        pathcrawler_assert_exception("Assert!",3);
+        pathcrawler_assert_exception("3$",3);
       }
       ;
     }

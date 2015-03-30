@@ -277,7 +277,8 @@ let compute_props ?(props=selected_props()) ?cwd () =
       Socket.print_exit_code ret
   end;
   States.Nb_test_cases.mark_as_computed();
-  States.Counter_examples.mark_as_computed();
+  States.NC_counter_examples.mark_as_computed();
+  States.CW_counter_examples.mark_as_computed();
   States.Unreachable_Stmts.mark_as_computed();
   Options.Self.result "all-paths: %b" (States.All_Paths.get());
   Options.Self.result "%i test cases" (States.Nb_test_cases.get());
@@ -289,20 +290,21 @@ let compute_props ?(props=selected_props()) ?cwd () =
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
   in
-  let no_CE = States.Counter_examples.length() = 0 in
-  let emit_status prop =
+  let no_CE = States.NC_counter_examples.length() = 0 in
+  let on_prop prop =
+    Options.Self.result "%a" Utils.pp_ce prop;
     try
-      Utils.print_counter_examples false Options.Self.result prop;
+      ignore (States.NC_counter_examples.find prop);
       let status = Property_status.False_and_reachable in
       Property_status.emit emitter ~hyps:[] prop ~distinct status
     with
     | Not_found ->
       let status = Property_status.True in
       let hyps = strengthened_precond in
-      if States.All_Paths.get() && no_CE then
+      if States.All_Paths.get() && no_CE && List.mem prop translated_props then
 	Property_status.emit emitter ~hyps prop ~distinct status
   in
-  List.iter emit_status translated_props;
+  Property_status.iter on_prop;
   let dkey = Options.dkey_reach in
   let add_assert_false sid (stmt, kf) =
     Options.Self.feedback ~dkey "stmt %i unreachable" sid;

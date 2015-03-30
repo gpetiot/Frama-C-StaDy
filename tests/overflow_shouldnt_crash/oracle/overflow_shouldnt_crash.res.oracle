@@ -40,7 +40,7 @@ void f(int x)
         __gmpz_clear(__stady_gmp_2);
         __gmpz_clear(__stady_gmp_3);
         if(! (__stady_term_0 > 0)) {
-          pathcrawler_assert_exception("Assert!",0);
+          pathcrawler_assert_exception("",0);
         }
         ;
       }

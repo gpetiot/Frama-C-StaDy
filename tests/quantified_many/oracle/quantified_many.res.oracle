@@ -127,7 +127,7 @@ void f(int default_value)
         __gmpz_clear(__stady_gmp_3);
       }
       if(! __stady_pred_0) {
-        pathcrawler_assert_exception("Assert!",0);
+        pathcrawler_assert_exception("",0);
       }
       ;
     }
@@ -176,7 +176,7 @@ void f(int default_value)
         __gmpz_clear(__stady_gmp_9);
       }
       if(! __stady_pred_1) {
-        pathcrawler_assert_exception("Assert!",2);
+        pathcrawler_assert_exception("",2);
       }
       ;
     }
@@ -199,13 +199,11 @@ void f(int default_value)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 295 test cases
-[stady]  Counter-example for assert
-                            A4:
-                              ∃ ℤ a, ℤ b;
-                                0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b]; (tests/quantified_many/quantified_many.c:39)
-[stady]  testcases___sd_instru_quantified_many_f/f/testdrivers/TC_1.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]      default_value|          -214739|                 |
+[stady] NC of assert
+              A4: ∃ ℤ a, ℤ b; 0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b]; 
+        LOCATION: tests/quantified_many/quantified_many.c:39
+        TEST DRIVER: testcases___sd_instru_quantified_many_f/f/testdrivers/TC_1.c
+        default_value = -214739
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

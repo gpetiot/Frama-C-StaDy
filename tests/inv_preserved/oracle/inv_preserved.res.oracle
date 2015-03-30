@@ -244,7 +244,7 @@ void f(int n, int *t)
         __stady_pred_3 = i <= n;
       }
       if(! __stady_pred_3) {
-        pathcrawler_assert_exception("Loop invariant not established!",1);
+        pathcrawler_assert_exception("9$not established",1);
       }
       int __stady_pred_5;
       __stady_pred_5 = 1;
@@ -316,7 +316,7 @@ void f(int n, int *t)
         __gmpz_clear(__stady_gmp_27);
       }
       if(! __stady_pred_5) {
-        pathcrawler_assert_exception("Loop invariant not established!",7);
+        pathcrawler_assert_exception("9$not established",7);
       }
       while (1) {
         if (! (i < n)) {
@@ -334,7 +334,7 @@ void f(int n, int *t)
         int __stady_term_22;
         __stady_term_22 = __gmpz_cmp_ui(__stady_gmp_50,0);
         if(__stady_term_22 < 0) {
-          pathcrawler_assert_exception("Variant non positive",0);
+          pathcrawler_assert_exception("9$non positive",0);
         }
         mpz_t __stady_gmp_51;
         __gmpz_init_set(__stady_gmp_51,__stady_gmp_50);
@@ -353,7 +353,7 @@ void f(int n, int *t)
           __stady_pred_4 = i <= n;
         }
         if(! __stady_pred_4) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",1);
+          pathcrawler_assert_exception("9$not preserved",1);
         }
         int __stady_pred_7;
         __stady_pred_7 = 1;
@@ -425,7 +425,7 @@ void f(int n, int *t)
           __gmpz_clear(__stady_gmp_39);
         }
         if(! __stady_pred_7) {
-          pathcrawler_assert_exception("Loop invariant not preserved!",7);
+          pathcrawler_assert_exception("9$not preserved",7);
         }
         mpz_t __stady_gmp_52;
         __gmpz_init_set_si(__stady_gmp_52,n);
@@ -439,7 +439,7 @@ void f(int n, int *t)
         int __stady_term_23;
         __stady_term_23 = __gmpz_cmp(__stady_gmp_54,__stady_gmp_51);
         if(__stady_term_23 >= 0) {
-          pathcrawler_assert_exception("Variant non decreasing",0);
+          pathcrawler_assert_exception("9$non decreasing",0);
         }
         __gmpz_clear(__stady_gmp_51);
         }
@@ -466,33 +466,40 @@ void f(int n, int *t)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 236 test cases
-[stady]  Counter-example for loop invariant
-                              ∀ ℤ k;
-                                2 ≤ k < i-1 ⇒
-                                *(t+k) ≡ *(t+(k-1)) ∨ *(t+k) ≡ *(t+(k-2)); (tests/inv_preserved/inv_preserved.c:22)
-[stady]  testcases___sd_instru_inv_preserved_f/f/testdrivers/TC_28.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]                  n|                5|                 |
-[stady]  nondet_..._val[0]|            30702|                 |
-[stady]  nondet_..._val[1]|           -14819|                 |
-[stady]  nondet_..._val[2]|                4|                 |
-[stady]               t[0]|                0|                 |
-[stady]               t[1]|      -1073801408|                 |
-[stady]               t[2]|          -126194|                0|             t[0]
-[stady]               t[3]|          -165352|            30702|nondet_..._val[0]
-[stady]               t[4]|          -211632|            30702|nondet_..._val[0]
+[stady] CW of stmt 9 for loop invariant
+                           ∀ ℤ k;
+                             2 ≤ k < i-1 ⇒
+                             *(t+k) ≡ *(t+(k-1)) ∨ *(t+k) ≡ *(t+(k-2)); (not preserved)
+        LOCATION: tests/inv_preserved/inv_preserved.c:27
+        TEST DRIVER: testcases___sd_instru_inv_preserved_f/f/testdrivers/TC_28.c
+        n = 5
+        nondet_sint_val[0] = 30702
+        nondet_sint_val[1] = -14819
+        nondet_sint_val[2] = 4
+        t[0] = 0
+        t[1] = -1073801408
+        t[2] = -126194 -- OUTPUT: 0 (t[0])
+        t[3] = -165352 -- OUTPUT: 30702 (nondet_sint_val[0])
+        t[4] = -211632 -- OUTPUT: 30702 (nondet_sint_val[0])
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'f'
 --------------------------------------------------------------------------------
 
-[   Bug   ] Invariant (file tests/inv_preserved/inv_preserved.c, line 22)
-            by StaDy.
+[ Partial ] Loop variant at loop (file tests/inv_preserved/inv_preserved.c, line 27)
+            By StaDy, with pending:
+             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 12)
+[ Partial ] Invariant (file tests/inv_preserved/inv_preserved.c, line 21)
+            By StaDy, with pending:
+             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 12)
+[ Partial ] Invariant (file tests/inv_preserved/inv_preserved.c, line 22)
+            By StaDy, with pending:
+             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 12)
 
 --------------------------------------------------------------------------------
 --- Status Report Summary
 --------------------------------------------------------------------------------
-     1 Bugs found
-     1 Total
+     3 Locally validated
+     3 Total
 --------------------------------------------------------------------------------

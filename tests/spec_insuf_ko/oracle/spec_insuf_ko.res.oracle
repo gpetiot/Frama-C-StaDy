@@ -79,7 +79,7 @@ void sort(int *A, int n)
   __gmpz_clear(__stady_gmp_0);
   __gmpz_clear(__stady_gmp_1);
   if(! (__stady_term_0 == 0)) {
-    pathcrawler_assert_exception("Pre-condition!",6);
+    pathcrawler_assert_exception("28$",6);
   }
   mpz_t __stady_gmp_2;
   __gmpz_init_set_str(__stady_gmp_2,"0",10);
@@ -110,7 +110,7 @@ void sort(int *A, int n)
   __gmpz_clear(__stady_gmp_2);
   __gmpz_clear(__stady_gmp_5);
   if(! __stady_pred_0) {
-    pathcrawler_assert_exception("Pre-condition!",8);
+    pathcrawler_assert_exception("28$",8);
   }
   int *old_A;
   int *old_ptr_A;
@@ -213,7 +213,7 @@ void f(int *t, int k)
       __stady_term_7 = (int)__gmpz_get_si(__stady_gmp_8);
       __gmpz_clear(__stady_gmp_8);
       if(! (*(old_t + __stady_term_6) <= *(old_t + __stady_term_7))) {
-        pathcrawler_assert_exception("Post-condition!",3);
+        pathcrawler_assert_exception("28$",3);
       }
     }
     free(old_ptr_t);
@@ -284,35 +284,42 @@ void __stady_fct_0(int *A, int n) {
 [pc] generation finished
 [stady] all-paths: true
 [stady] 21 test cases
-[stady]  Counter-example for ensures *(\old(t)+0) ≤ *(\old(t)+1) (tests/spec_insuf_ko/spec_insuf_ko.c:34)
-[stady]  testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_5.c
-[stady]           variable|            input|  concrete output|  symbolic output
-[stady]                  k|                4|                 |
-[stady]  nondet_..._val[0]|           174739|                 |
-[stady]  nondet_..._val[1]|           171583|                 |
-[stady]  nondet_..._val[2]|           172458|                 |
-[stady]  nondet_..._val[3]|          -144005|                 |
-[stady]               t[0]|            65712|           174739|nondet_..._val[0]
-[stady]               t[1]|           198227|           171583|nondet_..._val[1]
-[stady]               t[2]|           153754|           172458|nondet_..._val[2]
-[stady]               t[3]|           -88465|          -144005|nondet_..._val[3]
+[stady] CW of sort(t,k); for ensures *(\old(t)+0) ≤ *(\old(t)+1) 
+        LOCATION: tests/spec_insuf_ko/spec_insuf_ko.c:37
+        TEST DRIVER: testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_5.c
+        k = 4
+        nondet_sint_val[0] = 174739
+        nondet_sint_val[1] = 171583
+        nondet_sint_val[2] = 172458
+        nondet_sint_val[3] = -144005
+        t[0] = 65712 -- OUTPUT: 174739 (nondet_sint_val[0])
+        t[1] = 198227 -- OUTPUT: 171583 (nondet_sint_val[1])
+        t[2] = 153754 -- OUTPUT: 172458 (nondet_sint_val[2])
+        t[3] = -88465 -- OUTPUT: -144005 (nondet_sint_val[3])
 [report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'sort'
+--------------------------------------------------------------------------------
+
+[  Valid  ] Pre-condition (file tests/spec_insuf_ko/spec_insuf_ko.c, line 6)
+            by StaDy.
+[  Valid  ] Pre-condition (file tests/spec_insuf_ko/spec_insuf_ko.c, line 7)
+            by StaDy.
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'f'
 --------------------------------------------------------------------------------
 
-[   Bug   ] Post-condition (file tests/spec_insuf_ko/spec_insuf_ko.c, line 34)
+[  Valid  ] Post-condition (file tests/spec_insuf_ko/spec_insuf_ko.c, line 34)
             by StaDy.
-[  Dead   ] Default behavior
-            Locally invalid, but unreachable.
-            By Frama-C kernel because:
-             - Post-condition (file tests/spec_insuf_ko/spec_insuf_ko.c, line 34)
+[    -    ] Default behavior
+            tried with Frama-C kernel.
 
 --------------------------------------------------------------------------------
 --- Status Report Summary
 --------------------------------------------------------------------------------
-     1 Bugs found
-     1 Dead property
-     2 Total
+     3 Completely validated
+     1 To be validated
+     4 Total
 --------------------------------------------------------------------------------
