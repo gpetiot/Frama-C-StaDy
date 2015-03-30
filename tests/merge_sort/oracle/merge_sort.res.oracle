@@ -64,7 +64,6 @@ extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);
 extern void __gmpz_mul(mpz_t, const mpz_t, const mpz_t);
 extern int pathcrawler_assert_exception(char*,int);
 extern int pathcrawler_dimension(void*);
-extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
 /*@ requires \valid(A+(iLeft .. iRight-1));
@@ -238,10 +237,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         pathcrawler_assert_exception("not established",20);
       }
       while (1) {
-        if (! (j < iEnd)) {
-                            pathcrawler_to_framac("@FC:REACHABLE_STMT:9");
-                            break;
-                          }mpz_t __stady_gmp_28;
+        if (! (j < iEnd)) break;mpz_t __stady_gmp_28;
         __gmpz_init_set_si(__stady_gmp_28,iEnd);
         mpz_t __stady_gmp_29;
         __gmpz_init_set_si(__stady_gmp_29,j);
@@ -258,37 +254,17 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         mpz_t __stady_gmp_31;
         __gmpz_init_set(__stady_gmp_31,__stady_gmp_30);
         if (i0 < iRight) {
-          {
-            pathcrawler_to_framac("@FC:REACHABLE_STMT:14");
-            if (i1 >= iEnd) {
-                              pathcrawler_to_framac("@FC:REACHABLE_STMT:15");
-                              goto _LOR;
-                            }
-            else 
-              {
-                pathcrawler_to_framac("@FC:REACHABLE_STMT:17");
-                if (*(A + i0) <= *(A + i1)) {
-                  _LOR:
-                    {
-                      pathcrawler_to_framac("@FC:REACHABLE_STMT:18");
-                      *(B + j) = *(A + i0);
-                      i0 ++;
-                    }
-                }
-                else {
-                       pathcrawler_to_framac("@FC:REACHABLE_STMT:21");
-                       goto _LAND;
-                     }
-              }
-          }
+          if (i1 >= iEnd) goto _LOR;
+          else 
+            if (*(A + i0) <= *(A + i1)) {
+              _LOR: *(B + j) = *(A + i0);
+                    i0 ++;
+            }
+            else goto _LAND;
         }
         else {
-          _LAND:
-            {
-              pathcrawler_to_framac("@FC:REACHABLE_STMT:22");
-              *(B + j) = *(A + i1);
-              i1 ++;
-            }
+          _LAND: *(B + j) = *(A + i1);
+                 i1 ++;
         }
         j ++;int __stady_pred_5;
         __stady_pred_5 = iLeft <= j;
@@ -496,10 +472,7 @@ void CopyArray(int *A, int *B, int n)
         pathcrawler_assert_exception("not established",16);
       }
       while (1) {
-        if (! (i < n)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:32");
-                         break;
-                       }mpz_t __stady_gmp_49;
+        if (! (i < n)) break;mpz_t __stady_gmp_49;
         __gmpz_init_set_si(__stady_gmp_49,n);
         mpz_t __stady_gmp_50;
         __gmpz_init_set_si(__stady_gmp_50,i);
@@ -564,14 +537,7 @@ int min(int x, int y)
   old_y = y;
   {
     int tmp;
-    if (x <= y) {
-                  pathcrawler_to_framac("@FC:REACHABLE_STMT:40");
-                  tmp = x;
-                }
-    else {
-           pathcrawler_to_framac("@FC:REACHABLE_STMT:41");
-           tmp = y;
-         }
+    if (x <= y) tmp = x; else tmp = y;
     return tmp;
   }
 }
@@ -717,10 +683,7 @@ void BottomUpSort(int n, int *A, int *B)
         pathcrawler_assert_exception("not established",3);
       }
       while (1) {
-        if (! (width < n)) {
-                             pathcrawler_to_framac("@FC:REACHABLE_STMT:48");
-                             break;
-                           }mpz_t __stady_gmp_109;
+        if (! (width < n)) break;mpz_t __stady_gmp_109;
         __gmpz_init_set_si(__stady_gmp_109,n);
         mpz_t __stady_gmp_110;
         __gmpz_init_set_si(__stady_gmp_110,width);
@@ -786,10 +749,7 @@ void BottomUpSort(int n, int *A, int *B)
               pathcrawler_assert_exception("not established",26);
             }
             while (1) {
-              if (! (i < n)) {
-                               pathcrawler_to_framac("@FC:REACHABLE_STMT:54");
-                               break;
-                             }mpz_t __stady_gmp_86;
+              if (! (i < n)) break;mpz_t __stady_gmp_86;
               __gmpz_init_set_si(__stady_gmp_86,n);
               mpz_t __stady_gmp_87;
               __gmpz_init_set_si(__stady_gmp_87,i);

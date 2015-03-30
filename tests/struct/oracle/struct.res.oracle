@@ -58,7 +58,6 @@ struct __anonstruct___mpz_struct_1 {int _mp_alloc ;int _mp_size ;unsigned long *
 extern unsigned long int __gmpz_get_ui(mpz_t);
 extern void __gmpz_clear(mpz_t);
 extern void __gmpz_init_set_str(mpz_t, const char*, int);
-extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
 struct S {
@@ -116,17 +115,11 @@ int f(struct S *s, struct S *s2, int n)
   {
     int __retres;
     if (s->i) {
-      {
-        pathcrawler_to_framac("@FC:REACHABLE_STMT:3");
-        __retres = 1;
-      }
+      __retres = 1;
       goto return_label;
     }
     else {
-      {
-        pathcrawler_to_framac("@FC:REACHABLE_STMT:4");
-        __retres = -1;
-      }
+      __retres = -1;
       goto return_label;
     }
     return_label: free(old_ptr_s);

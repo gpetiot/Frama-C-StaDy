@@ -279,7 +279,6 @@ let compute_props ?(props=selected_props()) ?cwd () =
   States.Nb_test_cases.mark_as_computed();
   States.NC_counter_examples.mark_as_computed();
   States.CW_counter_examples.mark_as_computed();
-  States.Unreachable_Stmts.mark_as_computed();
   Options.Self.result "all-paths: %b" (States.All_Paths.get());
   Options.Self.result "%i test cases" (States.Nb_test_cases.get());
   let distinct = true in
@@ -304,24 +303,7 @@ let compute_props ?(props=selected_props()) ?cwd () =
       if States.All_Paths.get() && no_CE && List.mem prop translated_props then
 	Property_status.emit emitter ~hyps prop ~distinct status
   in
-  Property_status.iter on_prop;
-  let dkey = Options.dkey_reach in
-  let add_assert_false sid (stmt, kf) =
-    Options.Self.feedback ~dkey "stmt %i unreachable" sid;
-    Annotations.add_assert ~kf emitter stmt Logic_const.pfalse
-  in
-  let info_reachability _ (kf,bhv,is_reachable) =
-    Options.Self.feedback ~dkey "behavior '%s' of function '%s' %s"
-      bhv.b_name
-      (Kernel_function.get_name kf)
-      (if is_reachable then "reachable" else "not reachable")
-  in
-  if States.All_Paths.get() && strengthened_precond = [] then
-    begin
-      States.Unreachable_Stmts.iter add_assert_false;
-      if Options.Behavior_Reachability.get() then
-	States.Behavior_Reachability.iter info_reachability
-    end
+  Property_status.iter on_prop
 
 
 let run() =
@@ -333,7 +315,6 @@ let run() =
       States.Id_To_Property.clear();
       States.Property_To_Id.clear();
       States.Not_Translated_Predicates.clear();
-      States.Behavior_Reachability.clear();
       Options.mpz_t := None;
       States.Externals.clear()
     end

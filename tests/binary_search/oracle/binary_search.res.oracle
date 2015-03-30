@@ -60,7 +60,6 @@ extern void __gmpz_add_ui(mpz_t, const mpz_t, unsigned long int);
 extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);
 extern void __gmpz_ui_sub(mpz_t, unsigned long int, const mpz_t);
 extern int pathcrawler_assert_exception(char*,int);
-extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
 int binary_search_precond(int *arr, int length, int query)
@@ -226,10 +225,7 @@ int binary_search(int *arr, int length, int query)
         pathcrawler_assert_exception("not established",14);
       }
       while (1) {
-        if (! (low <= high)) {
-                               pathcrawler_to_framac("@FC:REACHABLE_STMT:7");
-                               break;
-                             }mpz_t __stady_gmp_56;
+        if (! (low <= high)) break;mpz_t __stady_gmp_56;
         __gmpz_init_set_si(__stady_gmp_56,high);
         mpz_t __stady_gmp_57;
         __gmpz_init_set_si(__stady_gmp_57,low);
@@ -334,20 +330,10 @@ int binary_search(int *arr, int length, int query)
             ;
           }
           if (*(arr + mean) == query) {
-            {
-              pathcrawler_to_framac("@FC:REACHABLE_STMT:18");
-              __retres = mean;
-            }
+            __retres = mean;
             goto return_label;
           }
-          if (*(arr + mean) < query) {
-                                       pathcrawler_to_framac("@FC:REACHABLE_STMT:22");
-                                       low = mean + 1;
-                                     }
-          else {
-                 pathcrawler_to_framac("@FC:REACHABLE_STMT:23");
-                 high = mean - 1;
-               }
+          if (*(arr + mean) < query) low = mean + 1; else high = mean - 1;
         }mpz_t __stady_gmp_34;
         __gmpz_init_set_str(__stady_gmp_34,"0",10);
         mpz_t __stady_gmp_35;

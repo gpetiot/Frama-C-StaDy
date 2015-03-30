@@ -1116,24 +1116,15 @@ class gather_insertions props cwd = object(self)
 	let prop = to_prop (tk,pred) in
 	ins @ (self#pc_assert_exception pred.ip_content "" prop)
       in
-      let str = Format.sprintf "@@FC:REACHABLE_BHV:%i" bhv_to_reach_cpt in
-      let to_reach =
-	not (Cil.is_default_behavior b)
-	&& (Options.Behavior_Reachability.get())
-      in
-      States.Behavior_Reachability.replace bhv_to_reach_cpt (kf,b,false);
-      bhv_to_reach_cpt <- bhv_to_reach_cpt+1;
-      if post <> [] || (Options.Behavior_Reachability.get()) then
+      if post <> [] then
 	if b.b_assumes <> [] then
 	  let i_0, exp = self#cond_of_assumes b.b_assumes in
-	  let ii_0 = if to_reach then [Instru(self#pc_to_fc str)] else [] in
 	  let ii_1 = List.fold_left do_postcond [] post in
-	  let i_1 = ins_if exp (ii_0 @ ii_1) [] in
+	  let i_1 = ins_if exp ii_1 [] in
 	  ins @ i_0 @ [i_1]
 	else
-	  let i_0 = if to_reach then [Instru(self#pc_to_fc str)] else [] in
 	  let i_1 = List.fold_left do_postcond [] post in
-	  ins @ i_0 @ i_1
+	  ins @ i_1
       else ins
     in
     List.fold_left do_behavior [] behaviors
@@ -1281,8 +1272,7 @@ class gather_insertions props cwd = object(self)
     let label_pre = BegFunc fname in
     let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
     List.iter (self#insert label_pre) inserts_pre;
-    if (self#at_least_one_prop kf behaviors Kglobal)
-      || (Options.Behavior_Reachability.get()) then
+    if self#at_least_one_prop kf behaviors Kglobal then
       begin
 	let inserts = self#post kf behaviors Kglobal in
 	self#insert (EndFunc f.svar.vname) (Block inserts)
@@ -1357,8 +1347,7 @@ class gather_insertions props cwd = object(self)
     inserts_0 @ [insert_1]
 
   method private translate_stmt_spec kf stmt for_behaviors bhvs =
-    if self#at_least_one_prop kf bhvs.spec_behavior (Kstmt stmt)
-       || Options.Behavior_Reachability.get() then
+    if self#at_least_one_prop kf bhvs.spec_behavior (Kstmt stmt) then
       begin
 	let stmt_bhvs = bhvs.spec_behavior in
 	let ins = self#pre ~pre_entry_point:false kf stmt_bhvs (Kstmt stmt) in
@@ -1538,21 +1527,8 @@ class gather_insertions props cwd = object(self)
 	let str = Format.sprintf "@@FC:REACHABLE_STMT:%i" stmt.sid in
 	self#insert (BegStmt stmt.sid) (Instru(self#pc_to_fc str))
       end;
-    let kf = Kernel_function.find_englobing_kf stmt in
     let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
-    | If(_exp,b1,b2,_loc) ->
-       let add_block_reachability b = match b.bstmts with
-	 | first_stmt :: _ ->
-	    let dkey = Options.dkey_reach in
-      	    Options.Self.debug ~dkey "stmt %i to reach" first_stmt.sid;
-	    States.Unreachable_Stmts.replace first_stmt.sid (first_stmt, kf);
-      	    stmts_to_reach <- first_stmt.sid :: stmts_to_reach
-      	 | _ -> ()
-       in
-       add_block_reachability b1;
-       add_block_reachability b2;
-       Cil.DoChildren
     | Loop _ when cwd <> None && (Extlib.the cwd).sid = stmt.sid->
        let kf = Kernel_function.find_englobing_kf stmt in
        let ca_l = Annotations.code_annot stmt in

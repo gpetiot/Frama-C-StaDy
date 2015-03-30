@@ -58,7 +58,6 @@ extern void __gmpz_add_ui(mpz_t, const mpz_t, unsigned long int);
 extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);
 extern void __gmpz_ui_sub(mpz_t, unsigned long int, const mpz_t);
 extern int pathcrawler_assert_exception(char*,int);
-extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
 /*@
@@ -205,18 +204,13 @@ int nextSubset(int *s, int n)
         pathcrawler_assert_exception("not established",4);
       }
       while (1) {
-        if (! (k >= 0)) {
-                          pathcrawler_to_framac("@FC:REACHABLE_STMT:5");
-                          break;
-                        }if(k < 0) {
-                           pathcrawler_assert_exception("non positive",0);
+        if (! (k >= 0)) break;if(k < 0) {
+                                pathcrawler_assert_exception("non positive",
+                                                             0);
         }
         int __stady_term_28;
         __stady_term_28 = k;
-        if (*(s + k) == 0) {
-                             pathcrawler_to_framac("@FC:REACHABLE_STMT:9");
-                             break;
-                           }
+        if (*(s + k) == 0) break;
         k --;mpz_t __stady_gmp_46;
         __gmpz_init_set_str(__stady_gmp_46,"1",10);
         mpz_t __stady_gmp_47;
@@ -259,10 +253,7 @@ int nextSubset(int *s, int n)
          
     }
     if (k == -1) {
-      {
-        pathcrawler_to_framac("@FC:REACHABLE_STMT:14");
-        __retres = -1;
-      }
+      __retres = -1;
       goto return_label;
     }
     *(s + k) = 1;
@@ -349,10 +340,7 @@ int nextSubset(int *s, int n)
         pathcrawler_assert_exception("not established",10);
       }
       while (1) {
-        if (! (i < n)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:21");
-                         break;
-                       }mpz_t __stady_gmp_77;
+        if (! (i < n)) break;mpz_t __stady_gmp_77;
         __gmpz_init_set_si(__stady_gmp_77,n);
         mpz_t __stady_gmp_78;
         __gmpz_init_set_si(__stady_gmp_78,i);

@@ -54,7 +54,6 @@ extern void __gmpz_init_set_str(mpz_t, const char*, int);
 extern void __gmpz_add_ui(mpz_t, const mpz_t, unsigned long int);
 extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);
 extern int pathcrawler_assert_exception(char*,int);
-extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
 int firstSubset_precond(int *s, int n)
@@ -166,10 +165,7 @@ void firstSubset(int *s, int n)
         pathcrawler_assert_exception("not established",7);
       }
       while (1) {
-        if (! (k < n)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:5");
-                         break;
-                       }mpz_t __stady_gmp_29;
+        if (! (k < n)) break;mpz_t __stady_gmp_29;
         __gmpz_init_set_si(__stady_gmp_29,n);
         mpz_t __stady_gmp_30;
         __gmpz_init_set_si(__stady_gmp_30,k);

@@ -46,11 +46,6 @@ module Properties = Self.String_list (struct
   let help = ""
 end)
 
-module Behavior_Reachability = Self.False (struct
-  let option_name = "-stady-bhv-reach"
-  let help = "compute reachability of each function's behavior"
-end)
-
 module CWD = Self.Int (struct
   let option_name = "-stady-cwd"
   let help = "detect contract weaknesses"
@@ -90,7 +85,6 @@ let dkey_generated_pl = Self.register_category "generated-pl"
 let dkey_socket = Self.register_category "socket"
 let dkey_generated_c = Self.register_category "generated-c"
 let dkey_properties = Self.register_category "properties"
-let dkey_reach = Self.register_category "reach"
 let dkey_insertions = Self.register_category "insertions"
 
 (* mpz_t type for GMP *)

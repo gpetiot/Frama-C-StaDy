@@ -54,7 +54,6 @@ extern void __gmpz_init_set_str(mpz_t, const char*, int);
 extern void __gmpz_add_ui(mpz_t, const mpz_t, unsigned long int);
 extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);
 extern int pathcrawler_assert_exception(char*,int);
-extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
 int num_of_precond(int n, int *t)
@@ -170,10 +169,7 @@ int num_of(int n, int *t)
         pathcrawler_assert_exception("not established",8);
       }
       while (1) {
-        if (! (i < n)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:6");
-                         break;
-                       }mpz_t __stady_gmp_32;
+        if (! (i < n)) break;mpz_t __stady_gmp_32;
         __gmpz_init_set_si(__stady_gmp_32,n);
         mpz_t __stady_gmp_33;
         __gmpz_init_set_si(__stady_gmp_33,i);
@@ -189,10 +185,7 @@ int num_of(int n, int *t)
         }
         mpz_t __stady_gmp_35;
         __gmpz_init_set(__stady_gmp_35,__stady_gmp_34);
-        if (*(t + i) == 0) {
-                             pathcrawler_to_framac("@FC:REACHABLE_STMT:9");
-                             num ++;
-                           }
+        if (*(t + i) == 0) num ++;
         i ++;mpz_t __stady_gmp_12;
         __gmpz_init_set_str(__stady_gmp_12,"0",10);
         mpz_t __stady_gmp_13;

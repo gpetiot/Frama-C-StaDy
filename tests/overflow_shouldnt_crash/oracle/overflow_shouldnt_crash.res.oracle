@@ -10,7 +10,6 @@ extern void __gmpz_init_set_si(mpz_t, signed long int);
 extern void __gmpz_init_set_str(mpz_t, const char*, int);
 extern void __gmpz_add(mpz_t, const mpz_t, const mpz_t);
 extern int pathcrawler_assert_exception(char*,int);
-extern void pathcrawler_to_framac(char*);
 int f_precond(int x)
 {
   return 1;
@@ -23,7 +22,6 @@ void f(int x)
   {
     if (x > 0) 
       {
-        pathcrawler_to_framac("@FC:REACHABLE_STMT:3");
         mpz_t __stady_gmp_0;
         __gmpz_init_set_si(__stady_gmp_0,x);
         mpz_t __stady_gmp_1;

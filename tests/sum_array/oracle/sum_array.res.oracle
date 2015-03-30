@@ -19,7 +19,6 @@ extern void __gmpz_add_ui(mpz_t, const mpz_t, unsigned long int);
 extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);
 extern int pathcrawler_assert_exception(char*,int);
 extern int pathcrawler_dimension(void*);
-extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
 int sum_array_precond(int *t, int n)
@@ -118,10 +117,7 @@ int sum_array(int *t, int n)
         pathcrawler_assert_exception("not established",9);
       }
       while (1) {
-        if (! (i < n)) {
-                         pathcrawler_to_framac("@FC:REACHABLE_STMT:6");
-                         break;
-                       }mpz_t __stady_gmp_41;
+        if (! (i < n)) break;mpz_t __stady_gmp_41;
         __gmpz_init_set_si(__stady_gmp_41,n);
         mpz_t __stady_gmp_42;
         __gmpz_init_set_si(__stady_gmp_42,i);

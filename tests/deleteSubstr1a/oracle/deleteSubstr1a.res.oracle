@@ -73,7 +73,6 @@ extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);
 extern void __gmpz_ui_sub(mpz_t, unsigned long int, const mpz_t);
 extern int pathcrawler_assert_exception(char*,int);
 extern int pathcrawler_dimension(void*);
-extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
 /*@ requires 0 < sublen <= strlen;
@@ -314,10 +313,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
         pathcrawler_assert_exception("not established",27);
       }
       while (1) {
-        if (! (i < strlen - sublen)) {
-                                       pathcrawler_to_framac("@FC:REACHABLE_STMT:6");
-                                       break;
-                                     }mpz_t __stady_gmp_98;
+        if (! (i < strlen - sublen)) break;mpz_t __stady_gmp_98;
         __gmpz_init_set_si(__stady_gmp_98,strlen);
         mpz_t __stady_gmp_99;
         __gmpz_init_set_si(__stady_gmp_99,sublen);
@@ -403,10 +399,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
               pathcrawler_assert_exception("not established",23);
             }
             while (1) {
-              if (! (j < sublen)) {
-                                    pathcrawler_to_framac("@FC:REACHABLE_STMT:13");
-                                    break;
-                                  }mpz_t __stady_gmp_63;
+              if (! (j < sublen)) break;mpz_t __stady_gmp_63;
               __gmpz_init_set_si(__stady_gmp_63,sublen);
               mpz_t __stady_gmp_64;
               __gmpz_init_set_si(__stady_gmp_64,j);
@@ -422,11 +415,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
               }
               mpz_t __stady_gmp_66;
               __gmpz_init_set(__stady_gmp_66,__stady_gmp_65);
-              if ((int)*(str + (i + j)) != (int)*(substr + j)) {
-                                                                 pathcrawler_to_framac
-                                                                 ("@FC:REACHABLE_STMT:17");
-                                                                 break;
-                                                               }
+              if ((int)*(str + (i + j)) != (int)*(substr + j)) break;
               j ++;mpz_t __stady_gmp_49;
               __gmpz_init_set_str(__stady_gmp_49,"0",10);
               mpz_t __stady_gmp_50;
@@ -503,10 +492,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
                
           }
           if (j == sublen) {
-            {
-              pathcrawler_to_framac("@FC:REACHABLE_STMT:23");
-              __retres = i;
-            }
+            __retres = i;
             goto return_label;
           }
         }
@@ -925,35 +911,23 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
     int k;
     start = find_substr(str,strlen,substr,sublen);
     if (start == -1) {
-      {
-        pathcrawler_to_framac("@FC:REACHABLE_STMT:31");
-        k = 0;
-      }
+      k = 0;
       while (1) {
-        if (! (k < strlen)) {
-                              pathcrawler_to_framac("@FC:REACHABLE_STMT:35");
-                              break;
-                            }*(dest + k) = *(str + k);
-                             k ++;}
+        if (! (k < strlen)) break;*(dest + k) = *(str + k);
+                                  k ++;}
          
       __retres = 0;
       goto return_label;
     }
     j = 0;
     while (1) {
-      if (! (j < start)) {
-                           pathcrawler_to_framac("@FC:REACHABLE_STMT:44");
-                           break;
-                         }*(dest + j) = *(str + j);
-                          j ++;}
+      if (! (j < start)) break;*(dest + j) = *(str + j);
+                               j ++;}
        
     j = start;
     while (1) {
-      if (! (j < strlen - sublen)) {
-                                     pathcrawler_to_framac("@FC:REACHABLE_STMT:51");
-                                     break;
-                                   }*(dest + j) = *(str + (j + sublen));
-                                    j ++;}
+      if (! (j < strlen - sublen)) break;*(dest + j) = *(str + (j + sublen));
+                                         j ++;}
        
     __retres = 1;
     return_label:

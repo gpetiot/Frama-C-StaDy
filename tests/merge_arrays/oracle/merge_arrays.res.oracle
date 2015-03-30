@@ -68,7 +68,6 @@ extern void __gmpz_add(mpz_t, const mpz_t, const mpz_t);
 extern void __gmpz_add_ui(mpz_t, const mpz_t, unsigned long int);
 extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);
 extern int pathcrawler_assert_exception(char*,int);
-extern void pathcrawler_to_framac(char*);
 extern void* malloc(unsigned long);
 extern void free(void*);
 int merge_arrays_precond(int *t1, int *t2, int *t3, int l1, int l2)
@@ -335,18 +334,9 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       }
       while (1) {
         if (i < l1) {
-          {
-            pathcrawler_to_framac("@FC:REACHABLE_STMT:8");
-            if (! (j < l2)) {
-                              pathcrawler_to_framac("@FC:REACHABLE_STMT:9");
-                              break;
-                            }
-          }
+          if (! (j < l2)) break;
         }
-        else {
-               pathcrawler_to_framac("@FC:REACHABLE_STMT:10");
-               break;
-             }mpz_t __stady_gmp_59;
+        else break;mpz_t __stady_gmp_59;
         __gmpz_init_set_si(__stady_gmp_59,l1);
         mpz_t __stady_gmp_60;
         __gmpz_init_set_si(__stady_gmp_60,l2);
@@ -370,17 +360,11 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         mpz_t __stady_gmp_64;
         __gmpz_init_set(__stady_gmp_64,__stady_gmp_63);
         if (*(t1 + i) < *(t2 + j)) {
-          {
-            pathcrawler_to_framac("@FC:REACHABLE_STMT:14");
-            *(t3 + k) = *(t1 + i);
-          }
+          *(t3 + k) = *(t1 + i);
           i ++;
         }
         else {
-          {
-            pathcrawler_to_framac("@FC:REACHABLE_STMT:16");
-            *(t3 + k) = *(t2 + j);
-          }
+          *(t3 + k) = *(t2 + j);
           j ++;
         }
         k ++;mpz_t __stady_gmp_33;
@@ -556,10 +540,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         pathcrawler_assert_exception("not established",16);
       }
       while (1) {
-        if (! (i < l1)) {
-                          pathcrawler_to_framac("@FC:REACHABLE_STMT:22");
-                          break;
-                        }mpz_t __stady_gmp_94;
+        if (! (i < l1)) break;mpz_t __stady_gmp_94;
         __gmpz_init_set_si(__stady_gmp_94,l1);
         mpz_t __stady_gmp_95;
         __gmpz_init_set_si(__stady_gmp_95,i);
@@ -727,10 +708,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         pathcrawler_assert_exception("not established",21);
       }
       while (1) {
-        if (! (j < l2)) {
-                          pathcrawler_to_framac("@FC:REACHABLE_STMT:30");
-                          break;
-                        }mpz_t __stady_gmp_125;
+        if (! (j < l2)) break;mpz_t __stady_gmp_125;
         __gmpz_init_set_si(__stady_gmp_125,l2);
         mpz_t __stady_gmp_126;
         __gmpz_init_set_si(__stady_gmp_126,j);

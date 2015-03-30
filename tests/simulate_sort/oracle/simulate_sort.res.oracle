@@ -54,7 +54,6 @@ extern void __gmpz_add(mpz_t, const mpz_t, const mpz_t);
 extern void __gmpz_add_ui(mpz_t, const mpz_t, unsigned long int);
 extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);
 extern int pathcrawler_dimension(void*);
-extern void pathcrawler_to_framac(char*);
 extern int pathcrawler_assume_exception(char*,int);
 extern void* malloc(unsigned long);
 extern void free(void*);
@@ -91,12 +90,9 @@ void main(void)
     n = 4;
     i = 0;
     while (1) {
-      if (! (i < n)) {
-                       pathcrawler_to_framac("@FC:REACHABLE_STMT:6");
-                       break;
-                     }t[i] = (13 - i) * ((i % 2) * 2 - 1);
-                      t_before[i] = t[i];
-                      i ++;}
+      if (! (i < n)) break;t[i] = (13 - i) * ((i % 2) * 2 - 1);
+                           t_before[i] = t[i];
+                           i ++;}
        
     {
       __stady_fct_0(t,n);
@@ -105,11 +101,8 @@ void main(void)
     printf("before:\t after:\n");
     i = 0;
     while (1) {
-      if (! (i < n)) {
-                       pathcrawler_to_framac("@FC:REACHABLE_STMT:17");
-                       break;
-                     }printf("%i \t %i\n",t_before[i],t[i]);
-                      i ++;}
+      if (! (i < n)) break;printf("%i \t %i\n",t_before[i],t[i]);
+                           i ++;}
        
     printf("\n");
     return;

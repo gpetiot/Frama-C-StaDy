@@ -85,14 +85,6 @@ let process_test_case s =
 let process_nb_test_cases s = States.Nb_test_cases.set (int_of_string s)
 
 let process_final_status () = States.All_Paths.set true
-    
-let process_reachable_stmt s =
-  States.Unreachable_Stmts.remove (int_of_string s)
-
-let process_reachable_bhv s =
-  let id = int_of_string s in
-  let kf,bhv,_ = States.Behavior_Reachability.find id in
-  States.Behavior_Reachability.replace id (kf,bhv,true)
 
 
 (* le mot-clé au début de la chaîne permet de savoir que faire des données
@@ -107,13 +99,7 @@ let process_string s =
       if s1 = "NbTC" then process_nb_test_cases s2
       else
 	if s = "FinalStatus|OK" then process_final_status ()
-	else
-	  let s1, s2 = Extlib.string_split s 13 in
-	  if s1 = "REACHABLE_BHV" then process_reachable_bhv s2
-	  else
-	    let s1, s2 = Extlib.string_split s 14 in
-	    if s1 = "REACHABLE_STMT" then process_reachable_stmt s2
-	    else assert false
+	else assert false
   with _ -> Options.Self.debug ~dkey:Options.dkey_socket "'%s' not processed" s
 
 
