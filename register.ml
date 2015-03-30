@@ -171,10 +171,18 @@ let selected_props() =
 let compute_props ?(props=selected_props()) ?cwd () =
   let cwd = match cwd with
     | Some x -> Some x
+    | None when Options.CWD.get() = -500 (* default value *) -> None
     | None ->
       let sid = Options.CWD.get() in
       try let stmt, _ = Kernel_function.find_from_sid sid in Some stmt
-      with _ -> None
+      with _ -> Options.Self.feedback ~once:true "stmt %i not found" sid; None
+  in
+  let cwd = match cwd with
+    | Some {skind=Instr(Call _)|Loop _} -> cwd
+    | Some x ->
+       Options.Self.feedback ~once:true "stmt %i not a Call nor a Loop" x.sid;
+       None
+    | None -> None
   in
   let files = Kernel.Files.get() in
   let fname = Filename.chop_extension (Filename.basename (List.hd files)) in
