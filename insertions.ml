@@ -1591,9 +1591,6 @@ class gather_insertions props cwd = object(self)
 	 ins @ ins_assumes @ [ins_bhv]
        in
        let ins_body = Annotations.fold_behaviors on_bhv kf [] in
-       (* if the function called returns a value (into a variable r),
-	* we declare a fresh global variable (new input)
-	* we affect the value of this new input to the variable __retres *)
        let decl_retres, aff_retres, ret_retres = match ret with
 	 | Some r ->
 	    let ty = Cil.typeOfLval r in
