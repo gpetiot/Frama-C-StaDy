@@ -34,9 +34,9 @@ let process_test_case s =
       try States.CW_counter_examples.find prop
       with Not_found -> Datatype.String.Hashtbl.create 16
     in
-    let msg, stmt, var_tbl =
+    let msg, stmts, var_tbl =
       try Datatype.String.Hashtbl.find file_tbl str_tc
-      with Not_found -> msg, stmt, Datatype.String.Hashtbl.create 16
+      with Not_found -> msg, [stmt], Datatype.String.Hashtbl.create 16
     in
     let on_pair (var, value) =
       let i, c, s =
@@ -52,7 +52,7 @@ let process_test_case s =
       else Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
     in
     List.iter on_pair list_entries;
-    Datatype.String.Hashtbl.replace file_tbl str_tc (msg, stmt, var_tbl);
+    Datatype.String.Hashtbl.replace file_tbl str_tc (msg, stmts, var_tbl);
     States.CW_counter_examples.replace prop file_tbl
   with
     _ ->

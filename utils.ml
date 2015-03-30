@@ -191,12 +191,16 @@ let pp_ce fmt p =
        Datatype.String.Hashtbl.iter_sorted on_var var_states;
        n-1
   in
-  let on_cw f (msg, stmt, var_states) = function
+  let on_cw f (msg, stmts, var_states) = function
     | 0 -> 0
     | n ->
        Format.fprintf
-	 fmt "CW of @[%a@] for @[%a@] %a@\n" pp_stmt stmt pp_prop p pp_msg msg;
-       Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Cil_datatype.Stmt.loc stmt);
+	 fmt "CW of @[%a@] for @[%a@] %a@\n"
+	 (Pretty_utils.pp_list pp_stmt) stmts pp_prop p pp_msg msg;
+       let on_stmt s =
+	 Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Cil_datatype.Stmt.loc s)
+       in
+       List.iter on_stmt stmts;
        Format.fprintf fmt "TEST DRIVER: %s@\n" f;
        Datatype.String.Hashtbl.iter_sorted on_var var_states;
        n-1

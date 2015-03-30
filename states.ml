@@ -17,8 +17,10 @@ module NC_counter_examples =
     (struct
       let name = "NC_counter_examples"
       let dependencies = [Ast.self]
-      let size = 64
+      let size = 16
      end)
+
+module Stmt_list = Datatype.List (Cil_datatype.Stmt)
 
 module CW_counter_examples =
   State_builder.Hashtbl
@@ -26,14 +28,14 @@ module CW_counter_examples =
     (Datatype.String.Hashtbl.Make (* file *)
        (Datatype.Triple
 	  (Datatype.String) (* msg *)
-	  (Cil_datatype.Stmt) (* statement whose contract is too weak *)
+	  (Stmt_list) (* statements whose contract is too weak *)
 	  (Var_states)
        )
     )
     (struct
       let name = "CW_counter_examples"
       let dependencies = [Ast.self]
-      let size = 64
+      let size = 16
      end)
 
 module Nb_test_cases = State_builder.Zero_ref
@@ -82,5 +84,5 @@ module Externals =
     (struct
       let name = "Externals"
       let dependencies = [Ast.self]
-      let size = 31
+      let size = 64
      end)
