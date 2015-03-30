@@ -113,15 +113,11 @@ class gather_insertions props cwd = object(self)
   val mutable result_varinfo = None
   val mutable in_old_term = false
   val mutable in_old_ptr = false
-  val mutable bhv_to_reach_cpt = 0
   val mutable visited_globals = []
   val mutable last_Z_var_id = -1
   val mutable last_ctype_var_id = -1
   val mutable last_pred_var_id = -1
   val mutable last_fct_id = -1
-
-  (* list of stmt ids (sids) used for testing reachibility of some stmts *)
-  val mutable stmts_to_reach = []
 
   (* we can only modify the property_status of the properties that have really
      been translated into pathcrawler_assert_exception *)
@@ -1522,11 +1518,6 @@ class gather_insertions props cwd = object(self)
     List.fold_left on_term [] assigns
 
   method! vstmt_aux stmt =
-    if List.mem stmt.sid stmts_to_reach then
-      begin
-	let str = Format.sprintf "@@FC:REACHABLE_STMT:%i" stmt.sid in
-	self#insert (BegStmt stmt.sid) (Instru(self#pc_to_fc str))
-      end;
     let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
     | Loop _ when cwd <> None && (Extlib.the cwd).sid = stmt.sid->
