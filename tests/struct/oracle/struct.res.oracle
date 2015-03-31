@@ -81,32 +81,32 @@ int f(struct S *s, struct S *s2, int n)
   struct S *old_s;
   struct S *old_ptr_s;
   old_s = s;
-  mpz_t __stady_gmp_0;
-  __gmpz_init_set_str(__stady_gmp_0,"1",10);
-  unsigned long __stady_term_0;
-  __stady_term_0 = __gmpz_get_ui(__stady_gmp_0);
-  __gmpz_clear(__stady_gmp_0);
-  unsigned long __stady_term_1;
-  old_ptr_s = (struct S *)malloc(__stady_term_0 * (unsigned long)sizeof(struct S));
-  __stady_term_1 = 0;
-  while(__stady_term_1 < __stady_term_0) {
-    *(old_ptr_s + __stady_term_1) = *(s + __stady_term_1);
-    __stady_term_1 ++;
+  mpz_t __sd_Z_cst_0;
+  __gmpz_init_set_str(__sd_Z_cst_0,"1",10);
+  unsigned long __sd_to_ctype_0;
+  __sd_to_ctype_0 = __gmpz_get_ui(__sd_Z_cst_0);
+  __gmpz_clear(__sd_Z_cst_0);
+  unsigned long __sd_iter_0;
+  old_ptr_s = (struct S *)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(struct S));
+  __sd_iter_0 = 0;
+  while(__sd_iter_0 < __sd_to_ctype_0) {
+    *(old_ptr_s + __sd_iter_0) = *(s + __sd_iter_0);
+    __sd_iter_0 ++;
   }
   struct S *old_s2;
   struct S *old_ptr_s2;
   old_s2 = s2;
-  mpz_t __stady_gmp_1;
-  __gmpz_init_set_str(__stady_gmp_1,"1",10);
-  unsigned long __stady_term_2;
-  __stady_term_2 = __gmpz_get_ui(__stady_gmp_1);
-  __gmpz_clear(__stady_gmp_1);
-  unsigned long __stady_term_3;
-  old_ptr_s2 = (struct S *)malloc(__stady_term_2 * (unsigned long)sizeof(struct S));
-  __stady_term_3 = 0;
-  while(__stady_term_3 < __stady_term_2) {
-    *(old_ptr_s2 + __stady_term_3) = *(s2 + __stady_term_3);
-    __stady_term_3 ++;
+  mpz_t __sd_Z_cst_1;
+  __gmpz_init_set_str(__sd_Z_cst_1,"1",10);
+  unsigned long __sd_to_ctype_1;
+  __sd_to_ctype_1 = __gmpz_get_ui(__sd_Z_cst_1);
+  __gmpz_clear(__sd_Z_cst_1);
+  unsigned long __sd_iter_1;
+  old_ptr_s2 = (struct S *)malloc(__sd_to_ctype_1 * (unsigned long)sizeof(struct S));
+  __sd_iter_1 = 0;
+  while(__sd_iter_1 < __sd_to_ctype_1) {
+    *(old_ptr_s2 + __sd_iter_1) = *(s2 + __sd_iter_1);
+    __sd_iter_1 ++;
   }
   int old_n;
   old_n = n;

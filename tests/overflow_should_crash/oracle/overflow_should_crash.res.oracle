@@ -21,22 +21,22 @@ void f(int x)
   old_x = x;
   {
     {
-      mpz_t __stady_gmp_0;
-      __gmpz_init_set_si(__stady_gmp_0,x);
-      mpz_t __stady_gmp_1;
-      __gmpz_init_set_str(__stady_gmp_1,"1",10);
-      mpz_t __stady_gmp_2;
-      __gmpz_init(__stady_gmp_2);
-      __gmpz_add(__stady_gmp_2,__stady_gmp_0,__stady_gmp_1);
-      __gmpz_clear(__stady_gmp_0);
-      __gmpz_clear(__stady_gmp_1);
-      mpz_t __stady_gmp_3;
-      __gmpz_init_set_str(__stady_gmp_3,"2147483647",10);
-      int __stady_term_0;
-      __stady_term_0 = __gmpz_cmp(__stady_gmp_2,__stady_gmp_3);
-      __gmpz_clear(__stady_gmp_2);
-      __gmpz_clear(__stady_gmp_3);
-      if(! (__stady_term_0 <= 0)) {
+      mpz_t __sd_Z_to_Z_0;
+      __gmpz_init_set_si(__sd_Z_to_Z_0,x);
+      mpz_t __sd_Z_cst_0;
+      __gmpz_init_set_str(__sd_Z_cst_0,"1",10);
+      mpz_t __sd_Z_add_0;
+      __gmpz_init(__sd_Z_add_0);
+      __gmpz_add(__sd_Z_add_0,__sd_Z_to_Z_0,__sd_Z_cst_0);
+      __gmpz_clear(__sd_Z_to_Z_0);
+      __gmpz_clear(__sd_Z_cst_0);
+      mpz_t __sd_Z_cst_1;
+      __gmpz_init_set_str(__sd_Z_cst_1,"2147483647",10);
+      int __sd_le_0;
+      __sd_le_0 = __gmpz_cmp(__sd_Z_add_0,__sd_Z_cst_1);
+      __gmpz_clear(__sd_Z_add_0);
+      __gmpz_clear(__sd_Z_cst_1);
+      if(! (__sd_le_0 <= 0)) {
         pathcrawler_assert_exception("",0);
       }
       ;

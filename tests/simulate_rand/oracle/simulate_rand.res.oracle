@@ -47,9 +47,9 @@ extern int pathcrawler_assume_exception(char*,int);
 #include "/usr/local/share/frama-c/stady/nondet.c"
 extern int rand();
 
-int __stady_fct_2();
-int __stady_fct_1();
-int __stady_fct_0();
+int __sd_rand_mod_2();
+int __sd_rand_mod_1();
+int __sd_rand_mod_0();
 int main_precond(void)
 {
   return 1;
@@ -62,15 +62,15 @@ void main(void)
     int y;
     int z;
     {
-      x = __stady_fct_0();
+      x = __sd_rand_mod_0();
       
     }
     {
-      y = __stady_fct_1();
+      y = __sd_rand_mod_1();
       
     }
     {
-      z = __stady_fct_2();
+      z = __sd_rand_mod_2();
       
     }
     {
@@ -89,17 +89,17 @@ void main(void)
   }
 }
 
-int __stady_fct_2() {
+int __sd_rand_mod_2() {
   int __retres;
   __retres = nondet_sint();
   return __retres;
 }
-int __stady_fct_1() {
+int __sd_rand_mod_1() {
   int __retres;
   __retres = nondet_sint();
   return __retres;
 }
-int __stady_fct_0() {
+int __sd_rand_mod_0() {
   int __retres;
   __retres = nondet_sint();
   return __retres;
