@@ -1200,8 +1200,14 @@ class gather_insertions props cwd = object(self)
 
   method private pc_exc str i =
     let cwd_str = match cwd with
-      | None -> ""
-      | Some x -> Format.sprintf "%i$" x.sid
+      | [] -> ""
+      | x ->
+	 let rec aux ret = function
+	   | [] -> ret
+	   | [h] -> aux (ret ^ (string_of_int h)) []
+	   | h :: t -> aux (ret ^ (string_of_int h) ^ ",") t
+	 in
+	 Format.sprintf "%s$" (aux "" x)
     in
     let str = Cil.mkString ~loc (cwd_str ^ str) in
     let const = CInt64(Integer.of_int i, IInt, Some(string_of_int i)) in
@@ -1397,7 +1403,7 @@ class gather_insertions props cwd = object(self)
   method! vstmt_aux stmt =
     let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
-    | Loop _ when cwd <> None && (Extlib.the cwd).sid = stmt.sid->
+    | Loop _ when List.mem stmt.sid cwd ->
        let kf = Kernel_function.find_englobing_kf stmt in
        let ca_l = Annotations.code_annot stmt in
        let ca_l = List.map (fun x -> x.annot_content) ca_l in
@@ -1425,8 +1431,7 @@ class gather_insertions props cwd = object(self)
        List.iter (self#insert (BegStmt stmt.sid)) ins_h;
        Cil.DoChildren
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
-	 when (cwd <> None && (Extlib.the cwd).sid = stmt.sid)
-	      || (List.mem fct_varinfo.vname sim_funcs) ->
+	 when List.mem stmt.sid cwd || List.mem fct_varinfo.vname sim_funcs ->
        let kf = Globals.Functions.get fct_varinfo in
        let formals = Kernel_function.get_formals kf in
        let locals = [] in

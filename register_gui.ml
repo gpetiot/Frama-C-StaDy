@@ -21,11 +21,11 @@ open Cil_types
 let to_do_on_select
       (popup_factory:GMenu.menu GMenu.factory)
       (main_ui:Design.main_window_extension_points) button_nb selected
-      (compute: ?props:Property.t list -> ?cwd:stmt -> unit -> unit) =
+      (compute: ?props:Property.t list -> ?cwd:int list -> unit -> unit) =
   match selected with
   | Pretty_source.PStmt(_,({skind=Loop _} as stmt))
   | Pretty_source.PStmt(_,({skind=Instr(Call _)} as stmt)) when button_nb = 3 ->
-     let callback() = compute ~cwd:stmt (); main_ui#redisplay() in
+     let callback() = compute ~cwd:[stmt.sid] (); main_ui#redisplay() in
      ignore (popup_factory#add_item "Check for Spec. Weakness" ~callback)
   | Pretty_source.PIP prop when button_nb = 1 ->
      main_ui#pretty_information "%a" Utils.pp_ce prop

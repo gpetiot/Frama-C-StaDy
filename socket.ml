@@ -28,6 +28,7 @@ let process_test_case s =
   in
   try (* '$' only present when a CW is found *)
     let str_stmt_id, msg = cut_sep '$' msg in
+    (* TODO: str_stmt is a comma-separated list of sid, must split it ! *)
     let stmt_id = int_of_string str_stmt_id in
     let stmt, _ = Kernel_function.find_from_sid stmt_id in
     let file_tbl =
