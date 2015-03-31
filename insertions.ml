@@ -1356,10 +1356,6 @@ class gather_insertions props cwd = object(self)
       | Writes froms -> (List.map fst froms) @ ret
     in
     let assigns = List.fold_left merge_assigns [] assigns in
-    (* for each term of the assigns clause,
-     * - we translate the term in C
-     * - we declare a fresh global variable (new input)
-     * - we affect the value of this new input to the term *)
     let on_term ret term =
       let t = term.it_content in
       match t.term_node with
