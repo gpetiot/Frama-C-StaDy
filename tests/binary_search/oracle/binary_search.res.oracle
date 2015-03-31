@@ -134,16 +134,15 @@ int binary_search(int *arr, int length, int query)
   mpz_t __stady_gmp_20;
   __gmpz_init_set_si(__stady_gmp_20,length);
   unsigned long __stady_term_9;
-  unsigned long __stady_term_10;
-  __stady_term_10 = __gmpz_get_ui(__stady_gmp_20);
-  old_ptr_arr = (int *)malloc(__stady_term_10 * (unsigned long)sizeof(int));
-  __stady_term_10 = __gmpz_get_ui(__stady_gmp_20);
-  __stady_term_9 = 0;
-  while(__stady_term_9 < __stady_term_10) {
-    *(old_ptr_arr + __stady_term_9) = *(arr + __stady_term_9);
-    __stady_term_9 ++;
-  }
+  __stady_term_9 = __gmpz_get_ui(__stady_gmp_20);
   __gmpz_clear(__stady_gmp_20);
+  unsigned long __stady_term_10;
+  old_ptr_arr = (int *)malloc(__stady_term_9 * (unsigned long)sizeof(int));
+  __stady_term_10 = 0;
+  while(__stady_term_10 < __stady_term_9) {
+    *(old_ptr_arr + __stady_term_10) = *(arr + __stady_term_10);
+    __stady_term_10 ++;
+  }
   int old_length;
   old_length = length;
   int old_query;

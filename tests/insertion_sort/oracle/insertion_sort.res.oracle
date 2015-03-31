@@ -77,16 +77,15 @@ void insertion_sort(int *t, int n)
   mpz_t __stady_gmp_8;
   __gmpz_init_set_si(__stady_gmp_8,n);
   unsigned long __stady_term_3;
-  unsigned long __stady_term_4;
-  __stady_term_4 = __gmpz_get_ui(__stady_gmp_8);
-  old_ptr_t = (int *)malloc(__stady_term_4 * (unsigned long)sizeof(int));
-  __stady_term_4 = __gmpz_get_ui(__stady_gmp_8);
-  __stady_term_3 = 0;
-  while(__stady_term_3 < __stady_term_4) {
-    *(old_ptr_t + __stady_term_3) = *(t + __stady_term_3);
-    __stady_term_3 ++;
-  }
+  __stady_term_3 = __gmpz_get_ui(__stady_gmp_8);
   __gmpz_clear(__stady_gmp_8);
+  unsigned long __stady_term_4;
+  old_ptr_t = (int *)malloc(__stady_term_3 * (unsigned long)sizeof(int));
+  __stady_term_4 = 0;
+  while(__stady_term_4 < __stady_term_3) {
+    *(old_ptr_t + __stady_term_4) = *(t + __stady_term_4);
+    __stady_term_4 ++;
+  }
   int old_n;
   old_n = n;
   {

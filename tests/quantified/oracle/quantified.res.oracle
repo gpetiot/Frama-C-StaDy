@@ -240,28 +240,26 @@ void f(int **t, int n)
   mpz_t __stady_gmp_19;
   __gmpz_init_set_si(__stady_gmp_19,n);
   unsigned long __stady_term_12;
+  __stady_term_12 = __gmpz_get_ui(__stady_gmp_19);
+  __gmpz_clear(__stady_gmp_19);
   unsigned long __stady_term_13;
-  __stady_term_13 = __gmpz_get_ui(__stady_gmp_19);
-  old_ptr_t = (int **)malloc(__stady_term_13 * (unsigned long)sizeof(int *));
-  __stady_term_13 = __gmpz_get_ui(__stady_gmp_19);
-  __stady_term_12 = 0;
-  while(__stady_term_12 < __stady_term_13) {
+  old_ptr_t = (int **)malloc(__stady_term_12 * (unsigned long)sizeof(int *));
+  __stady_term_13 = 0;
+  while(__stady_term_13 < __stady_term_12) {
     mpz_t __stady_gmp_20;
     __gmpz_init_set_si(__stady_gmp_20,n);
     unsigned long __stady_term_14;
-    unsigned long __stady_term_15;
-    __stady_term_15 = __gmpz_get_ui(__stady_gmp_20);
-    *(old_ptr_t + __stady_term_12) = (int *)malloc(__stady_term_15 * (unsigned long)sizeof(int));
-    __stady_term_15 = __gmpz_get_ui(__stady_gmp_20);
-    __stady_term_14 = 0;
-    while(__stady_term_14 < __stady_term_15) {
-      *(*(old_ptr_t + __stady_term_12) + __stady_term_14) = *(*(t + __stady_term_12) + __stady_term_14);
-      __stady_term_14 ++;
-    }
+    __stady_term_14 = __gmpz_get_ui(__stady_gmp_20);
     __gmpz_clear(__stady_gmp_20);
-    __stady_term_12 ++;
+    unsigned long __stady_term_15;
+    *(old_ptr_t + __stady_term_13) = (int *)malloc(__stady_term_14 * (unsigned long)sizeof(int));
+    __stady_term_15 = 0;
+    while(__stady_term_15 < __stady_term_14) {
+      *(*(old_ptr_t + __stady_term_13) + __stady_term_15) = *(*(t + __stady_term_13) + __stady_term_15);
+      __stady_term_15 ++;
+    }
+    __stady_term_13 ++;
   }
-  __gmpz_clear(__stady_gmp_19);
   int old_n;
   old_n = n;
   {
@@ -270,12 +268,12 @@ void f(int **t, int n)
     __gmpz_init_set_si(__stady_gmp_21,n);
     unsigned long __stady_term_17;
     __stady_term_17 = __gmpz_get_ui(__stady_gmp_21);
+    __gmpz_clear(__stady_gmp_21);
     __stady_term_16 = 0;
     while(__stady_term_16 < __stady_term_17) {
       free(*(old_ptr_t + __stady_term_16));
       __stady_term_16 ++;
     }
-    __gmpz_clear(__stady_gmp_21);
     free(old_ptr_t);
     return;
   }

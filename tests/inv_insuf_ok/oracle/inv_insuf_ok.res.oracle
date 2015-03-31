@@ -86,16 +86,15 @@ void f(int *t, int x)
   __gmpz_clear(__stady_gmp_0);
   __gmpz_clear(__stady_gmp_1);
   unsigned long __stady_term_0;
-  unsigned long __stady_term_1;
-  __stady_term_1 = __gmpz_get_ui(__stady_gmp_2);
-  old_ptr_t = (int *)malloc(__stady_term_1 * (unsigned long)sizeof(int));
-  __stady_term_1 = __gmpz_get_ui(__stady_gmp_2);
-  __stady_term_0 = 0;
-  while(__stady_term_0 < __stady_term_1) {
-    *(old_ptr_t + __stady_term_0) = *(t + __stady_term_0);
-    __stady_term_0 ++;
-  }
+  __stady_term_0 = __gmpz_get_ui(__stady_gmp_2);
   __gmpz_clear(__stady_gmp_2);
+  unsigned long __stady_term_1;
+  old_ptr_t = (int *)malloc(__stady_term_0 * (unsigned long)sizeof(int));
+  __stady_term_1 = 0;
+  while(__stady_term_1 < __stady_term_0) {
+    *(old_ptr_t + __stady_term_1) = *(t + __stady_term_1);
+    __stady_term_1 ++;
+  }
   int old_x;
   old_x = x;
   {
@@ -131,13 +130,13 @@ void f(int *t, int x)
           pathcrawler_assume_exception("",0);
         }
         mpz_t __stady_gmp_7;
-        __gmpz_init_set_str(__stady_gmp_7,"0",10);
+        __gmpz_init_set_si(__stady_gmp_7,found);
         mpz_t __stady_gmp_8;
-        __gmpz_init_set_si(__stady_gmp_8,found);
+        __gmpz_init_set_str(__stady_gmp_8,"0",10);
         int __stady_term_4;
-        __stady_term_4 = __gmpz_cmp(__stady_gmp_8,__stady_gmp_7);
-        __gmpz_clear(__stady_gmp_8);
+        __stady_term_4 = __gmpz_cmp(__stady_gmp_7,__stady_gmp_8);
         __gmpz_clear(__stady_gmp_7);
+        __gmpz_clear(__stady_gmp_8);
         int __stady_pred_1;
         __stady_pred_1 = 0;
         {
@@ -193,13 +192,13 @@ void f(int *t, int x)
         pathcrawler_assert_exception("3$not established",1);
       }
       mpz_t __stady_gmp_20;
-      __gmpz_init_set_str(__stady_gmp_20,"0",10);
+      __gmpz_init_set_si(__stady_gmp_20,found);
       mpz_t __stady_gmp_21;
-      __gmpz_init_set_si(__stady_gmp_21,found);
+      __gmpz_init_set_str(__stady_gmp_21,"0",10);
       int __stady_term_11;
-      __stady_term_11 = __gmpz_cmp(__stady_gmp_21,__stady_gmp_20);
-      __gmpz_clear(__stady_gmp_21);
+      __stady_term_11 = __gmpz_cmp(__stady_gmp_20,__stady_gmp_21);
       __gmpz_clear(__stady_gmp_20);
+      __gmpz_clear(__stady_gmp_21);
       int __stady_pred_4;
       __stady_pred_4 = 0;
       {
@@ -256,13 +255,13 @@ void f(int *t, int x)
           pathcrawler_assert_exception("3$not preserved",1);
         }
         mpz_t __stady_gmp_25;
-        __gmpz_init_set_str(__stady_gmp_25,"0",10);
+        __gmpz_init_set_si(__stady_gmp_25,found);
         mpz_t __stady_gmp_26;
-        __gmpz_init_set_si(__stady_gmp_26,found);
+        __gmpz_init_set_str(__stady_gmp_26,"0",10);
         int __stady_term_14;
-        __stady_term_14 = __gmpz_cmp(__stady_gmp_26,__stady_gmp_25);
-        __gmpz_clear(__stady_gmp_26);
+        __stady_term_14 = __gmpz_cmp(__stady_gmp_25,__stady_gmp_26);
         __gmpz_clear(__stady_gmp_25);
+        __gmpz_clear(__stady_gmp_26);
         int __stady_pred_5;
         __stady_pred_5 = 0;
         {
@@ -297,13 +296,13 @@ void f(int *t, int x)
     }
     {
       mpz_t __stady_gmp_30;
-      __gmpz_init_set_str(__stady_gmp_30,"0",10);
+      __gmpz_init_set_si(__stady_gmp_30,found);
       mpz_t __stady_gmp_31;
-      __gmpz_init_set_si(__stady_gmp_31,found);
+      __gmpz_init_set_str(__stady_gmp_31,"0",10);
       int __stady_term_17;
-      __stady_term_17 = __gmpz_cmp(__stady_gmp_31,__stady_gmp_30);
-      __gmpz_clear(__stady_gmp_31);
+      __stady_term_17 = __gmpz_cmp(__stady_gmp_30,__stady_gmp_31);
       __gmpz_clear(__stady_gmp_30);
+      __gmpz_clear(__stady_gmp_31);
       int __stady_pred_6;
       __stady_pred_6 = 0;
       {

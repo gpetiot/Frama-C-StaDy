@@ -133,16 +133,15 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   mpz_t __stady_gmp_6;
   __gmpz_init_set_si(__stady_gmp_6,iRight);
   unsigned long __stady_term_6;
-  unsigned long __stady_term_7;
-  __stady_term_7 = __gmpz_get_ui(__stady_gmp_6);
-  old_ptr_A = (int *)malloc(__stady_term_7 * (unsigned long)sizeof(int));
-  __stady_term_7 = __gmpz_get_ui(__stady_gmp_6);
-  __stady_term_6 = 0;
-  while(__stady_term_6 < __stady_term_7) {
-    *(old_ptr_A + __stady_term_6) = *(A + __stady_term_6);
-    __stady_term_6 ++;
-  }
+  __stady_term_6 = __gmpz_get_ui(__stady_gmp_6);
   __gmpz_clear(__stady_gmp_6);
+  unsigned long __stady_term_7;
+  old_ptr_A = (int *)malloc(__stady_term_6 * (unsigned long)sizeof(int));
+  __stady_term_7 = 0;
+  while(__stady_term_7 < __stady_term_6) {
+    *(old_ptr_A + __stady_term_7) = *(A + __stady_term_7);
+    __stady_term_7 ++;
+  }
   int old_iLeft;
   old_iLeft = iLeft;
   int old_iRight;
@@ -155,16 +154,15 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   mpz_t __stady_gmp_7;
   __gmpz_init_set_si(__stady_gmp_7,iEnd);
   unsigned long __stady_term_8;
-  unsigned long __stady_term_9;
-  __stady_term_9 = __gmpz_get_ui(__stady_gmp_7);
-  old_ptr_B = (int *)malloc(__stady_term_9 * (unsigned long)sizeof(int));
-  __stady_term_9 = __gmpz_get_ui(__stady_gmp_7);
-  __stady_term_8 = 0;
-  while(__stady_term_8 < __stady_term_9) {
-    *(old_ptr_B + __stady_term_8) = *(B + __stady_term_8);
-    __stady_term_8 ++;
-  }
+  __stady_term_8 = __gmpz_get_ui(__stady_gmp_7);
   __gmpz_clear(__stady_gmp_7);
+  unsigned long __stady_term_9;
+  old_ptr_B = (int *)malloc(__stady_term_8 * (unsigned long)sizeof(int));
+  __stady_term_9 = 0;
+  while(__stady_term_9 < __stady_term_8) {
+    *(old_ptr_B + __stady_term_9) = *(B + __stady_term_9);
+    __stady_term_9 ++;
+  }
   {
     int i0;
     int i1;
@@ -423,32 +421,30 @@ void CopyArray(int *A, int *B, int n)
   mpz_t __stady_gmp_43;
   __gmpz_init_set_si(__stady_gmp_43,n);
   unsigned long __stady_term_20;
-  unsigned long __stady_term_21;
-  __stady_term_21 = __gmpz_get_ui(__stady_gmp_43);
-  old_ptr_A = (int *)malloc(__stady_term_21 * (unsigned long)sizeof(int));
-  __stady_term_21 = __gmpz_get_ui(__stady_gmp_43);
-  __stady_term_20 = 0;
-  while(__stady_term_20 < __stady_term_21) {
-    *(old_ptr_A + __stady_term_20) = *(A + __stady_term_20);
-    __stady_term_20 ++;
-  }
+  __stady_term_20 = __gmpz_get_ui(__stady_gmp_43);
   __gmpz_clear(__stady_gmp_43);
+  unsigned long __stady_term_21;
+  old_ptr_A = (int *)malloc(__stady_term_20 * (unsigned long)sizeof(int));
+  __stady_term_21 = 0;
+  while(__stady_term_21 < __stady_term_20) {
+    *(old_ptr_A + __stady_term_21) = *(A + __stady_term_21);
+    __stady_term_21 ++;
+  }
   int *old_B;
   int *old_ptr_B;
   old_B = B;
   mpz_t __stady_gmp_44;
   __gmpz_init_set_si(__stady_gmp_44,n);
   unsigned long __stady_term_22;
-  unsigned long __stady_term_23;
-  __stady_term_23 = __gmpz_get_ui(__stady_gmp_44);
-  old_ptr_B = (int *)malloc(__stady_term_23 * (unsigned long)sizeof(int));
-  __stady_term_23 = __gmpz_get_ui(__stady_gmp_44);
-  __stady_term_22 = 0;
-  while(__stady_term_22 < __stady_term_23) {
-    *(old_ptr_B + __stady_term_22) = *(B + __stady_term_22);
-    __stady_term_22 ++;
-  }
+  __stady_term_22 = __gmpz_get_ui(__stady_gmp_44);
   __gmpz_clear(__stady_gmp_44);
+  unsigned long __stady_term_23;
+  old_ptr_B = (int *)malloc(__stady_term_22 * (unsigned long)sizeof(int));
+  __stady_term_23 = 0;
+  while(__stady_term_23 < __stady_term_22) {
+    *(old_ptr_B + __stady_term_23) = *(B + __stady_term_23);
+    __stady_term_23 ++;
+  }
   int old_n;
   old_n = n;
   {
@@ -614,32 +610,30 @@ void BottomUpSort(int n, int *A, int *B)
   mpz_t __stady_gmp_64;
   __gmpz_init_set_si(__stady_gmp_64,n);
   unsigned long __stady_term_34;
-  unsigned long __stady_term_35;
-  __stady_term_35 = __gmpz_get_ui(__stady_gmp_64);
-  old_ptr_A = (int *)malloc(__stady_term_35 * (unsigned long)sizeof(int));
-  __stady_term_35 = __gmpz_get_ui(__stady_gmp_64);
-  __stady_term_34 = 0;
-  while(__stady_term_34 < __stady_term_35) {
-    *(old_ptr_A + __stady_term_34) = *(A + __stady_term_34);
-    __stady_term_34 ++;
-  }
+  __stady_term_34 = __gmpz_get_ui(__stady_gmp_64);
   __gmpz_clear(__stady_gmp_64);
+  unsigned long __stady_term_35;
+  old_ptr_A = (int *)malloc(__stady_term_34 * (unsigned long)sizeof(int));
+  __stady_term_35 = 0;
+  while(__stady_term_35 < __stady_term_34) {
+    *(old_ptr_A + __stady_term_35) = *(A + __stady_term_35);
+    __stady_term_35 ++;
+  }
   int *old_B;
   int *old_ptr_B;
   old_B = B;
   mpz_t __stady_gmp_65;
   __gmpz_init_set_si(__stady_gmp_65,n);
   unsigned long __stady_term_36;
-  unsigned long __stady_term_37;
-  __stady_term_37 = __gmpz_get_ui(__stady_gmp_65);
-  old_ptr_B = (int *)malloc(__stady_term_37 * (unsigned long)sizeof(int));
-  __stady_term_37 = __gmpz_get_ui(__stady_gmp_65);
-  __stady_term_36 = 0;
-  while(__stady_term_36 < __stady_term_37) {
-    *(old_ptr_B + __stady_term_36) = *(B + __stady_term_36);
-    __stady_term_36 ++;
-  }
+  __stady_term_36 = __gmpz_get_ui(__stady_gmp_65);
   __gmpz_clear(__stady_gmp_65);
+  unsigned long __stady_term_37;
+  old_ptr_B = (int *)malloc(__stady_term_36 * (unsigned long)sizeof(int));
+  __stady_term_37 = 0;
+  while(__stady_term_37 < __stady_term_36) {
+    *(old_ptr_B + __stady_term_37) = *(B + __stady_term_37);
+    __stady_term_37 ++;
+  }
   {
     int width;
     width = 1;
@@ -917,16 +911,15 @@ void merge_sort(int *table, int l, int *ret)
   mpz_t __stady_gmp_124;
   __gmpz_init_set_si(__stady_gmp_124,l);
   unsigned long __stady_term_53;
-  unsigned long __stady_term_54;
-  __stady_term_54 = __gmpz_get_ui(__stady_gmp_124);
-  old_ptr_table = (int *)malloc(__stady_term_54 * (unsigned long)sizeof(int));
-  __stady_term_54 = __gmpz_get_ui(__stady_gmp_124);
-  __stady_term_53 = 0;
-  while(__stady_term_53 < __stady_term_54) {
-    *(old_ptr_table + __stady_term_53) = *(table + __stady_term_53);
-    __stady_term_53 ++;
-  }
+  __stady_term_53 = __gmpz_get_ui(__stady_gmp_124);
   __gmpz_clear(__stady_gmp_124);
+  unsigned long __stady_term_54;
+  old_ptr_table = (int *)malloc(__stady_term_53 * (unsigned long)sizeof(int));
+  __stady_term_54 = 0;
+  while(__stady_term_54 < __stady_term_53) {
+    *(old_ptr_table + __stady_term_54) = *(table + __stady_term_54);
+    __stady_term_54 ++;
+  }
   int old_l;
   old_l = l;
   int *old_ret;
@@ -935,16 +928,15 @@ void merge_sort(int *table, int l, int *ret)
   mpz_t __stady_gmp_125;
   __gmpz_init_set_si(__stady_gmp_125,l);
   unsigned long __stady_term_55;
-  unsigned long __stady_term_56;
-  __stady_term_56 = __gmpz_get_ui(__stady_gmp_125);
-  old_ptr_ret = (int *)malloc(__stady_term_56 * (unsigned long)sizeof(int));
-  __stady_term_56 = __gmpz_get_ui(__stady_gmp_125);
-  __stady_term_55 = 0;
-  while(__stady_term_55 < __stady_term_56) {
-    *(old_ptr_ret + __stady_term_55) = *(ret + __stady_term_55);
-    __stady_term_55 ++;
-  }
+  __stady_term_55 = __gmpz_get_ui(__stady_gmp_125);
   __gmpz_clear(__stady_gmp_125);
+  unsigned long __stady_term_56;
+  old_ptr_ret = (int *)malloc(__stady_term_55 * (unsigned long)sizeof(int));
+  __stady_term_56 = 0;
+  while(__stady_term_56 < __stady_term_55) {
+    *(old_ptr_ret + __stady_term_56) = *(ret + __stady_term_56);
+    __stady_term_56 ++;
+  }
   {
     BottomUpSort(l,table,ret);
     {

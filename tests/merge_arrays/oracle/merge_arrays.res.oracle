@@ -190,32 +190,30 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
   mpz_t __stady_gmp_26;
   __gmpz_init_set_si(__stady_gmp_26,l1);
   unsigned long __stady_term_9;
-  unsigned long __stady_term_10;
-  __stady_term_10 = __gmpz_get_ui(__stady_gmp_26);
-  old_ptr_t1 = (int *)malloc(__stady_term_10 * (unsigned long)sizeof(int));
-  __stady_term_10 = __gmpz_get_ui(__stady_gmp_26);
-  __stady_term_9 = 0;
-  while(__stady_term_9 < __stady_term_10) {
-    *(old_ptr_t1 + __stady_term_9) = *(t1 + __stady_term_9);
-    __stady_term_9 ++;
-  }
+  __stady_term_9 = __gmpz_get_ui(__stady_gmp_26);
   __gmpz_clear(__stady_gmp_26);
+  unsigned long __stady_term_10;
+  old_ptr_t1 = (int *)malloc(__stady_term_9 * (unsigned long)sizeof(int));
+  __stady_term_10 = 0;
+  while(__stady_term_10 < __stady_term_9) {
+    *(old_ptr_t1 + __stady_term_10) = *(t1 + __stady_term_10);
+    __stady_term_10 ++;
+  }
   int *old_t2;
   int *old_ptr_t2;
   old_t2 = t2;
   mpz_t __stady_gmp_27;
   __gmpz_init_set_si(__stady_gmp_27,l2);
   unsigned long __stady_term_11;
-  unsigned long __stady_term_12;
-  __stady_term_12 = __gmpz_get_ui(__stady_gmp_27);
-  old_ptr_t2 = (int *)malloc(__stady_term_12 * (unsigned long)sizeof(int));
-  __stady_term_12 = __gmpz_get_ui(__stady_gmp_27);
-  __stady_term_11 = 0;
-  while(__stady_term_11 < __stady_term_12) {
-    *(old_ptr_t2 + __stady_term_11) = *(t2 + __stady_term_11);
-    __stady_term_11 ++;
-  }
+  __stady_term_11 = __gmpz_get_ui(__stady_gmp_27);
   __gmpz_clear(__stady_gmp_27);
+  unsigned long __stady_term_12;
+  old_ptr_t2 = (int *)malloc(__stady_term_11 * (unsigned long)sizeof(int));
+  __stady_term_12 = 0;
+  while(__stady_term_12 < __stady_term_11) {
+    *(old_ptr_t2 + __stady_term_12) = *(t2 + __stady_term_12);
+    __stady_term_12 ++;
+  }
   int *old_t3;
   int *old_ptr_t3;
   old_t3 = t3;
@@ -229,16 +227,15 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
   __gmpz_clear(__stady_gmp_28);
   __gmpz_clear(__stady_gmp_29);
   unsigned long __stady_term_13;
-  unsigned long __stady_term_14;
-  __stady_term_14 = __gmpz_get_ui(__stady_gmp_30);
-  old_ptr_t3 = (int *)malloc(__stady_term_14 * (unsigned long)sizeof(int));
-  __stady_term_14 = __gmpz_get_ui(__stady_gmp_30);
-  __stady_term_13 = 0;
-  while(__stady_term_13 < __stady_term_14) {
-    *(old_ptr_t3 + __stady_term_13) = *(t3 + __stady_term_13);
-    __stady_term_13 ++;
-  }
+  __stady_term_13 = __gmpz_get_ui(__stady_gmp_30);
   __gmpz_clear(__stady_gmp_30);
+  unsigned long __stady_term_14;
+  old_ptr_t3 = (int *)malloc(__stady_term_13 * (unsigned long)sizeof(int));
+  __stady_term_14 = 0;
+  while(__stady_term_14 < __stady_term_13) {
+    *(old_ptr_t3 + __stady_term_14) = *(t3 + __stady_term_14);
+    __stady_term_14 ++;
+  }
   int old_l1;
   old_l1 = l1;
   int old_l2;

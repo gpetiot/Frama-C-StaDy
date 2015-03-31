@@ -75,16 +75,15 @@ void firstSubset(int *s, int n)
   mpz_t __stady_gmp_8;
   __gmpz_init_set_si(__stady_gmp_8,n);
   unsigned long __stady_term_5;
-  unsigned long __stady_term_6;
-  __stady_term_6 = __gmpz_get_ui(__stady_gmp_8);
-  old_ptr_s = (int *)malloc(__stady_term_6 * (unsigned long)sizeof(int));
-  __stady_term_6 = __gmpz_get_ui(__stady_gmp_8);
-  __stady_term_5 = 0;
-  while(__stady_term_5 < __stady_term_6) {
-    *(old_ptr_s + __stady_term_5) = *(s + __stady_term_5);
-    __stady_term_5 ++;
-  }
+  __stady_term_5 = __gmpz_get_ui(__stady_gmp_8);
   __gmpz_clear(__stady_gmp_8);
+  unsigned long __stady_term_6;
+  old_ptr_s = (int *)malloc(__stady_term_5 * (unsigned long)sizeof(int));
+  __stady_term_6 = 0;
+  while(__stady_term_6 < __stady_term_5) {
+    *(old_ptr_s + __stady_term_6) = *(s + __stady_term_6);
+    __stady_term_6 ++;
+  }
   int old_n;
   old_n = n;
   {

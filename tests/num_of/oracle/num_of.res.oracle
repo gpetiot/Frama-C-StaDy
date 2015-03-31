@@ -78,16 +78,15 @@ int num_of(int n, int *t)
   mpz_t __stady_gmp_9;
   __gmpz_init_set_si(__stady_gmp_9,n);
   unsigned long __stady_term_5;
-  unsigned long __stady_term_6;
-  __stady_term_6 = __gmpz_get_ui(__stady_gmp_9);
-  old_ptr_t = (int *)malloc(__stady_term_6 * (unsigned long)sizeof(int));
-  __stady_term_6 = __gmpz_get_ui(__stady_gmp_9);
-  __stady_term_5 = 0;
-  while(__stady_term_5 < __stady_term_6) {
-    *(old_ptr_t + __stady_term_5) = *(t + __stady_term_5);
-    __stady_term_5 ++;
-  }
+  __stady_term_5 = __gmpz_get_ui(__stady_gmp_9);
   __gmpz_clear(__stady_gmp_9);
+  unsigned long __stady_term_6;
+  old_ptr_t = (int *)malloc(__stady_term_5 * (unsigned long)sizeof(int));
+  __stady_term_6 = 0;
+  while(__stady_term_6 < __stady_term_5) {
+    *(old_ptr_t + __stady_term_6) = *(t + __stady_term_6);
+    __stady_term_6 ++;
+  }
   {
     int num;
     int i;

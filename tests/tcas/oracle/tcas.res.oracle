@@ -429,16 +429,15 @@ int alt_sep_test(void)
   __gmpz_clear(__stady_gmp_32);
   __gmpz_clear(__stady_gmp_33);
   unsigned long __stady_term_22;
-  unsigned long __stady_term_23;
-  __stady_term_23 = __gmpz_get_ui(__stady_gmp_34);
-  old_ptr_Positive_RA_Alt_Thresh = (int *)malloc(__stady_term_23 * (unsigned long)sizeof(int));
-  __stady_term_23 = __gmpz_get_ui(__stady_gmp_34);
-  __stady_term_22 = 0;
-  while(__stady_term_22 < __stady_term_23) {
-    *(old_ptr_Positive_RA_Alt_Thresh + __stady_term_22) = *(Positive_RA_Alt_Thresh + __stady_term_22);
-    __stady_term_22 ++;
-  }
+  __stady_term_22 = __gmpz_get_ui(__stady_gmp_34);
   __gmpz_clear(__stady_gmp_34);
+  unsigned long __stady_term_23;
+  old_ptr_Positive_RA_Alt_Thresh = (int *)malloc(__stady_term_22 * (unsigned long)sizeof(int));
+  __stady_term_23 = 0;
+  while(__stady_term_23 < __stady_term_22) {
+    *(old_ptr_Positive_RA_Alt_Thresh + __stady_term_23) = *(Positive_RA_Alt_Thresh + __stady_term_23);
+    __stady_term_23 ++;
+  }
   int old_Alt_Layer_Value;
   old_Alt_Layer_Value = Alt_Layer_Value;
   int old_Other_Tracked_Alt;

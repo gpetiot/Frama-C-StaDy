@@ -86,16 +86,15 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   mpz_t __stady_gmp_10;
   __gmpz_init_set_si(__stady_gmp_10,elements);
   unsigned long __stady_term_4;
-  unsigned long __stady_term_5;
-  __stady_term_5 = __gmpz_get_ui(__stady_gmp_10);
-  old_ptr_arr = (int *)malloc(__stady_term_5 * (unsigned long)sizeof(int));
-  __stady_term_5 = __gmpz_get_ui(__stady_gmp_10);
-  __stady_term_4 = 0;
-  while(__stady_term_4 < __stady_term_5) {
-    *(old_ptr_arr + __stady_term_4) = *(arr + __stady_term_4);
-    __stady_term_4 ++;
-  }
+  __stady_term_4 = __gmpz_get_ui(__stady_gmp_10);
   __gmpz_clear(__stady_gmp_10);
+  unsigned long __stady_term_5;
+  old_ptr_arr = (int *)malloc(__stady_term_4 * (unsigned long)sizeof(int));
+  __stady_term_5 = 0;
+  while(__stady_term_5 < __stady_term_4) {
+    *(old_ptr_arr + __stady_term_5) = *(arr + __stady_term_5);
+    __stady_term_5 ++;
+  }
   int old_elements;
   old_elements = elements;
   int *old_beg;
@@ -111,16 +110,15 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   __gmpz_clear(__stady_gmp_11);
   __gmpz_clear(__stady_gmp_12);
   unsigned long __stady_term_6;
-  unsigned long __stady_term_7;
-  __stady_term_7 = __gmpz_get_ui(__stady_gmp_13);
-  old_ptr_beg = (int *)malloc(__stady_term_7 * (unsigned long)sizeof(int));
-  __stady_term_7 = __gmpz_get_ui(__stady_gmp_13);
-  __stady_term_6 = 0;
-  while(__stady_term_6 < __stady_term_7) {
-    *(old_ptr_beg + __stady_term_6) = *(beg + __stady_term_6);
-    __stady_term_6 ++;
-  }
+  __stady_term_6 = __gmpz_get_ui(__stady_gmp_13);
   __gmpz_clear(__stady_gmp_13);
+  unsigned long __stady_term_7;
+  old_ptr_beg = (int *)malloc(__stady_term_6 * (unsigned long)sizeof(int));
+  __stady_term_7 = 0;
+  while(__stady_term_7 < __stady_term_6) {
+    *(old_ptr_beg + __stady_term_7) = *(beg + __stady_term_7);
+    __stady_term_7 ++;
+  }
   int *old_end;
   int *old_ptr_end;
   old_end = end;
@@ -134,16 +132,15 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   __gmpz_clear(__stady_gmp_14);
   __gmpz_clear(__stady_gmp_15);
   unsigned long __stady_term_8;
-  unsigned long __stady_term_9;
-  __stady_term_9 = __gmpz_get_ui(__stady_gmp_16);
-  old_ptr_end = (int *)malloc(__stady_term_9 * (unsigned long)sizeof(int));
-  __stady_term_9 = __gmpz_get_ui(__stady_gmp_16);
-  __stady_term_8 = 0;
-  while(__stady_term_8 < __stady_term_9) {
-    *(old_ptr_end + __stady_term_8) = *(end + __stady_term_8);
-    __stady_term_8 ++;
-  }
+  __stady_term_8 = __gmpz_get_ui(__stady_gmp_16);
   __gmpz_clear(__stady_gmp_16);
+  unsigned long __stady_term_9;
+  old_ptr_end = (int *)malloc(__stady_term_8 * (unsigned long)sizeof(int));
+  __stady_term_9 = 0;
+  while(__stady_term_9 < __stady_term_8) {
+    *(old_ptr_end + __stady_term_9) = *(end + __stady_term_9);
+    __stady_term_9 ++;
+  }
   {
     int __retres;
     int piv;

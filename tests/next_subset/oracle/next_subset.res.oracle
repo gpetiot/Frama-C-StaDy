@@ -150,16 +150,15 @@ int nextSubset(int *s, int n)
   mpz_t __stady_gmp_38;
   __gmpz_init_set_si(__stady_gmp_38,n);
   unsigned long __stady_term_22;
-  unsigned long __stady_term_23;
-  __stady_term_23 = __gmpz_get_ui(__stady_gmp_38);
-  old_ptr_s = (int *)malloc(__stady_term_23 * (unsigned long)sizeof(int));
-  __stady_term_23 = __gmpz_get_ui(__stady_gmp_38);
-  __stady_term_22 = 0;
-  while(__stady_term_22 < __stady_term_23) {
-    *(old_ptr_s + __stady_term_22) = *(s + __stady_term_22);
-    __stady_term_22 ++;
-  }
+  __stady_term_22 = __gmpz_get_ui(__stady_gmp_38);
   __gmpz_clear(__stady_gmp_38);
+  unsigned long __stady_term_23;
+  old_ptr_s = (int *)malloc(__stady_term_22 * (unsigned long)sizeof(int));
+  __stady_term_23 = 0;
+  while(__stady_term_23 < __stady_term_22) {
+    *(old_ptr_s + __stady_term_23) = *(s + __stady_term_23);
+    __stady_term_23 ++;
+  }
   int old_n;
   old_n = n;
   {

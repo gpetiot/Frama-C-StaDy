@@ -184,16 +184,15 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
   mpz_t __stady_gmp_45;
   __gmpz_init_set_si(__stady_gmp_45,strlen);
   unsigned long __stady_term_21;
-  unsigned long __stady_term_22;
-  __stady_term_22 = __gmpz_get_ui(__stady_gmp_45);
-  old_ptr_str = (char *)malloc(__stady_term_22 * (unsigned long)sizeof(char));
-  __stady_term_22 = __gmpz_get_ui(__stady_gmp_45);
-  __stady_term_21 = 0;
-  while(__stady_term_21 < __stady_term_22) {
-    *(old_ptr_str + __stady_term_21) = *(str + __stady_term_21);
-    __stady_term_21 ++;
-  }
+  __stady_term_21 = __gmpz_get_ui(__stady_gmp_45);
   __gmpz_clear(__stady_gmp_45);
+  unsigned long __stady_term_22;
+  old_ptr_str = (char *)malloc(__stady_term_21 * (unsigned long)sizeof(char));
+  __stady_term_22 = 0;
+  while(__stady_term_22 < __stady_term_21) {
+    *(old_ptr_str + __stady_term_22) = *(str + __stady_term_22);
+    __stady_term_22 ++;
+  }
   int old_strlen;
   old_strlen = strlen;
   char *old_substr;
@@ -202,16 +201,15 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
   mpz_t __stady_gmp_46;
   __gmpz_init_set_si(__stady_gmp_46,sublen);
   unsigned long __stady_term_23;
-  unsigned long __stady_term_24;
-  __stady_term_24 = __gmpz_get_ui(__stady_gmp_46);
-  old_ptr_substr = (char *)malloc(__stady_term_24 * (unsigned long)sizeof(char));
-  __stady_term_24 = __gmpz_get_ui(__stady_gmp_46);
-  __stady_term_23 = 0;
-  while(__stady_term_23 < __stady_term_24) {
-    *(old_ptr_substr + __stady_term_23) = *(substr + __stady_term_23);
-    __stady_term_23 ++;
-  }
+  __stady_term_23 = __gmpz_get_ui(__stady_gmp_46);
   __gmpz_clear(__stady_gmp_46);
+  unsigned long __stady_term_24;
+  old_ptr_substr = (char *)malloc(__stady_term_23 * (unsigned long)sizeof(char));
+  __stady_term_24 = 0;
+  while(__stady_term_24 < __stady_term_23) {
+    *(old_ptr_substr + __stady_term_24) = *(substr + __stady_term_24);
+    __stady_term_24 ++;
+  }
   int old_sublen;
   old_sublen = sublen;
   {
@@ -858,16 +856,15 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
   mpz_t __stady_gmp_150;
   __gmpz_init_set_si(__stady_gmp_150,strlen);
   unsigned long __stady_term_69;
-  unsigned long __stady_term_70;
-  __stady_term_70 = __gmpz_get_ui(__stady_gmp_150);
-  old_ptr_str = (char *)malloc(__stady_term_70 * (unsigned long)sizeof(char));
-  __stady_term_70 = __gmpz_get_ui(__stady_gmp_150);
-  __stady_term_69 = 0;
-  while(__stady_term_69 < __stady_term_70) {
-    *(old_ptr_str + __stady_term_69) = *(str + __stady_term_69);
-    __stady_term_69 ++;
-  }
+  __stady_term_69 = __gmpz_get_ui(__stady_gmp_150);
   __gmpz_clear(__stady_gmp_150);
+  unsigned long __stady_term_70;
+  old_ptr_str = (char *)malloc(__stady_term_69 * (unsigned long)sizeof(char));
+  __stady_term_70 = 0;
+  while(__stady_term_70 < __stady_term_69) {
+    *(old_ptr_str + __stady_term_70) = *(str + __stady_term_70);
+    __stady_term_70 ++;
+  }
   int old_strlen;
   old_strlen = strlen;
   char *old_substr;
@@ -876,16 +873,15 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
   mpz_t __stady_gmp_151;
   __gmpz_init_set_si(__stady_gmp_151,sublen);
   unsigned long __stady_term_71;
-  unsigned long __stady_term_72;
-  __stady_term_72 = __gmpz_get_ui(__stady_gmp_151);
-  old_ptr_substr = (char *)malloc(__stady_term_72 * (unsigned long)sizeof(char));
-  __stady_term_72 = __gmpz_get_ui(__stady_gmp_151);
-  __stady_term_71 = 0;
-  while(__stady_term_71 < __stady_term_72) {
-    *(old_ptr_substr + __stady_term_71) = *(substr + __stady_term_71);
-    __stady_term_71 ++;
-  }
+  __stady_term_71 = __gmpz_get_ui(__stady_gmp_151);
   __gmpz_clear(__stady_gmp_151);
+  unsigned long __stady_term_72;
+  old_ptr_substr = (char *)malloc(__stady_term_71 * (unsigned long)sizeof(char));
+  __stady_term_72 = 0;
+  while(__stady_term_72 < __stady_term_71) {
+    *(old_ptr_substr + __stady_term_72) = *(substr + __stady_term_72);
+    __stady_term_72 ++;
+  }
   int old_sublen;
   old_sublen = sublen;
   char *old_dest;
@@ -894,16 +890,15 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
   mpz_t __stady_gmp_152;
   __gmpz_init_set_si(__stady_gmp_152,strlen);
   unsigned long __stady_term_73;
-  unsigned long __stady_term_74;
-  __stady_term_74 = __gmpz_get_ui(__stady_gmp_152);
-  old_ptr_dest = (char *)malloc(__stady_term_74 * (unsigned long)sizeof(char));
-  __stady_term_74 = __gmpz_get_ui(__stady_gmp_152);
-  __stady_term_73 = 0;
-  while(__stady_term_73 < __stady_term_74) {
-    *(old_ptr_dest + __stady_term_73) = *(dest + __stady_term_73);
-    __stady_term_73 ++;
-  }
+  __stady_term_73 = __gmpz_get_ui(__stady_gmp_152);
   __gmpz_clear(__stady_gmp_152);
+  unsigned long __stady_term_74;
+  old_ptr_dest = (char *)malloc(__stady_term_73 * (unsigned long)sizeof(char));
+  __stady_term_74 = 0;
+  while(__stady_term_74 < __stady_term_73) {
+    *(old_ptr_dest + __stady_term_74) = *(dest + __stady_term_74);
+    __stady_term_74 ++;
+  }
   {
     int __retres;
     int start;
