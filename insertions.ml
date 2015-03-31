@@ -297,33 +297,9 @@ class gather_insertions props cwd = object(self)
        let e_ret = Cil.evar ret in
        let i_2 = decl_varinfo ret in
        let i_3 = Instru(self#cinit e_ret) in
-       let i_0, x = self#translate_term a in
-       let i_1, y = self#translate_term b in
-       let b0, a0, e0 = match a.term_type with
-	 | Linteger -> [], [Instru(self#cclear x)], x
-	 | Ctype ty ->
-	    let init_set = match Cil.isUnsignedInteger ty with
-	      | true -> self#cinit_set_ui
-	      | false -> self#cinit_set_si
-	    in
-	    let v_1 = self#fresh_Z_varinfo() in
-	    let i_4 = decl_varinfo v_1 in
-	    let e_v_1 = Cil.evar v_1 in
-	    let i_6 = Instru(init_set e_v_1 x) in
-	    [i_4; i_6], [Instru(self#cclear e_v_1)], e_v_1
-	 | _ -> raise Unreachable
-       in
-       let b1, e1 = match b.term_type with
-	 | Linteger ->
-	    let v = self#fresh_ctype_varinfo Cil.ulongLongType in
-	    let i_1 = decl_varinfo v in
-	    let i_2 = Instru(self#cget_ui (Cil.var v) y) in
-	    let i_3 = Instru(self#cclear y) in
-	    [i_1; i_2; i_3], (Cil.evar v)
-	 | Ctype _ -> [], y
-	 | _ -> raise Unreachable
-       in
-       i_2 :: i_3 :: i_0 @ i_1 @ b0 @ b1 @ Instru(shift e_ret e0 e1) :: a0,
+       let i_0, x = self#as_logic_type Linteger a in
+       let i_1, y = self#as_c_type Cil.ulongLongType b in
+       i_2::i_3::i_0 @ i_1 @ [Instru(shift e_ret x y) ; Instru(self#cclear x)],
        e_ret.enode
     | _ -> raise Unreachable
 
@@ -332,61 +308,29 @@ class gather_insertions props cwd = object(self)
     | PlusPI
     | MinusPI ->
        let i_0, a' = self#translate_term a in
-       let i_1, b' = self#translate_term b in
-       let i_2, e = match b.term_type with
-	 | Linteger ->
-	    let v = self#fresh_ctype_varinfo Cil.intType in
-	    let ii_0 = decl_varinfo v in
-	    let ii_1 = Instru(self#cget_si (Cil.var v) b') in
-	    let ii_2 = Instru(self#cclear b') in
-	    [ii_0; ii_1; ii_2], Cil.evar v
-	 | _ -> [], b'
-       in
-       let e' = Cil.new_exp ~loc (BinOp(op,a',e,(Cil.typeOf a'))) in
-       i_0 @ i_1 @ i_2, e'.enode
+       let i_1, b' = self#as_c_type Cil.intType b in
+       let e' = Cil.new_exp ~loc (BinOp(op,a',b',(Cil.typeOf a'))) in
+       i_0 @ i_1, e'.enode
     | Shiftlt -> self#translate_shift ty self#cmul_2exp a b
     | Shiftrt -> self#translate_shift ty self#cfdiv_q_2exp a b
     | _ ->
-       let i_0, x = self#translate_term a in
-       let i_1, y = self#translate_term b in
        match ty with
        | Linteger ->
+	  let i_0, x = self#as_logic_type Linteger a in
+	  let i_1, y = self#as_logic_type Linteger b in
 	  let ret = self#fresh_Z_varinfo() in
 	  let i_2 = decl_varinfo ret in
 	  let e_ret = Cil.evar ret in
 	  let i_3 = Instru(self#cinit e_ret) in
 	  let clear_t1 = Instru(self#cclear x) in
 	  let clear_t2 = Instru(self#cclear y) in
-	  let inserts = match a.term_type, b.term_type with
-	    | Linteger, Linteger ->
-	       [Instru(self#cbinop op e_ret x y); clear_t1; clear_t2]
-	    | Ctype(TInt _ as ty1), Ctype(TInt _ as ty2) ->
-	       let init_set_1 = match Cil.isUnsignedInteger ty1 with
-		 | true -> self#cinit_set_ui
-		 | false -> self#cinit_set_si
-	       in
-	       let init_set_2 = match Cil.isUnsignedInteger ty2 with
-		 | true -> self#cinit_set_ui
-		 | false -> self#cinit_set_si
-	       in
-	       let v_1 = self#fresh_Z_varinfo() in
-	       let i_4 = decl_varinfo v_1 in
-	       let v_2 = self#fresh_Z_varinfo() in
-	       let i_5 = decl_varinfo v_2 in
-	       let e_v_1 = Cil.evar v_1 in
-	       let e_v_2 = Cil.evar v_2 in
-	       let i_6 = Instru(init_set_1 e_v_1 x) in
-	       let i_7 = Instru(init_set_2 e_v_2 y) in
-	       let i_8 = Instru(self#cbinop op e_ret e_v_1 e_v_2) in
-	       let i_9 = Instru(self#cclear e_v_1) in
-	       let i_10 = Instru(self#cclear e_v_2) in
-	       [i_4; i_5; i_6; i_7; i_8; i_9; i_10]
-	    | _ -> raise Unreachable
-	  in
-	  i_0 @ i_1 @ i_2 :: i_3 :: inserts, e_ret.enode
+	  let i_4 = Instru(self#cbinop op e_ret x y) in
+	  i_0 @ i_1 @ [i_2 ; i_3 ; i_4 ; clear_t1; clear_t2 ], e_ret.enode
        | Lreal -> raise Unsupported
        | Ltype _ as lt when Logic_const.is_boolean_type lt ->
-	  begin
+	  let i_0, x = self#translate_term a in
+	  let i_1, y = self#translate_term b in
+	  let inserts, e =
 	    match a.term_type, b.term_type with
 	    | Linteger, Linteger ->
 	       let var = self#fresh_ctype_varinfo Cil.intType in
@@ -400,9 +344,10 @@ class gather_insertions props cwd = object(self)
 	       let i_5 = Instru(instru_affect lvar (cmp op e_tmp zero)) in
 	       let i_6 = Instru(self#cclear x) in
 	       let i_7 = Instru(self#cclear y) in
-	       i_0 @ i_1 @ [i_2; i_3; i_4; i_5; i_6; i_7], (Cil.evar var).enode
-	    | _ -> i_0 @ i_1, (Cil.mkBinOp ~loc op x y).enode
-	  end
+	       [i_2; i_3; i_4; i_5; i_6; i_7], Cil.evar var
+	    | _ -> [], Cil.mkBinOp ~loc op x y
+	  in
+	  i_0 @ i_1 @ inserts, e.enode
        | _ -> raise Unreachable
 
   method private translate_tif cond then_b else_b = match then_b.term_type with
@@ -490,6 +435,14 @@ class gather_insertions props cwd = object(self)
        i_0 @ [i_1; i_2; i_3], (Cil.evar ret).enode
     | Lreal -> raise Unsupported
     | _ -> raise Unreachable
+
+  method private as_logic_type ty t = match ty with
+    | x when x = t.term_type -> self#translate_term t
+    | _ -> let i, e = self#translate_logic_coerce ty t in i, Cil.new_exp ~loc e
+
+  method private as_c_type ty t = match ty with
+    | x when Ctype x = t.term_type -> self#translate_term t
+    | _ -> let i, e = self#translate_coerce t ty in i, Cil.new_exp ~loc e
 
   method private translate_lambda li lower upper q t =
     assert(lower.term_type = Linteger && upper.term_type = Linteger);
@@ -620,17 +573,7 @@ class gather_insertions props cwd = object(self)
     | TField(fi,o) -> let ins, o' = self#translate_offset o in ins, Field(fi,o')
     | TModel _ -> raise Unsupported
     | TIndex(t,o) ->
-       let ins, e = self#translate_term t in
-       let ins, e = match t.term_type with
-	 | Linteger ->
-  	    let tmp = self#fresh_ctype_varinfo Cil.intType in
-  	    let i_1 = decl_varinfo tmp in
-	    let i_2 = Instru(self#cget_si (Cil.var tmp) e) in
-	    let i_3 = Instru(self#cclear e) in
-	    ins @ [i_1; i_2; i_3], Cil.evar tmp
-	 | Lreal -> raise Unreachable
-	 | _ -> ins, e
-       in
+       let ins, e = self#as_c_type Cil.intType t in
        let ins', o' = self#translate_offset o in
        ins @ ins', Index(e,o')
 
@@ -655,45 +598,36 @@ class gather_insertions props cwd = object(self)
   method private translate_pnamed p = self#translate_predicate p.content
 
   method private translate_rel rel t1 t2 =
-    let inserts_0, t1' = self#translate_term t1 in
-    let inserts_1, t2' = self#translate_term t2 in
-    let clear_t1 = Instru(self#cclear t1') in
-    let clear_t2 = Instru(self#cclear t2') in
-    let inserts, ret = match t1.term_type, t2.term_type with
-      | Linteger, Linteger ->
-	let var = self#fresh_ctype_varinfo Cil.intType in
-	let i_2 = decl_varinfo var in
-	let i_3 = Instru(self#ccmp (Cil.var var) t1' t2') in
-	[i_2; i_3; clear_t1; clear_t2], cmp rel (Cil.evar var) zero
-      | Linteger, Ctype x ->
-	let var = self#fresh_ctype_varinfo Cil.intType in
-	let i_2 = decl_varinfo var in
-	let zcmp =
-	  if Cil.isUnsignedInteger x then self#ccmp_ui
-	  else if Cil.isSignedInteger x then self#ccmp_si
-	  else raise Unsupported
-	in
-	let i_3 = Instru(zcmp (Cil.var var) t1' t2') in
-	[i_2; i_3; clear_t1], cmp rel (Cil.evar var) zero
-      | Lreal, Lreal -> raise Unsupported
-      | Ctype x, Linteger ->
-	let var = self#fresh_ctype_varinfo Cil.intType in
-	let fresh_var' = self#fresh_Z_varinfo() in
-	let i_2 = decl_varinfo fresh_var' in
-	let init_set =
-	  if Cil.isUnsignedInteger x then self#cinit_set_ui
-	  else if Cil.isSignedInteger x then self#cinit_set_si
-	  else raise Unsupported
-	in
-	let e_fresh_var = Cil.evar fresh_var' in
-	let i_3 = Instru(init_set e_fresh_var t1') in
-	let i_4 = decl_varinfo var in
-	let i_5 = Instru(self#ccmp (Cil.var var) e_fresh_var t2') in
-	let i_6 = Instru(self#cclear e_fresh_var) in
-	[i_2; i_3; i_4; i_5; i_6; clear_t2], cmp rel (Cil.evar var) zero
-      | _ -> [], cmp rel t1' t2'
-    in
-    inserts_0 @ inserts_1 @ inserts, ret
+    match t1.term_type, t2.term_type with
+    | Linteger, Ctype x ->
+       let inserts_0, t1' = self#translate_term t1 in
+       let inserts_1, t2' = self#translate_term t2 in
+       let var = self#fresh_ctype_varinfo Cil.intType in
+       let i_2 = decl_varinfo var in
+       let zcmp =
+	 if Cil.isUnsignedInteger x then self#ccmp_ui
+	 else if Cil.isSignedInteger x then self#ccmp_si
+	 else raise Unsupported
+       in
+       let i_3 = Instru(zcmp (Cil.var var) t1' t2') in
+       inserts_0 @ inserts_1 @ [i_2; i_3; Instru(self#cclear t1')],
+       cmp rel (Cil.evar var) zero
+    | Lreal, Lreal -> raise Unsupported
+    | Linteger, Linteger
+    | Ctype _, Linteger ->
+       let inserts_0, t1' = self#as_logic_type Linteger t1 in
+       let inserts_1, t2' = self#translate_term t2 in
+       let var = self#fresh_ctype_varinfo Cil.intType in
+       let i_4 = decl_varinfo var in
+       let i_5 = Instru(self#ccmp (Cil.var var) t1' t2') in
+       let i_6 = Instru(self#cclear t1') in
+       let i_7 = Instru(self#cclear t2') in
+       inserts_0 @ inserts_1 @ [i_4; i_5; i_6; i_7],
+       cmp rel (Cil.evar var) zero
+    | _ ->
+       let inserts_0, t1' = self#translate_term t1 in
+       let inserts_1, t2' = self#translate_term t2 in
+       inserts_0 @ inserts_1, cmp rel t1' t2'
 
   method private translate_and p q =
     let var = self#fresh_pred_varinfo() in
@@ -1157,47 +1091,23 @@ class gather_insertions props cwd = object(self)
       let rec alloc_aux my_old_ptr my_ptr ty = function
 	| h :: t ->
 	  let ty = dig_type ty in
-	  let inserts_0, h' = self#translate_term h in
+	  let inserts_0, h' = self#as_c_type Cil.ulongType h in
 	  let my_iterator = self#fresh_ctype_varinfo Cil.ulongType in
 	  let e_iterator = Cil.evar my_iterator in
 	  let lmy_iterator = Cil.var my_iterator in
 	  let insert_1 = decl_varinfo my_iterator in
-	  let inserts = match h.term_type with
-	    | Linteger ->
-	       let tmp = self#fresh_ctype_varinfo Cil.ulongType in
-	       let i_1 = decl_varinfo tmp in
-	       let i_2 = Instru(self#cget_ui (Cil.var tmp) h') in
-	       let e_tmp = Cil.evar tmp in
-	       let e1 = Cil.new_exp ~loc (SizeOf ty) in
-	       let e2 = Cil.mkBinOp ~loc Mult e_tmp e1 in
-	       let insert_2 = Instru(self#cmalloc my_old_ptr e2) in
-	       let my_new_old_ptr = addoffset my_old_ptr e_iterator in
-	       let my_new_ptr = addoffset my_ptr e_iterator in
-	       let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
-	       let init = instru_affect lmy_iterator zero in
-	       let i_3 = Instru(self#cget_ui (Cil.var tmp) h') in
-	       let cond = cmp Rlt e_iterator e_tmp in
-	       let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
-	       let step = instru_affect lmy_iterator e3 in
-	       let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
-	       let insert_4 = Instru(self#cclear h') in
-	       [i_1; i_2; insert_2; i_3; Instru init; insert_3; insert_4]
-	    | Lreal -> raise Unsupported
-	    | _ ->
-	       let e1 = Cil.new_exp ~loc (SizeOf ty) in
-	       let e2 = Cil.mkBinOp ~loc Mult h' e1 in
-	       let insert_2 = Instru(self#cmalloc my_old_ptr e2) in
-	       let my_new_old_ptr = addoffset my_old_ptr e_iterator in
-	       let my_new_ptr = addoffset my_ptr e_iterator in
-	       let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
-	       let init = instru_affect lmy_iterator zero in
-	       let cond = cmp Rlt e_iterator h' in
-	       let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
-	       let step = instru_affect lmy_iterator e3 in
-	       let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
-	       [insert_2; Instru init; insert_3]
-	  in
-	  inserts_0 @ (insert_1 :: inserts)
+	  let e1 = Cil.new_exp ~loc (SizeOf ty) in
+	  let e2 = Cil.mkBinOp ~loc Mult h' e1 in
+	  let insert_2 = Instru(self#cmalloc my_old_ptr e2) in
+	  let my_new_old_ptr = addoffset my_old_ptr e_iterator in
+	  let my_new_ptr = addoffset my_ptr e_iterator in
+	  let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
+	  let init = instru_affect lmy_iterator zero in
+	  let cond = cmp Rlt e_iterator h' in
+	  let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
+	  let step = instru_affect lmy_iterator e3 in
+	  let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
+	  inserts_0 @ [insert_1 ; insert_2; Instru init; insert_3]
 	| [] ->
 	  let e = Cil.new_exp ~loc (Lval my_ptr) in
 	  [Instru(instru_affect my_old_ptr e)]
@@ -1221,33 +1131,16 @@ class gather_insertions props cwd = object(self)
 	  let e_iterator = Cil.evar my_iterator in
 	  let lmy_iterator = Cil.var my_iterator in
 	  let insert_0 = decl_varinfo my_iterator in
-	  let inserts_1, h' = self#translate_term h in
-	  let inserts' = match h.term_type with
-	    | Linteger ->
-	      let aux = addoffset my_old_ptr e_iterator in
-	      let inserts_block = dealloc_aux aux t in
-	      let init = instru_affect lmy_iterator zero in
-	      let tmp = self#fresh_ctype_varinfo Cil.ulongType in
-	      let i_1 = decl_varinfo tmp in
-	      let i_2 = Instru(self#cget_ui (Cil.var tmp) h') in
-	      let e_tmp = Cil.evar tmp in
-	      let cond = cmp Rlt e_iterator e_tmp in
-	      let e1 = Cil.mkBinOp ~loc PlusA e_iterator one in
-	      let step = instru_affect lmy_iterator e1 in
-	      let insert_2 = ins_loop cond (inserts_block @ [Instru step]) in
-	      [i_1; i_2; Instru init; insert_2; Instru(self#cclear h')]
-	    | Lreal -> raise Unsupported
-	    | _ ->
-	      let aux = addoffset my_old_ptr (Cil.evar my_iterator) in
-	      let inserts_block = dealloc_aux aux t in
-	      let init = instru_affect lmy_iterator zero in
-	      let cond = cmp Rlt e_iterator h' in
-	      let e1 = Cil.mkBinOp ~loc PlusA e_iterator one in
-	      let step = instru_affect lmy_iterator e1 in
-	      [Instru init; ins_loop cond (inserts_block @ [Instru step])]
-	  in
+	  let inserts_1, h' = self#as_c_type Cil.ulongType h in
+	  let aux = addoffset my_old_ptr (Cil.evar my_iterator) in
+	  let inserts_block = dealloc_aux aux t in
+	  let init = instru_affect lmy_iterator zero in
+	  let cond = cmp Rlt e_iterator h' in
+	  let e1 = Cil.mkBinOp ~loc PlusA e_iterator one in
+	  let step = instru_affect lmy_iterator e1 in
 	  let e = Cil.new_exp ~loc (Lval my_old_ptr) in
-	  insert_0 :: inserts_1 @ inserts' @ [Instru(self#cfree e)]
+	  let i_loop = ins_loop cond (inserts_block @ [Instru step]) in
+	  insert_0 :: inserts_1 @ [Instru init; i_loop ; Instru(self#cfree e)]
       in
       if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
 	let my_old_ptr = my_varinfo v.vtype ("old_ptr_" ^ v.vname) in
@@ -1473,37 +1366,25 @@ class gather_insertions props cwd = object(self)
       | TLval(TMem{term_node=TBinOp(op, op1,
 				    {term_node=Trange (Some t1, Some t2)})},
 	      TNoOffset) ->
-	 assert(t1.term_type = Linteger);
-	 assert(t2.term_type = Linteger);
 	 let ty =
 	   match op1.term_type with Ctype t -> t | _ -> raise Unreachable in
-	 let it = self#fresh_Z_varinfo () in
-	 let e_it = Cil.evar it in
+	 let it = self#fresh_ctype_varinfo Cil.intType in
+	 let e_it = Cil.evar it
+	 and l_it = Cil.var it in
 	 let i_0 = decl_varinfo it in
-	 let i_1, e_t1 = self#translate_term t1 in
-	 let i_2 = Instru(self#cinit_set e_it e_t1) in
-	 let i_3, e_t2 = self#translate_term t2 in
-	 let i_it = self#fresh_ctype_varinfo Cil.intType in
-	 let e_i_it = Cil.evar i_it in
-	 let i_4 = decl_varinfo i_it in
-	 let tmp = self#fresh_ctype_varinfo Cil.intType in
-	 let e_tmp = Cil.evar tmp in
-	 let i_5 = decl_varinfo tmp in
-	 let i_6 = Instru(self#ccmp (Cil.var tmp) e_it e_t2) in
-	 let cond = cmp Rle e_tmp zero in
-	 let i_f_0 = Instru(self#cget_si (Cil.var i_it) e_it) in
+	 let i_1, e_t1 = self#as_c_type Cil.intType t1 in
+	 let i_2 = Instru(instru_affect l_it e_t1) in
+	 let i_3, e_t2 = self#as_c_type Cil.intType t2 in
+	 let cond = cmp Rle e_it e_t2 in
 	 let ll, e_op1 = self#translate_term op1 in
 	 assert (ll = []);
-	 let e = Cil.new_exp ~loc (BinOp(op, e_op1, e_i_it, ty)) in
+	 let e = Cil.new_exp ~loc (BinOp(op, e_op1, e_it, ty)) in
 	 let y = Mem e, NoOffset in
 	 let i_f_1 = Instru(self#cnondet (Cil.typeOfLval y) y) in
-	 let i_f_2 = Instru(self#cbinop_ui PlusA e_it e_it one) in
-	 let i_f_3 = Instru(self#ccmp (Cil.var tmp) e_it e_t2) in
-	 let i_7 = ins_loop cond [i_f_0; i_f_1; i_f_2; i_f_3] in
-	 let i_8 = Instru(self#cclear e_it) in
-	 let i_9 = Instru(self#cclear e_t1) in
-	 let i_10 = Instru(self#cclear e_t2) in
-	 i_0::i_1 @ i_2::i_3 @ i_4::i_5::i_6::i_7::i_8::i_9::i_10::ret
+	 let plus_one = Cil.mkBinOp ~loc PlusA e_it one in
+	 let i_f_2 = Instru(instru_affect l_it plus_one) in
+	 let i_7 = ins_loop cond [i_f_1; i_f_2] in
+	 i_0::i_1 @ i_2::i_3 @ i_7::ret
       | TLval lv ->
 	 let ty = match t.term_type with Ctype x -> x | _-> raise Unreachable in
 	 let ins, e = self#translate_lval lv in
