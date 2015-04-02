@@ -39,6 +39,11 @@ let to_prop = States.Id_To_Property.find
 
 open Cil_types
 
+let rec unname = function
+  | TNamed (x, _) -> unname x.ttype
+  | TPtr (x,y) -> TPtr (unname x, y)
+  | TArray (a,_b,_c,_d) -> TPtr (unname a, _d)
+  | x -> x
 
 (* extract guards for logic vars, e.g.: [0 <= a <= 10; x <= b <= y] *)
 let extract_guards var p =
@@ -119,6 +124,19 @@ let rec extract_from_valid t =
   | TLval (TMem m, TNoOffset) ->
     let varinfo, _ = extract_from_valid m in
     varinfo, Cil.lone ~loc ()
+  | TAddrOf (TMem x, TIndex (y, TNoOffset)) ->
+     let x' = Cil.mkTermMem ~addr:x ~off:TNoOffset in
+     let rec type_of_pointed = function
+       | Ctype (TPtr (ty,_)) -> Ctype ty
+       | Ctype (TArray (ty,_,_,_)) -> Ctype ty
+       | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
+       | ty ->
+	  Options.Self.abort
+	    ~current:true "unsupported type %a" Printer.pp_logic_type ty
+     in
+     let ty = type_of_pointed (Cil.typeOfTermLval x') in
+     let x' = Logic_const.term (TLval x') ty in
+     extract_from_valid {t with term_node=(TBinOp(PlusPI,x',y))}
   | _ -> Options.Self.debug "\\valid(%a)" Debug.pp_term t; assert false
 
 

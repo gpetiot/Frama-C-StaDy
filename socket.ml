@@ -7,80 +7,81 @@ let process_test_case s =
   let id_prop = int_of_string str_prop in
   let kind, s = try cut_sep '|' s with _ -> s, "" in
   if kind <> "IN" && kind <> "OUTCONC" && kind <> "OUTSYMB" then
-    Options.Self.abort "wrong value for kind: %s" kind;
-  let add_var_val acc str =
-    try let x, y = cut_sep '=' str in (x,y)::acc
-    with _ -> acc
-  in
-  let list_entries =
-    let rec aux acc str =
-      try let x,y = cut_sep '|' str in aux (add_var_val acc x) y
-      with _ -> add_var_val acc str
+    Options.Self.warning "wrong value for kind: %s" kind
+  else
+    let add_var_val acc str =
+      try let x, y = cut_sep '=' str in (x,y)::acc
+      with _ -> acc
     in
-    if s = "" then [] else aux [] s
-  in
-  let prop = Utils.to_prop id_prop in
-  let ignore_var v =
-    try
-      (String.sub v 0 7) = "nondet_"
-      && (String.sub v (String.rindex v '_') 4) = "_cpt"
-    with _ -> false
-  in
-  try (* '$' only present when a CW is found *)
-    let str_stmt_id, msg = cut_sep '$' msg in
-    (* TODO: str_stmt is a comma-separated list of sid, must split it ! *)
-    let stmt_id = int_of_string str_stmt_id in
-    let stmt, _ = Kernel_function.find_from_sid stmt_id in
-    let file_tbl =
-      try States.CW_counter_examples.find prop
-      with Not_found -> Datatype.String.Hashtbl.create 16
-    in
-    let msg, stmts, var_tbl =
-      try Datatype.String.Hashtbl.find file_tbl str_tc
-      with Not_found -> msg, [stmt], Datatype.String.Hashtbl.create 16
-    in
-    let on_pair (var, value) =
-      let i, c, s =
-	try Datatype.String.Hashtbl.find var_tbl var
-	with Not_found -> "", "", ""
+    let list_entries =
+      let rec aux acc str =
+	try let x,y = cut_sep '|' str in aux (add_var_val acc x) y
+	with _ -> add_var_val acc str
       in
-      let i, c, s =
-	if kind = "IN" then value,c,s
-	else if kind = "OUTCONC" then i,value,s
-	else i,c,value
+      if s = "" then [] else aux [] s
+    in
+    let prop = Utils.to_prop id_prop in
+    let ignore_var v =
+      try
+	(String.sub v 0 7) = "nondet_"
+	&& (String.sub v (String.rindex v '_') 4) = "_cpt"
+      with _ -> false
+    in
+    try (* '$' only present when a CW is found *)
+      let str_stmt_id, msg = cut_sep '$' msg in
+      (* TODO: str_stmt is a comma-separated list of sid, must split it ! *)
+      let stmt_id = int_of_string str_stmt_id in
+      let stmt, _ = Kernel_function.find_from_sid stmt_id in
+      let file_tbl =
+	try States.CW_counter_examples.find prop
+	with Not_found -> Datatype.String.Hashtbl.create 16
       in
-      if ignore_var var then ()
-      else Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
-    in
-    List.iter on_pair list_entries;
-    Datatype.String.Hashtbl.replace file_tbl str_tc (msg, stmts, var_tbl);
-    States.CW_counter_examples.replace prop file_tbl
-  with
-    _ ->
-    let file_tbl =
-      try States.NC_counter_examples.find prop
-      with Not_found -> Datatype.String.Hashtbl.create 16
-    in
-    let msg, var_tbl =
-      try Datatype.String.Hashtbl.find file_tbl str_tc
-      with Not_found -> msg, Datatype.String.Hashtbl.create 16
-    in
-    let on_pair (var, value) =
-      let i, c, s =
-	try Datatype.String.Hashtbl.find var_tbl var
-	with Not_found -> "", "", ""
+      let msg, stmts, var_tbl =
+	try Datatype.String.Hashtbl.find file_tbl str_tc
+	with Not_found -> msg, [stmt], Datatype.String.Hashtbl.create 16
       in
-      let i, c, s =
-	if kind = "IN" then value,c,s
-	else if kind = "OUTCONC" then i,value,s
-	else i,c,value
+      let on_pair (var, value) =
+	let i, c, s =
+	  try Datatype.String.Hashtbl.find var_tbl var
+	  with Not_found -> "", "", ""
+	in
+	let i, c, s =
+	  if kind = "IN" then value,c,s
+	  else if kind = "OUTCONC" then i,value,s
+	  else i,c,value
+	in
+	if ignore_var var then ()
+	else Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
       in
-      if ignore_var var then ()
-      else Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
-    in
-    List.iter on_pair list_entries;
-    Datatype.String.Hashtbl.replace file_tbl str_tc (msg, var_tbl);
-    States.NC_counter_examples.replace prop file_tbl
+      List.iter on_pair list_entries;
+      Datatype.String.Hashtbl.replace file_tbl str_tc (msg, stmts, var_tbl);
+      States.CW_counter_examples.replace prop file_tbl
+    with
+      _ ->
+      let file_tbl =
+	try States.NC_counter_examples.find prop
+	with Not_found -> Datatype.String.Hashtbl.create 16
+      in
+      let msg, var_tbl =
+	try Datatype.String.Hashtbl.find file_tbl str_tc
+	with Not_found -> msg, Datatype.String.Hashtbl.create 16
+      in
+      let on_pair (var, value) =
+	let i, c, s =
+	  try Datatype.String.Hashtbl.find var_tbl var
+	  with Not_found -> "", "", ""
+	in
+	let i, c, s =
+	  if kind = "IN" then value,c,s
+	  else if kind = "OUTCONC" then i,value,s
+	  else i,c,value
+	in
+	if ignore_var var then ()
+	else Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
+      in
+      List.iter on_pair list_entries;
+      Datatype.String.Hashtbl.replace file_tbl str_tc (msg, var_tbl);
+      States.NC_counter_examples.replace prop file_tbl
 
 
 let process_nb_test_cases s = States.Nb_test_cases.set (int_of_string s)

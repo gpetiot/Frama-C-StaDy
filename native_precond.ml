@@ -238,8 +238,10 @@ let rec input_from_type domains ty t =
       let d = PLIntDom (PLDim t, Some Integer.zero, Some maxuint) in
       input_from_type (d :: domains) ty' (PLContAll t)
   | _ ->
-    Options.Self.abort "input_from_type (%a) (%a)"
-      Printer.pp_typ ty (new pl_printer)#term t
+    Options.Self.warning
+      ~current:true "unsupported input_from_type (%a) (%a)"
+      Printer.pp_typ ty (new pl_printer)#term t;
+    domains
 
 let rec valid_to_prolog term =
   let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
@@ -247,6 +249,19 @@ let rec valid_to_prolog term =
   | TLval _ ->
     let t = term_to_pl term in
     [ PLDomain (PLIntDom (PLDim t, Some (Integer.one), Some maxuint)) ]
+  | TAddrOf (TMem x, TIndex (y, TNoOffset)) ->
+     let x' = Cil.mkTermMem ~addr:x ~off:TNoOffset in
+     let rec type_of_pointed = function
+       | Ctype (TPtr (ty,_)) -> Ctype ty
+       | Ctype (TArray (ty,_,_,_)) -> Ctype ty
+       | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
+       | ty ->
+	  Options.Self.abort
+	    ~current:true "unsupported type %a" Printer.pp_logic_type ty
+     in
+     let ty = type_of_pointed (Cil.typeOfTermLval x') in
+     let x' = Logic_const.term (TLval x') ty in
+     valid_to_prolog {term with term_node=TBinOp(PlusPI,x',y)}
   | TBinOp (((PlusPI|IndexPI|MinusPI) as op),
     	    ({term_node=TCastE((TPtr _) as ty,t)}),
     	    ({term_node=(Trange (_, Some _))} as operand2)) ->

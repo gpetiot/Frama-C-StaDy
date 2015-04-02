@@ -542,6 +542,20 @@ class gather_insertions props cwd = object(self)
     | TUnOp (op,t) -> self#translate_unop op t
     | TBinOp (op,a,b) -> self#translate_binop t.term_type op a b
     | TCastE (ty,t) -> self#translate_cast ty t
+    | TAddrOf (TMem x, TIndex (y, TNoOffset)) ->
+       let x' = Cil.mkTermMem ~addr:x ~off:TNoOffset in
+       let rec type_of_pointed = function
+	 | Ctype (TPtr (ty,_)) -> Ctype ty
+	 | Ctype (TArray (ty,_,_,_)) -> Ctype ty
+	 | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
+	 | ty ->
+	    Options.Self.feedback
+	      ~current:true "unsupported type %a" Printer.pp_logic_type ty;
+	    raise Unsupported
+       in
+       let ty = type_of_pointed (Cil.typeOfTermLval x') in
+       let x' = Logic_const.term (TLval x') ty in
+       self#translate_term_node {t with term_node=(TBinOp(PlusPI,x',y))}
     | TAddrOf tl -> let ins, lv = self#translate_lval tl in ins, AddrOf lv
     | TStartOf tl -> let ins, lv = self#translate_lval tl in ins, StartOf lv
     | Tapp (li,ll,params) -> self#translate_app li ll params
@@ -725,6 +739,20 @@ class gather_insertions props cwd = object(self)
        let x = Cil.term_of_exp_info loc (TUnOp(Neg,x)) einfo in
        self#translate_valid_ptr_offset p x
     | TLval _ -> self#translate_valid_ptr term
+    | TAddrOf (TMem x, TIndex (y, TNoOffset)) ->
+       let x' = Cil.mkTermMem ~addr:x ~off:TNoOffset in
+       let rec type_of_pointed = function
+	 | Ctype (TPtr (ty,_)) -> Ctype ty
+	 | Ctype (TArray (ty,_,_,_)) -> Ctype ty
+	 | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
+	 | ty ->
+	    Options.Self.feedback
+	      ~current:true "unsupported type %a" Printer.pp_logic_type ty;
+	    raise Unsupported
+       in
+       let ty = type_of_pointed (Cil.typeOfTermLval x') in
+       let x' = Logic_const.term (TLval x') ty in
+       self#translate_valid {term with term_node=(TBinOp(PlusPI,x',y))}
     | _ -> Utils.error_term term
 
   method private translate_valid_ptr_range pointer min_off max_off =
@@ -967,12 +995,12 @@ class gather_insertions props cwd = object(self)
 	 Options.Self.warning ~current:true
 			      "%a not of the form \\forall ...; a ==> b"
 			      Printer.pp_predicate p;
-	 self#unsupported_predicate p
+	 raise Unsupported
       | Pexists _ ->
 	 Options.Self.warning ~current:true
 			      "%a not of the form \\exists ...; a && b"
 			      Printer.pp_predicate p;
-	 self#unsupported_predicate p
+	 raise Unsupported
       | Papp _
       | Pseparated _
       | Pxor _
@@ -983,7 +1011,7 @@ class gather_insertions props cwd = object(self)
       | Pdangling _
       | Pallocable _
       | Pfreeable _
-      | Psubtype _ -> self#unsupported_predicate p
+      | Psubtype _ -> raise Unsupported
     with Unsupported -> self#unsupported_predicate p
 
   (* modify result_varinfo when the function returns something *)
@@ -1074,7 +1102,9 @@ class gather_insertions props cwd = object(self)
       | TPtr (ty, _) -> Cil.stripConstLocalType ty
       | TArray (ty, _, _, _) -> Cil.stripConstLocalType ty
       | TNamed (ty, _) -> dig_type ty.ttype
-      | ty -> Options.Self.abort ~current:true "dig_type %a" Printer.pp_typ ty
+      | ty ->
+	 Options.Self.feedback ~current:true "dig_type %a" Printer.pp_typ ty;
+	 raise Unsupported
     in
     let rec strip_const = function
       | TPtr (t, att) -> Cil.stripConstLocalType (TPtr(strip_const t, att))
@@ -1093,7 +1123,8 @@ class gather_insertions props cwd = object(self)
     let lengths = Utils.lengths_from_requires kf in
     let terms = try Cil_datatype.Varinfo.Hashtbl.find lengths vi with _ -> [] in
     let do_varinfo v =
-      let my_old_v = my_varinfo (strip_const v.vtype) ("old_" ^ v.vname) in
+      let vtype = Utils.unname v.vtype in
+      let my_old_v = my_varinfo (strip_const vtype) ("old_" ^ v.vname) in
       let insert_decl = decl_varinfo my_old_v in
       let lmy_old_v = Cil.var my_old_v in
       let insert_before = Instru(instru_affect lmy_old_v (Cil.evar v)) in
@@ -1121,17 +1152,18 @@ class gather_insertions props cwd = object(self)
 	  let e = Cil.new_exp ~loc (Lval my_ptr) in
 	  [Instru(instru_affect my_old_ptr e)]
       in
-      if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
-	let my_old_ptr = my_varinfo (strip_const v.vtype) ("old_ptr_"^v.vname)in
+      if Cil.isPointerType vtype || Cil.isArrayType vtype then
+	let my_old_ptr = my_varinfo (strip_const vtype) ("old_ptr_"^v.vname)in
 	let insert_0 = decl_varinfo my_old_ptr in
 	let inserts_decl = [insert_decl; insert_0] in
-	let ins = alloc_aux (Cil.var my_old_ptr) (Cil.var v) v.vtype terms in
+	let ins = alloc_aux (Cil.var my_old_ptr) (Cil.var v) vtype terms in
 	let inserts_before = insert_before :: ins in
 	inserts_decl, inserts_before
       else [insert_decl], [insert_before]
     in
     let inserts_decl, inserts_before = do_varinfo vi in
     let do_varinfo v =
+      let vtype = Utils.unname v.vtype in
       let rec dealloc_aux my_old_ptr = function
 	| [] -> []
 	| _ :: [] -> [ Instru(self#cfree (Cil.new_exp ~loc (Lval my_old_ptr))) ]
@@ -1151,8 +1183,8 @@ class gather_insertions props cwd = object(self)
 	   let i_loop = ins_loop cond (inserts_block @ [Instru step]) in
 	   insert_0 :: inserts_1 @ [Instru init; i_loop ; Instru(self#cfree e)]
       in
-      if Cil.isPointerType v.vtype || Cil.isArrayType v.vtype then
-	let my_old_ptr = my_varinfo v.vtype ("old_ptr_" ^ v.vname) in
+      if Cil.isPointerType vtype || Cil.isArrayType vtype then
+	let my_old_ptr = my_varinfo vtype ("old_ptr_" ^ v.vname) in
 	dealloc_aux (Cil.var my_old_ptr) terms
       else []
     in
