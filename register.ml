@@ -167,26 +167,25 @@ let selected_props() =
   let app p l = p :: l in
   if props = [] then Property_status.fold app [] else props
 
-
 let compute_props ?(props=selected_props()) ?cwd () =
   let cwd = match cwd with
-    | Some x -> x
-    | None when Options.CWD.get() = -500 (* default value *) -> []
-    | None -> [Options.CWD.get()]
+    | Some x -> List.map string_of_int x
+    | None -> Options.CWD.get()
   in
-  let valid_sid sid =
+  let valid_sid acc sid =
     try
+      let sid = int_of_string sid in
       let s, _ = Kernel_function.find_from_sid sid in
       begin
 	match s.skind with
-	| Instr(Call _) | Loop _ -> true
+	| Instr(Call _) | Loop _ -> sid :: acc
 	| _ ->
 	   Options.Self.feedback ~once:true "stmt %i not a Call nor a Loop" sid;
-	   false
+	   acc
       end
-    with _ -> Options.Self.feedback ~once:true "stmt %i not found" sid; false
+    with _ -> Options.Self.feedback "%s: not a valid stmt id" sid; acc
   in
-  let cwd = List.filter valid_sid cwd in
+  let cwd = List.fold_left valid_sid [] cwd in
   let files = Kernel.Files.get() in
   let fname = Filename.chop_extension (Filename.basename (List.hd files)) in
   let kf = fst (Globals.entry_point()) in

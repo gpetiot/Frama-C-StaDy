@@ -46,11 +46,10 @@ module Properties = Self.String_list (struct
   let help = ""
 end)
 
-module CWD = Self.Int (struct
+module CWD = Self.String_list (struct
   let option_name = "-stady-cwd"
   let help = "detect contract weaknesses"
-  let arg_name = "i"
-  let default = -500
+  let arg_name = "i,..."
 end)
 
 module Simulate_Functions =
