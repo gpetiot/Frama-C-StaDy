@@ -94,13 +94,10 @@ class print_insertions insertions functions cwd () = object(self)
     self#stmt_labels fmt stmt;
     Format.pp_open_hvbox fmt 0;
     let kf = Kernel_function.find_englobing_kf stmt in
+    let insert_something l = not (Queue.is_empty (Hashtbl.find insertions l)) in
     let insert_something =
-      (try not (Queue.is_empty
-		  (Hashtbl.find insertions (Insertions.BegStmt stmt.sid)))
-       with _ -> false)
-      || (try not (Queue.is_empty
-		     (Hashtbl.find insertions (Insertions.EndStmt stmt.sid)))
-	with _ -> false)
+      (try insert_something (Insertions.BegStmt stmt.sid) with _ -> false)
+      || (try insert_something (Insertions.EndStmt stmt.sid) with _ -> false)
     in
     if insert_something then Format.fprintf fmt "@[<hov 2>{@\n";
     self#insertions_at fmt (Insertions.BegStmt stmt.sid);
