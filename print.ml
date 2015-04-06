@@ -2,14 +2,6 @@
 open Cil_types
 
 
-let pp_label fmt = function
-  | Insertions.BegStmt s -> Format.fprintf fmt "BegStmt %i" s
-  | Insertions.EndStmt s -> Format.fprintf fmt "EndStmt %i" s
-  | Insertions.BegFunc s -> Format.fprintf fmt "BegFunc %s" s
-  | Insertions.EndFunc s -> Format.fprintf fmt "EndFunc %s" s
-  | Insertions.BegIter s -> Format.fprintf fmt "BegIter %i" s
-  | Insertions.EndIter s -> Format.fprintf fmt "EndIter %i" s
-
 let pp_lval = Printer.pp_lval
 let pp_exp = Printer.pp_exp
 let pp_list =  Pretty_utils.pp_list ~sep:", "
@@ -74,7 +66,7 @@ class print_insertions insertions functions cwd () = object(self)
       Format.fprintf fmt "%a@ @[<hov 2>{@\n"
 	(self#typ (Some (fun fmt -> Format.fprintf fmt "%s" precond)))
 	(TFun(Cil.intType,x,y,z));
-      self#insertions_at fmt (Insertions.BegFunc precond);
+      self#insertions_at fmt (Label.beg_func precond);
       Format.fprintf fmt "@[return 1;@]";
       Format.fprintf fmt "@]@\n}@\n@\n"
     end;
@@ -82,7 +74,7 @@ class print_insertions insertions functions cwd () = object(self)
     Format.fprintf fmt "@[%t%a@\n@[<v 2>" ignore self#vdecl f.svar;
     (* body. *)
     Format.fprintf fmt "@[<hov 2>{@\n";
-    self#insertions_at fmt (Insertions.BegFunc f.svar.vname);
+    self#insertions_at fmt (Label.beg_func f.svar.vname);
     self#block ~braces:true fmt f.sbody;
     Format.fprintf fmt "@.}";
     Format.fprintf fmt "@]%t@]@." ignore;
@@ -96,11 +88,11 @@ class print_insertions insertions functions cwd () = object(self)
     let kf = Kernel_function.find_englobing_kf stmt in
     let insert_something l = not (Queue.is_empty (Hashtbl.find insertions l)) in
     let insert_something =
-      (try insert_something (Insertions.BegStmt stmt.sid) with _ -> false)
-      || (try insert_something (Insertions.EndStmt stmt.sid) with _ -> false)
+      (try insert_something (Label.beg_stmt stmt.sid) with _ -> false)
+      || (try insert_something (Label.end_stmt stmt.sid) with _ -> false)
     in
     if insert_something then Format.fprintf fmt "@[<hov 2>{@\n";
-    self#insertions_at fmt (Insertions.BegStmt stmt.sid);
+    self#insertions_at fmt (Label.beg_stmt stmt.sid);
     begin
       match stmt.skind with
       | Loop(_,b,l,_,_) ->
@@ -109,22 +101,22 @@ class print_insertions insertions functions cwd () = object(self)
 	 let new_b = {b with bstmts = [List.hd b.bstmts]} in
 	 let braces = false in
 	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
-	 self#insertions_at fmt (Insertions.BegIter stmt.sid);
+	 self#insertions_at fmt (Label.beg_iter stmt.sid);
 	 let new_b = {b with bstmts = List.tl b.bstmts} in
 	 let new_b = {new_b with blocals = []} in
 	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
-	 self#insertions_at fmt (Insertions.EndIter stmt.sid);
+	 self#insertions_at fmt (Label.end_iter stmt.sid);
 	 Format.fprintf fmt "}@\n @]"
       | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
 	  when List.mem stmt.sid cwd
 	       || List.mem vi.vname (Options.Simulate_Functions.get()) -> ()
       | Return _ ->
 	let f = Kernel_function.get_name kf in
-	self#insertions_at fmt (Insertions.EndFunc f);
+	self#insertions_at fmt (Label.end_func f);
 	self#stmtkind next fmt stmt.skind
       | _ -> self#stmtkind next fmt stmt.skind
     end;
-    self#insertions_at fmt (Insertions.EndStmt stmt.sid);
+    self#insertions_at fmt (Label.end_stmt stmt.sid);
     if insert_something then Format.fprintf fmt "@]@\n}";
     Format.pp_close_box fmt ();
     Format.pp_close_box fmt ()

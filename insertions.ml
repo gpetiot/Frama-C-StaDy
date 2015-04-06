@@ -4,14 +4,6 @@ open Cil_types
 exception Unreachable
 exception Unsupported
 
-type label =
-| BegStmt of int
-| EndStmt of int
-| BegFunc of string
-| EndFunc of string
-| BegIter of int
-| EndIter of int
-
 (* alternate type 'stmt' *)
 type insertion =
 | Instru of instr
@@ -115,7 +107,7 @@ let ins_loop a b = ILoop(a,b)
 class gather_insertions props cwd = object(self)
   inherit Visitor.frama_c_inplace
 
-  val insertions : (label, insertion Queue.t) Hashtbl.t = Hashtbl.create 64
+  val insertions : (Label.t, insertion Queue.t) Hashtbl.t = Hashtbl.create 64
   val mutable functions = ([] : func list)
   val mutable result_varinfo = None
   val mutable in_old_term = false
@@ -1199,19 +1191,19 @@ class gather_insertions props cwd = object(self)
     let pre_entry_point = f.svar.vname = entry_point in
     let fprename = f.svar.vname ^ "_precond" in
     let fname = if pre_entry_point then fprename else f.svar.vname in
-    let label_pre = BegFunc fname in
+    let label_pre = Label.beg_func fname in
     let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
     List.iter (self#insert label_pre) inserts_pre;
     if self#at_least_one_prop kf behaviors Kglobal then
       begin
 	let inserts = self#post kf behaviors Kglobal in
-	self#insert (EndFunc f.svar.vname) (Block inserts)
+	self#insert (Label.end_func f.svar.vname) (Block inserts)
       end;
     let do_varinfo v =
       let inserts_decl,inserts_before,inserts_after = self#save_varinfo kf v in
-      List.iter (self#insert (BegFunc f.svar.vname)) inserts_decl;
-      List.iter (self#insert (BegFunc f.svar.vname)) inserts_before;
-      List.iter (self#insert (EndFunc f.svar.vname)) inserts_after
+      List.iter (self#insert (Label.beg_func f.svar.vname)) inserts_decl;
+      List.iter (self#insert (Label.beg_func f.svar.vname)) inserts_before;
+      List.iter (self#insert (Label.end_func f.svar.vname)) inserts_after
     in
     List.iter do_varinfo visited_globals;
     List.iter do_varinfo (Kernel_function.get_formals kf);
@@ -1288,13 +1280,13 @@ class gather_insertions props cwd = object(self)
 	let stmt_bhvs = bhvs.spec_behavior in
 	let ins = self#pre ~pre_entry_point:false kf stmt_bhvs (Kstmt stmt) in
 	let ins = self#for_behaviors for_behaviors ins in
-	List.iter (self#insert (BegStmt stmt.sid)) ins;
+	List.iter (self#insert (Label.beg_stmt stmt.sid)) ins;
 	let ins = self#post kf stmt_bhvs (Kstmt stmt) in
 	let ins =
 	  if for_behaviors = [] then ins
 	  else self#for_behaviors for_behaviors ins
 	in
-	List.iter (self#insert (EndStmt stmt.sid)) ins;
+	List.iter (self#insert (Label.end_stmt stmt.sid)) ins;
       end
 
   method private translate_assert kf stmt ca for_behaviors pred =
@@ -1302,7 +1294,7 @@ class gather_insertions props cwd = object(self)
     if List.mem prop props then
       let ins = self#pc_assert_exception pred.content "" prop in
       let inserts = self#for_behaviors for_behaviors ins in
-      List.iter (self#insert (BegStmt stmt.sid)) inserts
+      List.iter (self#insert (Label.beg_stmt stmt.sid)) inserts
 
   method private translate_invariant kf stmt ca for_behaviors pred =
     let prop = Property.ip_of_code_annot_single kf stmt ca in
@@ -1312,15 +1304,16 @@ class gather_insertions props cwd = object(self)
 	let inserts = self#for_behaviors for_behaviors ins in
 	List.iter (self#insert label) inserts
       in
-      f (BegStmt stmt.sid) "not established";
-      f (EndIter stmt.sid) "not preserved"
+      f (Label.beg_stmt stmt.sid) "not established";
+      f (Label.end_iter stmt.sid) "not preserved"
 
   method private translate_variant kf stmt ca term =
     let prop = Property.ip_of_code_annot_single kf stmt ca in
     translated_properties <- prop :: translated_properties;
     if List.mem prop props then
       let id = Utils.to_id prop in
-      let beg_label = BegIter stmt.sid and end_label = EndIter stmt.sid in
+      let beg_label = Label.beg_iter stmt.sid
+      and end_label = Label.end_iter stmt.sid in
       match term.term_type with
       | Linteger ->
 	 (* at BegIter *)
@@ -1472,7 +1465,7 @@ class gather_insertions props cwd = object(self)
 	 ins @ ins_assumes @ [ins_bhv]
        in
        let ins_h = Annotations.fold_behaviors on_bhv kf [] in
-       List.iter (self#insert (BegStmt stmt.sid)) ins_h;
+       List.iter (self#insert (Label.beg_stmt stmt.sid)) ins_h;
        Cil.DoChildren
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
 	 when List.mem stmt.sid cwd || List.mem fct_varinfo.vname sim_funcs ->
@@ -1522,7 +1515,7 @@ class gather_insertions props cwd = object(self)
        let new_f = mk_func new_f_vi formals locals ins_full_body in
        functions <- new_f :: functions;
        let i_call = Instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
-       self#insert (EndStmt stmt.sid) i_call;
+       self#insert (Label.end_stmt stmt.sid) i_call;
        Cil.SkipChildren
     | _ -> Cil.DoChildren
 
