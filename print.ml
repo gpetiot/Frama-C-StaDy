@@ -2,11 +2,6 @@
 open Cil_types
 
 
-let pp_lval = Printer.pp_lval
-let pp_exp = Printer.pp_exp
-let pp_list =  Pretty_utils.pp_list ~sep:", "
-let pp_instr = Printer.pp_instr
-
 let rec pp_insertion ?(line_break = true) fmt ins =
   let rec aux fmt = function
     | [] -> ()
@@ -14,8 +9,8 @@ let rec pp_insertion ?(line_break = true) fmt ins =
     | h :: t -> pp_insertion ~line_break:true fmt h; aux fmt t
   in
   begin match ins with
-  | Insertions.Instru i -> Format.fprintf fmt "@[%a@]" pp_instr i
-  | Insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" pp_exp e
+  | Insertions.Instru i -> Format.fprintf fmt "@[%a@]" Printer.pp_instr i
+  | Insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" Printer.pp_exp e
   | Insertions.Decl v ->
      let ty = Cil.stripConstLocalType v.vtype in
      let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
@@ -25,10 +20,10 @@ let rec pp_insertion ?(line_break = true) fmt ins =
   | Insertions.Block b ->
      if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
   | Insertions.IIf (e,b1,b2) ->
-     Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" pp_exp e aux b1;
+     Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b1;
      if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
   | Insertions.ILoop (e,b) ->
-     Format.fprintf fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" pp_exp e aux b
+     Format.fprintf fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b
   end;
   if line_break then Format.fprintf fmt "@\n"
 
