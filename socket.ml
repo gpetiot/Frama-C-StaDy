@@ -136,4 +136,54 @@ let print_exit_code code =
     | Unix.WSTOPPED _ -> "stopped"
   in
   Options.Self.feedback ~dkey:Options.dkey_socket "PathCrawler %s!" str
-    
+
+
+let run cmd =
+  match Options.Socket_Type.get() with
+  | s when s = "unix" ->
+     let socket = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
+     let name = "Pc2FcSocket" in
+     begin
+       try
+	 Unix.bind socket (Unix.ADDR_UNIX name);
+	 Unix.listen socket 2;
+	 let ret = Unix.system cmd in
+	 let rec aux cpt =
+	   if cpt < 3 then
+	     let client, _ = Unix.accept socket in
+	     process_socket client;
+	     print_exit_code ret;
+	     aux (cpt+1)
+	 in
+	 aux 0
+       with _ ->
+	 Unix.close socket;
+	 Options.Self.abort "unix socket now closed!"
+     end;
+     Unix.close socket;
+     Sys.remove name
+  | s when s = "internet" ->
+     let socket = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
+     begin
+       try
+	 Unix.bind socket(Unix.ADDR_INET(Unix.inet_addr_loopback,2222));
+	 Unix.listen socket 2;
+	 let ret = Unix.system cmd in
+	 let rec aux cpt =
+	   if cpt < 3 then
+             let client, _ = Unix.accept socket in
+	     process_socket client;
+	     print_exit_code ret;
+	     aux (cpt+1)
+	 in
+	 aux 0
+       with _ ->
+	 Unix.close socket;
+	 Options.Self.abort "internet socket now closed!"
+     end;
+     Unix.close socket
+  | _ (* stdio *) ->
+     let chan = Unix.open_process_in cmd in
+     process_channel chan;
+     let ret = Unix.close_process_in chan in
+     print_exit_code ret
