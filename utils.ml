@@ -27,6 +27,12 @@ let machdep() = match Kernel.Machdep.get() with
 let default_behavior kf =
   List.find Cil.is_default_behavior (Annotations.behaviors kf)
 
+let unguarded_behaviors kf =
+  let on_bhv _emitter bhv acc =
+    match bhv.Cil_types.b_assumes with [] -> bhv :: acc | _ -> acc
+  in
+  Annotations.fold_behaviors on_bhv kf []
+
 let typically_preds bhv =
   let is_typically (s,_,_) = s = "typically" in
   let typically = List.filter is_typically bhv.Cil_types.b_extended in

@@ -36,8 +36,8 @@ quantif_preconds('pathcrawler__merge_sort_precond',A) :-
   quantif_preconds('merge_sort',A).
 unquantif_preconds('merge_sort',
   [
-    cond(egal,dim('ret'),+(int(math), -(int(math), 'l', 1), 1),pre),
-    cond(egal,dim('table'),+(int(math), -(int(math), 'l', 1), 1),pre)
+    cond(egal,dim('table'),+(int(math), -(int(math), 'l', 1), 1),pre),
+    cond(egal,dim('ret'),+(int(math), -(int(math), 'l', 1), 1),pre)
   ]
 ).
 unquantif_preconds('pathcrawler__merge_sort_precond',A) :-

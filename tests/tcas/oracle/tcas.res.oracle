@@ -12,10 +12,10 @@
 
 dom(0,0,0,0).
 dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',_), [], int([-2147483648..2147483647])).
-dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',0), [], int([16434])).
-dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',1), [], int([0])).
-dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',2), [], int([0])).
 dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',3), [], int([0])).
+dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',2), [], int([0])).
+dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',1), [], int([0])).
+dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',0), [], int([16434])).
 dom('alt_sep_test', dim('Positive_RA_Alt_Thresh'), [], int([4..4294967295])).
 dom('pathcrawler__alt_sep_test_precond',A,B,C) :-
   dom('alt_sep_test',A,B,C).
@@ -23,10 +23,10 @@ create_input_vals('alt_sep_test', Ins):-
   create_input_val('Down_Separation', int([-2147483648..2147483647]),Ins),
   create_input_val('Cur_Vertical_Sep', int([16684]),Ins),
   create_input_val('Other_RAC', int([0..2]),Ins),
-  create_input_val(cont('Positive_RA_Alt_Thresh',0), int([16434]),Ins),
-  create_input_val(cont('Positive_RA_Alt_Thresh',1), int([0]),Ins),
-  create_input_val(cont('Positive_RA_Alt_Thresh',2), int([0]),Ins),
   create_input_val(cont('Positive_RA_Alt_Thresh',3), int([0]),Ins),
+  create_input_val(cont('Positive_RA_Alt_Thresh',2), int([0]),Ins),
+  create_input_val(cont('Positive_RA_Alt_Thresh',1), int([0]),Ins),
+  create_input_val(cont('Positive_RA_Alt_Thresh',0), int([16434]),Ins),
   create_input_val('Own_Tracked_Alt_Rate', int([450]),Ins),
   create_input_val('Two_of_Three_Reports_Valid', int([0..1]),Ins),
   create_input_val('Own_Tracked_Alt', int([300..1000]),Ins),

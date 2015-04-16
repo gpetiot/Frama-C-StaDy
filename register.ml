@@ -193,27 +193,16 @@ let compute_props ?(props=selected_props()) ?cwd () =
   let precond_fname = Printf.sprintf "__sd_%s_%s.pl" fname entry_point in
   let instru_fname = Printf.sprintf "__sd_instru_%s_%s.c" fname entry_point in
   (* Translate some parts of the pre-condition in Prolog *)
-  let native_precond_generated, domains, unquantifs, quantifs =
-    try let a,b,c = Native_precond.compute_constraints() in true, a, b, c
-    with _ -> false, [], [], []
-  in
-  Options.Self.feedback ~dkey:Options.dkey_native_precond
-    "Prolog pre-condition %s generated"
-    (if native_precond_generated then "successfully" else "not");
+  let domains, unquantifs, quantifs = Native_precond.compute_constraints() in
   let insertions, functions, translated_props, new_globals, new_init_globals =
     translate props cwd in
   let test_params =
-    if native_precond_generated || new_globals <> [] ||
-	 new_init_globals <> [] then
-      begin
-	let add_global = Native_precond.add_global in
-	let add_init_global = Native_precond.add_init_global in 
-	let domains = List.fold_left add_global domains new_globals in
-	let domains = List.fold_left add_init_global domains new_init_globals in
-	Native_precond.translate precond_fname domains unquantifs quantifs;
-	Printf.sprintf "-pc-test-params %s" precond_fname
-      end
-    else ""
+    let add_global = Native_precond.add_global in
+    let add_init_global = Native_precond.add_init_global in 
+    let domains = List.fold_left add_global domains new_globals in
+    let domains = List.fold_left add_init_global domains new_init_globals in
+    Native_precond.translate precond_fname domains unquantifs quantifs;
+    Printf.sprintf "-pc-test-params %s" precond_fname
   in
   print_translation instru_fname insertions functions cwd;
   let stop_when_assert_violated =

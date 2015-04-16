@@ -215,14 +215,7 @@ let rec input_from_type domains ty t =
   | TFloat (fk,_) ->
     let b_min, b_max = fbounds fk in
     PLFloatDom (t, Some b_min, Some b_max) :: domains
-  | TComp (ci,_,_) ->
-    let rec aux doms i = function
-      | [] -> doms
-      | f :: fields ->
-	let d = input_from_type doms f.ftype (PLCont (t, PLConst(PLInt i))) in
-	aux d (Integer.succ i) fields
-    in
-    aux domains Integer.zero ci.cfields
+  | TComp (ci,_,_) -> input_from_fields domains Integer.zero t ci.cfields
   | TPtr (ty',attr) | TArray (ty',_,_,attr) ->
     let att = Cil.findAttribute "arraylen" attr in
     if att <> [] then
@@ -242,6 +235,12 @@ let rec input_from_type domains ty t =
       ~current:true "unsupported input_from_type (%a) (%a)"
       Printer.pp_typ ty (new pl_printer)#term t;
     domains
+and input_from_fields doms i t = function
+  | [] -> doms
+  | f :: fields ->
+     let d = input_from_type doms f.ftype (PLCont (t, PLConst(PLInt i))) in
+     input_from_fields d (Integer.succ i) t fields
+    
 
 let rec valid_to_prolog term =
   let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
@@ -329,7 +328,8 @@ let rel_to_prolog rel term1 term2 =
 let rec requires_to_prolog constraints pred = match pred.content with
   | Pand (p, q) -> requires_to_prolog (requires_to_prolog constraints p) q
   | Ptrue -> constraints
-  | Pvalid(_,t) | Pvalid_read(_,t) -> (valid_to_prolog t) @ constraints
+  | Pvalid(_,t)
+  | Pvalid_read(_,t) -> List.rev_append (valid_to_prolog t) constraints
   | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
   | Pat(p,LogicLabel(_,l)) when l = "Here" -> requires_to_prolog constraints p
   | _ -> assert false
@@ -337,10 +337,12 @@ let rec requires_to_prolog constraints pred = match pred.content with
 
 let compute_constraints() =
   let kf = fst (Globals.entry_point()) in
-  let bhv = Utils.default_behavior kf in
+  let bhvs = Utils.unguarded_behaviors kf in
   let subst pred = (new Subst.subst ())#pnamed pred [] [] [] [] in
-  let requires_preds = bhv.b_requires in
-  let typically_preds = Utils.typically_preds bhv in
+  let accumulate f =
+    List.fold_left (fun l x -> List.rev_append (f x) l) [] bhvs in
+  let requires_preds = accumulate (fun x -> x.b_requires) in
+  let typically_preds = accumulate Utils.typically_preds in
   let f constraints id_pred =
     let pnamed = Logic_const.pred_of_id_pred id_pred in
     let pnamed = subst pnamed in
@@ -386,7 +388,7 @@ let compute_constraints() =
 	  let lower' = merge_int Integer.max lower i1 in
 	  let upper' = merge_int Integer.min upper i2 in
 	  Hashtbl.replace domains_tbl t (lower', upper')
-	with Not_found -> Hashtbl.add domains_tbl t (i1, i2)
+	with _ -> Hashtbl.add domains_tbl t (i1, i2)
       end
     | PLFloatDom _ -> assert false
   in
