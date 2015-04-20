@@ -26,7 +26,7 @@ let translate props cwd =
     let dkey = Options.dkey_insertions in
     let f ins =
       Options.Self.feedback
-	~dkey "/* %a */ %a" Label.pretty lab Print.pp_insertion_lb ins
+	~dkey "/* %a */ %a" Symbolic_label.pretty lab Print.pp_insertion_lb ins
     in
     Queue.iter f insertions;
     Options.Self.feedback ~dkey "--------------------"

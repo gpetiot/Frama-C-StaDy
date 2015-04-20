@@ -24,6 +24,7 @@ PLUGIN_CMO := \
 	subst \
 	utils \
 	socket \
+	symbolic_label \
 	native_precond \
 	insertions \
 	print \
