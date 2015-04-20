@@ -23,31 +23,6 @@ type func = {
 
 let mk_func v f l s = {func_var=v; func_formals=f; func_locals=l; func_stmts=s;}
 
-let binop_to_relation = function
-  | Lt -> Rlt
-  | Gt -> Rgt
-  | Le -> Rle
-  | Ge -> Rge
-  | Eq -> Req
-  | Ne -> Rneq
-  | _ -> raise Unreachable
-
-let relation_to_binop = function
-  | Rlt -> Lt
-  | Rgt -> Gt
-  | Rle -> Le
-  | Rge -> Ge
-  | Req -> Eq
-  | Rneq -> Ne
-
-let rel_to_string = function
-  | Rlt -> "lt"
-  | Rgt -> "gt"
-  | Rle -> "le"
-  | Rge -> "ge"
-  | Req -> "eq"
-  | Rneq -> "ne"
-
 let loc = Cil_datatype.Location.unknown
 
 (* varinfos *)
@@ -57,19 +32,11 @@ let my_Z_varinfo s = my_varinfo (Utils.mpz_t()) s
 (* expressions *)
 let zero = Cil.zero ~loc
 let one = Cil.one ~loc
-let cmp rel e1 e2 = Cil.mkBinOp ~loc (relation_to_binop rel) e1 e2
+let cmp rel e1 e2 = Cil.mkBinOp ~loc (Utils.relation_to_binop rel) e1 e2
 
 (* instructions *)
 let instru_affect a b = Set(a,b,loc)
 let instru_skip = Skip loc
-
-let binop_to_fname = function
-  | PlusA -> "add"
-  | MinusA -> "sub"
-  | Mult -> "mul"
-  | Div -> "tdiv_q"
-  | Mod -> "tdiv_r"
-  | _ -> raise Unreachable
 
 let rec typename = function
   | TInt (ikind, _) ->
@@ -150,9 +117,10 @@ class gather_insertions props cwd = object(self)
   method ctdiv_q_ui x y z = self#call "__gmpz_tdiv_q_ui" None [x;y;z]
   method ctdiv_r x y z = self#call "__gmpz_tdiv_r" None [x;y;z]
   method ctdiv_r_ui x y z = self#call "__gmpz_tdiv_r_ui" None [x;y;z]
-  method cbinop op x y z = self#call("__gmpz_"^(binop_to_fname op)) None [x;y;z]
+  method cbinop op x y z =
+    self#call("__gmpz_"^(Utils.binop_to_fname op)) None [x;y;z]
   method cbinop_ui op x y z =
-    self#call("__gmpz_"^(binop_to_fname op)^"_ui") None [x;y;z]
+    self#call("__gmpz_"^(Utils.binop_to_fname op)^"_ui") None [x;y;z]
   method cget_ui x y = self#call "__gmpz_get_ui" (Some x) [y]
   method cget_si x y = self#call "__gmpz_get_si" (Some x) [y]
   method ccmp x y z = self#call "__gmpz_cmp" (Some x) [y;z]
@@ -312,7 +280,7 @@ class gather_insertions props cwd = object(self)
        | Linteger ->
 	  let i_0, x = self#as_logic_type Linteger a in
 	  let i_1, y = self#as_logic_type Linteger b in
-	  let ret = self#fresh_Z_varinfo (binop_to_fname op) in
+	  let ret = self#fresh_Z_varinfo (Utils.binop_to_fname op) in
 	  let i_2 = decl_varinfo ret in
 	  let e_ret = Cil.evar ret in
 	  let i_3 = Instru(self#cinit e_ret) in
@@ -333,7 +301,7 @@ class gather_insertions props cwd = object(self)
 	       let e_tmp = Cil.evar tmp in
 	       let i_3 = decl_varinfo tmp in
 	       let i_4 = Instru(self#ccmp (Cil.var tmp) x y) in
-	       let op = binop_to_relation op in
+	       let op = Utils.binop_to_relation op in
 	       let lvar = Cil.var var in
 	       let i_5 = Instru(instru_affect lvar (cmp op e_tmp zero)) in
 	       let i_6 = Instru(self#cclear x) in
@@ -611,7 +579,8 @@ class gather_insertions props cwd = object(self)
     | Linteger, Ctype x ->
        let inserts_0, t1' = self#translate_term t1 in
        let inserts_1, t2' = self#translate_term t2 in
-       let var = self#fresh_ctype_varinfo Cil.intType (rel_to_string rel) in
+       let varname = Utils.rel_to_string rel in
+       let var = self#fresh_ctype_varinfo Cil.intType varname in
        let i_2 = decl_varinfo var in
        let zcmp =
 	 if Cil.isUnsignedInteger x then self#ccmp_ui
@@ -626,7 +595,8 @@ class gather_insertions props cwd = object(self)
     | Ctype _, Linteger ->
        let inserts_0, t1' = self#as_logic_type Linteger t1 in
        let inserts_1, t2' = self#translate_term t2 in
-       let var = self#fresh_ctype_varinfo Cil.intType (rel_to_string rel) in
+       let varname = Utils.rel_to_string rel in
+       let var = self#fresh_ctype_varinfo Cil.intType varname in
        let i_4 = decl_varinfo var in
        let i_5 = Instru(self#ccmp (Cil.var var) t1' t2') in
        let i_6 = Instru(self#cclear t1') in

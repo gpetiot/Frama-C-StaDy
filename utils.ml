@@ -281,3 +281,36 @@ let pp_ce fmt p =
 (*   let lenv = Logic_typing.Lenv.empty() in *)
 (*   let _, lexpr = Logic_lexer.lexpr (Lexing.dummy_pos, pred_as_string) in *)
 (*   M.predicate lenv lexpr *)
+
+let binop_to_relation = function
+  | Lt -> Rlt
+  | Gt -> Rgt
+  | Le -> Rle
+  | Ge -> Rge
+  | Eq -> Req
+  | Ne -> Rneq
+  | _ -> failwith "binop_to_relation"
+
+let binop_to_fname = function
+  | PlusA -> "add"
+  | MinusA -> "sub"
+  | Mult -> "mul"
+  | Div -> "tdiv_q"
+  | Mod -> "tdiv_r"
+  | _ -> failwith "binop_to_fname"
+
+let relation_to_binop = function
+  | Rlt -> Lt
+  | Rgt -> Gt
+  | Rle -> Le
+  | Rge -> Ge
+  | Req -> Eq
+  | Rneq -> Ne
+
+let rel_to_string = function
+  | Rlt -> "lt"
+  | Rgt -> "gt"
+  | Rle -> "le"
+  | Rge -> "ge"
+  | Req -> "eq"
+  | Rneq -> "ne"
