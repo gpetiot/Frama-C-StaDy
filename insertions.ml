@@ -4,21 +4,13 @@ open Cil_types
 exception Unreachable
 exception Unsupported
 
-(* alternate type 'stmt' *)
-type insertion =
-| Instru of instr
-| IRet of exp
-| Decl of varinfo
-| Block of insertion list
-| IIf of exp * insertion list * insertion list
-| ILoop of exp * insertion list
 
 (* alternate type 'fundec' using insertions instead of stmts *)
 type func = {
   mutable func_var: varinfo;
   mutable func_formals: varinfo list;
   mutable func_locals: varinfo list;
-  mutable func_stmts: insertion list;
+  mutable func_stmts: Insertion.t list;
 }
 
 let mk_func v f l s = {func_var=v; func_formals=f; func_locals=l; func_stmts=s;}
@@ -65,11 +57,6 @@ let rec typename = function
   | TNamed (ty, _) -> typename ty.ttype
   | _ -> raise Unreachable
 
-(* insertions *)
-let decl_varinfo v = Decl v
-let ins_ret a = IRet a
-let ins_if  a b c = IIf(a,b,c)
-let ins_loop a b = ILoop(a,b)
 
 class gather_insertions props cwd = object(self)
   inherit Visitor.frama_c_inplace
@@ -196,13 +183,13 @@ class gather_insertions props cwd = object(self)
 	 match ty with
 	 | Linteger ->
 	    let fresh_var = self#fresh_Z_varinfo "cst" in
-	    let insert_0 = decl_varinfo fresh_var in
+	    let insert_0 = Insertion.mk_decl fresh_var in
 	    let str = try Extlib.the str_opt with _ -> Integer.to_string i in
 	    let str = Cil.mkString ~loc str in
 	    let e_fresh_var = Cil.evar fresh_var in
 	    let ten = CInt64(Integer.of_int 10, Cil_types.IInt, Some "10") in
 	    let e_ten = Cil.new_exp ~loc (Const ten) in
-	    let insert_1 = Instru(self#cinit_set_str e_fresh_var str e_ten) in
+	    let insert_1 = Insertion.mk_instru(self#cinit_set_str e_fresh_var str e_ten) in
 	    [insert_0; insert_1], Cil.evar fresh_var
 	 | Ctype(TInt(ik,_)) ->[],Cil.new_exp ~loc (Const(CInt64(i,ik,str_opt)))
 	 | _ -> raise Unreachable
@@ -243,11 +230,11 @@ class gather_insertions props cwd = object(self)
        assert(op = Neg);
        let i_0, e = self#translate_term t in
        let ret = self#fresh_Z_varinfo "neg" in
-       let i_1 = decl_varinfo ret in
+       let i_1 = Insertion.mk_decl ret in
        let e_ret = Cil.evar ret in
-       let i_2 = Instru(self#cinit e_ret) in
-       let i_3 = Instru(self#cui_sub e_ret zero e) in
-       let i_4 = Instru(self#cclear e) in
+       let i_2 = Insertion.mk_instru(self#cinit e_ret) in
+       let i_3 = Insertion.mk_instru(self#cui_sub e_ret zero e) in
+       let i_4 = Insertion.mk_instru(self#cclear e) in
        i_0 @ [i_1; i_2; i_3; i_4], Lval(Cil.var ret)
     | Lreal -> raise Unsupported
     | _ -> let ins, e = self#translate_term t in ins, UnOp(op,e,(Cil.typeOf e))
@@ -256,12 +243,12 @@ class gather_insertions props cwd = object(self)
     | Linteger ->
        let ret = self#fresh_Z_varinfo varname in
        let e_ret = Cil.evar ret in
-       let i_0 = decl_varinfo ret in
-       let i_1 = Instru(self#cinit e_ret) in
+       let i_0 = Insertion.mk_decl ret in
+       let i_1 = Insertion.mk_instru(self#cinit e_ret) in
        let i_2, x = self#as_logic_type Linteger a in
        let i_3, y = self#as_c_type Cil.ulongLongType b in
-       let i_4 = Instru(shift e_ret x y) in
-       let i_5 = Instru(self#cclear x) in
+       let i_4 = Insertion.mk_instru(shift e_ret x y) in
+       let i_5 = Insertion.mk_instru(self#cclear x) in
        i_0 :: i_1 :: i_2 @ i_3 @ [i_4 ; i_5], e_ret.enode
     | _ -> raise Unreachable
 
@@ -281,12 +268,12 @@ class gather_insertions props cwd = object(self)
 	  let i_0, x = self#as_logic_type Linteger a in
 	  let i_1, y = self#as_logic_type Linteger b in
 	  let ret = self#fresh_Z_varinfo (Utils.binop_to_fname op) in
-	  let i_2 = decl_varinfo ret in
+	  let i_2 = Insertion.mk_decl ret in
 	  let e_ret = Cil.evar ret in
-	  let i_3 = Instru(self#cinit e_ret) in
-	  let clear_t1 = Instru(self#cclear x) in
-	  let clear_t2 = Instru(self#cclear y) in
-	  let i_4 = Instru(self#cbinop op e_ret x y) in
+	  let i_3 = Insertion.mk_instru(self#cinit e_ret) in
+	  let clear_t1 = Insertion.mk_instru(self#cclear x) in
+	  let clear_t2 = Insertion.mk_instru(self#cclear y) in
+	  let i_4 = Insertion.mk_instru(self#cbinop op e_ret x y) in
 	  i_0 @ i_1 @ [i_2 ; i_3 ; i_4 ; clear_t1; clear_t2 ], e_ret.enode
        | Lreal -> raise Unsupported
        | Ltype _ as lt when Logic_const.is_boolean_type lt ->
@@ -296,16 +283,16 @@ class gather_insertions props cwd = object(self)
 	    match a.term_type, b.term_type with
 	    | Linteger, Linteger ->
 	       let var = self#fresh_ctype_varinfo Cil.intType "binop" in
-	       let i_2 = decl_varinfo var in
+	       let i_2 = Insertion.mk_decl var in
 	       let tmp = self#fresh_ctype_varinfo Cil.intType "binop_cmp" in
 	       let e_tmp = Cil.evar tmp in
-	       let i_3 = decl_varinfo tmp in
-	       let i_4 = Instru(self#ccmp (Cil.var tmp) x y) in
+	       let i_3 = Insertion.mk_decl tmp in
+	       let i_4 = Insertion.mk_instru(self#ccmp (Cil.var tmp) x y) in
 	       let op = Utils.binop_to_relation op in
 	       let lvar = Cil.var var in
-	       let i_5 = Instru(instru_affect lvar (cmp op e_tmp zero)) in
-	       let i_6 = Instru(self#cclear x) in
-	       let i_7 = Instru(self#cclear y) in
+	       let i_5 = Insertion.mk_instru(instru_affect lvar (cmp op e_tmp zero)) in
+	       let i_6 = Insertion.mk_instru(self#cclear x) in
+	       let i_7 = Insertion.mk_instru(self#cclear y) in
 	       [i_2; i_3; i_4; i_5; i_6; i_7], Cil.evar var
 	    | _ -> [], Cil.mkBinOp ~loc op x y
 	  in
@@ -315,24 +302,24 @@ class gather_insertions props cwd = object(self)
   method private translate_tif cond then_b else_b = match then_b.term_type with
     | Linteger ->
        let ret = self#fresh_Z_varinfo "tif" in
-       let i_0 = decl_varinfo ret in
+       let i_0 = Insertion.mk_decl ret in
        let e_ret = Cil.evar ret in
-       let i_1 = Instru(self#cinit e_ret) in
+       let i_1 = Insertion.mk_instru(self#cinit e_ret) in
        let i_2, cond' = self#translate_term cond in
        let tmp = self#fresh_ctype_varinfo Cil.intType "tif_cmp" in
        let e_tmp = Cil.evar tmp in
-       let i_3 = decl_varinfo tmp in
-       let i_4 = Instru(self#ccmp_si (Cil.var tmp) cond' zero) in
+       let i_3 = Insertion.mk_decl tmp in
+       let i_4 = Insertion.mk_instru(self#ccmp_si (Cil.var tmp) cond' zero) in
        let inserts_then_0, then_b' = self#translate_term then_b in
-       let set_1 = Instru(self#cset e_ret then_b') in
-       let clear_1 = Instru(self#cclear then_b') in
+       let set_1 = Insertion.mk_instru(self#cset e_ret then_b') in
+       let clear_1 = Insertion.mk_instru(self#cclear then_b') in
        let inserts_then = inserts_then_0 @ [set_1 ; clear_1] in
        let inserts_else_0, else_b' = self#translate_term else_b in
-       let set_2 = Instru(self#cset e_ret else_b') in
-       let clear_2 = Instru(self#cclear else_b') in
+       let set_2 = Insertion.mk_instru(self#cset e_ret else_b') in
+       let clear_2 = Insertion.mk_instru(self#cclear else_b') in
        let inserts_else = inserts_else_0 @ [ set_2 ; clear_2] in
-       let i_5 = ins_if (cmp Rneq e_tmp zero) inserts_then inserts_else in
-       let i_6 = Instru(self#cclear cond') in
+       let i_5 = Insertion.mk_if (cmp Rneq e_tmp zero) inserts_then inserts_else in
+       let i_6 = Insertion.mk_instru(self#cclear cond') in
        i_0 :: i_1 :: i_2 @ [i_3; i_4; i_5; i_6], e_ret.enode
     | Lreal -> raise Unsupported
     | _ -> raise Unreachable
@@ -369,14 +356,14 @@ class gather_insertions props cwd = object(self)
        in
        let i_0, v = self#translate_term t in
        let ret = self#fresh_Z_varinfo "to_Z" in
-       let i_1 = decl_varinfo ret in
+       let i_1 = Insertion.mk_decl ret in
        let init_set = match ty with
 	 | Ctype x when Cil.isUnsignedInteger x -> self#cinit_set_ui
 	 | Ctype x when Cil.isSignedInteger x -> self#cinit_set_si
 	 | _ -> raise Unsupported
        in
        let e_ret = Cil.evar ret in
-       let i_2 = Instru(init_set e_ret v) in
+       let i_2 = Insertion.mk_instru(init_set e_ret v) in
        i_0 @ [i_1; i_2], e_ret.enode
     | Lreal -> raise Unsupported
     | _ -> raise Unreachable
@@ -386,14 +373,14 @@ class gather_insertions props cwd = object(self)
     | Linteger ->
        let i_0, v = self#translate_term t in
        let ret = self#fresh_ctype_varinfo ty "to_ctype" in
-       let i_1 = decl_varinfo ret in
+       let i_1 = Insertion.mk_decl ret in
        let get = match ty with
 	 | x when Cil.isUnsignedInteger x -> self#cget_ui
 	 | x when Cil.isSignedInteger x -> self#cget_si
 	 | _ -> raise Unsupported
        in
-       let i_2 = Instru(get (Cil.var ret) v) in
-       let i_3 = Instru(self#cclear v) in
+       let i_2 = Insertion.mk_instru(get (Cil.var ret) v) in
+       let i_3 = Insertion.mk_instru(self#cclear v) in
        i_0 @ [i_1; i_2; i_3], (Cil.evar ret).enode
     | Lreal -> raise Unsupported
     | _ -> raise Unreachable
@@ -413,42 +400,42 @@ class gather_insertions props cwd = object(self)
     let varname = match name with
       | "\\sum" -> "sum" | "\\product" -> "product" | _ -> "numof" in
     let ret = self#fresh_Z_varinfo varname in
-    let i_0 = decl_varinfo ret in
+    let i_0 = Insertion.mk_decl ret in
     let e_ret = Cil.evar ret in
-    let i_1 = Instru(self#cinit_set_si e_ret init_val) in
+    let i_1 = Insertion.mk_instru(self#cinit_set_si e_ret init_val) in
     let i_3, low = self#translate_term lower in
     let i_4, up = self#translate_term upper in
     let fresh_iter = my_Z_varinfo q.lv_name in
-    let i_5 = decl_varinfo fresh_iter in
+    let i_5 = Insertion.mk_decl fresh_iter in
     let e_iter = Cil.evar fresh_iter in
-    let i_6 = Instru(self#cinit_set e_iter low) in
+    let i_6 = Insertion.mk_instru(self#cinit_set e_iter low) in
     let ins_b_0, lambda_t = self#translate_term t in
     let ins_b_1, clear_lambda = match name with
       | s when s = "\\sum" ->
-	 Instru(self#cbinop PlusA e_ret e_ret lambda_t),
-	 [Instru(self#cclear lambda_t)]
+	 Insertion.mk_instru(self#cbinop PlusA e_ret e_ret lambda_t),
+	 [Insertion.mk_instru(self#cclear lambda_t)]
       | s when s = "\\product" ->
-	 Instru(self#cbinop Mult e_ret e_ret lambda_t),
-	 [Instru(self#cclear lambda_t)]
+	 Insertion.mk_instru(self#cbinop Mult e_ret e_ret lambda_t),
+	 [Insertion.mk_instru(self#cclear lambda_t)]
       | s when s = "\\numof" ->
 	 let cond = cmp Rneq lambda_t zero in
-	 let instr = Instru(self#cbinop_ui PlusA e_ret e_ret one) in
-	 ins_if cond [instr] [], []
+	 let instr = Insertion.mk_instru(self#cbinop_ui PlusA e_ret e_ret one) in
+	 Insertion.mk_if cond [instr] [], []
       | _ -> raise Unsupported
     in
-    let ins_b_2 = Instru(self#cbinop_ui PlusA e_iter e_iter one) in
+    let ins_b_2 = Insertion.mk_instru(self#cbinop_ui PlusA e_iter e_iter one) in
     let tmp = self#fresh_ctype_varinfo Cil.intType (varname ^ "_cmp") in
     let e_tmp = Cil.evar tmp in
-    let ii_1 = decl_varinfo tmp in
-    let ii_2 = Instru(self#ccmp (Cil.var tmp) e_iter up) in
-    let ii_3 = Instru(self#ccmp (Cil.var tmp) e_iter up) in
+    let ii_1 = Insertion.mk_decl tmp in
+    let ii_2 = Insertion.mk_instru(self#ccmp (Cil.var tmp) e_iter up) in
+    let ii_3 = Insertion.mk_instru(self#ccmp (Cil.var tmp) e_iter up) in
     let ins_b = ins_b_0 @ ins_b_1 :: ins_b_2 :: ii_3 :: clear_lambda in
-    let i_7 = ins_loop (cmp Rle e_tmp zero) ins_b in
-    let i_8 = Instru(self#cclear e_iter) in
-    let i_9 = Instru(self#cclear low) in
-    let i_10 = Instru(self#cclear up) in
+    let i_7 = Insertion.mk_loop (cmp Rle e_tmp zero) ins_b in
+    let i_8 = Insertion.mk_instru(self#cclear e_iter) in
+    let i_9 = Insertion.mk_instru(self#cclear low) in
+    let i_10 = Insertion.mk_instru(self#cclear up) in
     let ins_block = i_3 @ i_4 @ [i_5; i_6; ii_1; ii_2; i_7; i_8; i_9; i_10] in
-    [i_0; i_1; Block ins_block], e_ret.enode
+    [i_0; i_1; Insertion.mk_block ins_block], e_ret.enode
 
   method private translate_app li _ params =
     let s = li.l_var_info.lv_name in
@@ -457,11 +444,11 @@ class gather_insertions props cwd = object(self)
     | Linteger, [param] when s = "\\abs" ->
        let i_0, x = self#translate_term param in
        let ret = self#fresh_Z_varinfo "abs" in
-       let i_1 = decl_varinfo ret in
+       let i_1 = Insertion.mk_decl ret in
        let e_ret = Cil.evar ret in
-       let i_2 = Instru(self#cinit e_ret) in
-       let i_3 = Instru(self#cabs e_ret x) in
-       let i_4 = Instru(self#cclear x) in
+       let i_2 = Insertion.mk_instru(self#cinit e_ret) in
+       let i_3 = Insertion.mk_instru(self#cabs e_ret x) in
+       let i_4 = Insertion.mk_instru(self#cclear x) in
        i_0 @ [i_1; i_2; i_3; i_4], e_ret.enode
     | Linteger, [l;u;{term_node=Tlambda([q],t)}]
 	 when s = "\\sum" || s = "\\product" || s = "\\numof" ->
@@ -474,14 +461,14 @@ class gather_insertions props cwd = object(self)
     | Linteger ->
        let i_0, e = self#translate_term t in
        let ret = self#fresh_ctype_varinfo ty "cast" in
-       let i_1 = decl_varinfo ret in
+       let i_1 = Insertion.mk_decl ret in
        let get = match ty with (* dest type *)
 	 | x when Cil.isUnsignedInteger x -> self#cget_ui
 	 | x when Cil.isSignedInteger x -> self#cget_si
 	 | _ -> raise Unsupported
        in
-       let i_2 = Instru(get (Cil.var ret) e) in
-       let i_3 = Instru(self#cclear e) in
+       let i_2 = Insertion.mk_instru(get (Cil.var ret) e) in
+       let i_3 = Insertion.mk_instru(self#cclear e) in
        i_0 @ [i_1; i_2; i_3], (Cil.evar ret).enode
     | Lreal -> raise Unsupported
     | Ctype _ -> let ins, e = self#translate_term t in ins, CastE (ty, e)
@@ -565,10 +552,10 @@ class gather_insertions props cwd = object(self)
     | Linteger ->
        let fresh_var = self#fresh_Z_varinfo "lval" in
        let ins_0, t' = aux() in
-       let ins_1 = decl_varinfo fresh_var in
+       let ins_1 = Insertion.mk_decl fresh_var in
        let e_t' = Cil.new_exp ~loc (Lval t') in
        let e_fresh_var = Cil.evar fresh_var in
-       let ins_2 = Instru(self#cinit_set e_fresh_var e_t') in
+       let ins_2 = Insertion.mk_instru(self#cinit_set e_fresh_var e_t') in
        ins_0 @ [ins_1; ins_2], Cil.var fresh_var
     | Lreal -> raise Unsupported
     | _ -> aux()
@@ -581,14 +568,14 @@ class gather_insertions props cwd = object(self)
        let inserts_1, t2' = self#translate_term t2 in
        let varname = Utils.rel_to_string rel in
        let var = self#fresh_ctype_varinfo Cil.intType varname in
-       let i_2 = decl_varinfo var in
+       let i_2 = Insertion.mk_decl var in
        let zcmp =
 	 if Cil.isUnsignedInteger x then self#ccmp_ui
 	 else if Cil.isSignedInteger x then self#ccmp_si
 	 else raise Unsupported
        in
-       let i_3 = Instru(zcmp (Cil.var var) t1' t2') in
-       inserts_0 @ inserts_1 @ [i_2; i_3; Instru(self#cclear t1')],
+       let i_3 = Insertion.mk_instru(zcmp (Cil.var var) t1' t2') in
+       inserts_0 @ inserts_1 @ [i_2; i_3; Insertion.mk_instru(self#cclear t1')],
        cmp rel (Cil.evar var) zero
     | Lreal, Lreal -> raise Unsupported
     | Linteger, Linteger
@@ -597,10 +584,10 @@ class gather_insertions props cwd = object(self)
        let inserts_1, t2' = self#translate_term t2 in
        let varname = Utils.rel_to_string rel in
        let var = self#fresh_ctype_varinfo Cil.intType varname in
-       let i_4 = decl_varinfo var in
-       let i_5 = Instru(self#ccmp (Cil.var var) t1' t2') in
-       let i_6 = Instru(self#cclear t1') in
-       let i_7 = Instru(self#cclear t2') in
+       let i_4 = Insertion.mk_decl var in
+       let i_5 = Insertion.mk_instru(self#ccmp (Cil.var var) t1' t2') in
+       let i_6 = Insertion.mk_instru(self#cclear t1') in
+       let i_7 = Insertion.mk_instru(self#cclear t2') in
        inserts_0 @ inserts_1 @ [i_4; i_5; i_6; i_7], cmp rel (Cil.evar var) zero
     | _ ->
        let inserts_0, t1' = self#translate_term t1 in
@@ -610,36 +597,36 @@ class gather_insertions props cwd = object(self)
   method private translate_and p q =
     let var = self#fresh_pred_varinfo "and" in
     let inserts_0, pred1_var = self#translate_pnamed p in
-    let insert_1 = decl_varinfo var in
+    let insert_1 = Insertion.mk_decl var in
     let lvar = Cil.var var in
-    let insert_2 = Instru(instru_affect lvar pred1_var) in
+    let insert_2 = Insertion.mk_instru(instru_affect lvar pred1_var) in
     let inserts_b_0, pred2_var = self#translate_pnamed q in
-    let insert_b_1 = Instru(instru_affect lvar pred2_var) in
+    let insert_b_1 = Insertion.mk_instru(instru_affect lvar pred2_var) in
     let e_var = Cil.evar var in
-    let insert_3 = ins_if e_var (inserts_b_0 @ [insert_b_1]) [] in
+    let insert_3 = Insertion.mk_if e_var (inserts_b_0 @ [insert_b_1]) [] in
     inserts_0 @ [insert_1; insert_2; insert_3], e_var
 
   method private translate_or p q =
     let var = self#fresh_pred_varinfo "or"  in
     let inserts_0, pred1_var = self#translate_pnamed p in
-    let insert_1 = decl_varinfo var in
+    let insert_1 = Insertion.mk_decl var in
     let lvar = Cil.var var in
-    let insert_2 = Instru(instru_affect lvar pred1_var) in
+    let insert_2 = Insertion.mk_instru(instru_affect lvar pred1_var) in
     let inserts_b_0, pred2_var = self#translate_pnamed q in
-    let insert_b_1 = Instru(instru_affect lvar pred2_var) in
+    let insert_b_1 = Insertion.mk_instru(instru_affect lvar pred2_var) in
     let e_var = Cil.evar var in
-    let insert_3 = ins_if e_var [] (inserts_b_0 @ [insert_b_1]) in
+    let insert_3 = Insertion.mk_if e_var [] (inserts_b_0 @ [insert_b_1]) in
     inserts_0 @ [insert_1; insert_2; insert_3], e_var
 
   method private translate_implies p q =
     let var = self#fresh_pred_varinfo "implies" in
-    let insert_0 = decl_varinfo var in
+    let insert_0 = Insertion.mk_decl var in
     let lvar = Cil.var var in
-    let insert_1 = Instru(instru_affect lvar one) in
+    let insert_1 = Insertion.mk_instru(instru_affect lvar one) in
     let inserts_2, pred1_var = self#translate_pnamed p in
     let inserts_b_0, pred2_var = self#translate_pnamed q in
-    let insert_b_1 = Instru(instru_affect lvar pred2_var) in
-    let insert_3 = ins_if pred1_var (inserts_b_0 @ [insert_b_1]) [] in
+    let insert_b_1 = Insertion.mk_instru(instru_affect lvar pred2_var) in
+    let insert_3 = Insertion.mk_if pred1_var (inserts_b_0 @ [insert_b_1]) [] in
     insert_0 :: insert_1 :: inserts_2 @ [insert_3], Cil.evar var
 
   method private translate_equiv p q =
@@ -658,13 +645,13 @@ class gather_insertions props cwd = object(self)
   method private translate_pif t p q =
     let inserts_0, term_var = self#translate_term t in
     let res_var = self#fresh_pred_varinfo "pif" in
-    let insert_1 = decl_varinfo res_var in
+    let insert_1 = Insertion.mk_decl res_var in
     let cond, ii, insert_3 = match t.term_type with
       | Linteger ->
 	 let tmp = self#fresh_ctype_varinfo Cil.intType "pif_cmp" in
-	 let i_1 = decl_varinfo tmp in
-	 let i_2 = Instru(self#ccmp_si (Cil.var tmp) term_var zero) in
-	 cmp Rneq (Cil.evar tmp) zero, [i_1; i_2],[Instru(self#cclear term_var)]
+	 let i_1 = Insertion.mk_decl tmp in
+	 let i_2 = Insertion.mk_instru(self#ccmp_si (Cil.var tmp) term_var zero) in
+	 cmp Rneq (Cil.evar tmp) zero, [i_1; i_2],[Insertion.mk_instru(self#cclear term_var)]
       | Lreal -> raise Unsupported
       | Ctype (TInt _) -> cmp Rneq term_var zero, [], []
       | Ltype _ as lt when Logic_const.is_boolean_type lt ->
@@ -673,12 +660,12 @@ class gather_insertions props cwd = object(self)
     in
     let inserts_then_0, pred1_var = self#translate_pnamed p in
     let lres_var = Cil.var res_var in
-    let insert_then_1 = Instru(instru_affect lres_var pred1_var) in
+    let insert_then_1 = Insertion.mk_instru(instru_affect lres_var pred1_var) in
     let inserts_then = inserts_then_0 @ [insert_then_1] in
     let inserts_else_0, pred2_var = self#translate_pnamed q in
-    let insert_else_1 = Instru(instru_affect lres_var pred2_var) in
+    let insert_else_1 = Insertion.mk_instru(instru_affect lres_var pred2_var) in
     let inserts_else = inserts_else_0 @ [insert_else_1] in
-    let insert_2 = ins_if cond inserts_then inserts_else in
+    let insert_2 = Insertion.mk_if cond inserts_then inserts_else in
     inserts_0 @ ii @ insert_1 :: insert_2 :: insert_3, Cil.evar res_var
 
   method private unsupported_predicate p =
@@ -718,7 +705,7 @@ class gather_insertions props cwd = object(self)
     let ret = self#fresh_pred_varinfo "valid" in
     let l_ret = Cil.var ret in
     let e_ret = Cil.evar ret in
-    let i_0 = decl_varinfo ret in
+    let i_0 = Insertion.mk_decl ret in
     let dim = self#fresh_ctype_varinfo Cil.intType "valid_dim" in
     let l_dim = Cil.var dim in
     let e_dim = Cil.evar dim in
@@ -726,77 +713,77 @@ class gather_insertions props cwd = object(self)
       match min_off.term_type, max_off.term_type with
       | Linteger, Linteger ->
   	 let nonempty_set = self#fresh_pred_varinfo "valid_cmp" in
-  	 let i_8 = decl_varinfo nonempty_set in
+  	 let i_8 = Insertion.mk_decl nonempty_set in
   	 let l_nonempty_set = Cil.var nonempty_set in
   	 let e_nonempty_set = Cil.evar nonempty_set in
-  	 let i_9 = Instru(self#ccmp l_nonempty_set low_o up_o) in
+  	 let i_9 = Insertion.mk_instru(self#ccmp l_nonempty_set low_o up_o) in
   	 let cond = cmp Rle e_nonempty_set zero in
-  	 let i_1 = decl_varinfo dim in
-  	 let i_2 = Instru(self#cpc_dim l_dim x') in
+  	 let i_1 = Insertion.mk_decl dim in
+  	 let i_2 = Insertion.mk_instru(self#cpc_dim l_dim x') in
   	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
   	 let l_cmp_dim_off = Cil.var cmp_dim_off in
   	 let e_cmp_dim_off = Cil.evar cmp_dim_off in
-  	 let i_3 = decl_varinfo cmp_dim_off in
-  	 let i_4 = Instru(self#ccmp_ui l_cmp_dim_off up_o e_dim) in
+  	 let i_3 = Insertion.mk_decl cmp_dim_off in
+  	 let i_4 = Insertion.mk_instru(self#ccmp_ui l_cmp_dim_off up_o e_dim) in
   	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
   	 let l_cmp_off_zero = Cil.var cmp_off_zero in
   	 let e_cmp_off_zero = Cil.evar cmp_off_zero in
-  	 let i_5 = decl_varinfo cmp_off_zero in
-  	 let i_6 = Instru(self#ccmp_ui l_cmp_off_zero up_o zero) in
+  	 let i_5 = Insertion.mk_decl cmp_off_zero in
+  	 let i_6 = Insertion.mk_instru(self#ccmp_ui l_cmp_off_zero up_o zero) in
   	 let e1 = cmp Rge e_cmp_off_zero zero in
   	 let e2 = cmp Rlt e_cmp_dim_off zero in
-  	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
-  	 let i_cl = Instru(self#cclear low_o) in
-	 let i_cl2 = Instru(self#cclear up_o) in
+  	 let i_7 = Insertion.mk_instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+  	 let i_cl = Insertion.mk_instru(self#cclear low_o) in
+	 let i_cl2 = Insertion.mk_instru(self#cclear up_o) in
   	 [i_8; i_9], [i_1; i_2; i_3; i_4; i_5; i_6; i_7], cond, [i_cl; i_cl2]
       | Linteger, Ctype (TInt _) ->
   	 let nonempty_set = self#fresh_pred_varinfo "valid_cmp" in
-  	 let i_0' = decl_varinfo nonempty_set in
+  	 let i_0' = Insertion.mk_decl nonempty_set in
   	 let l_nonempty_set = Cil.var nonempty_set in
   	 let e_nonempty_set = Cil.evar nonempty_set in
-  	 let i_cond = Instru(self#ccmp_si l_nonempty_set low_o up_o) in
+  	 let i_cond = Insertion.mk_instru(self#ccmp_si l_nonempty_set low_o up_o) in
   	 let cond = cmp Rle e_nonempty_set zero in
-  	 let i_1 = decl_varinfo dim in
-  	 let i_2 = Instru(self#cpc_dim l_dim x') in
+  	 let i_1 = Insertion.mk_decl dim in
+  	 let i_2 = Insertion.mk_instru(self#cpc_dim l_dim x') in
   	 let e1 = cmp Rge up_o zero in
   	 let e2 = cmp Rgt e_dim up_o in
-  	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
-  	 let i_clear = Instru(self#cclear low_o) in
+  	 let i_7 = Insertion.mk_instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+  	 let i_clear = Insertion.mk_instru(self#cclear low_o) in
   	 [i_0'; i_cond], [i_1; i_2; i_7], cond, [i_clear]
       | Ctype (TInt _), Linteger ->
 	 let nonempty_set = self#fresh_pred_varinfo "valid_cmp" in
-  	 let i_0' = decl_varinfo nonempty_set in
+  	 let i_0' = Insertion.mk_decl nonempty_set in
   	 let l_nonempty_set = Cil.var nonempty_set in
   	 let e_nonempty_set = Cil.evar nonempty_set in
-  	 let i_cond = Instru(self#ccmp_ui l_nonempty_set up_o low_o) in
+  	 let i_cond = Insertion.mk_instru(self#ccmp_ui l_nonempty_set up_o low_o) in
   	 let cond = cmp Rge e_nonempty_set zero in
-  	 let i_1 = decl_varinfo dim in
-  	 let i_2 = Instru(self#cpc_dim l_dim x') in
+  	 let i_1 = Insertion.mk_decl dim in
+  	 let i_2 = Insertion.mk_instru(self#cpc_dim l_dim x') in
   	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
   	 let l_cmp_dim_off = Cil.var cmp_dim_off in
   	 let e_cmp_dim_off = Cil.evar cmp_dim_off in
-  	 let i_3 = decl_varinfo cmp_dim_off in
-  	 let i_4 = Instru(self#ccmp_ui l_cmp_dim_off up_o e_dim) in
+  	 let i_3 = Insertion.mk_decl cmp_dim_off in
+  	 let i_4 = Insertion.mk_instru(self#ccmp_ui l_cmp_dim_off up_o e_dim) in
   	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
   	 let l_cmp_off_zero = Cil.var cmp_off_zero in
   	 let e_cmp_off_zero = Cil.evar cmp_off_zero in
-  	 let i_5 = decl_varinfo cmp_off_zero in
-  	 let i_6 = Instru(self#ccmp_ui l_cmp_off_zero up_o zero) in
+  	 let i_5 = Insertion.mk_decl cmp_off_zero in
+  	 let i_6 = Insertion.mk_instru(self#ccmp_ui l_cmp_off_zero up_o zero) in
   	 let e1 = cmp Rge e_cmp_off_zero zero in
   	 let e2 = cmp Rlt e_cmp_dim_off zero in
-  	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
-	 let i_clear = Instru(self#cclear up_o) in
+  	 let i_7 = Insertion.mk_instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+	 let i_clear = Insertion.mk_instru(self#cclear up_o) in
   	 [i_0'; i_cond], [i_1; i_2; i_3; i_4; i_5; i_6; i_7], cond, [i_clear]
       | Ctype (TInt _), Ctype (TInt _) ->
-  	 let i_1 = decl_varinfo dim in
-  	 let i_2 = Instru(self#cpc_dim l_dim x') in
+  	 let i_1 = Insertion.mk_decl dim in
+  	 let i_2 = Insertion.mk_instru(self#cpc_dim l_dim x') in
   	 let e1 = cmp Rge up_o zero in
   	 let e2 = cmp Rgt e_dim up_o in
-  	 let i_3 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+  	 let i_3 = Insertion.mk_instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
 	 [], [i_1; i_2; i_3], cmp Rle low_o up_o, []
       | _ -> raise Unreachable
     in
-    let i_if = ins_if cond i_then [Instru(instru_affect l_ret one)] in
+    let i_if = Insertion.mk_if cond i_then [Insertion.mk_instru(instru_affect l_ret one)] in
     inserts_0 @ inserts_1 @ inserts_2 @ [i_0] @ i_before @ i_if::i_after, e_ret
 
   method private translate_valid_ptr_offset pointer offset =
@@ -806,33 +793,33 @@ class gather_insertions props cwd = object(self)
     let ret = self#fresh_pred_varinfo "valid" in
     let l_ret = Cil.var ret in
     let e_ret = Cil.evar ret in
-    let i_0 = decl_varinfo ret in
+    let i_0 = Insertion.mk_decl ret in
     let dim = self#fresh_ctype_varinfo Cil.intType "valid_dim" in
     let l_dim = Cil.var dim in
     let e_dim = Cil.evar dim in
-    let i_1 = decl_varinfo dim in
-    let i_2 = Instru(self#cpc_dim l_dim x') in
+    let i_1 = Insertion.mk_decl dim in
+    let i_2 = Insertion.mk_instru(self#cpc_dim l_dim x') in
     let inserts = match offset.term_type with
       | Linteger ->
   	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
   	 let l_cmp_dim_off = Cil.var cmp_dim_off in
   	 let e_cmp_dim_off = Cil.evar cmp_dim_off in
-  	 let i_3 = decl_varinfo cmp_dim_off in
-  	 let i_4 = Instru(self#ccmp_ui l_cmp_dim_off y' e_dim) in
+  	 let i_3 = Insertion.mk_decl cmp_dim_off in
+  	 let i_4 = Insertion.mk_instru(self#ccmp_ui l_cmp_dim_off y' e_dim) in
   	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
   	 let l_cmp_off_zero = Cil.var cmp_off_zero in
   	 let e_cmp_off_zero = Cil.evar cmp_off_zero in
-  	 let i_5 = decl_varinfo cmp_off_zero in
-  	 let i_6 = Instru(self#ccmp_ui l_cmp_off_zero y' zero) in
+  	 let i_5 = Insertion.mk_decl cmp_off_zero in
+  	 let i_6 = Insertion.mk_instru(self#ccmp_ui l_cmp_off_zero y' zero) in
   	 let e1 = cmp Rge e_cmp_off_zero zero in
   	 let e2 = cmp Rlt e_cmp_dim_off zero in
-  	 let i_7 = Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
-  	 let i_clear = Instru(self#cclear y') in
+  	 let i_7 = Insertion.mk_instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) in
+  	 let i_clear = Insertion.mk_instru(self#cclear y') in
   	 [i_3; i_4; i_5; i_6; i_7; i_clear]
       | Ctype (TInt _) ->
   	 let e1 = cmp Rge y' zero in
   	 let e2 = cmp Rgt e_dim y' in
-  	 [ Instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) ]
+  	 [ Insertion.mk_instru(instru_affect l_ret (Cil.mkBinOp ~loc LAnd e1 e2)) ]
       | _ -> raise Unreachable
     in
     inserts_0 @ inserts_1 @ [i_0; i_1; i_2] @ inserts, e_ret
@@ -840,12 +827,12 @@ class gather_insertions props cwd = object(self)
   method private translate_valid_ptr pointer =
     let inserts_0, x' = self#translate_term pointer in
     let ret = self#fresh_pred_varinfo "valid" in
-    let i_0 = decl_varinfo ret in
+    let i_0 = Insertion.mk_decl ret in
     let dim = self#fresh_ctype_varinfo Cil.intType "valid_dim" in
-    let i_1 = decl_varinfo dim in
-    let i_2 = Instru(self#cpc_dim (Cil.var dim) x') in
+    let i_1 = Insertion.mk_decl dim in
+    let i_2 = Insertion.mk_instru(self#cpc_dim (Cil.var dim) x') in
     let e2 = cmp Rgt (Cil.evar dim) zero in
-    let i_3 = Instru(instru_affect (Cil.var ret) e2) in
+    let i_3 = Insertion.mk_instru(instru_affect (Cil.var ret) e2) in
     inserts_0 @ [i_0; i_1; i_2; i_3], (Cil.evar ret)
 
   method private translate_forall = self#translate_quantif ~forall:true
@@ -853,11 +840,11 @@ class gather_insertions props cwd = object(self)
   method private translate_quantif ~forall logic_vars hyps goal =
     let varname = if forall then "forall" else "exists" in
     let var = self#fresh_pred_varinfo varname in
-    let i_0 = decl_varinfo var in
+    let i_0 = Insertion.mk_decl var in
     let init_val = if forall then one else zero in
     let lvar = Cil.var var in
     let e_var = Cil.evar var in
-    let i_1 = Instru(instru_affect lvar init_val) in
+    let i_1 = Insertion.mk_instru(instru_affect lvar init_val) in
     let negate exp = Cil.new_exp ~loc (UnOp(LNot,exp,Cil.intType)) in
     let cond = if forall then e_var else negate e_var in
     let on_lvar (i_b,e_c,i_i,i_a) lvar =
@@ -866,27 +853,27 @@ class gather_insertions props cwd = object(self)
       let i_before, e_cond, i_inside, i_after = match t1.term_type with
 	| Linteger ->
 	   let fresh_iter = my_Z_varinfo iter_name in
-	   let i_0 = decl_varinfo fresh_iter in
+	   let i_0 = Insertion.mk_decl fresh_iter in
 	   let i_1, t1' = self#translate_term t1 in
 	   let i_2, t2' = self#translate_term t2 in
 	   let e_iter = Cil.evar fresh_iter in
-	   let i_3 = Instru(self#cinit_set e_iter t1') in
-	   let inc exp = Instru(self#cbinop_ui PlusA exp exp one) in
+	   let i_3 = Insertion.mk_instru(self#cinit_set e_iter t1') in
+	   let inc exp = Insertion.mk_instru(self#cbinop_ui PlusA exp exp one) in
 	   let i_4 = if r1 = Rlt then [inc e_iter] else [] in
 	   let tmp = self#fresh_ctype_varinfo Cil.intType (varname ^ "_cmp") in
-	   let i_5 = decl_varinfo tmp in
+	   let i_5 = Insertion.mk_decl tmp in
 	   let ltmp = Cil.var tmp in
-	   let ins_b_2 = Instru(self#cbinop_ui PlusA e_iter e_iter one) in
+	   let ins_b_2 = Insertion.mk_instru(self#cbinop_ui PlusA e_iter e_iter one) in
 	   let e1 = cmp r2 (Cil.evar tmp) zero in
-	   let i_8 = Instru(self#cclear e_iter) in
-	   let i_9 = Instru(self#cclear t1') in
+	   let i_8 = Insertion.mk_instru(self#cclear e_iter) in
+	   let i_9 = Insertion.mk_instru(self#cclear t1') in
 	   let cmp, i_10 = match t2.term_type with
-	     | Linteger -> self#ccmp, [Instru(self#cclear t2')]
+	     | Linteger -> self#ccmp, [Insertion.mk_instru(self#cclear t2')]
 	     | Lreal -> raise Unsupported
 	     | _ -> self#ccmp_si, []
 	   in
-	   let i_6 = Instru(cmp ltmp e_iter t2') in
-	   let ins_b_3 = Instru(cmp ltmp e_iter t2') in
+	   let i_6 = Insertion.mk_instru(cmp ltmp e_iter t2') in
+	   let ins_b_3 = Insertion.mk_instru(cmp ltmp e_iter t2') in
 	   let i_before = i_0 :: i_1 @ i_2 @ i_3 :: i_4 @ [i_5; i_6] in
 	   let i_inside = [ins_b_2; ins_b_3] in
 	   let i_after = i_8 :: i_9 :: i_10 in
@@ -894,7 +881,7 @@ class gather_insertions props cwd = object(self)
 	| Lreal -> raise Unsupported
 	| _ ->
 	   let iter = my_varinfo Cil.intType iter_name in
-	   let insert_0 = decl_varinfo iter in
+	   let insert_0 = Insertion.mk_decl iter in
 	   let inserts_1, t1' = self#translate_term t1 in
 	   let inserts_2, t2' = self#translate_term t2 in
 	   let liter = Cil.var iter in
@@ -907,8 +894,8 @@ class gather_insertions props cwd = object(self)
 	   let e_iter = Cil.evar iter in
 	   let e1 = cmp r2 e_iter t2' in
 	   let next = instru_affect liter (Cil.mkBinOp ~loc PlusA e_iter one) in
-	   let i_before = insert_0 :: inserts_1 @ inserts_2 @ [Instru init] in
-	   let i_inside = [Instru next] in
+	   let i_before = insert_0 :: inserts_1 @ inserts_2 @ [Insertion.mk_instru init] in
+	   let i_inside = [Insertion.mk_instru next] in
 	   i_before, e1, i_inside, []
       in
       i_b @ i_before, Cil.mkBinOp ~loc LAnd e_cond e_c,
@@ -918,10 +905,10 @@ class gather_insertions props cwd = object(self)
       List.fold_left on_lvar ([],cond,[],[]) logic_vars
     in
     let ins_b_0, goal_var = self#translate_pnamed goal in
-    let ins_b_1 = Instru(instru_affect lvar goal_var) in
+    let ins_b_1 = Insertion.mk_instru(instru_affect lvar goal_var) in
     let i_inside = ins_b_0 @ ins_b_1 :: i_inside in
-    let i_loop = ins_loop e_cond i_inside in
-    [i_0; i_1; Block (i_before @ i_loop :: i_after)], e_var
+    let i_loop = Insertion.mk_loop e_cond i_inside in
+    [i_0; i_1; Insertion.mk_block (i_before @ i_loop :: i_after)], e_var
 
   method private translate_predicate p =
     try
@@ -994,7 +981,7 @@ class gather_insertions props cwd = object(self)
       (* untreated predicates are translated as True *)
       if not (Cil_datatype.Exp.equal v one) then
 	let e = Cil.new_exp ~loc (UnOp (LNot, v, Cil.intType)) in
-	ins @ [ins_if e [ins_ret zero] []]
+	ins @ [Insertion.mk_if e [Insertion.mk_ret zero] []]
       else ins
     in
     let do_behavior ins b =
@@ -1020,7 +1007,7 @@ class gather_insertions props cwd = object(self)
 	let inserts = List.fold_left do_requires inserts' requires in
 	if b.b_assumes <> [] then
 	  let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-	  let insert_1 = ins_if exp inserts [] in
+	  let insert_1 = Insertion.mk_if exp inserts [] in
 	  ins @ inserts_0 @ [insert_1]
 	else ins @ inserts
       else ins
@@ -1040,7 +1027,7 @@ class gather_insertions props cwd = object(self)
 	if b.b_assumes <> [] then
 	  let i_0, exp = self#cond_of_assumes b.b_assumes in
 	  let ii_1 = List.fold_left do_postcond [] post in
-	  let i_1 = ins_if exp ii_1 [] in
+	  let i_1 = Insertion.mk_if exp ii_1 [] in
 	  ins @ i_0 @ [i_1]
 	else
 	  let i_1 = List.fold_left do_postcond [] post in
@@ -1078,9 +1065,9 @@ class gather_insertions props cwd = object(self)
     let do_varinfo v =
       let vtype = Utils.unname v.vtype in
       let my_old_v = my_varinfo (strip_const vtype) ("old_" ^ v.vname) in
-      let insert_decl = decl_varinfo my_old_v in
+      let insert_decl = Insertion.mk_decl my_old_v in
       let lmy_old_v = Cil.var my_old_v in
-      let insert_before = Instru(instru_affect lmy_old_v (Cil.evar v)) in
+      let insert_before = Insertion.mk_instru(instru_affect lmy_old_v (Cil.evar v)) in
       let rec alloc_aux my_old_ptr my_ptr ty = function
 	| h :: t ->
 	   let ty = dig_type ty in
@@ -1088,10 +1075,10 @@ class gather_insertions props cwd = object(self)
 	   let my_iterator = self#fresh_ctype_varinfo Cil.ulongType "iter" in
 	   let e_iterator = Cil.evar my_iterator in
 	   let lmy_iterator = Cil.var my_iterator in
-	   let insert_1 = decl_varinfo my_iterator in
+	   let insert_1 = Insertion.mk_decl my_iterator in
 	   let e1 = Cil.new_exp ~loc (SizeOf ty) in
 	   let e2 = Cil.mkBinOp ~loc Mult h' e1 in
-	   let insert_2 = Instru(self#cmalloc my_old_ptr e2) in
+	   let insert_2 = Insertion.mk_instru(self#cmalloc my_old_ptr e2) in
 	   let my_new_old_ptr = addoffset my_old_ptr e_iterator in
 	   let my_new_ptr = addoffset my_ptr e_iterator in
 	   let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
@@ -1099,15 +1086,15 @@ class gather_insertions props cwd = object(self)
 	   let cond = cmp Rlt e_iterator h' in
 	   let e3 = Cil.mkBinOp ~loc PlusA e_iterator one in
 	   let step = instru_affect lmy_iterator e3 in
-	   let insert_3 = ins_loop cond (inserts_block @ [Instru step]) in
-	   inserts_0 @ [insert_1 ; insert_2; Instru init; insert_3]
+	   let insert_3 = Insertion.mk_loop cond (inserts_block @ [Insertion.mk_instru step]) in
+	   inserts_0 @ [insert_1 ; insert_2; Insertion.mk_instru init; insert_3]
 	| [] ->
 	   let e = Cil.new_exp ~loc (Lval my_ptr) in
-	   [Instru(instru_affect my_old_ptr e)]
+	   [Insertion.mk_instru(instru_affect my_old_ptr e)]
       in
       if Cil.isPointerType vtype || Cil.isArrayType vtype then
 	let my_old_ptr = my_varinfo (strip_const vtype) ("old_ptr_"^v.vname)in
-	let insert_0 = decl_varinfo my_old_ptr in
+	let insert_0 = Insertion.mk_decl my_old_ptr in
 	let inserts_decl = [insert_decl; insert_0] in
 	let ins = alloc_aux (Cil.var my_old_ptr) (Cil.var v) vtype terms in
 	let inserts_before = insert_before :: ins in
@@ -1119,12 +1106,12 @@ class gather_insertions props cwd = object(self)
       let vtype = Utils.unname v.vtype in
       let rec dealloc_aux my_old_ptr = function
 	| [] -> []
-	| _ :: [] -> [ Instru(self#cfree (Cil.new_exp ~loc (Lval my_old_ptr))) ]
+	| _ :: [] -> [ Insertion.mk_instru(self#cfree (Cil.new_exp ~loc (Lval my_old_ptr))) ]
 	| h :: t ->
 	   let my_iterator = self#fresh_ctype_varinfo Cil.ulongType "iter" in
 	   let e_iterator = Cil.evar my_iterator in
 	   let lmy_iterator = Cil.var my_iterator in
-	   let insert_0 = decl_varinfo my_iterator in
+	   let insert_0 = Insertion.mk_decl my_iterator in
 	   let inserts_1, h' = self#as_c_type Cil.ulongType h in
 	   let aux = addoffset my_old_ptr (Cil.evar my_iterator) in
 	   let inserts_block = dealloc_aux aux t in
@@ -1133,8 +1120,8 @@ class gather_insertions props cwd = object(self)
 	   let e1 = Cil.mkBinOp ~loc PlusA e_iterator one in
 	   let step = instru_affect lmy_iterator e1 in
 	   let e = Cil.new_exp ~loc (Lval my_old_ptr) in
-	   let i_loop = ins_loop cond (inserts_block @ [Instru step]) in
-	   insert_0 :: inserts_1 @ [Instru init; i_loop ; Instru(self#cfree e)]
+	   let i_loop = Insertion.mk_loop cond (inserts_block @ [Insertion.mk_instru step]) in
+	   insert_0 :: inserts_1 @ [Insertion.mk_instru init; i_loop ; Insertion.mk_instru(self#cfree e)]
       in
       if Cil.isPointerType vtype || Cil.isArrayType vtype then
 	let my_old_ptr = my_varinfo vtype ("old_ptr_" ^ v.vname) in
@@ -1158,7 +1145,7 @@ class gather_insertions props cwd = object(self)
     if self#at_least_one_prop kf behaviors Kglobal then
       begin
 	let inserts = self#post kf behaviors Kglobal in
-	self#insert (Symbolic_label.end_func f.svar.vname) (Block inserts)
+	self#insert (Symbolic_label.end_func f.svar.vname) (Insertion.mk_block inserts)
       end;
     let do_varinfo v =
       let inserts_decl,inserts_before,inserts_after = self#save_varinfo kf v in
@@ -1219,20 +1206,20 @@ class gather_insertions props cwd = object(self)
     let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
     let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
     let id = Utils.to_id prop in
-    let insert_1 = ins_if e [Instru(self#pc_exc msg id)] [] in
+    let insert_1 = Insertion.mk_if e [Insertion.mk_instru(self#pc_exc msg id)] [] in
     translated_properties <- prop :: translated_properties;
     inserts_0 @ [insert_1]
 
   method private pc_assume pred =
     let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
     let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
-    inserts_0 @ [ ins_if e [Instru(self#pc_ass "" 0)] [] ]
+    inserts_0 @ [ Insertion.mk_if e [Insertion.mk_instru(self#pc_ass "" 0)] [] ]
 
   method private for_behaviors bhvs ins = match bhvs with
   | [] -> ins
   | bhvs ->
      let inserts_0, cond = self#cond_of_behaviors bhvs in
-     inserts_0 @ [ ins_if cond ins [] ]
+     inserts_0 @ [ Insertion.mk_if cond ins [] ]
 
   method private translate_stmt_spec kf stmt bhvs spec =
     if self#at_least_one_prop kf spec.spec_behavior (Kstmt stmt) then
@@ -1280,17 +1267,17 @@ class gather_insertions props cwd = object(self)
 	   self#fresh_ctype_varinfo Cil.intType "variant_pos" in
 	 let e_cmp_variant_zero = Cil.evar cmp_variant_zero in
 	 let l_cmp_variant_zero = Cil.var cmp_variant_zero in
-	 let instr = Instru(self#pc_exc "non positive" id) in
-	 self#insert beg_label (decl_varinfo cmp_variant_zero);
-	 let i_2 = Instru(self#ccmp_ui l_cmp_variant_zero beg_variant zero) in
+	 let instr = Insertion.mk_instru(self#pc_exc "non positive" id) in
+	 self#insert beg_label (Insertion.mk_decl cmp_variant_zero);
+	 let i_2 = Insertion.mk_instru(self#ccmp_ui l_cmp_variant_zero beg_variant zero) in
 	 self#insert beg_label i_2;
 	 let cond = cmp Rlt e_cmp_variant_zero zero in
-	 self#insert beg_label (ins_if cond [instr] []);
+	 self#insert beg_label (Insertion.mk_if cond [instr] []);
 	 let save_variant = self#fresh_Z_varinfo "variant_save" in
-	 let insert_2 = decl_varinfo save_variant in
+	 let insert_2 = Insertion.mk_decl save_variant in
 	 self#insert beg_label insert_2;
 	 let e_save_variant  = Cil.evar save_variant in
-	 let insert_3 = Instru(self#cinit_set e_save_variant beg_variant) in
+	 let insert_3 = Insertion.mk_instru(self#cinit_set e_save_variant beg_variant) in
 	 self#insert beg_label insert_3;
 	 (* at EndIter *)
 	 let inserts_4, end_variant = self#translate_term term in
@@ -1299,34 +1286,34 @@ class gather_insertions props cwd = object(self)
 	   self#fresh_ctype_varinfo Cil.intType "variant_decr" in
 	 let e_cmp_variants = Cil.evar cmp_variants in
 	 let l_cmp_variants = Cil.var cmp_variants in
-	 let instr = Instru(self#pc_exc "non decreasing" id) in
-	 self#insert end_label (decl_varinfo cmp_variants);
-	 let i_4 = Instru(self#ccmp l_cmp_variants end_variant e_save_variant)in
+	 let instr = Insertion.mk_instru(self#pc_exc "non decreasing" id) in
+	 self#insert end_label (Insertion.mk_decl cmp_variants);
+	 let i_4 = Insertion.mk_instru(self#ccmp l_cmp_variants end_variant e_save_variant)in
 	 self#insert end_label i_4;
 	 let cond = cmp Rge e_cmp_variants zero in
-	 self#insert end_label (ins_if cond [instr] []);
-	 self#insert end_label (Instru(self#cclear e_save_variant))
+	 self#insert end_label (Insertion.mk_if cond [instr] []);
+	 self#insert end_label (Insertion.mk_instru(self#cclear e_save_variant))
       | Lreal -> raise Unsupported
       | _ ->
 	 (* at BegIter *)
 	 let inserts_1, beg_variant = self#translate_term term in
 	 List.iter (self#insert beg_label) inserts_1;
 	 let cond = cmp Rlt beg_variant zero in
-	 let instr = Instru(self#pc_exc "non positive" id) in
-	 self#insert beg_label (ins_if cond [instr] []);
+	 let instr = Insertion.mk_instru(self#pc_exc "non positive" id) in
+	 self#insert beg_label (Insertion.mk_if cond [instr] []);
 	 let save_variant =
 	   self#fresh_ctype_varinfo Cil.intType "variant_save" in
 	 let l_save_variant = Cil.var save_variant in
 	 let e_save_variant = Cil.evar save_variant in
-	 self#insert beg_label (decl_varinfo save_variant);
-	 let insert = Instru(instru_affect l_save_variant beg_variant) in
+	 self#insert beg_label (Insertion.mk_decl save_variant);
+	 let insert = Insertion.mk_instru(instru_affect l_save_variant beg_variant) in
 	 self#insert beg_label insert;
 	 (* at EndIter *)
 	 let inserts_2, end_variant = self#translate_term term in
 	 List.iter (self#insert end_label) inserts_2;
 	 let cond = cmp Rge end_variant e_save_variant in
-	 let instr = Instru(self#pc_exc "non decreasing" id) in
-	 self#insert end_label (ins_if cond [instr] [])
+	 let instr = Insertion.mk_instru(self#pc_exc "non decreasing" id) in
+	 self#insert end_label (Insertion.mk_if cond [instr] [])
 
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
@@ -1366,24 +1353,24 @@ class gather_insertions props cwd = object(self)
 	 let it = self#fresh_ctype_varinfo Cil.intType "iter" in
 	 let e_it = Cil.evar it
 	 and l_it = Cil.var it in
-	 let i_0 = decl_varinfo it in
+	 let i_0 = Insertion.mk_decl it in
 	 let i_1, e_t1 = self#as_c_type Cil.intType t1 in
-	 let i_2 = Instru(instru_affect l_it e_t1) in
+	 let i_2 = Insertion.mk_instru(instru_affect l_it e_t1) in
 	 let i_3, e_t2 = self#as_c_type Cil.intType t2 in
 	 let cond = cmp Rle e_it e_t2 in
 	 let ll, e_op1 = self#translate_term op1 in
 	 assert (ll = []);
 	 let e = Cil.new_exp ~loc (BinOp(op, e_op1, e_it, ty)) in
 	 let y = Mem e, NoOffset in
-	 let i_f_1 = Instru(self#cnondet (Cil.typeOfLval y) y) in
+	 let i_f_1 = Insertion.mk_instru(self#cnondet (Cil.typeOfLval y) y) in
 	 let plus_one = Cil.mkBinOp ~loc PlusA e_it one in
-	 let i_f_2 = Instru(instru_affect l_it plus_one) in
-	 let i_7 = ins_loop cond [i_f_1; i_f_2] in
+	 let i_f_2 = Insertion.mk_instru(instru_affect l_it plus_one) in
+	 let i_7 = Insertion.mk_loop cond [i_f_1; i_f_2] in
 	 i_0::i_1 @ i_2::i_3 @ i_7::ret
       | TLval lv ->
 	 let ty = match t.term_type with Ctype x -> x | _-> raise Unreachable in
 	 let ins, e = self#translate_lval lv in
-	 let aff = Instru(self#cnondet ty e) in
+	 let aff = Insertion.mk_instru(self#cnondet ty e) in
 	 ins @ aff :: ret
       | _ ->
 	 Options.Self.warning
@@ -1417,7 +1404,7 @@ class gather_insertions props cwd = object(self)
 	 let affects = self#assigns_cwd assigns in
 	 let on_inv ret p = ret @ (self#pc_assume p.content) in
 	 let ins_block = List.fold_left on_inv affects linvs in
-	 let ins_bhv = ins_if e_assumes ins_block [] in
+	 let ins_bhv = Insertion.mk_if e_assumes ins_block [] in
 	 ins @ ins_assumes @ [ins_bhv]
        in
        let ins_h = Annotations.fold_behaviors on_bhv kf [] in
@@ -1454,7 +1441,7 @@ class gather_insertions props cwd = object(self)
 	 in
 	 let posts = List.fold_left on_post [] ensures in
 	 let ins_bhv =
-	   ins_if e_assumes (begin_save @ affects @ posts @ end_save) [] in
+	   Insertion.mk_if e_assumes (begin_save @ affects @ posts @ end_save) [] in
 	 ins @ ins_assumes @ [ins_bhv]
        in
        let ins_body = Annotations.fold_behaviors on_bhv kf [] in
@@ -1463,14 +1450,14 @@ class gather_insertions props cwd = object(self)
 	    let ty = Cil.typeOfLval r in
 	    let retres = my_varinfo ty "__retres" in
 	    let e_retres = Cil.evar retres in
-	    let aff = Instru(self#cnondet ty (Cil.var retres)) in
-	    [decl_varinfo retres], [aff], [ins_ret e_retres]
+	    let aff = Insertion.mk_instru(self#cnondet ty (Cil.var retres)) in
+	    [Insertion.mk_decl retres], [aff], [Insertion.mk_ret e_retres]
 	 | None -> [], [], []
        in
        let ins_full_body = decl_retres @ aff_retres @ ins_body @ ret_retres in
        let new_f = mk_func new_f_vi formals locals ins_full_body in
        functions <- new_f :: functions;
-       let i_call = Instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
+       let i_call = Insertion.mk_instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
        self#insert (Symbolic_label.end_stmt stmt.sid) i_call;
        Cil.SkipChildren
     | _ -> Cil.DoChildren

@@ -2,39 +2,11 @@
 open Cil_types
 
 
-let rec pp_insertion ?(line_break = true) fmt ins =
-  let rec aux fmt = function
-    | [] -> ()
-    | h :: [] -> pp_insertion ~line_break:false fmt h
-    | h :: t -> pp_insertion ~line_break:true fmt h; aux fmt t
-  in
-  begin match ins with
-  | Insertions.Instru i -> Format.fprintf fmt "@[%a@]" Printer.pp_instr i
-  | Insertions.IRet e -> Format.fprintf fmt "@[return %a;@]" Printer.pp_exp e
-  | Insertions.Decl v ->
-     let ty = Cil.stripConstLocalType v.vtype in
-     let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
-     let ty = array_to_ptr ty in
-     let v' = {v with vtype = ty} in
-     Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v'
-  | Insertions.Block b ->
-     if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
-  | Insertions.IIf (e,b1,b2) ->
-     Format.fprintf fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b1;
-     if b2 <> [] then Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
-  | Insertions.ILoop (e,b) ->
-     Format.fprintf fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b
-  end;
-  if line_break then Format.fprintf fmt "@\n"
-
-let pp_insertion_lb = pp_insertion ~line_break:true
-
-
 class print_insertions insertions functions cwd () = object(self)
   inherit Printer.extensible_printer () as super
 
   method private insertions_at fmt label =
-    try Queue.iter (pp_insertion_lb fmt) (Hashtbl.find insertions label)
+    try Queue.iter (Insertion.pretty fmt) (Hashtbl.find insertions label)
     with _ -> ()
 
   val mutable in_vdecl = 0
@@ -127,8 +99,10 @@ class print_insertions insertions functions cwd () = object(self)
     Format.fprintf fmt "@[<v 2>%a {@\n" (self#typ (Some print)) ty;
     let rec aux = function
       | [] -> ()
-      | [h] -> Format.fprintf fmt "%a" (pp_insertion ~line_break:false) h
-      | h::t -> Format.fprintf fmt "%a" (pp_insertion ~line_break:true) h; aux t
+      | [h] -> Format.fprintf fmt "%a" (Insertion.pretty ~line_break:false) h
+      | h::t ->
+	 Format.fprintf fmt "%a" (Insertion.pretty ~line_break:true) h;
+	 aux t
     in
     aux f.Insertions.func_stmts;
     Format.fprintf fmt "@]@\n}@\n"
@@ -140,29 +114,12 @@ class print_insertions insertions functions cwd () = object(self)
     List.iter (fun x -> self#func fmt x) functions;
     Format.fprintf fmt "@]@."
 
-  val mutable nondet = false
-
-  method private instru = function
-    | Call (_,{enode=Lval(Var v,_)},_,_) ->
-       begin
-	 try if (String.sub v.vname 0 7) = "nondet_" then nondet <- true
-	 with _ -> ()
-       end
-    | _ -> ()
-
-  method private insertion = function
-    | Insertions.Instru i -> self#instru i
-    | Insertions.IRet _ -> ()
-    | Insertions.Decl _ -> ()
-    | Insertions.Block i -> List.iter self#insertion i
-    | Insertions.IIf(_,i1,i2) ->
-       List.iter self#insertion i1; List.iter self#insertion i2
-    | Insertions.ILoop(_,i) -> List.iter self#insertion i
-
   method private headers fmt =
-    Hashtbl.iter (fun _ q -> Queue.iter self#insertion q) insertions;
-    let on_func f = List.iter self#insertion f.Insertions.func_stmts in
-    List.iter on_func functions;
+    let is_nondet b i = b || Insertion.is_nondet i in
+    let on_hash _ q b = b || Queue.fold is_nondet b q in
+    let on_func b f = b || List.fold_left is_nondet b f.Insertions.func_stmts in
+    let nondet = Hashtbl.fold on_hash insertions false in
+    let nondet = List.fold_left on_func nondet functions in
     let externals_file = Options.Self.Share.file ~error:true "externals.h" in
     let nondet_file = Options.Self.Share.file ~error:true "nondet.c" in
     let headers = [ nondet, ("#include \"" ^ nondet_file ^ "\"") ] in
