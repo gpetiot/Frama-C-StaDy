@@ -84,6 +84,7 @@ install::
 	$(PRINT_CP) $(PLUGIN_NAME) share files
 	$(MKDIR) $(FRAMAC_SHARE)/stady
 	$(CP) $(StaDy_DIR)/share/externals.c $(FRAMAC_SHARE)/stady
+	$(CP) $(StaDy_DIR)/share/externals.h $(FRAMAC_SHARE)/stady
 	$(CP) $(StaDy_DIR)/share/nondet.c $(FRAMAC_SHARE)/stady
 
 uninstall::

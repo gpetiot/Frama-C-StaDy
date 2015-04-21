@@ -143,81 +143,14 @@ class print_insertions insertions functions cwd () = object(self)
     List.iter (fun x -> self#func fmt x) functions;
     Format.fprintf fmt "@]@."
 
-  val mutable gmp = false
-  val mutable gmpz_get_ui = false
-  val mutable gmpz_get_si = false
-  val mutable gmpz_cmp = false
-  val mutable gmpz_cmp_ui = false
-  val mutable gmpz_cmp_si = false
-  val mutable gmpz_clear = false
-  val mutable gmpz_init = false
-  val mutable gmpz_init_set = false
-  val mutable gmpz_init_set_ui = false
-  val mutable gmpz_init_set_si = false
-  val mutable gmpz_init_set_str = false
-  val mutable gmpz_set = false
-  val mutable gmpz_abs = false
-  val mutable gmpz_add = false
-  val mutable gmpz_add_ui = false
-  val mutable gmpz_sub = false
-  val mutable gmpz_sub_ui = false
-  val mutable gmpz_ui_sub = false
-  val mutable gmpz_mul = false
-  val mutable gmpz_mul_si = false
-  val mutable gmpz_mul_ui = false
-  val mutable gmpz_tdiv_q = false
-  val mutable gmpz_tdiv_q_ui = false
-  val mutable gmpz_tdiv_r = false
-  val mutable gmpz_tdiv_r_ui = false
-  val mutable gmpz_mul_2exp = false
-  val mutable gmpz_fdiv_q_2exp = false
-  val mutable pc_assert_exc = false
-  val mutable pc_dim = false
-  val mutable pc_to_fc = false
-  val mutable pc_assume = false
-  val mutable malloc = false
-  val mutable free = false
   val mutable nondet = false
 
   method private instru = function
   | Call (_,{enode=Lval(Var v,_)},_,_) ->
-    if v.vname = "malloc" then malloc <- true
-    else if v.vname = "free" then free <- true
-    else if v.vname = "pathcrawler_dimension" then pc_dim <- true
-    else if v.vname = "pathcrawler_assert_exception" then pc_assert_exc <- true
-    else if v.vname = "pathcrawler_assume_exception" then pc_assume <- true
-    else if v.vname = "pathcrawler_to_framac" then pc_to_fc <- true
-    else if v.vname = "__gmpz_clear" then (gmpz_clear <- true; gmp <- true)
-    else if v.vname = "__gmpz_init" then gmpz_init <- true
-    else if v.vname = "__gmpz_init_set" then gmpz_init_set <- true
-    else if v.vname = "__gmpz_init_set_ui" then gmpz_init_set_ui <- true
-    else if v.vname = "__gmpz_init_set_si" then gmpz_init_set_si <- true
-    else if v.vname = "__gmpz_init_set_str" then gmpz_init_set_str <- true
-    else if v.vname = "__gmpz_set" then gmpz_set <- true
-    else if v.vname = "__gmpz_abs" then gmpz_abs <- true
-    else if v.vname = "__gmpz_add" then gmpz_add <- true
-    else if v.vname = "__gmpz_add_ui" then gmpz_add_ui <- true
-    else if v.vname = "__gmpz_sub" then gmpz_sub <- true
-    else if v.vname = "__gmpz_sub_ui" then gmpz_sub_ui <- true
-    else if v.vname = "__gmpz_ui_sub" then gmpz_ui_sub <- true
-    else if v.vname = "__gmpz_mul" then gmpz_mul <- true
-    else if v.vname = "__gmpz_mul_ui" then gmpz_mul_ui <- true
-    else if v.vname = "__gmpz_mul_si" then gmpz_mul_si <- true
-    else if v.vname = "__gmpz_tdiv_q" then gmpz_tdiv_q <- true
-    else if v.vname = "__gmpz_tdiv_q_ui" then gmpz_tdiv_q_ui <- true
-    else if v.vname = "__gmpz_tdiv_r" then gmpz_tdiv_r <- true
-    else if v.vname = "__gmpz_tdiv_r_ui" then gmpz_tdiv_r_ui <- true
-    else if v.vname = "__gmpz_get_ui" then gmpz_get_ui <- true
-    else if v.vname = "__gmpz_get_si" then gmpz_get_si <- true
-    else if v.vname = "__gmpz_cmp" then gmpz_cmp <- true
-    else if v.vname = "__gmpz_cmp_ui" then gmpz_cmp_ui <- true
-    else if v.vname = "__gmpz_cmp_si" then gmpz_cmp_si <- true
-    else if v.vname = "__gmpz_mul_2exp" then gmpz_mul_2exp <- true
-    else if v.vname = "__gmpz_fdiv_q_2exp" then gmpz_fdiv_q_2exp <- true
-    else if (String.sub v.vname 0 7) = "nondet_" then
-      begin
-	nondet <- true; pc_dim <- true; pc_assume <- true
-      end
+     begin
+       try if (String.sub v.vname 0 7) = "nondet_" then nondet <- true
+       with _ -> ()
+     end
   | _ -> ()
 
   method private insertion = function
@@ -233,64 +166,12 @@ class print_insertions insertions functions cwd () = object(self)
     Hashtbl.iter (fun _ q -> Queue.iter self#insertion q) insertions;
     let on_func f = List.iter self#insertion f.Insertions.func_stmts in
     List.iter on_func functions;
+    let externals_file = Options.Self.Share.file ~error:true "externals.h" in
     let nondet_file = Options.Self.Share.file ~error:true "nondet.c" in
-    let bitcnt = "unsigned long long" (*"mp_bitcnt_t"*) in
     let headers = [
-      gmp, "struct __anonstruct___mpz_struct_1 {\
-	    int _mp_alloc ;\
-	    int _mp_size ;\
-	    unsigned long *_mp_d ;\
-	    };\
-	    typedef struct __anonstruct___mpz_struct_1 __mpz_struct;\
-	    typedef __mpz_struct mpz_t[1];";
-      gmpz_get_ui, "extern unsigned long int __gmpz_get_ui(mpz_t);";
-      gmpz_get_si, "extern signed long int __gmpz_get_si(mpz_t);";
-      gmpz_cmp_ui, "extern int __gmpz_cmp_ui(mpz_t, unsigned long int);";
-      gmpz_cmp_si, "extern int __gmpz_cmp_si(mpz_t, signed long int);";
-      gmpz_cmp, "extern int __gmpz_cmp(mpz_t, mpz_t);";
-      gmpz_clear, "extern void __gmpz_clear(mpz_t);";
-      gmpz_init, "extern void __gmpz_init(mpz_t);";
-      gmpz_init_set, "extern void __gmpz_init_set(mpz_t, mpz_t);";
-      gmpz_init_set_ui,
-      "extern void __gmpz_init_set_ui(mpz_t, unsigned long int);";
-      gmpz_init_set_si,
-      "extern void __gmpz_init_set_si(mpz_t, signed long int);";
-      gmpz_init_set_str,
-      "extern void __gmpz_init_set_str(mpz_t, const char*, int);";
-      gmpz_set, "extern void __gmpz_set(mpz_t, mpz_t);";
-      gmpz_abs, "extern void __gmpz_abs(mpz_t, mpz_t);";
-      gmpz_add, "extern void __gmpz_add(mpz_t, const mpz_t, const mpz_t);";
-      gmpz_add_ui,
-      "extern void __gmpz_add_ui(mpz_t, const mpz_t, unsigned long int);";
-      gmpz_sub, "extern void __gmpz_sub(mpz_t, const mpz_t, const mpz_t);";
-      gmpz_sub_ui,
-      "extern void __gmpz_sub_ui(mpz_t, const mpz_t, unsigned long int);";
-      gmpz_ui_sub,
-      "extern void __gmpz_ui_sub(mpz_t, unsigned long int, const mpz_t);";
-      gmpz_mul, "extern void __gmpz_mul(mpz_t, const mpz_t, const mpz_t);";
-      gmpz_mul_si, "extern void __gmpz_mul_si(mpz_t, const mpz_t, long int);";
-      gmpz_mul_ui,
-      "extern void __gmpz_mul_ui(mpz_t, const mpz_t, unsigned long int);";
-      gmpz_tdiv_q,
-      "extern void __gmpz_tdiv_q(mpz_t, const mpz_t, const mpz_t);";
-      gmpz_tdiv_q_ui,
-      "extern void __gmpz_tdiv_q_ui(mpz_t, const mpz_t, unsigned long int);";
-      gmpz_tdiv_r,
-      "extern void __gmpz_tdiv_r(mpz_t, const mpz_t, const mpz_t);";
-      gmpz_tdiv_r_ui,
-      "extern void __gmpz_tdiv_r_ui(mpz_t, const mpz_t, unsigned long int);";
-      gmpz_mul_2exp,
-      "extern void __gmpz_mul_2exp(mpz_t rop, const mpz_t op1,"^bitcnt^" op2);";
-      gmpz_fdiv_q_2exp,
-      "extern void __gmpz_fdiv_q_2exp(mpz_t q, const mpz_t n,"^bitcnt^" b);";
-      pc_assert_exc, "extern int pathcrawler_assert_exception(char*,int);";
-      pc_dim, "extern int pathcrawler_dimension(void*);";
-      pc_to_fc, "extern void pathcrawler_to_framac(char*);";
-      pc_assume, "extern int pathcrawler_assume_exception(char*,int);";
-      malloc, "extern void* malloc(unsigned long);";
-      free, "extern void free(void*);";
       nondet, ("#include \""^nondet_file^"\"");
     ] in
+    Format.fprintf fmt "#include \"%s\"@\n" externals_file;
     let do_header (print, s) = if print then Format.fprintf fmt "%s@\n" s in
     List.iter do_header headers
 
