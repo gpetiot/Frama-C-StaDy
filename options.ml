@@ -84,6 +84,3 @@ let dkey_generated_pl = Self.register_category "generated-pl"
 let dkey_socket = Self.register_category "socket"
 let dkey_generated_c = Self.register_category "generated-c"
 let dkey_insertions = Self.register_category "insertions"
-
-(* mpz_t type for GMP *)
-let mpz_t = ref (None:Cil_types.typ option)

@@ -90,7 +90,7 @@ let do_externals() =
     !tmp_mpz_t, !externals
   ) () in
   Project.remove ~project:p' ();
-  Options.mpz_t := mpz_t;
+  Utils.mpz_t_ref := mpz_t;
   List.iter (fun(a,b) -> States.Externals.add a b) externals
 
 
@@ -265,7 +265,7 @@ let run() =
       States.Id_To_Property.clear();
       States.Property_To_Id.clear();
       States.Not_Translated_Predicates.clear();
-      Options.mpz_t := None;
+      Utils.mpz_t_ref := None;
       States.Externals.clear()
     end
 

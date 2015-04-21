@@ -185,8 +185,11 @@ let lengths_from_requires kf =
   if not (Cil.is_unused_builtin vi) then Annotations.iter_behaviors on_bhv kf;
   kf_tbl
 
+(* mpz_t type for GMP *)
+let mpz_t_ref = ref (None:Cil_types.typ option)
+
 let mpz_t() =
-  let ty = Options.mpz_t in
+  let ty = mpz_t_ref in
   let ty = !ty in
   let ty = Extlib.the ty in
   ty
