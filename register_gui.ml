@@ -1,5 +1,27 @@
 
-let pc_panel (main_ui:Design.main_window_extension_points) =
+open Cil_types
+
+let ref_cwd = ref ([] : int list)
+
+let reset_cwd () = ref_cwd := []
+
+let print_cwd () =
+  let pp_int fmt x = Format.fprintf fmt "%i" x in
+  let pp_int_list = Pretty_utils.pp_list ~sep:"," pp_int in
+  Options.Self.debug ~level:1 "cwd: %a@." pp_int_list !ref_cwd
+
+let add_cwd sid =
+  ref_cwd := sid :: !ref_cwd;
+  print_cwd()
+
+let rem_cwd sid =
+  ref_cwd := List.filter (fun x-> x <> sid) !ref_cwd;
+  print_cwd()
+
+
+let pc_panel
+      (compute: ?props:Property.t list -> ?cwd:int list -> unit -> unit)
+      (main_ui:Design.main_window_extension_points) =
   let vbox = GPack.vbox () in
   let packing = vbox#pack ~expand:true ~fill:true in
   let w = GPack.table ~packing ~columns:2 () in
@@ -10,13 +32,11 @@ let pc_panel (main_ui:Design.main_window_extension_points) =
   let set = Kernel.MainFunction.set in
   let refresh = Gtk_helper.on_string ~tooltip ~validator box_4 "main" get set in
   let run_button = GButton.button ~label:"Run" ~packing:(vbox#pack) () in
-  let callback() = Register.run(); main_ui#redisplay() in
+  let callback() = compute ~cwd:(!ref_cwd) (); main_ui#redisplay() in
   let on_press() = main_ui#protect ~cancelable:true callback in
   ignore(run_button#connect#pressed on_press);
   "stady", vbox#coerce, Some refresh
-  
 
-open Cil_types
 
 let to_do_on_select
       (popup_factory:GMenu.menu GMenu.factory)
@@ -25,8 +45,12 @@ let to_do_on_select
   match selected with
   | Pretty_source.PStmt(_,({skind=Loop _} as stmt))
   | Pretty_source.PStmt(_,({skind=Instr(Call _)} as stmt)) when button_nb = 3 ->
-     let callback() = compute ~cwd:[stmt.sid] (); main_ui#redisplay() in
-     ignore (popup_factory#add_item "Check for Spec. Weakness" ~callback)
+     let callback() = add_cwd stmt.sid in
+     let str1 = "Add this contract to the CWD list" in
+     ignore (popup_factory#add_item str1 ~callback);
+     let callback() = rem_cwd stmt.sid in
+     let str2 = "Remove this contract from the CWD list" in
+     ignore (popup_factory#add_item str2 ~callback)
   | Pretty_source.PIP prop when button_nb = 1 ->
      main_ui#pretty_information "%a" Utils.pp_ce prop
   | Pretty_source.PIP prop when button_nb = 3 ->
@@ -61,9 +85,12 @@ let main main_ui =
     Register.setup_props_bijection();
     Register.do_externals();
     let compute = Register.compute_props in
-    main_ui#register_panel pc_panel;
+    main_ui#register_panel (pc_panel compute);
     main_ui#register_source_selector (pc_selector compute)
   with _ -> ()
 
 
-let () = Design.register_extension main
+let () =
+  Design.register_extension main;
+  Design.register_reset_extension
+    (fun main -> main#protect ~cancelable:false reset_cwd)
