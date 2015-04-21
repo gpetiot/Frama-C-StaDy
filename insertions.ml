@@ -121,6 +121,7 @@ class gather_insertions props cwd = object(self)
   method get_new_globals() =
     let on_varinfo ret v =
       try
+	(* the nondet values (as an array) of each type *)
 	if (String.sub v.vname 0 7) = "nondet_" then
 	  let vname1 = v.vname ^ "_val" in
 	  let ty1 = TPtr(Cil.getReturnType v.vtype,[]) in
@@ -135,6 +136,7 @@ class gather_insertions props cwd = object(self)
   method get_new_init_globals() =
     let on_varinfo ret v =
       try
+	(* the number of nondet values of each type *)
 	if (String.sub v.vname 0 7) = "nondet_" then
 	  let vname2 = v.vname ^ "_cpt" in
 	  let vi2 = Cil.makeVarinfo false false vname2 Cil.uintType in
