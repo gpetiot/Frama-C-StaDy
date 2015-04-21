@@ -394,9 +394,17 @@ class gather_insertions props cwd = object(self)
   method private translate_lambda li lower upper q t =
     assert(lower.term_type = Linteger && upper.term_type = Linteger);
     let name = li.l_var_info.lv_name in
-    let init_val = if name = "\\sum" || name = "\\numof" then zero else one in
-    let varname = match name with
-      | "\\sum" -> "sum" | "\\product" -> "product" | _ -> "numof" in
+    let do_op op r l = self#cbinop op r r l in
+    let init_val, varname, compute, clear = match name with
+      | "\\sum" -> zero, "sum", (do_op PlusA), (fun l -> [self#cclear l])
+      | "\\product" -> one, "product", (do_op Mult), (fun l -> [self#cclear l])
+      | "\\numof" ->
+	 zero, "numof",
+	 (fun r l ->
+	 Insertion.mk_if (cmp Rneq l zero) [self#cbinop_ui PlusA r r one] []),
+	 (fun _ -> [])
+      | _ -> raise Unsupported
+    in
     let ret = self#fresh_Z_varinfo varname in
     let i_0 = Insertion.mk_decl ret in
     let e_ret = Cil.evar ret in
@@ -408,23 +416,14 @@ class gather_insertions props cwd = object(self)
     let e_iter = Cil.evar fresh_iter in
     let i_6 = self#cinit_set e_iter low in
     let ins_b_0, lambda_t = self#translate_term t in
-    let ins_b_1, clear_lambda = match name with
-      | "\\sum" ->
-	 self#cbinop PlusA e_ret e_ret lambda_t, [self#cclear lambda_t]
-      | "\\product" ->
-	 self#cbinop Mult e_ret e_ret lambda_t, [self#cclear lambda_t]
-      | "\\numof" ->
-	 let cond = cmp Rneq lambda_t zero in
-	 let i = self#cbinop_ui PlusA e_ret e_ret one in
-	 Insertion.mk_if cond [i] [], []
-      | _ -> raise Unsupported
-    in
     let ins_b_2 = self#cbinop_ui PlusA e_iter e_iter one in
     let tmp = self#fresh_ctype_varinfo Cil.intType (varname ^ "_cmp") in
     let e_tmp = Cil.evar tmp in
     let ii_1 = Insertion.mk_decl tmp in
     let ii_2 = self#ccmp (Cil.var tmp) e_iter up in
     let ii_3 = self#ccmp (Cil.var tmp) e_iter up in
+    let ins_b_1 = compute e_ret lambda_t in
+    let clear_lambda = clear lambda_t in
     let ins_b = ins_b_0 @ ins_b_1 :: ins_b_2 :: ii_3 :: clear_lambda in
     let i_7 = Insertion.mk_loop (cmp Rle e_tmp zero) ins_b in
     let i_8 = self#cclear e_iter in
