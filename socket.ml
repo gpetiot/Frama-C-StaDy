@@ -29,16 +29,23 @@ let process_test_case s =
     in
     try (* '$' only present when a CW is found *)
       let str_stmt_id, msg = cut_sep '$' msg in
-      (* TODO: str_stmt is a comma-separated list of sid, must split it ! *)
-      let stmt_id = int_of_string str_stmt_id in
-      let stmt, _ = Kernel_function.find_from_sid stmt_id in
+      let str_stmt_ids =
+	let rec aux acc str =
+	  try let x,y = cut_sep ',' str in aux (x::acc) y
+	  with _ -> str :: acc
+	in
+	aux [] str_stmt_id
+      in
+      let stmt_ids = List.map int_of_string str_stmt_ids in
+      let find_stmt sid = fst (Kernel_function.find_from_sid sid) in
+      let stmts = List.map find_stmt stmt_ids in
       let file_tbl =
 	try States.CW_counter_examples.find prop
 	with Not_found -> Datatype.String.Hashtbl.create 16
       in
       let msg, stmts, var_tbl =
 	try Datatype.String.Hashtbl.find file_tbl str_tc
-	with Not_found -> msg, [stmt], Datatype.String.Hashtbl.create 16
+	with Not_found -> msg, stmts, Datatype.String.Hashtbl.create 16
       in
       let on_pair (var, value) =
 	let i, c, s =
