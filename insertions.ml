@@ -1161,11 +1161,11 @@ class gather_insertions props cwd = object(self)
 
   method private subst_pred p = (new Subst.subst ())#pred p [] [] [] []
 
-  method private cond_of_assumes ?(subst_pred=self#subst_pred) pred_list =
+  method private cond_of_assumes pred_list =
     let rec aux insertions ret = function
       | [] -> insertions, ret
       | h :: t ->
-	 let ins, v = self#translate_predicate (subst_pred h.ip_content) in
+	 let ins, v = self#translate_predicate (self#subst_pred h.ip_content) in
 	 let e = Cil.mkBinOp ~loc LAnd ret v in
 	 aux (insertions @ ins) e t
     in
