@@ -83,7 +83,6 @@ let dkey_native_precond = Self.register_category "native-precond"
 let dkey_generated_pl = Self.register_category "generated-pl"
 let dkey_socket = Self.register_category "socket"
 let dkey_generated_c = Self.register_category "generated-c"
-let dkey_properties = Self.register_category "properties"
 let dkey_insertions = Self.register_category "insertions"
 
 (* mpz_t type for GMP *)
