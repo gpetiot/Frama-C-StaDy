@@ -34,37 +34,36 @@ class print_insertions insertions functions cwd () = object(self)
   inherit Printer.extensible_printer () as super
 
   method private insertions_at fmt label =
-    try
-      let q = Hashtbl.find insertions label in
-      Queue.iter (pp_insertion_lb fmt) q
+    try Queue.iter (pp_insertion_lb fmt) (Hashtbl.find insertions label)
     with _ -> ()
 
   val mutable in_vdecl = 0
+
   method! vdecl fmt v =
     in_vdecl <- in_vdecl+1; super#vdecl fmt v; in_vdecl <- in_vdecl-1
 
   (* "unname" all types, except in a variable declaration *)
   method! typ ?fundecl fmtopt fmt t =
-    super#typ ?fundecl fmtopt fmt
-	      (if in_vdecl > 0 then t else (Utils.unname t))
+    super#typ ?fundecl fmtopt fmt (if in_vdecl > 0 then t else (Utils.unname t))
 
   method private fundecl fmt f =
     let entry_point_name=Kernel_function.get_name(fst(Globals.entry_point())) in
     let old_is_ghost = is_ghost in
     is_ghost <- true;
     (* BEGIN precond (entry-point) *)
-    if f.svar.vname = entry_point_name then begin
-      let precond = f.svar.vname ^ "_precond" in
-      let x,y,z =
-	match f.svar.vtype with TFun(_,x,y,z) -> x,y,z | _ -> assert false
-      in
-      Format.fprintf fmt "%a@ @[<hov 2>{@\n"
-	(self#typ (Some (fun fmt -> Format.fprintf fmt "%s" precond)))
-	(TFun(Cil.intType,x,y,z));
-      self#insertions_at fmt (Symbolic_label.beg_func precond);
-      Format.fprintf fmt "@[return 1;@]";
-      Format.fprintf fmt "@]@\n}@\n@\n"
-    end;
+    if f.svar.vname = entry_point_name then
+      begin
+	let precond = f.svar.vname ^ "_precond" in
+	let x,y,z =
+	  match f.svar.vtype with TFun(_,x,y,z) -> x,y,z | _ -> assert false
+	in
+	let print fmt = Format.fprintf fmt "%s" precond in
+	Format.fprintf fmt "%a@ @[<hov 2>{@\n" (self#typ (Some print))
+		       (TFun(Cil.intType,x,y,z));
+	self#insertions_at fmt (Symbolic_label.beg_func precond);
+	Format.fprintf fmt "@[return 1;@]";
+	Format.fprintf fmt "@]@\n}@\n@\n"
+      end;
     (* END precond (entry-point) *)
     Format.fprintf fmt "@[%t%a@\n@[<v 2>" ignore self#vdecl f.svar;
     (* body. *)
@@ -74,7 +73,6 @@ class print_insertions insertions functions cwd () = object(self)
     Format.fprintf fmt "@.}";
     Format.fprintf fmt "@]%t@]@." ignore;
     is_ghost <- old_is_ghost
-  (* end of fundecl *)
 
   method! private annotated_stmt next fmt stmt =
     Format.pp_open_hvbox fmt 2;
@@ -91,8 +89,8 @@ class print_insertions insertions functions cwd () = object(self)
     begin
       match stmt.skind with
       | Loop(_,b,l,_,_) ->
-	 Format.fprintf fmt "%a@[<v 2>while (1) {@\n"
-			(fun fmt -> self#line_directive fmt) l;
+	 let line_directive fmt = self#line_directive fmt in
+	 Format.fprintf fmt "%a@[<v 2>while (1) {@\n" line_directive l;
 	 let new_b = {b with bstmts = [List.hd b.bstmts]} in
 	 let braces = false in
 	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
@@ -103,31 +101,30 @@ class print_insertions insertions functions cwd () = object(self)
 	 self#insertions_at fmt (Symbolic_label.end_iter stmt.sid);
 	 Format.fprintf fmt "}@\n @]"
       | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
-	  when List.mem stmt.sid cwd
-	       || List.mem vi.vname (Options.Simulate_Functions.get()) -> ()
+	   when List.mem stmt.sid cwd
+		|| List.mem vi.vname (Options.Simulate_Functions.get()) -> ()
       | Return _ ->
-	let f = Kernel_function.get_name kf in
-	self#insertions_at fmt (Symbolic_label.end_func f);
-	self#stmtkind next fmt stmt.skind
+	 let f = Kernel_function.get_name kf in
+	 self#insertions_at fmt (Symbolic_label.end_func f);
+	 self#stmtkind next fmt stmt.skind
       | _ -> self#stmtkind next fmt stmt.skind
     end;
     self#insertions_at fmt (Symbolic_label.end_stmt stmt.sid);
     if insert_something then Format.fprintf fmt "@]@\n}";
     Format.pp_close_box fmt ();
     Format.pp_close_box fmt ()
-  (* end of annotated_stmt *)
 
   method private func_header fmt f =
     let ty = f.Insertions.func_var.vtype in
     let vname = f.Insertions.func_var.vname in
-    Format.fprintf fmt "@[%a;@\n@]"
-      (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" vname))) ty
+    let print fmt = Format.fprintf fmt "%s" vname in
+    Format.fprintf fmt "@[%a;@\n@]" (self#typ (Some print)) ty
 
   method private func fmt f =
     let ty = f.Insertions.func_var.vtype in
     let vname = f.Insertions.func_var.vname in
-    Format.fprintf fmt "@[<v 2>%a {@\n"
-      (self#typ (Some (fun fmt -> Format.fprintf fmt "%s" vname))) ty;
+    let print fmt = Format.fprintf fmt "%s" vname in
+    Format.fprintf fmt "@[<v 2>%a {@\n" (self#typ (Some print)) ty;
     let rec aux = function
       | [] -> ()
       | [h] -> Format.fprintf fmt "%a" (pp_insertion ~line_break:false) h
@@ -146,21 +143,21 @@ class print_insertions insertions functions cwd () = object(self)
   val mutable nondet = false
 
   method private instru = function
-  | Call (_,{enode=Lval(Var v,_)},_,_) ->
-     begin
-       try if (String.sub v.vname 0 7) = "nondet_" then nondet <- true
-       with _ -> ()
-     end
-  | _ -> ()
+    | Call (_,{enode=Lval(Var v,_)},_,_) ->
+       begin
+	 try if (String.sub v.vname 0 7) = "nondet_" then nondet <- true
+	 with _ -> ()
+       end
+    | _ -> ()
 
   method private insertion = function
-  | Insertions.Instru i -> self#instru i
-  | Insertions.IRet _ -> ()
-  | Insertions.Decl _ -> ()
-  | Insertions.Block i -> List.iter self#insertion i
-  | Insertions.IIf(_,i1,i2) ->
-     List.iter self#insertion i1; List.iter self#insertion i2
-  | Insertions.ILoop(_,i) -> List.iter self#insertion i
+    | Insertions.Instru i -> self#instru i
+    | Insertions.IRet _ -> ()
+    | Insertions.Decl _ -> ()
+    | Insertions.Block i -> List.iter self#insertion i
+    | Insertions.IIf(_,i1,i2) ->
+       List.iter self#insertion i1; List.iter self#insertion i2
+    | Insertions.ILoop(_,i) -> List.iter self#insertion i
 
   method private headers fmt =
     Hashtbl.iter (fun _ q -> Queue.iter self#insertion q) insertions;
@@ -168,9 +165,7 @@ class print_insertions insertions functions cwd () = object(self)
     List.iter on_func functions;
     let externals_file = Options.Self.Share.file ~error:true "externals.h" in
     let nondet_file = Options.Self.Share.file ~error:true "nondet.c" in
-    let headers = [
-      nondet, ("#include \""^nondet_file^"\"");
-    ] in
+    let headers = [ nondet, ("#include \"" ^ nondet_file ^ "\"") ] in
     Format.fprintf fmt "#include \"%s\"@\n" externals_file;
     let do_header (print, s) = if print then Format.fprintf fmt "%s@\n" s in
     List.iter do_header headers
@@ -191,9 +186,9 @@ class print_insertions insertions functions cwd () = object(self)
        fundec.svar.vattr <- oldattr;
        Format.fprintf fmt "@\n"
     | GVar (vi,_,_) ->
-      let old_vghost = vi.vghost in
-      vi.vghost <- false;
-      super#global fmt g;
-      vi.vghost <- old_vghost
+       let old_vghost = vi.vghost in
+       vi.vghost <- false;
+       super#global fmt g;
+       vi.vghost <- old_vghost
     | _ -> super#global fmt g
 end
