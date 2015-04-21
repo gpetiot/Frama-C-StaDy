@@ -28,7 +28,6 @@ let cmp rel e1 e2 = Cil.mkBinOp ~loc (Utils.relation_to_binop rel) e1 e2
 
 (* instructions *)
 let instru_affect a b = Set(a,b,loc)
-let instru_skip = Skip loc
 
 let rec typename = function
   | TInt (ikind, _) ->
