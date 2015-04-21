@@ -407,11 +407,11 @@ class gather_insertions props cwd = object(self)
     let i_6 = self#cinit_set e_iter low in
     let ins_b_0, lambda_t = self#translate_term t in
     let ins_b_1, clear_lambda = match name with
-      | s when s = "\\sum" ->
+      | "\\sum" ->
 	 self#cbinop PlusA e_ret e_ret lambda_t, [self#cclear lambda_t]
-      | s when s = "\\product" ->
+      | "\\product" ->
 	 self#cbinop Mult e_ret e_ret lambda_t, [self#cclear lambda_t]
-      | s when s = "\\numof" ->
+      | "\\numof" ->
 	 let cond = cmp Rneq lambda_t zero in
 	 let i = self#cbinop_ui PlusA e_ret e_ret one in
 	 Insertion.mk_if cond [i] [], []
@@ -434,8 +434,8 @@ class gather_insertions props cwd = object(self)
   method private translate_app li _ params =
     let s = li.l_var_info.lv_name in
     let ty = Extlib.the li.l_type in
-    match ty, params with
-    | Linteger, [param] when s = "\\abs" ->
+    match ty, params, s with
+    | Linteger, [param], "\\abs" ->
        let i_0, x = self#translate_term param in
        let ret = self#fresh_Z_varinfo "abs" in
        let i_1 = Insertion.mk_decl ret in
@@ -444,11 +444,12 @@ class gather_insertions props cwd = object(self)
        let i_3 = self#cabs e_ret x in
        let i_4 = self#cclear x in
        i_0 @ [i_1; i_2; i_3; i_4], e_ret.enode
-    | Linteger, [l;u;{term_node=Tlambda([q],t)}]
-	 when s = "\\sum" || s = "\\product" || s = "\\numof" ->
+    | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\sum"
+    | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\product"
+    | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\numof" ->
        self#translate_lambda li l u q t
-    | Linteger, _ -> raise Unsupported
-    | Lreal, _ -> raise Unsupported
+    | Linteger, _, _ -> raise Unsupported
+    | Lreal, _, _ -> raise Unsupported
     | _ -> raise Unreachable
 
   method private translate_cast ty t = match t.term_type with (* source type *)
@@ -922,7 +923,7 @@ class gather_insertions props cwd = object(self)
       | Pif(t,p,q) -> self#translate_pif t p q
       | Pforall(vars,{content=Pimplies(h,g)}) -> self#translate_forall vars h g
       | Pexists(vars,{content=Pand(h,g)}) -> self#translate_exists vars h g
-      | Pat (p, LogicLabel(_,l)) when l = "Here" -> self#translate_pnamed p
+      | Pat (p, LogicLabel(_,"Here")) -> self#translate_pnamed p
       | Pvalid (_,t) -> self#translate_valid t
       | Pvalid_read (_,t) ->
 	 Options.Self.warning ~current:true

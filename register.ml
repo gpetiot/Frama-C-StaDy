@@ -77,7 +77,7 @@ let do_externals() =
     let set_mpzt = object
       inherit Cil.nopCilVisitor
       method !vglob = function
-      | GType({ torig_name = s } as info, _) when s = "mpz_t" ->
+      | GType({ torig_name = "mpz_t" } as info, _) ->
 	tmp_mpz_t := Some (TNamed(info,[]));
 	Cil.SkipChildren
       | GFun({svar=vi},_) ->

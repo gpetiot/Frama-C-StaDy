@@ -140,7 +140,7 @@ let print_exit_code code =
 
 let run cmd =
   match Options.Socket_Type.get() with
-  | s when s = "unix" ->
+  | "unix" ->
      let socket = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
      let name = "Pc2FcSocket" in
      begin
@@ -162,7 +162,7 @@ let run cmd =
      end;
      Unix.close socket;
      Sys.remove name
-  | s when s = "internet" ->
+  | "internet" ->
      let socket = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
      begin
        try
