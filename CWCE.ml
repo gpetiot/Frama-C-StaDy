@@ -22,6 +22,33 @@ let one_for prop =
   with Not_found -> None
 
 
+let register ignore_var kind prop str_tc msg stmts list_entries =
+  let file_tbl =
+    try States.CW_counter_examples.find prop
+    with Not_found -> Datatype.String.Hashtbl.create 16
+  in
+  let msg, stmts, var_tbl =
+    try Datatype.String.Hashtbl.find file_tbl str_tc
+    with Not_found -> msg, stmts, Datatype.String.Hashtbl.create 16
+  in
+  let on_pair (var, value) =
+    let i, c, s =
+      try Datatype.String.Hashtbl.find var_tbl var
+      with Not_found -> "", "", ""
+    in
+    let i, c, s =
+      if kind = "IN" then value,c,s
+      else if kind = "OUTCONC" then i,value,s
+      else i,c,value
+    in
+    if ignore_var var then ()
+    else Datatype.String.Hashtbl.replace var_tbl var (i,c,s)
+  in
+  List.iter on_pair list_entries;
+  Datatype.String.Hashtbl.replace file_tbl str_tc (msg, stmts, var_tbl);
+  States.CW_counter_examples.replace prop file_tbl
+
+
 let pretty fmt (p, f, msg, stmts, var_states) =
   let pp_msg fmt = function "" -> () | x -> Format.fprintf fmt "(%s)" x in
   let pp_loc = Cil_datatype.Location.pretty in
