@@ -23,6 +23,8 @@ PLUGIN_CMO := \
 	states \
 	subst \
 	utils \
+	NCCE \
+	CWCE \
 	socket \
 	symbolic_label \
 	native_precond \

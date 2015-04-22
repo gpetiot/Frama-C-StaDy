@@ -231,7 +231,6 @@ let compute_props ?(props=selected_props()) ?cwd () =
   States.CW_counter_examples.mark_as_computed();
   Options.Self.result "all-paths: %b" (States.All_Paths.get());
   Options.Self.result "%i test cases" (States.Nb_test_cases.get());
-  let distinct = true in
   let strengthened_precond =
     try
       let bhv = Utils.default_behavior kf in
@@ -241,17 +240,20 @@ let compute_props ?(props=selected_props()) ?cwd () =
   in
   let no_CE = States.NC_counter_examples.length() = 0 in
   let on_prop prop =
-    Options.Self.result "%a" Utils.pp_ce prop;
-    try
-      ignore (States.NC_counter_examples.find prop);
-      let status = Property_status.False_and_reachable in
-      Property_status.emit emitter ~hyps:[] prop ~distinct status
-    with
-    | Not_found ->
-      let status = Property_status.True in
-      let hyps = strengthened_precond in
-      if States.All_Paths.get() && no_CE && List.mem prop translated_props then
-	Property_status.emit emitter ~hyps prop ~distinct status
+    begin
+      match NCCE.one_for prop with
+      | Some ncce ->
+	 Options.Self.result "%a" NCCE.pretty ncce;
+	 let status = Property_status.False_and_reachable in
+	 Property_status.emit emitter ~hyps:[] prop ~distinct:true status
+      | None ->
+	 let status = Property_status.True in
+	 let hyps = strengthened_precond in
+	 if States.All_Paths.get() && no_CE
+	    && List.mem prop translated_props then
+	   Property_status.emit emitter ~hyps prop ~distinct:true status
+    end;
+    Extlib.may (Options.Self.result "%a" CWCE.pretty) (CWCE.one_for prop)
   in
   Property_status.iter on_prop
 

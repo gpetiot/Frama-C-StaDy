@@ -194,50 +194,6 @@ let mpz_t() =
   let ty = Extlib.the ty in
   ty
 
-let pp_ce fmt p =
-  let pp_msg fmt = function "" -> () | x -> Format.fprintf fmt "(%s)" x in
-  let pp_loc = Cil_datatype.Location.pretty in
-  let pp_prop = Property.pretty in
-  let pp_stmt fmt s = match s.skind with
-    | Instr(Call _) -> Printer.pp_stmt fmt s
-    | _ -> Format.fprintf fmt "stmt %i" s.sid
-  in
-  let on_var var (inp, con, sym) =
-    match con, sym with
-    | "", "" -> Format.fprintf fmt "%s = %s@\n" var inp
-    | "", x
-    | x, "" -> Format.fprintf fmt "%s = %s -- OUTPUT: %s@\n" var inp x
-    | x, y -> Format.fprintf fmt "%s = %s -- OUTPUT: %s (%s)@\n" var inp x y
-  in
-  let on_nc f (msg, var_states) = function
-    | 0 -> 0
-    | n ->
-       Format.fprintf fmt "NC of @[%a@] %a@\n" pp_prop p pp_msg msg;
-       Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Property.location p);
-       Format.fprintf fmt "TEST DRIVER: %s@\n" f;
-       Datatype.String.Hashtbl.iter_sorted on_var var_states;
-       n-1
-  in
-  let on_cw f (msg, stmts, var_states) = function
-    | 0 -> 0
-    | n ->
-       Format.fprintf
-	 fmt "CW of @[%a@] for @[%a@] %a@\n"
-	 (Pretty_utils.pp_list pp_stmt) stmts pp_prop p pp_msg msg;
-       let on_stmt s =
-	 Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Cil_datatype.Stmt.loc s)
-       in
-       List.iter on_stmt stmts;
-       Format.fprintf fmt "TEST DRIVER: %s@\n" f;
-       Datatype.String.Hashtbl.iter_sorted on_var var_states;
-       n-1
-  in
-  let on_tbl find f =
-    try let t = find p in ignore (Datatype.String.Hashtbl.fold f t 1)
-    with Not_found -> ()
-  in
-  on_tbl States.NC_counter_examples.find on_nc;
-  on_tbl States.CW_counter_examples.find on_cw
 
 (* unused: interpreting string as precondition predicates *)
 (* let type_str_precond kf pred_as_string = *)

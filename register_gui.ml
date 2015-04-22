@@ -52,7 +52,10 @@ let to_do_on_select
      let str2 = "Remove this contract from the CWD list" in
      ignore (popup_factory#add_item str2 ~callback)
   | Pretty_source.PIP prop when button_nb = 1 ->
-     main_ui#pretty_information "%a" Utils.pp_ce prop
+     let ncce = NCCE.one_for prop in
+     let cwce = CWCE.one_for prop in
+     Extlib.may (main_ui#pretty_information "%a" NCCE.pretty) ncce;
+     Extlib.may (main_ui#pretty_information "%a" CWCE.pretty) cwce
   | Pretty_source.PIP prop when button_nb = 3 ->
      begin
        try
