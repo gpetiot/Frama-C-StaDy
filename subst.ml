@@ -2,7 +2,7 @@
 open Cil_types
 
 
-class subst ?subst_result () = object(self)
+class subst () = object(self)
 
   method app ll vt vv li lassoc params =
     let rec aux_label ret = function
@@ -84,12 +84,6 @@ class subst ?subst_result () = object(self)
       | TLval v' -> TLval (Logic_const.addTermOffsetLval off v')
       | whatever -> assert (off = TNoOffset); whatever
     else TLval (TVar (if List.mem_assoc v vv then List.assoc v vv else v), off)
-  | TLval(TResult _,y) when subst_result <> None ->
-    (* substitution of \result by a lvalue *)
-    let lval = Extlib.the subst_result in
-    let tlval = Logic_utils.lval_to_term_lval ~cast:false lval in
-    let x = Logic_const.addTermOffsetLval (self#toffset y ll vt vv) tlval in
-    TLval(x)
   | TLval(TResult t,y) -> TLval(TResult t, self#toffset y ll vt vv)
   | TLval(TMem t,y) -> TLval(TMem(self#term t ll vt vv),self#toffset y ll vt vv)
   | TSizeOf t -> TSizeOf t

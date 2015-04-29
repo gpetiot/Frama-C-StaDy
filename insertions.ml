@@ -1433,8 +1433,8 @@ class gather_insertions props cwd = object(self)
 	   let p = match ret with
 	     | Some r ->
 		let ty = Cil.typeOfLval r in
-		let subst_result = Cil.var (my_varinfo ty "__retres") in
-		(new Subst.subst ~subst_result ())#pred p[][][][]
+		result_varinfo <- Some (my_varinfo ty "__retres");
+		(new Subst.subst ())#pred p[][][][]
 	     | None -> p
 	   in
 	   ins @ (self#pc_assume p)
