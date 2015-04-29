@@ -1159,7 +1159,7 @@ class gather_insertions props cwd = object(self)
     List.iter do_varinfo (Kernel_function.get_formals kf);
     Cil.DoChildren
 
-  method private subst_pred p = (new Subst.subst ())#pred p [] [] [] []
+  method private subst_pred p = Subst.pred p [] [] [] []
 
   method private cond_of_assumes pred_list =
     let rec aux insertions ret = function
@@ -1434,7 +1434,7 @@ class gather_insertions props cwd = object(self)
 	     | Some r ->
 		let ty = Cil.typeOfLval r in
 		result_varinfo <- Some (my_varinfo ty "__retres");
-		(new Subst.subst ())#pred p[][][][]
+		Subst.pred p[][][][]
 	     | None -> p
 	   in
 	   ins @ (self#pc_assume p)

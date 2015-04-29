@@ -339,7 +339,7 @@ let rec requires_to_prolog constraints pred = match pred.content with
 let compute_constraints() =
   let kf = fst (Globals.entry_point()) in
   let bhvs = Utils.unguarded_behaviors kf in
-  let subst pred = (new Subst.subst ())#pnamed pred [] [] [] [] in
+  let subst pred = Subst.pnamed pred [] [] [] [] in
   let accumulate f =
     List.fold_left (fun l x -> List.rev_append (f x) l) [] bhvs in
   let requires_preds = accumulate (fun x -> x.b_requires) in
