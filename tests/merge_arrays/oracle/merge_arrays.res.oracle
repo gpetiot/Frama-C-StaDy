@@ -339,8 +339,6 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         if(__sd_variant_pos_0 < 0) {
           pathcrawler_assert_exception("non positive",9);
         }
-        mpz_t __sd_Z_variant_save_0;
-        __gmpz_init_set(__sd_Z_variant_save_0,__sd_Z_sub_3);
         if (*(t1 + i) < *(t2 + j)) {
           *(t3 + k) = *(t1 + i);
           i ++;
@@ -447,11 +445,11 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         __gmpz_clear(__sd_Z_add_10);
         __gmpz_clear(__sd_Z_to_Z_31);
         int __sd_variant_decr_0;
-        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_4,__sd_Z_variant_save_0);
+        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_4,__sd_Z_sub_3);
         if(__sd_variant_decr_0 >= 0) {
           pathcrawler_assert_exception("non decreasing",9);
         }
-        __gmpz_clear(__sd_Z_variant_save_0);
+        __gmpz_clear(__sd_Z_sub_3);
         }
          
     }
@@ -536,8 +534,6 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         if(__sd_variant_pos_1 < 0) {
           pathcrawler_assert_exception("non positive",14);
         }
-        mpz_t __sd_Z_variant_save_1;
-        __gmpz_init_set(__sd_Z_variant_save_1,__sd_Z_sub_5);
         *(t3 + k) = *(t1 + i);
         i ++;
         k ++;mpz_t __sd_Z_cst_16;
@@ -615,11 +611,11 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         __gmpz_clear(__sd_Z_to_Z_50);
         __gmpz_clear(__sd_Z_to_Z_51);
         int __sd_variant_decr_1;
-        __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_6,__sd_Z_variant_save_1);
+        __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_6,__sd_Z_sub_5);
         if(__sd_variant_decr_1 >= 0) {
           pathcrawler_assert_exception("non decreasing",14);
         }
-        __gmpz_clear(__sd_Z_variant_save_1);
+        __gmpz_clear(__sd_Z_sub_5);
         }
          
     }
@@ -704,8 +700,6 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         if(__sd_variant_pos_2 < 0) {
           pathcrawler_assert_exception("non positive",19);
         }
-        mpz_t __sd_Z_variant_save_2;
-        __gmpz_init_set(__sd_Z_variant_save_2,__sd_Z_sub_7);
         *(t3 + k) = *(t2 + j);
         j ++;
         k ++;mpz_t __sd_Z_cst_20;
@@ -783,11 +777,11 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         __gmpz_clear(__sd_Z_to_Z_70);
         __gmpz_clear(__sd_Z_to_Z_71);
         int __sd_variant_decr_2;
-        __sd_variant_decr_2 = __gmpz_cmp(__sd_Z_sub_8,__sd_Z_variant_save_2);
+        __sd_variant_decr_2 = __gmpz_cmp(__sd_Z_sub_8,__sd_Z_sub_7);
         if(__sd_variant_decr_2 >= 0) {
           pathcrawler_assert_exception("non decreasing",19);
         }
-        __gmpz_clear(__sd_Z_variant_save_2);
+        __gmpz_clear(__sd_Z_sub_7);
         }
          
     }

@@ -113,8 +113,6 @@ void bubble_sort(int *A, int n)
         if(__sd_variant_pos_1 < 0) {
           pathcrawler_assert_exception("non positive",2);
         }
-        mpz_t __sd_Z_variant_save_1;
-        __gmpz_init_set(__sd_Z_variant_save_1,__sd_Z_sub_11);
         j = 0;
         {
           mpz_t __sd_Z_cst_3;
@@ -217,8 +215,6 @@ void bubble_sort(int *A, int n)
             if(__sd_variant_pos_0 < 0) {
               pathcrawler_assert_exception("non positive",5);
             }
-            mpz_t __sd_Z_variant_save_0;
-            __gmpz_init_set(__sd_Z_variant_save_0,__sd_Z_sub_7);
             if (*(A + j) > *(A + (j + 1))) {
               int x;
               x = *(A + j);
@@ -320,12 +316,11 @@ void bubble_sort(int *A, int n)
             __gmpz_clear(__sd_Z_sub_9);
             __gmpz_clear(__sd_Z_to_Z_19);
             int __sd_variant_decr_0;
-            __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_10,
-                                             __sd_Z_variant_save_0);
+            __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_10,__sd_Z_sub_7);
             if(__sd_variant_decr_0 >= 0) {
               pathcrawler_assert_exception("non decreasing",5);
             }
-            __gmpz_clear(__sd_Z_variant_save_0);
+            __gmpz_clear(__sd_Z_sub_7);
             }
              
         }
@@ -355,11 +350,11 @@ void bubble_sort(int *A, int n)
         __gmpz_clear(__sd_Z_to_Z_24);
         __gmpz_clear(__sd_Z_to_Z_25);
         int __sd_variant_decr_1;
-        __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_12,__sd_Z_variant_save_1);
+        __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_12,__sd_Z_sub_11);
         if(__sd_variant_decr_1 >= 0) {
           pathcrawler_assert_exception("non decreasing",2);
         }
-        __gmpz_clear(__sd_Z_variant_save_1);
+        __gmpz_clear(__sd_Z_sub_11);
         }
          
     }

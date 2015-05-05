@@ -157,8 +157,6 @@ void insertion_sort(int *t, int n)
         if(__sd_variant_pos_0 < 0) {
           pathcrawler_assert_exception("non positive",6);
         }
-        mpz_t __sd_Z_variant_save_0;
-        __gmpz_init_set(__sd_Z_variant_save_0,__sd_Z_sub_3);
         mv = *(t + i);
         j = i;
         {
@@ -339,11 +337,11 @@ void insertion_sort(int *t, int n)
         __gmpz_clear(__sd_Z_to_Z_14);
         __gmpz_clear(__sd_Z_to_Z_15);
         int __sd_variant_decr_0;
-        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_4,__sd_Z_variant_save_0);
+        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_4,__sd_Z_sub_3);
         if(__sd_variant_decr_0 >= 0) {
           pathcrawler_assert_exception("non decreasing",6);
         }
-        __gmpz_clear(__sd_Z_variant_save_0);
+        __gmpz_clear(__sd_Z_sub_3);
         }
          
     }

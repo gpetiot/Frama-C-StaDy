@@ -337,8 +337,6 @@ int nextSubset(int *s, int n)
         if(__sd_variant_pos_0 < 0) {
           pathcrawler_assert_exception("non positive",9);
         }
-        mpz_t __sd_Z_variant_save_0;
-        __gmpz_init_set(__sd_Z_variant_save_0,__sd_Z_sub_2);
         *(s + i) = 0;
         i ++;mpz_t __sd_Z_to_Z_23;
         __gmpz_init_set_si(__sd_Z_to_Z_23,k);
@@ -430,11 +428,11 @@ int nextSubset(int *s, int n)
         __gmpz_clear(__sd_Z_to_Z_33);
         __gmpz_clear(__sd_Z_to_Z_34);
         int __sd_variant_decr_0;
-        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_3,__sd_Z_variant_save_0);
+        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_3,__sd_Z_sub_2);
         if(__sd_variant_decr_0 >= 0) {
           pathcrawler_assert_exception("non decreasing",9);
         }
-        __gmpz_clear(__sd_Z_variant_save_0);
+        __gmpz_clear(__sd_Z_sub_2);
         }
          
     }

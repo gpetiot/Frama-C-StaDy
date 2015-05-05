@@ -306,8 +306,6 @@ void f(int n, int *t)
         if(__sd_variant_pos_0 < 0) {
           pathcrawler_assert_exception("9$non positive",0);
         }
-        mpz_t __sd_Z_variant_save_0;
-        __gmpz_init_set(__sd_Z_variant_save_0,__sd_Z_sub_10);
         *(t + i) = fmax(*(t + (i - 1)),*(t + (i - 2)));
         i ++;mpz_t __sd_Z_cst_8;
         __gmpz_init_set_str(__sd_Z_cst_8,"3",10);
@@ -407,11 +405,11 @@ void f(int n, int *t)
         __gmpz_clear(__sd_Z_to_Z_10);
         __gmpz_clear(__sd_Z_to_Z_11);
         int __sd_variant_decr_0;
-        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_11,__sd_Z_variant_save_0);
+        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_11,__sd_Z_sub_10);
         if(__sd_variant_decr_0 >= 0) {
           pathcrawler_assert_exception("9$non decreasing",0);
         }
-        __gmpz_clear(__sd_Z_variant_save_0);
+        __gmpz_clear(__sd_Z_sub_10);
         }
          
     }

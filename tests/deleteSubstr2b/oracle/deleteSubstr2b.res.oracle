@@ -315,8 +315,6 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
         if(__sd_variant_pos_1 < 0) {
           pathcrawler_assert_exception("non positive",0);
         }
-        mpz_t __sd_Z_variant_save_1;
-        __gmpz_init_set(__sd_Z_variant_save_1,__sd_Z_sub_10);
         {
           int j;
           j = 0;
@@ -394,8 +392,6 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
               if(__sd_variant_pos_0 < 0) {
                 pathcrawler_assert_exception("non positive",35);
               }
-              mpz_t __sd_Z_variant_save_0;
-              __gmpz_init_set(__sd_Z_variant_save_0,__sd_Z_sub_5);
               if ((int)*(str + (i + j)) != (int)*(substr + j)) break;
               j ++;mpz_t __sd_Z_cst_13;
               __gmpz_init_set_str(__sd_Z_cst_13,"0",10);
@@ -464,12 +460,11 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
               __gmpz_clear(__sd_Z_to_Z_26);
               __gmpz_clear(__sd_Z_to_Z_27);
               int __sd_variant_decr_0;
-              __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_6,
-                                               __sd_Z_variant_save_0);
+              __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_6,__sd_Z_sub_5);
               if(__sd_variant_decr_0 >= 0) {
                 pathcrawler_assert_exception("non decreasing",35);
               }
-              __gmpz_clear(__sd_Z_variant_save_0);
+              __gmpz_clear(__sd_Z_sub_5);
               }
                
           }
@@ -587,11 +582,11 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
         __gmpz_clear(__sd_Z_sub_11);
         __gmpz_clear(__sd_Z_to_Z_45);
         int __sd_variant_decr_1;
-        __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_12,__sd_Z_variant_save_1);
+        __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_12,__sd_Z_sub_10);
         if(__sd_variant_decr_1 >= 0) {
           pathcrawler_assert_exception("non decreasing",0);
         }
-        __gmpz_clear(__sd_Z_variant_save_1);
+        __gmpz_clear(__sd_Z_sub_10);
         }
          
     }
@@ -957,8 +952,6 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           if(__sd_variant_pos_2 < 0) {
             pathcrawler_assert_exception("non positive",1);
           }
-          mpz_t __sd_Z_variant_save_2;
-          __gmpz_init_set(__sd_Z_variant_save_2,__sd_Z_sub_17);
           *(dest + k) = *(str + k);
           k ++;int __sd_forall_12;
           __sd_forall_12 = 1;
@@ -1020,12 +1013,11 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           __gmpz_clear(__sd_Z_to_Z_69);
           __gmpz_clear(__sd_Z_to_Z_70);
           int __sd_variant_decr_2;
-          __sd_variant_decr_2 = __gmpz_cmp(__sd_Z_sub_18,
-                                           __sd_Z_variant_save_2);
+          __sd_variant_decr_2 = __gmpz_cmp(__sd_Z_sub_18,__sd_Z_sub_17);
           if(__sd_variant_decr_2 >= 0) {
             pathcrawler_assert_exception("non decreasing",1);
           }
-          __gmpz_clear(__sd_Z_variant_save_2);
+          __gmpz_clear(__sd_Z_sub_17);
           }
            
       }

@@ -1273,12 +1273,6 @@ class gather_insertions props cwd = object(self)
 	 self#insert beg_label i_2;
 	 let cond = cmp Rlt e_cmp_variant_zero zero in
 	 self#insert beg_label (Insertion.mk_if cond [instr] []);
-	 let save_variant = self#fresh_Z_varinfo "variant_save" in
-	 let insert_2 = Insertion.mk_decl save_variant in
-	 self#insert beg_label insert_2;
-	 let e_save_variant  = Cil.evar save_variant in
-	 let insert_3 = self#cinit_set e_save_variant beg_variant in
-	 self#insert beg_label insert_3;
 	 (* at EndIter *)
 	 let inserts_4, end_variant = self#translate_term term in
 	 List.iter (self#insert end_label) inserts_4;
@@ -1288,11 +1282,11 @@ class gather_insertions props cwd = object(self)
 	 let l_cmp_variants = Cil.var cmp_variants in
 	 let instr = self#pc_exc "non decreasing" id in
 	 self#insert end_label (Insertion.mk_decl cmp_variants);
-	 let i_4 = self#ccmp l_cmp_variants end_variant e_save_variant in
+	 let i_4 = self#ccmp l_cmp_variants end_variant beg_variant in
 	 self#insert end_label i_4;
 	 let cond = cmp Rge e_cmp_variants zero in
 	 self#insert end_label (Insertion.mk_if cond [instr] []);
-	 self#insert end_label (self#cclear e_save_variant)
+	 self#insert end_label (self#cclear beg_variant)
       | Lreal -> raise Unsupported
       | _ ->
 	 (* at BegIter *)

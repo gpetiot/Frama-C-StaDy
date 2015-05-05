@@ -168,8 +168,6 @@ int num_of(int n, int *t)
         if(__sd_variant_pos_0 < 0) {
           pathcrawler_assert_exception("non positive",0);
         }
-        mpz_t __sd_Z_variant_save_0;
-        __gmpz_init_set(__sd_Z_variant_save_0,__sd_Z_sub_3);
         if (*(t + i) == 0) num ++;
         i ++;mpz_t __sd_Z_cst_4;
         __gmpz_init_set_str(__sd_Z_cst_4,"0",10);
@@ -255,11 +253,11 @@ int num_of(int n, int *t)
         __gmpz_clear(__sd_Z_to_Z_14);
         __gmpz_clear(__sd_Z_to_Z_15);
         int __sd_variant_decr_0;
-        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_4,__sd_Z_variant_save_0);
+        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_4,__sd_Z_sub_3);
         if(__sd_variant_decr_0 >= 0) {
           pathcrawler_assert_exception("non decreasing",0);
         }
-        __gmpz_clear(__sd_Z_variant_save_0);
+        __gmpz_clear(__sd_Z_sub_3);
         }
          
     }

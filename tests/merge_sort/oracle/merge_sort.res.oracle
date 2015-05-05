@@ -232,8 +232,6 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         if(__sd_variant_pos_0 < 0) {
           pathcrawler_assert_exception("non positive",4);
         }
-        mpz_t __sd_Z_variant_save_0;
-        __gmpz_init_set(__sd_Z_variant_save_0,__sd_Z_sub_8);
         if (i0 < iRight) {
           if (i1 >= iEnd) goto _LOR;
           else 
@@ -320,11 +318,11 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         __gmpz_clear(__sd_Z_to_Z_18);
         __gmpz_clear(__sd_Z_to_Z_19);
         int __sd_variant_decr_0;
-        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_9,__sd_Z_variant_save_0);
+        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_9,__sd_Z_sub_8);
         if(__sd_variant_decr_0 >= 0) {
           pathcrawler_assert_exception("non decreasing",4);
         }
-        __gmpz_clear(__sd_Z_variant_save_0);
+        __gmpz_clear(__sd_Z_sub_8);
         }
          
     }
@@ -465,8 +463,6 @@ void CopyArray(int *A, int *B, int n)
         if(__sd_variant_pos_1 < 0) {
           pathcrawler_assert_exception("non positive",6);
         }
-        mpz_t __sd_Z_variant_save_1;
-        __gmpz_init_set(__sd_Z_variant_save_1,__sd_Z_sub_12);
         *(A + i) = *(B + i);
         i ++;mpz_t __sd_Z_cst_7;
         __gmpz_init_set_str(__sd_Z_cst_7,"0",10);
@@ -494,11 +490,11 @@ void CopyArray(int *A, int *B, int n)
         __gmpz_clear(__sd_Z_to_Z_28);
         __gmpz_clear(__sd_Z_to_Z_29);
         int __sd_variant_decr_1;
-        __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_13,__sd_Z_variant_save_1);
+        __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_13,__sd_Z_sub_12);
         if(__sd_variant_decr_1 >= 0) {
           pathcrawler_assert_exception("non decreasing",6);
         }
-        __gmpz_clear(__sd_Z_variant_save_1);
+        __gmpz_clear(__sd_Z_sub_12);
         }
          
     }
@@ -674,8 +670,6 @@ void BottomUpSort(int n, int *A, int *B)
         if(__sd_variant_pos_3 < 0) {
           pathcrawler_assert_exception("non positive",13);
         }
-        mpz_t __sd_Z_variant_save_3;
-        __gmpz_init_set(__sd_Z_variant_save_3,__sd_Z_sub_22);
         {
           int i;
           i = 0;
@@ -740,8 +734,6 @@ void BottomUpSort(int n, int *A, int *B)
               if(__sd_variant_pos_2 < 0) {
                 pathcrawler_assert_exception("non positive",7);
               }
-              mpz_t __sd_Z_variant_save_2;
-              __gmpz_init_set(__sd_Z_variant_save_2,__sd_Z_sub_18);
               {
                 int tmp;
                 int tmp_0;
@@ -809,12 +801,11 @@ void BottomUpSort(int n, int *A, int *B)
               __gmpz_clear(__sd_Z_to_Z_44);
               __gmpz_clear(__sd_Z_to_Z_45);
               int __sd_variant_decr_2;
-              __sd_variant_decr_2 = __gmpz_cmp(__sd_Z_sub_19,
-                                               __sd_Z_variant_save_2);
+              __sd_variant_decr_2 = __gmpz_cmp(__sd_Z_sub_19,__sd_Z_sub_18);
               if(__sd_variant_decr_2 >= 0) {
                 pathcrawler_assert_exception("non decreasing",7);
               }
-              __gmpz_clear(__sd_Z_variant_save_2);
+              __gmpz_clear(__sd_Z_sub_18);
               }
                
           }
@@ -868,11 +859,11 @@ void BottomUpSort(int n, int *A, int *B)
         __gmpz_clear(__sd_Z_to_Z_54);
         __gmpz_clear(__sd_Z_to_Z_55);
         int __sd_variant_decr_3;
-        __sd_variant_decr_3 = __gmpz_cmp(__sd_Z_sub_23,__sd_Z_variant_save_3);
+        __sd_variant_decr_3 = __gmpz_cmp(__sd_Z_sub_23,__sd_Z_sub_22);
         if(__sd_variant_decr_3 >= 0) {
           pathcrawler_assert_exception("non decreasing",13);
         }
-        __gmpz_clear(__sd_Z_variant_save_3);
+        __gmpz_clear(__sd_Z_sub_22);
         }
          
     }
