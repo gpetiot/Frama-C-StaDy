@@ -664,10 +664,6 @@ class gather_insertions props cwd = object(self)
     let insert_2 = Insertion.mk_if cond inserts_then inserts_else in
     inserts_0 @ ii @ insert_1 :: insert_2 :: insert_3, Cil.evar res_var
 
-  method private unsupported_predicate p =
-    Options.Self.warning ~current:true "%a unsupported" Printer.pp_predicate p;
-    [], one
-
   method private translate_valid term = match term.term_node with
     | Tempty_set -> [], one
     | TBinOp ((PlusPI|IndexPI),p,{term_node = Trange(Some x,Some y)}) ->
@@ -910,49 +906,46 @@ class gather_insertions props cwd = object(self)
     let i_loop = Insertion.mk_loop e_cond i_inside in
     [i_0; i_1; Insertion.mk_block (i_before @ i_loop :: i_after)], e_var
 
-  method private translate_predicate p =
-    try
-      match p with
-      | Pfalse -> [], zero
-      | Ptrue -> [], one
-      | Prel (r,t1,t2) -> self#translate_rel r t1 t2
-      | Pand (p,q) -> self#translate_and p q
-      | Por (p,q) -> self#translate_or p q
-      | Pimplies (p,q) -> self#translate_implies p q
-      | Piff(p,q) -> self#translate_equiv p q
-      | Pnot p -> self#translate_not p
-      | Pif(t,p,q) -> self#translate_pif t p q
-      | Pforall(vars,{content=Pimplies(h,g)}) -> self#translate_forall vars h g
-      | Pexists(vars,{content=Pand(h,g)}) -> self#translate_exists vars h g
-      | Pat (p, LogicLabel(_,"Here")) -> self#translate_pnamed p
-      | Pvalid (_,t) -> self#translate_valid t
-      | Pvalid_read (_,t) ->
-	 Options.Self.warning ~current:true
-			      "\\valid_read(%a) is interpreted as \\valid(%a)"
-			      Printer.pp_term t Printer.pp_term t;
-	 self#translate_valid t
-      | Pforall _ ->
-	 Options.Self.warning ~current:true
-			      "%a not of the form \\forall ...; a ==> b"
-			      Printer.pp_predicate p;
-	 raise Unsupported
-      | Pexists _ ->
-	 Options.Self.warning ~current:true
-			      "%a not of the form \\exists ...; a && b"
-			      Printer.pp_predicate p;
-	 raise Unsupported
-      | Papp _
-      | Pseparated _
-      | Pxor _
-      | Plet _
-      | Pat _
-      | Pinitialized _
-      | Pfresh _
-      | Pdangling _
-      | Pallocable _
-      | Pfreeable _
-      | Psubtype _ -> raise Unsupported
-    with Unsupported -> self#unsupported_predicate p
+  method private translate_predicate p = match p with
+    | Pfalse -> [], zero
+    | Ptrue -> [], one
+    | Prel (r,t1,t2) -> self#translate_rel r t1 t2
+    | Pand (p,q) -> self#translate_and p q
+    | Por (p,q) -> self#translate_or p q
+    | Pimplies (p,q) -> self#translate_implies p q
+    | Piff(p,q) -> self#translate_equiv p q
+    | Pnot p -> self#translate_not p
+    | Pif(t,p,q) -> self#translate_pif t p q
+    | Pforall(vars,{content=Pimplies(h,g)}) -> self#translate_forall vars h g
+    | Pexists(vars,{content=Pand(h,g)}) -> self#translate_exists vars h g
+    | Pat (p, LogicLabel(_,"Here")) -> self#translate_pnamed p
+    | Pvalid (_,t) -> self#translate_valid t
+    | Pvalid_read (_,t) ->
+       Options.Self.warning ~current:true
+			    "\\valid_read(%a) is interpreted as \\valid(%a)"
+			    Printer.pp_term t Printer.pp_term t;
+       self#translate_valid t
+    | Pforall _ ->
+       Options.Self.warning ~current:true
+			    "%a not of the form \\forall ...; a ==> b"
+			    Printer.pp_predicate p;
+       raise Unsupported
+    | Pexists _ ->
+       Options.Self.warning ~current:true
+			    "%a not of the form \\exists ...; a && b"
+			    Printer.pp_predicate p;
+       raise Unsupported
+    | Papp _
+    | Pseparated _
+    | Pxor _
+    | Plet _
+    | Pat _
+    | Pinitialized _
+    | Pfresh _
+    | Pdangling _
+    | Pallocable _
+    | Pfreeable _
+    | Psubtype _ -> raise Unsupported
 
   (* modify result_varinfo when the function returns something *)
   method private compute_result_varinfo fct =
@@ -977,12 +970,17 @@ class gather_insertions props cwd = object(self)
       else true
     in
     let translate_as_return pred =
-      let ins, v = self#translate_predicate(self#subst_pred pred.ip_content) in
-      (* untreated predicates are translated as True *)
-      if not (Cil_datatype.Exp.equal v one) then
-	let e = Cil.new_exp ~loc (UnOp (LNot, v, Cil.intType)) in
-	ins @ [Insertion.mk_if e [Insertion.mk_ret zero] []]
-      else ins
+      try
+	let ins,v = self#translate_predicate(self#subst_pred pred.ip_content) in
+	(* untreated predicates are translated as True *)
+	if not (Cil_datatype.Exp.equal v one) then
+	  let e = Cil.new_exp ~loc (UnOp (LNot, v, Cil.intType)) in
+	  ins @ [Insertion.mk_if e [Insertion.mk_ret zero] []]
+	else ins
+      with Unsupported ->
+	Options.Self.warning
+	  ~current:true "%a unsupported" Printer.pp_predicate pred.ip_content;
+	[]
     in
     let do_behavior ins b =
       let requires = List.filter not_translated b.b_requires in
@@ -1203,17 +1201,27 @@ class gather_insertions props cwd = object(self)
   method private pc_to_fc str = self#cpc_to_fc (Cil.mkString ~loc str)
 
   method private pc_assert_exception pred msg prop =
-    let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
-    let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
-    let id = Utils.to_id prop in
-    let insert_1 = Insertion.mk_if e [ self#pc_exc msg id ] [] in
-    translated_properties <- prop :: translated_properties;
-    inserts_0 @ [insert_1]
+    try
+      let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
+      let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
+      let id = Utils.to_id prop in
+      let insert_1 = Insertion.mk_if e [ self#pc_exc msg id ] [] in
+      translated_properties <- prop :: translated_properties;
+      inserts_0 @ [insert_1]
+    with Unsupported ->
+      Options.Self.warning
+	~current:true "%a unsupported" Printer.pp_predicate pred;
+      []
 
   method private pc_assume pred =
-    let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
-    let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
-    inserts_0 @ [ Insertion.mk_if e [ self#pc_ass "" 0 ] [] ]
+    try
+      let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
+      let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
+      inserts_0 @ [ Insertion.mk_if e [ self#pc_ass "" 0 ] [] ]
+    with Unsupported ->
+      Options.Self.warning
+	~current:true "%a unsupported" Printer.pp_predicate pred;
+      []
 
   method private for_behaviors bhvs ins = match bhvs with
   | [] -> ins
