@@ -22,3 +22,4 @@ __NONDET(unsigned long long,ulonglong)
 __NONDET(float,float)
 __NONDET(double,double)
 //__NONDET(long double,longdouble)
+void Frama_C_update_entropy(void){}
