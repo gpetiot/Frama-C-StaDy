@@ -203,8 +203,10 @@ void f(int default_value)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 295 test cases
-[stady] NC of assert
-              A4: ∃ ℤ a, ℤ b; 0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b]; 
+[stady] Non-Compliance of assert
+                          A4:
+                            ∃ ℤ a, ℤ b;
+                              0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b]; 
         LOCATION: tests/quantified_many/quantified_many.c:39
         TEST DRIVER: testcases___sd_instru_quantified_many_f/f/testdrivers/TC_1.c
         default_value = -214739

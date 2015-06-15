@@ -118,13 +118,13 @@ int __sd_rand_mod_0() {
 [pc] generation finished
 [stady] all-paths: true
 [stady] 6 test cases
-[stady] NC of assert x ≡ y; 
+[stady] Non-Compliance of assert x ≡ y; 
         LOCATION: tests/simulate_rand/simulate_rand.c:13
         TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_4.c
         nondet_sint_val[0] = -133277
         nondet_sint_val[1] = 168196
         nondet_sint_val[2] = 200986
-[stady] NC of assert x ≢ z; 
+[stady] Non-Compliance of assert x ≢ z; 
         LOCATION: tests/simulate_rand/simulate_rand.c:15
         TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_6.c
         nondet_sint_val[0] = -101831

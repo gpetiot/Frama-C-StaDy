@@ -249,7 +249,7 @@ void __sd_sort_mod_0(int *A, int n) {
 [pc] generation finished
 [stady] all-paths: true
 [stady] 21 test cases
-[stady] CW of sort(t,k); for ensures *(\old(t)+0) ≤ *(\old(t)+1) 
+[stady] Contract Weakness of sort(t,k); for ensures *(\old(t)+0) ≤ *(\old(t)+1) 
         LOCATION: tests/spec_insuf_ko/spec_insuf_ko.c:37
         TEST DRIVER: testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_5.c
         k = 4

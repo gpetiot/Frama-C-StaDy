@@ -751,7 +751,7 @@ int alt_sep_test(void)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 1224 test cases
-[stady] NC of ensures \result ≢ 1 
+[stady] Non-Compliance of ensures \result ≢ 1 
         LOCATION: tests/tcas/tcas.c:107
         TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_46.c
         Alt_Layer_Value = 0
@@ -771,7 +771,7 @@ int alt_sep_test(void)
         Two_of_Three_Reports_Valid = 1
         Up_Separation = -56
         return value =  -- OUTPUT: 0 (0)
-[stady] NC of ensures \result ≢ 1 
+[stady] Non-Compliance of ensures \result ≢ 1 
         LOCATION: tests/tcas/tcas.c:123
         TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_20.c
         Alt_Layer_Value = 0
@@ -791,7 +791,7 @@ int alt_sep_test(void)
         Two_of_Three_Reports_Valid = 1
         Up_Separation = 7260
         return value =  -- OUTPUT: 0 (0)
-[stady] NC of ensures \result ≢ 2 
+[stady] Non-Compliance of ensures \result ≢ 2 
         LOCATION: tests/tcas/tcas.c:112
         TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_79.c
         Alt_Layer_Value = 3
@@ -811,7 +811,7 @@ int alt_sep_test(void)
         Two_of_Three_Reports_Valid = 1
         Up_Separation = 0
         return value =  -- OUTPUT: 1 (1)
-[stady] NC of ensures \result ≢ 2 
+[stady] Non-Compliance of ensures \result ≢ 2 
         LOCATION: tests/tcas/tcas.c:93
         TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_38.c
         Alt_Layer_Value = 0

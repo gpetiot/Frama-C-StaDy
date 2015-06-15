@@ -1327,7 +1327,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 291 test cases
-[stady] NC of loop invariant 0 ≤ k < strlen; (not preserved)
+[stady] Non-Compliance of loop invariant 0 ≤ k < strlen; (not preserved)
         LOCATION: tests/deleteSubstr2b/deleteSubstr2b.c:75
         TEST DRIVER: testcases___sd_instru_deleteSubstr2b_delete_substr/delete_substr/testdrivers/TC_2.c
         dest[0] = -27 -- OUTPUT: 119 (str[0])

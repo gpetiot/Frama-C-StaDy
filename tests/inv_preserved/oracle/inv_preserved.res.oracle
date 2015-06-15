@@ -434,10 +434,11 @@ void f(int n, int *t)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 236 test cases
-[stady] CW of stmt 9 for loop invariant
-                           ∀ ℤ k;
-                             2 ≤ k < i-1 ⇒
-                             *(t+k) ≡ *(t+(k-1)) ∨ *(t+k) ≡ *(t+(k-2)); (not preserved)
+[stady] Contract Weakness of stmt 9 for loop invariant
+                                          ∀ ℤ k;
+                                            2 ≤ k < i-1 ⇒
+                                            *(t+k) ≡ *(t+(k-1)) ∨
+                                            *(t+k) ≡ *(t+(k-2)); (not preserved)
         LOCATION: tests/inv_preserved/inv_preserved.c:27
         TEST DRIVER: testcases___sd_instru_inv_preserved_f/f/testdrivers/TC_28.c
         n = 5

@@ -64,7 +64,7 @@ let pretty fmt (p, f, msg, stmts, var_states) =
     | x, y -> Format.fprintf fmt "%s = %s -- OUTPUT: %s (%s)@\n" var inp x y
   in
   Format.fprintf
-    fmt "CW of @[%a@] for @[%a@] %a@\n"
+    fmt "Contract Weakness of @[%a@] for @[%a@] %a@\n"
     (Pretty_utils.pp_list pp_stmt) stmts Property.pretty p pp_msg msg;
   let on_stmt s =
     Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Cil_datatype.Stmt.loc s)
