@@ -2,7 +2,7 @@
 open Cil_types
 
 
-class print_insertions insertions functions cwd () = object(self)
+class print_insertions insertions functions swd () = object(self)
   inherit Printer.extensible_printer () as super
 
   method private insertions_at fmt label =
@@ -73,7 +73,7 @@ class print_insertions insertions functions cwd () = object(self)
 	 self#insertions_at fmt (Symbolic_label.end_iter stmt.sid);
 	 Format.fprintf fmt "}@\n @]"
       | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
-	   when List.mem stmt.sid cwd
+	   when List.mem stmt.sid swd
 		|| List.mem vi.vname (Options.Simulate_Functions.get()) -> ()
       | Return _ ->
 	 let f = Kernel_function.get_name kf in

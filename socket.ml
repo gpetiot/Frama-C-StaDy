@@ -27,7 +27,7 @@ let process_test_case s =
 	&& (String.sub v (String.rindex v '_') 4) = "_cpt"
       with _ -> false
     in
-    try (* '$' only present when a CW is found *)
+    try (* '$' only present when a SW is found *)
       let str_stmt_id, msg = cut_sep '$' msg in
       let str_stmt_ids =
 	let rec aux acc str =
@@ -39,7 +39,7 @@ let process_test_case s =
       let stmt_ids = List.map int_of_string str_stmt_ids in
       let find_stmt sid = fst (Kernel_function.find_from_sid sid) in
       let stmts = List.map find_stmt stmt_ids in
-      CWCE.register ignore_var kind prop str_tc msg stmts list_entries
+      SWCE.register ignore_var kind prop str_tc msg stmts list_entries
     with _ -> NCCE.register ignore_var kind prop str_tc msg list_entries
 
 

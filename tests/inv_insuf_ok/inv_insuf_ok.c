@@ -1,6 +1,6 @@
 
 /* run.config
-STDOPT: +"-main f -stady -stady-cwd 3 -stady-msg-key generated-c,generated-pl -then -report"
+STDOPT: +"-main f -stady -stady-swd 3 -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 int found;

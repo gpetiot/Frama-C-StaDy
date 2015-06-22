@@ -24,7 +24,7 @@ PLUGIN_CMO := \
 	subst \
 	utils \
 	NCCE \
-	CWCE \
+	SWCE \
 	socket \
 	symbolic_label \
 	native_precond \

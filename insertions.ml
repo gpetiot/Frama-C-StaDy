@@ -56,7 +56,7 @@ let rec typename = function
   | _ -> raise Unreachable
 
 
-class gather_insertions props cwd = object(self)
+class gather_insertions props swd = object(self)
   inherit Visitor.frama_c_inplace
 
   val insertions = Hashtbl.create 64
@@ -1185,11 +1185,11 @@ class gather_insertions props cwd = object(self)
       | [h] -> aux (ret ^ (string_of_int h)) []
       | h :: t -> aux (ret ^ (string_of_int h) ^ ",") t
     in
-    let cwd_str = match cwd with
+    let swd_str = match swd with
       | [] -> ""
       | x -> Format.sprintf "%s$" (aux "" x)
     in
-    let str = Cil.mkString ~loc (cwd_str ^ str) in
+    let str = Cil.mkString ~loc (swd_str ^ str) in
     let const = CInt64(Integer.of_int i, IInt, Some(string_of_int i)) in
     self#cpc_exc str (Cil.new_exp ~loc (Const const))
 
@@ -1336,7 +1336,7 @@ class gather_insertions props cwd = object(self)
     end;
     Cil.DoChildren
 
-  method private assigns_cwd assigns =
+  method private assigns_swd assigns =
     let merge_assigns ret = function
       | WritesAny ->
 	 Options.Self.warning ~current:true "assigns clause not precise enough";
@@ -1385,7 +1385,7 @@ class gather_insertions props cwd = object(self)
   method! vstmt_aux stmt =
     let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
-    | Loop _ when List.mem stmt.sid cwd ->
+    | Loop _ when List.mem stmt.sid swd ->
        let kf = Kernel_function.find_englobing_kf stmt in
        let ca_l = Annotations.code_annot stmt in
        let ca_l = List.map (fun x -> x.annot_content) ca_l in
@@ -1403,7 +1403,7 @@ class gather_insertions props cwd = object(self)
 	 let assigns = List.fold_left f_assigns [] ca_l in
 	 let linvs = List.fold_left f_linvs [] ca_l in
 	 let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
-	 let affects = self#assigns_cwd assigns in
+	 let affects = self#assigns_swd assigns in
 	 let on_inv ret p = ret @ (self#pc_assume p.content) in
 	 let ins_block = List.fold_left on_inv affects linvs in
 	 let ins_bhv = Insertion.mk_if e_assumes ins_block [] in
@@ -1413,7 +1413,7 @@ class gather_insertions props cwd = object(self)
        List.iter (self#insert (Symbolic_label.beg_stmt stmt.sid)) ins_h;
        Cil.DoChildren
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
-	 when List.mem stmt.sid cwd || List.mem fct_varinfo.vname sim_funcs ->
+	 when List.mem stmt.sid swd || List.mem fct_varinfo.vname sim_funcs ->
        let kf = Globals.Functions.get fct_varinfo in
        let formals = Kernel_function.get_formals kf in
        let locals = [] in
@@ -1429,7 +1429,7 @@ class gather_insertions props cwd = object(self)
 	 let i1,i2,i3 = Globals.Vars.fold save_global ([],[],[]) in
 	 let i1,i2,i3 = List.fold_left save_formal (i1,i2,i3) formals in
 	 let begin_save = i1 @ i2 and end_save = i3 in
-	 let affects = self#assigns_cwd [bhv.b_assigns] in
+	 let affects = self#assigns_swd [bhv.b_assigns] in
 	 let ensures = bhv.b_post_cond in
 	 let on_post ins (_,{ip_content=p}) =
 	   let p = match ret with

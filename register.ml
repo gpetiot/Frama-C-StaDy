@@ -14,8 +14,8 @@ let typically_typer ~typing_context ~loc bhv = function
 let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
-let translate props cwd =
-  let gatherer = new Insertions.gather_insertions props cwd in
+let translate props swd =
+  let gatherer = new Insertions.gather_insertions props swd in
   Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
   let insertions = gatherer#get_insertions()
   and functions = gatherer#get_functions()
@@ -36,10 +36,10 @@ let translate props cwd =
   insertions, functions, props, globals, init_globals
 
 
-let print_translation filename insertions fcts cwd =
+let print_translation filename insertions fcts swd =
   let old_unicode = Kernel.Unicode.get() in
   Kernel.Unicode.set false;
-  let printer = new Print.print_insertions insertions fcts cwd () in
+  let printer = new Print.print_insertions insertions fcts swd () in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());
@@ -168,10 +168,10 @@ let selected_props() =
   let app p l = p :: l in
   if props = [] then Property_status.fold app [] else props
 
-let compute_props ?(props=selected_props()) ?cwd () =
-  let cwd = match cwd with
+let compute_props ?(props=selected_props()) ?swd () =
+  let swd = match swd with
     | Some x -> List.map string_of_int x
-    | None -> Options.CWD.get()
+    | None -> Options.SWD.get()
   in
   let valid_sid acc sid =
     try
@@ -186,7 +186,7 @@ let compute_props ?(props=selected_props()) ?cwd () =
       end
     with _ -> Options.Self.feedback "%s: not a valid stmt id" sid; acc
   in
-  let cwd = List.fold_left valid_sid [] cwd in
+  let swd = List.fold_left valid_sid [] swd in
   let files = Kernel.Files.get() in
   let fname = Filename.chop_extension (Filename.basename (List.hd files)) in
   let kf = fst (Globals.entry_point()) in
@@ -196,7 +196,7 @@ let compute_props ?(props=selected_props()) ?cwd () =
   (* Translate some parts of the pre-condition in Prolog *)
   let domains, unquantifs, quantifs = Native_precond.compute_constraints() in
   let insertions, functions, translated_props, new_globals, new_init_globals =
-    translate props cwd in
+    translate props swd in
   let test_params =
     let add_global = Native_precond.add_global in
     let add_init_global = Native_precond.add_init_global in 
@@ -205,7 +205,7 @@ let compute_props ?(props=selected_props()) ?cwd () =
     Native_precond.translate precond_fname domains unquantifs quantifs;
     Printf.sprintf "-pc-test-params %s" precond_fname
   in
-  print_translation instru_fname insertions functions cwd;
+  print_translation instru_fname insertions functions swd;
   let stop_when_assert_violated =
     if Options.Stop_When_Assert_Violated.get() then
       "-pc-stop-when-assert-violated"
@@ -228,7 +228,7 @@ let compute_props ?(props=selected_props()) ?cwd () =
   Socket.run cmd;
   States.Nb_test_cases.mark_as_computed();
   States.NC_counter_examples.mark_as_computed();
-  States.CW_counter_examples.mark_as_computed();
+  States.SW_counter_examples.mark_as_computed();
   Options.Self.result "all-paths: %b" (States.All_Paths.get());
   Options.Self.result "%i test cases" (States.Nb_test_cases.get());
   let strengthened_precond =
@@ -253,7 +253,7 @@ let compute_props ?(props=selected_props()) ?cwd () =
 	    && List.mem prop translated_props then
 	   Property_status.emit emitter ~hyps prop ~distinct:true status
     end;
-    Extlib.may (Options.Self.result "%a" CWCE.pretty) (CWCE.one_for prop)
+    Extlib.may (Options.Self.result "%a" SWCE.pretty) (SWCE.one_for prop)
   in
   Property_status.iter on_prop
 

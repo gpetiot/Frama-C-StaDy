@@ -1,6 +1,6 @@
 
 /* run.config
-STDOPT: +"-main f -stady -stady-cwd 28 -stady-msg-key generated-c,generated-pl -then -report"
+STDOPT: +"-main f -stady -stady-swd 28 -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 /*@ requires n == 4;

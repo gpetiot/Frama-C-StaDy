@@ -46,8 +46,8 @@ module Properties = Self.String_list (struct
   let help = ""
 end)
 
-module CWD = Self.String_list (struct
-  let option_name = "-stady-cwd"
+module SWD = Self.String_list (struct
+  let option_name = "-stady-swd"
   let help = "detect contract weaknesses"
   let arg_name = "i,..."
 end)

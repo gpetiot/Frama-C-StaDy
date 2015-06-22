@@ -1,26 +1,26 @@
 
 open Cil_types
 
-let ref_cwd = ref ([] : int list)
+let ref_swd = ref ([] : int list)
 
-let reset_cwd () = ref_cwd := []
+let reset_swd () = ref_swd := []
 
-let print_cwd () =
+let print_swd () =
   let pp_int fmt x = Format.fprintf fmt "%i" x in
   let pp_int_list = Pretty_utils.pp_list ~sep:"," pp_int in
-  Options.Self.debug ~level:1 "cwd: %a@." pp_int_list !ref_cwd
+  Options.Self.debug ~level:1 "swd: %a@." pp_int_list !ref_swd
 
-let add_cwd sid =
-  ref_cwd := sid :: !ref_cwd;
-  print_cwd()
+let add_swd sid =
+  ref_swd := sid :: !ref_swd;
+  print_swd()
 
-let rem_cwd sid =
-  ref_cwd := List.filter (fun x-> x <> sid) !ref_cwd;
-  print_cwd()
+let rem_swd sid =
+  ref_swd := List.filter (fun x-> x <> sid) !ref_swd;
+  print_swd()
 
 
 let pc_panel
-      (compute: ?props:Property.t list -> ?cwd:int list -> unit -> unit)
+      (compute: ?props:Property.t list -> ?swd:int list -> unit -> unit)
       (main_ui:Design.main_window_extension_points) =
   let vbox = GPack.vbox () in
   let packing = vbox#pack ~expand:true ~fill:true in
@@ -32,7 +32,7 @@ let pc_panel
   let set = Kernel.MainFunction.set in
   let refresh = Gtk_helper.on_string ~tooltip ~validator box_4 "main" get set in
   let run_button = GButton.button ~label:"Run" ~packing:(vbox#pack) () in
-  let callback() = compute ~cwd:(!ref_cwd) (); main_ui#redisplay() in
+  let callback() = compute ~swd:(!ref_swd) (); main_ui#redisplay() in
   let on_press() = main_ui#protect ~cancelable:true callback in
   ignore(run_button#connect#pressed on_press);
   "stady", vbox#coerce, Some refresh
@@ -41,21 +41,21 @@ let pc_panel
 let to_do_on_select
       (popup_factory:GMenu.menu GMenu.factory)
       (main_ui:Design.main_window_extension_points) button_nb selected
-      (compute: ?props:Property.t list -> ?cwd:int list -> unit -> unit) =
+      (compute: ?props:Property.t list -> ?swd:int list -> unit -> unit) =
   match selected with
   | Pretty_source.PStmt(_,({skind=Loop _} as stmt))
   | Pretty_source.PStmt(_,({skind=Instr(Call _)} as stmt)) when button_nb = 3 ->
-     let callback() = add_cwd stmt.sid in
-     let str1 = "Add this contract to the CWD list" in
+     let callback() = add_swd stmt.sid in
+     let str1 = "Add this contract to the SWD list" in
      ignore (popup_factory#add_item str1 ~callback);
-     let callback() = rem_cwd stmt.sid in
-     let str2 = "Remove this contract from the CWD list" in
+     let callback() = rem_swd stmt.sid in
+     let str2 = "Remove this contract from the SWD list" in
      ignore (popup_factory#add_item str2 ~callback)
   | Pretty_source.PIP prop when button_nb = 1 ->
      let ncce = NCCE.one_for prop in
-     let cwce = CWCE.one_for prop in
+     let swce = SWCE.one_for prop in
      Extlib.may (main_ui#pretty_information "%a" NCCE.pretty) ncce;
-     Extlib.may (main_ui#pretty_information "%a" CWCE.pretty) cwce
+     Extlib.may (main_ui#pretty_information "%a" SWCE.pretty) swce
   | Pretty_source.PIP prop when button_nb = 3 ->
      begin
        try
@@ -96,4 +96,4 @@ let main main_ui =
 let () =
   Design.register_extension main;
   Design.register_reset_extension
-    (fun main -> main#protect ~cancelable:false reset_cwd)
+    (fun main -> main#protect ~cancelable:false reset_swd)

@@ -22,7 +22,7 @@ module NC_counter_examples =
 
 module Stmt_list = Datatype.List (Cil_datatype.Stmt)
 
-module CW_counter_examples =
+module SW_counter_examples =
   State_builder.Hashtbl
     (Property.Hashtbl)
     (Datatype.String.Hashtbl.Make (* file *)
@@ -33,7 +33,7 @@ module CW_counter_examples =
        )
     )
     (struct
-      let name = "CW_counter_examples"
+      let name = "SW_counter_examples"
       let dependencies = [Ast.self]
       let size = 16
      end)

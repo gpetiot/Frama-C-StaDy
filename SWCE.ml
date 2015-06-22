@@ -7,24 +7,24 @@ type t = Property.t * string * string * stmt list * var_states
 
 
 let all_for prop =
-  let on_cw k (a,b,c) acc = ((prop,k,a,b,c)::acc) in
+  let on_sw k (a,b,c) acc = ((prop,k,a,b,c)::acc) in
   try
-    let t = States.CW_counter_examples.find prop in
-    Datatype.String.Hashtbl.fold on_cw t []
+    let t = States.SW_counter_examples.find prop in
+    Datatype.String.Hashtbl.fold on_sw t []
   with Not_found -> []
 
 
 let one_for prop =
-  let on_cw k (a,b,c) = function None -> Some (prop,k,a,b,c) | x -> x in
+  let on_sw k (a,b,c) = function None -> Some (prop,k,a,b,c) | x -> x in
   try
-    let t = States.CW_counter_examples.find prop in
-    Datatype.String.Hashtbl.fold on_cw t None
+    let t = States.SW_counter_examples.find prop in
+    Datatype.String.Hashtbl.fold on_sw t None
   with Not_found -> None
 
 
 let register ignore_var kind prop str_tc msg stmts list_entries =
   let file_tbl =
-    try States.CW_counter_examples.find prop
+    try States.SW_counter_examples.find prop
     with Not_found -> Datatype.String.Hashtbl.create 16
   in
   let msg, stmts, var_tbl =
@@ -46,7 +46,7 @@ let register ignore_var kind prop str_tc msg stmts list_entries =
   in
   List.iter on_pair list_entries;
   Datatype.String.Hashtbl.replace file_tbl str_tc (msg, stmts, var_tbl);
-  States.CW_counter_examples.replace prop file_tbl
+  States.SW_counter_examples.replace prop file_tbl
 
 
 let pretty fmt (p, f, msg, stmts, var_states) =
@@ -64,7 +64,7 @@ let pretty fmt (p, f, msg, stmts, var_states) =
     | x, y -> Format.fprintf fmt "%s = %s -- OUTPUT: %s (%s)@\n" var inp x y
   in
   Format.fprintf
-    fmt "Contract Weakness of @[%a@] for @[%a@] %a@\n"
+    fmt "Subcontract Weakness of @[%a@] for @[%a@] %a@\n"
     (Pretty_utils.pp_list pp_stmt) stmts Property.pretty p pp_msg msg;
   let on_stmt s =
     Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Cil_datatype.Stmt.loc s)

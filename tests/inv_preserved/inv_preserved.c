@@ -1,5 +1,5 @@
 /* run.config
-STDOPT: +"-main f -stady -stady-msg-key generated-c,generated-pl -stady-cwd 9 -stady-stop-when-assert-violated -then -report"
+STDOPT: +"-main f -stady -stady-msg-key generated-c,generated-pl -stady-swd 9 -stady-stop-when-assert-violated -then -report"
 */
 
 int fmax(int x, int y) {

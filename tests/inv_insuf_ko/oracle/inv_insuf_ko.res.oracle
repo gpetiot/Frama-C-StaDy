@@ -233,9 +233,9 @@ void f(int *t, int x)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 55 test cases
-[stady] Contract Weakness of stmt 3 for assert
-                                        found ≢ 0 ⇔
-                                        (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x); 
+[stady] Subcontract Weakness of stmt 3 for assert
+                                           found ≢ 0 ⇔
+                                           (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t+i) ≡ x); 
         LOCATION: tests/inv_insuf_ko/inv_insuf_ko.c:18
         TEST DRIVER: testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_4.c
         found = 198227 -- OUTPUT: 172458 (nondet_sint_val[1])
