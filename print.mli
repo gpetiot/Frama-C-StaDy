@@ -5,7 +5,7 @@ class print_insertions:
 	(* labeled code insertions *)
 	(Symbolic_label.t, Insertion.t Queue.t) Hashtbl.t ->
 	(* new functions *)
-	Insertions.func list ->
+	Function.t list ->
 	(* id of stmts, parameterizing the SWD *)
 	int list ->
 	unit ->

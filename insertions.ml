@@ -5,16 +5,6 @@ exception Unreachable
 exception Unsupported
 
 
-(* alternate type 'fundec' using insertions instead of stmts *)
-type func = {
-  mutable func_var: varinfo;
-  mutable func_formals: varinfo list;
-  mutable func_locals: varinfo list;
-  mutable func_stmts: Insertion.t list;
-}
-
-let mk_func v f l s = {func_var=v; func_formals=f; func_locals=l; func_stmts=s;}
-
 let loc = Cil_datatype.Location.unknown
 
 (* varinfos *)
@@ -60,7 +50,7 @@ class gather_insertions props swd = object(self)
   inherit Visitor.frama_c_inplace
 
   val insertions = Hashtbl.create 64
-  val mutable functions = ([] : func list)
+  val mutable functions = ([] : Function.t list)
   val mutable result_varinfo = None
   val mutable in_old_term = false
   val mutable in_old_ptr = false
@@ -1457,7 +1447,7 @@ class gather_insertions props swd = object(self)
 	 | None -> [], [], []
        in
        let ins_full_body = decl_retres @ aff_retres @ ins_body @ ret_retres in
-       let new_f = mk_func new_f_vi formals locals ins_full_body in
+       let new_f = Function.make new_f_vi formals locals ins_full_body in
        functions <- new_f :: functions;
        let i_call = Insertion.mk_instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
        self#insert (Symbolic_label.end_stmt stmt.sid) i_call;
