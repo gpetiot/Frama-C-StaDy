@@ -97,7 +97,7 @@ let print_exit_code code =
   Options.Self.feedback ~dkey:Options.dkey_socket "PathCrawler %s!" str
 
 
-let run cmd =
+let run_cmd cmd =
   match Options.Socket_Type.get() with
   | "unix" ->
      let socket = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in

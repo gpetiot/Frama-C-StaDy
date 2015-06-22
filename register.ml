@@ -225,7 +225,7 @@ let compute_props ?(props=selected_props()) ?swd () =
       stop_when_assert_violated
   in
   Options.Self.debug ~dkey:Options.dkey_socket "cmd: %s" cmd;
-  Socket.run cmd;
+  Socket.run_cmd cmd;
   States.Nb_test_cases.mark_as_computed();
   States.NC_counter_examples.mark_as_computed();
   States.SW_counter_examples.mark_as_computed();
