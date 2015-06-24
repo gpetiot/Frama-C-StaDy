@@ -961,7 +961,7 @@ class gather_insertions props swd = object(self)
     in
     let translate_as_return pred =
       try
-	let ins,v = self#translate_predicate(self#subst_pred pred.ip_content) in
+	let ins,v = self#translate_predicate(self#inline_pred pred.ip_content)in
 	(* untreated predicates are translated as True *)
 	if not (Cil_datatype.Exp.equal v one) then
 	  let e = Cil.new_exp ~loc (UnOp (LNot, v, Cil.intType)) in
@@ -1147,13 +1147,13 @@ class gather_insertions props swd = object(self)
     List.iter do_varinfo (Kernel_function.get_formals kf);
     Cil.DoChildren
 
-  method private subst_pred p = Subst.pred Subst.empty_env p
+  method private inline_pred p = Inline.pred Inline.empty_env p
 
   method private cond_of_assumes pred_list =
     let rec aux insertions ret = function
       | [] -> insertions, ret
       | h :: t ->
-	 let ins, v = self#translate_predicate (self#subst_pred h.ip_content) in
+	 let ins,v = self#translate_predicate (self#inline_pred h.ip_content) in
 	 let e = Cil.mkBinOp ~loc LAnd ret v in
 	 aux (insertions @ ins) e t
     in
@@ -1192,7 +1192,7 @@ class gather_insertions props swd = object(self)
 
   method private pc_assert_exception pred msg prop =
     try
-      let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
+      let inserts_0, var = self#translate_predicate (self#inline_pred pred) in
       let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
       let id = Utils.to_id prop in
       let insert_1 = Insertion.mk_if e [ self#pc_exc msg id ] [] in
@@ -1205,7 +1205,7 @@ class gather_insertions props swd = object(self)
 
   method private pc_assume pred =
     try
-      let inserts_0, var = self#translate_predicate (self#subst_pred pred) in
+      let inserts_0, var = self#translate_predicate (self#inline_pred pred) in
       let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
       inserts_0 @ [ Insertion.mk_if e [ self#pc_ass "" 0 ] [] ]
     with Unsupported ->
@@ -1426,7 +1426,7 @@ class gather_insertions props swd = object(self)
 	     | Some r ->
 		let ty = Cil.typeOfLval r in
 		result_varinfo <- Some (my_varinfo ty "__retres");
-		Subst.pred Subst.empty_env p
+		self#inline_pred p
 	     | None -> p
 	   in
 	   ins @ (self#pc_assume p)

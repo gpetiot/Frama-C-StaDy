@@ -178,7 +178,7 @@ let lengths_from_requires kf =
   end
   in
   let on_requires p =
-    let p' = Subst.id_pred Subst.empty_env p in
+    let p' = Inline.id_pred Inline.empty_env p in
     ignore (Visitor.visitFramacIdPredicate o p')
   in
   let on_bhv _ bhv = List.iter on_requires bhv.b_requires in
