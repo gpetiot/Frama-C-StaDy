@@ -14,28 +14,6 @@ let typically_typer ~typing_context ~loc bhv = function
 let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
-let translate props swd =
-  let gatherer = new Insertions.gather_insertions props swd in
-  Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
-  let insertions = gatherer#get_insertions()
-  and functions = gatherer#get_functions()
-  and props = gatherer#translated_properties()
-  and globals = gatherer#get_new_globals()
-  and init_globals = gatherer#get_new_init_globals() in
-  let print_insertions_at_label lab insertions =
-    let dkey = Options.dkey_insertions in
-    let f ins =
-      Options.Self.feedback
-	~dkey "/* %a */ %a" Symbolic_label.pretty lab
-	(Insertion.pretty ~line_break:true) ins
-    in
-    Queue.iter f insertions;
-    Options.Self.feedback ~dkey "--------------------"
-  in
-  Hashtbl.iter print_insertions_at_label insertions;
-  insertions, functions, props, globals, init_globals
-
-
 let print_translation filename insertions fcts swd =
   let old_unicode = Kernel.Unicode.get() in
   Kernel.Unicode.set false;
@@ -196,7 +174,7 @@ let compute_props ?(props=selected_props()) ?swd () =
   (* Translate some parts of the pre-condition in Prolog *)
   let domains, unquantifs, quantifs = Native_precond.compute_constraints() in
   let insertions, functions, translated_props, new_globals, new_init_globals =
-    translate props swd in
+    Insertions.translate props swd in
   let test_params =
     let add_global = Native_precond.add_global in
     let add_init_global = Native_precond.add_init_global in 

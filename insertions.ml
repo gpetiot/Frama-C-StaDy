@@ -1458,3 +1458,25 @@ class gather_insertions props swd = object(self)
     | GVar(vi,_,_) -> visited_globals <- vi::visited_globals; Cil.DoChildren
     | _ -> Cil.DoChildren
 end
+
+
+let translate props swd =
+  let gatherer = new gather_insertions props swd in
+  Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
+  let insertions = gatherer#get_insertions()
+  and functions = gatherer#get_functions()
+  and props = gatherer#translated_properties()
+  and globals = gatherer#get_new_globals()
+  and init_globals = gatherer#get_new_init_globals() in
+  let print_insertions_at_label lab insertions =
+    let dkey = Options.dkey_insertions in
+    let f ins =
+      Options.Self.feedback
+	~dkey "/* %a */ %a" Symbolic_label.pretty lab
+	(Insertion.pretty ~line_break:true) ins
+    in
+    Queue.iter f insertions;
+    Options.Self.feedback ~dkey "--------------------"
+  in
+  Hashtbl.iter print_insertions_at_label insertions;
+  insertions, functions, props, globals, init_globals
