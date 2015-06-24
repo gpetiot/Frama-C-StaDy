@@ -29,6 +29,7 @@ PLUGIN_CMO := \
 	symbolic_label \
 	native_precond \
 	insertion \
+	unname \
 	function \
 	insertions \
 	print \

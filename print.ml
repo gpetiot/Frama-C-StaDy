@@ -3,20 +3,11 @@ open Cil_types
 
 
 class print_insertions insertions functions swd () = object(self)
-  inherit Printer.extensible_printer () as super
+  inherit Unname.printer () as super
 
   method private insertions_at fmt label =
     try Queue.iter (Insertion.pretty fmt) (Hashtbl.find insertions label)
     with _ -> ()
-
-  val mutable in_vdecl = 0
-
-  method! vdecl fmt v =
-    in_vdecl <- in_vdecl+1; super#vdecl fmt v; in_vdecl <- in_vdecl-1
-
-  (* "unname" all types, except in a variable declaration *)
-  method! typ ?fundecl fmtopt fmt t =
-    super#typ ?fundecl fmtopt fmt (if in_vdecl > 0 then t else (Utils.unname t))
 
   method private fundecl fmt f =
     let entry_point_name=Kernel_function.get_name(fst(Globals.entry_point())) in
