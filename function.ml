@@ -12,7 +12,11 @@ let make v f l s = {func_var=v; func_formals=f; func_locals=l; func_stmts=s;}
 
 let pretty fmt f =
   let ty = f.func_var.vtype in
-  Format.fprintf fmt "@[<v 2>%a {@\n" Printer.pp_typ ty;
+  let vname = f.func_var.vname in
+  let print fmt = Format.fprintf fmt "%s" vname in
+  Format.fprintf
+    fmt "@[<v 2>%a {@\n"
+    ((new Printer.extensible_printer ())#typ (Some print)) ty;
   let rec aux = function
     | [] -> ()
     | [h] -> Format.fprintf fmt "%a" (Insertion.pretty ~line_break:false) h
@@ -25,7 +29,10 @@ let pretty fmt f =
 
 let pretty_header fmt f =
   let ty = f.func_var.vtype in
-  Format.fprintf fmt "@[%a;@\n@]" Printer.pp_typ ty
+  let vname = f.func_var.vname in
+  let print fmt = Format.fprintf fmt "%s" vname in
+  Format.fprintf
+    fmt "@[%a;@\n@]" ((new Printer.extensible_printer ())#typ (Some print)) ty
 
 let is_nondet f =
   let is_nondet b i = b || Insertion.is_nondet i in
