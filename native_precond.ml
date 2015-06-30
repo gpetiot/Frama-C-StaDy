@@ -217,20 +217,13 @@ let rec input_from_type domains ty t =
     let b_min, b_max = fbounds fk in
     PLFloatDom (t, Some b_min, Some b_max) :: domains
   | TComp (ci,_,_) -> input_from_fields domains Integer.zero t ci.cfields
-  | TPtr (ty',attr) | TArray (ty',_,_,attr) ->
-    let att = Cil.findAttribute "arraylen" attr in
-    if att <> [] then
-      let is_array_len = function AInt _ -> true | _ -> false in
-      if List.exists is_array_len att then
-	match List.find is_array_len att with
-	| AInt ii ->
-	  let d = PLIntDom (PLDim t, Some ii, Some ii) in
-	  input_from_type (d :: domains) ty' (PLContAll t)
-	| _ -> assert false
-      else assert false
-    else
-      let d = PLIntDom (PLDim t, Some Integer.zero, Some maxuint) in
-      input_from_type (d :: domains) ty' (PLContAll t)
+  | TPtr (ty',_) ->
+     let d = PLIntDom (PLDim t, Some Integer.zero, Some maxuint) in
+     input_from_type (d :: domains) ty' (PLContAll t)
+  | TArray (ty',_,_,_) ->
+     (* attribute "arraylen" may contain the static size of the array but we do
+      * not need it for the precondition *)
+     input_from_type domains ty' (PLContAll t)
   | _ ->
     Options.Self.warning
       ~current:true "unsupported input_from_type (%a) (%a)"
