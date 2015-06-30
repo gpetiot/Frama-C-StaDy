@@ -1416,7 +1416,7 @@ class gather_insertions props swd = object(self)
 	 let save v (a,b,c) = let d,e,f=self#save_varinfo kf v in d@a,e@b,f@c in
 	 let save_global v _ l = save v l in
 	 let save_formal l v = save v l in
-	 let i1,i2,i3 = Globals.Vars.fold save_global ([],[],[]) in
+	 let i1,i2,i3 = Globals.Vars.fold_in_file_order save_global ([],[],[])in
 	 let i1,i2,i3 = List.fold_left save_formal (i1,i2,i3) formals in
 	 let begin_save = i1 @ i2 and end_save = i3 in
 	 let affects = self#assigns_swd [bhv.b_assigns] in
