@@ -208,7 +208,7 @@ let rec input_from_type domains ty t =
     | FDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
     | FLongDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
   in
-  match (Cil.unrollType ty) with
+  match (Utils.unname ty) with
   | TVoid _ -> PLIntDom (t, Some minint, Some maxint) :: domains
   | TEnum ({ekind=ik},_) | TInt (ik,_) ->
     let b_min, b_max = ibounds ik in
@@ -364,7 +364,8 @@ let compute_constraints() =
   let formals = Kernel_function.get_formals kf in
   let create_input d v = input_from_type d v.vtype (PLCVar v) in
   let domains = List.fold_left create_input domains formals in
-  let domains = Globals.Vars.fold (fun v _ d -> create_input d v) domains in
+  let domains =
+    Globals.Vars.fold_in_file_order (fun v _ d -> create_input d v) domains in
   let domains_tbl = Hashtbl.create 32 in
   let is_int_domain = function PLIntDom _ -> true | _ -> false in
   let int_doms, float_doms = List.partition is_int_domain domains in
@@ -423,7 +424,7 @@ let compute_constraints() =
 
 let add_global domains v = input_from_type domains v.vtype (PLCVar v)
 
-let add_init_global domains v = match v.vtype with
+let add_init_global domains v = match Utils.unname v.vtype with
   | TInt _ -> PLIntDom (PLCVar v, Some Integer.zero, Some Integer.zero)::domains
   | _ -> assert false
 
