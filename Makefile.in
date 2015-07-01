@@ -27,7 +27,7 @@ PLUGIN_CMO := \
 	SWCE \
 	socket \
 	symbolic_label \
-	native_precond \
+	input_domain \
 	insertion \
 	unname \
 	function \

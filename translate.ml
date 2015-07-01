@@ -1466,7 +1466,7 @@ end
 
 
 let translate props swd precond_fname instru_fname =
-  let domains, unquantifs, quantifs = Native_precond.compute_constraints() in
+  let domains, unquantifs, quantifs = Input_domain.compute_constraints() in
   let gatherer = new gather_insertions props swd in
   Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
   let insertions = gatherer#get_insertions()
@@ -1485,11 +1485,11 @@ let translate props swd precond_fname instru_fname =
     Options.Self.feedback ~dkey "--------------------"
   in
   Hashtbl.iter print_insertions_at_label insertions;
-  let add_global = Native_precond.add_global in
-  let add_init_global = Native_precond.add_init_global in 
+  let add_global = Input_domain.add_global in
+  let add_init_global = Input_domain.add_init_global in 
   let domains = List.fold_left add_global domains new_globals in
   let domains = List.fold_left add_init_global domains new_init_globals in
-  Native_precond.translate precond_fname domains unquantifs quantifs;
+  Input_domain.translate precond_fname domains unquantifs quantifs;
   let old_unicode = Kernel.Unicode.get() in
   Kernel.Unicode.set false;
   let printer = new Print.print_insertions insertions functions swd () in

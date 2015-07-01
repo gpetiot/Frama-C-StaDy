@@ -79,7 +79,7 @@ module Stop_When_Assert_Violated =
 
 (* Debug Keys *)
 
-let dkey_native_precond = Self.register_category "native-precond"
+let dkey_input_domain = Self.register_category "input_domain"
 let dkey_generated_pl = Self.register_category "generated-pl"
 let dkey_socket = Self.register_category "socket"
 let dkey_generated_c = Self.register_category "generated-c"

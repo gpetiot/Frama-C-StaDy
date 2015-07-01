@@ -352,7 +352,7 @@ let compute_constraints() =
   in
   let constraints = List.fold_left f [] typically_preds in
   let constraints = List.fold_left f constraints requires_preds in
-  let dkey = Options.dkey_native_precond in
+  let dkey = Options.dkey_input_domain in
   Options.Self.feedback ~dkey "non-default behaviors ignored!";
   let split_constraints (d,q,uq) c = match c with
     | PLUnquantif x -> d, q, x::uq
