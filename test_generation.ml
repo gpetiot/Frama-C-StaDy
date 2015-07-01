@@ -97,7 +97,7 @@ let print_exit_code code =
   Options.feedback ~dkey:Options.dkey_socket "PathCrawler %s!" str
 
 
-let run entry_point precond_fname instru_fname  =
+let run ~entry_point ~precondition_filename ~instrumented_filename  =
   let stop_when_assert_violated =
     if Options.Stop_When_Assert_Violated.get() then
       "-pc-stop-when-assert-violated"
@@ -108,9 +108,9 @@ let run entry_point precond_fname instru_fname  =
       "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -lib-entry \
        -pc -pc-gmp -pc-validate-asserts -pc-test-params %s -pc-com %s \
        -pc-no-xml %s -pc-deter -pc-session-timeout=%i %s"
-      instru_fname
+      instrumented_filename
       entry_point
-      precond_fname
+      precondition_filename
       (Options.Socket_Type.get())
       (Options.PathCrawler_Options.get())
       (Options.Timeout.get())
