@@ -1465,14 +1465,15 @@ class gather_insertions props swd = object(self)
 end
 
 
-let translate props swd =
+let translate props swd precond_fname instru_fname =
+  let domains, unquantifs, quantifs = Native_precond.compute_constraints() in
   let gatherer = new gather_insertions props swd in
   Visitor.visitFramacFile (gatherer :> Visitor.frama_c_inplace) (Ast.get());
   let insertions = gatherer#get_insertions()
   and functions = gatherer#get_functions()
-  and props = gatherer#translated_properties()
-  and globals = gatherer#get_new_globals()
-  and init_globals = gatherer#get_new_init_globals() in
+  and translated_props = gatherer#translated_properties()
+  and new_globals = gatherer#get_new_globals()
+  and new_init_globals = gatherer#get_new_init_globals() in
   let print_insertions_at_label lab insertions =
     let dkey = Options.dkey_insertions in
     let f ins =
@@ -1484,4 +1485,28 @@ let translate props swd =
     Options.Self.feedback ~dkey "--------------------"
   in
   Hashtbl.iter print_insertions_at_label insertions;
-  insertions, functions, props, globals, init_globals
+  let add_global = Native_precond.add_global in
+  let add_init_global = Native_precond.add_init_global in 
+  let domains = List.fold_left add_global domains new_globals in
+  let domains = List.fold_left add_init_global domains new_init_globals in
+  Native_precond.translate precond_fname domains unquantifs quantifs;
+  let old_unicode = Kernel.Unicode.get() in
+  Kernel.Unicode.set false;
+  let printer = new Print.print_insertions insertions functions swd () in
+  let buf = Buffer.create 512 in
+  let fmt = Format.formatter_of_buffer buf in
+  printer#file fmt (Ast.get());
+  let dkey = Options.dkey_generated_c in
+  let out_file = open_out instru_fname in
+  Options.Self.debug ~dkey "generated C file:";
+  let dkeys = Options.Self.Debug_category.get() in
+  if Datatype.String.Set.mem "generated-c" dkeys then
+    Buffer.output_buffer stdout buf;
+  Buffer.output_buffer out_file buf;
+  Format.pp_print_flush fmt();
+  flush stdout;
+  flush out_file;
+  close_out out_file;
+  Buffer.clear buf;
+  Kernel.Unicode.set old_unicode;
+  translated_props

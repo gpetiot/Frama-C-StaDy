@@ -14,28 +14,6 @@ let typically_typer ~typing_context ~loc bhv = function
 let () = Logic_typing.register_behavior_extension "typically" typically_typer
 
 
-let print_translation filename insertions fcts swd =
-  let old_unicode = Kernel.Unicode.get() in
-  Kernel.Unicode.set false;
-  let printer = new Print.print_insertions insertions fcts swd () in
-  let buf = Buffer.create 512 in
-  let fmt = Format.formatter_of_buffer buf in
-  printer#file fmt (Ast.get());
-  let dkey = Options.dkey_generated_c in
-  let out_file = open_out filename in
-  Options.Self.debug ~dkey "generated C file:";
-  let dkeys = Options.Self.Debug_category.get() in
-  if Datatype.String.Set.mem "generated-c" dkeys then
-    Buffer.output_buffer stdout buf;
-  Buffer.output_buffer out_file buf;
-  Format.pp_print_flush fmt();
-  flush stdout;
-  flush out_file;
-  close_out out_file;
-  Buffer.clear buf;
-  Kernel.Unicode.set old_unicode
-
-
 let emitter =
   Emitter.create "StaDy" [Emitter.Property_status; Emitter.Funspec]
     ~correctness:[] ~tuning:[]
@@ -171,19 +149,9 @@ let compute_props ?(props=selected_props()) ?swd () =
   let entry_point = Kernel_function.get_name kf in
   let precond_fname = Printf.sprintf "__sd_%s_%s.pl" fname entry_point in
   let instru_fname = Printf.sprintf "__sd_instru_%s_%s.c" fname entry_point in
-  (* Translate some parts of the pre-condition in Prolog *)
-  let domains, unquantifs, quantifs = Native_precond.compute_constraints() in
-  let insertions, functions, translated_props, new_globals, new_init_globals =
-    Insertions.translate props swd in
-  let test_params =
-    let add_global = Native_precond.add_global in
-    let add_init_global = Native_precond.add_init_global in 
-    let domains = List.fold_left add_global domains new_globals in
-    let domains = List.fold_left add_init_global domains new_init_globals in
-    Native_precond.translate precond_fname domains unquantifs quantifs;
-    Printf.sprintf "-pc-test-params %s" precond_fname
-  in
-  print_translation instru_fname insertions functions swd;
+  let test_params = Printf.sprintf "-pc-test-params %s" precond_fname in
+  let translated_props =
+    Insertions.translate props swd precond_fname instru_fname in
   let stop_when_assert_violated =
     if Options.Stop_When_Assert_Violated.get() then
       "-pc-stop-when-assert-violated"

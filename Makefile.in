@@ -31,8 +31,8 @@ PLUGIN_CMO := \
 	insertion \
 	unname \
 	function \
-	insertions \
 	print \
+	insertions \
 	register
 PLUGIN_GUI_CMO 	:= register_gui 
 PLUGIN_HAS_MLI:= yes
