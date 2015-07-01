@@ -149,7 +149,6 @@ let compute_props ?(props=selected_props()) ?swd () =
   let entry_point = Kernel_function.get_name kf in
   let precond_fname = Printf.sprintf "__sd_%s_%s.pl" fname entry_point in
   let instru_fname = Printf.sprintf "__sd_instru_%s_%s.c" fname entry_point in
-  let test_params = Printf.sprintf "-pc-test-params %s" precond_fname in
   let translated_props =
     Insertions.translate props swd precond_fname instru_fname in
   let stop_when_assert_violated =
@@ -160,11 +159,11 @@ let compute_props ?(props=selected_props()) ?swd () =
   let cmd =
     Printf.sprintf
       "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -lib-entry \
-       -pc -pc-gmp -pc-validate-asserts %s -pc-com %s -pc-no-xml %s -pc-deter \
-       -pc-session-timeout=%i %s"
+       -pc -pc-gmp -pc-validate-asserts -pc-test-params %s -pc-com %s \
+       -pc-no-xml %s -pc-deter -pc-session-timeout=%i %s"
       instru_fname
       entry_point
-      test_params
+      precond_fname
       (Options.Socket_Type.get())
       (Options.PathCrawler_Options.get())
       (Options.Timeout.get())
