@@ -97,7 +97,26 @@ let print_exit_code code =
   Options.feedback ~dkey:Options.dkey_socket "PathCrawler %s!" str
 
 
-let run_cmd cmd =
+let run entry_point precond_fname instru_fname  =
+  let stop_when_assert_violated =
+    if Options.Stop_When_Assert_Violated.get() then
+      "-pc-stop-when-assert-violated"
+    else ""
+  in
+  let cmd =
+    Printf.sprintf
+      "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -lib-entry \
+       -pc -pc-gmp -pc-validate-asserts -pc-test-params %s -pc-com %s \
+       -pc-no-xml %s -pc-deter -pc-session-timeout=%i %s"
+      instru_fname
+      entry_point
+      precond_fname
+      (Options.Socket_Type.get())
+      (Options.PathCrawler_Options.get())
+      (Options.Timeout.get())
+      stop_when_assert_violated
+  in
+  Options.debug ~dkey:Options.dkey_socket "cmd: %s" cmd;
   match Options.Socket_Type.get() with
   | "unix" ->
      let socket = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in

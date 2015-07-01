@@ -124,6 +124,7 @@ let selected_props() =
   let app p l = p :: l in
   if props = [] then Property_status.fold app [] else props
 
+
 let compute_props ?(props=selected_props()) ?swd () =
   let swd = match swd with
     | Some x -> List.map string_of_int x
@@ -151,26 +152,7 @@ let compute_props ?(props=selected_props()) ?swd () =
   let instru_fname = Printf.sprintf "__sd_instru_%s_%s.c" fname entry_point in
   let translated_props =
     Translate.translate props swd precond_fname instru_fname in
-  let stop_when_assert_violated =
-    if Options.Stop_When_Assert_Violated.get() then
-      "-pc-stop-when-assert-violated"
-    else ""
-  in
-  let cmd =
-    Printf.sprintf
-      "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -lib-entry \
-       -pc -pc-gmp -pc-validate-asserts -pc-test-params %s -pc-com %s \
-       -pc-no-xml %s -pc-deter -pc-session-timeout=%i %s"
-      instru_fname
-      entry_point
-      precond_fname
-      (Options.Socket_Type.get())
-      (Options.PathCrawler_Options.get())
-      (Options.Timeout.get())
-      stop_when_assert_violated
-  in
-  Options.debug ~dkey:Options.dkey_socket "cmd: %s" cmd;
-  Socket.run_cmd cmd;
+  Socket.run entry_point precond_fname instru_fname;
   States.Nb_test_cases.mark_as_computed();
   States.NC_counter_examples.mark_as_computed();
   States.SW_counter_examples.mark_as_computed();
