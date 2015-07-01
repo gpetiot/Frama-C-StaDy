@@ -152,7 +152,7 @@ let compute_props ?(props=selected_props()) ?swd () =
   let instru_fname = Printf.sprintf "__sd_instru_%s_%s.c" fname entry_point in
   let translated_props =
     Translate.translate props swd precond_fname instru_fname in
-  Socket.run entry_point precond_fname instru_fname;
+  Test_generation.run entry_point precond_fname instru_fname;
   States.Nb_test_cases.mark_as_computed();
   States.NC_counter_examples.mark_as_computed();
   States.SW_counter_examples.mark_as_computed();
