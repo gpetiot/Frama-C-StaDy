@@ -32,7 +32,7 @@ PLUGIN_CMO := \
 	unname \
 	function \
 	print \
-	insertions \
+	translate \
 	register
 PLUGIN_GUI_CMO 	:= register_gui 
 PLUGIN_HAS_MLI:= yes

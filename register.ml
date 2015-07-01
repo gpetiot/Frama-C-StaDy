@@ -150,7 +150,7 @@ let compute_props ?(props=selected_props()) ?swd () =
   let precond_fname = Printf.sprintf "__sd_%s_%s.pl" fname entry_point in
   let instru_fname = Printf.sprintf "__sd_instru_%s_%s.c" fname entry_point in
   let translated_props =
-    Insertions.translate props swd precond_fname instru_fname in
+    Translate.translate props swd precond_fname instru_fname in
   let stop_when_assert_violated =
     if Options.Stop_When_Assert_Violated.get() then
       "-pc-stop-when-assert-violated"
