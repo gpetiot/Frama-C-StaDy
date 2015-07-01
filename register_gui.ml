@@ -8,7 +8,7 @@ let reset_swd () = ref_swd := []
 let print_swd () =
   let pp_int fmt x = Format.fprintf fmt "%i" x in
   let pp_int_list = Pretty_utils.pp_list ~sep:"," pp_int in
-  Options.Self.debug ~level:1 "swd: %a@." pp_int_list !ref_swd
+  Options.debug ~level:1 "swd: %a@." pp_int_list !ref_swd
 
 let add_swd sid =
   ref_swd := sid :: !ref_swd;

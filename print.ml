@@ -90,8 +90,8 @@ class print_insertions insertions functions swd () = object(self)
     let on_func b f = b || Function.is_nondet f in
     let nondet = Hashtbl.fold on_hash insertions false in
     let nondet = List.fold_left on_func nondet functions in
-    let externals_file = Options.Self.Share.file ~error:true "externals.h" in
-    let nondet_file = Options.Self.Share.file ~error:true "nondet.c" in
+    let externals_file = Options.Share.file ~error:true "externals.h" in
+    let nondet_file = Options.Share.file ~error:true "nondet.c" in
     let headers = [ nondet, ("#include \"" ^ nondet_file ^ "\"") ] in
     Format.fprintf fmt "#include \"%s\"@\n" externals_file;
     let do_header (print, s) = if print then Format.fprintf fmt "%s@\n" s in

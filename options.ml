@@ -6,6 +6,9 @@ module Self = Plugin.Register (struct
   let shortname = "stady"
   let help = "Counter-Example Generation by Dynamic Analysis"
 end)
+
+module PP = Self
+include PP
   
 module Enabled = Self.False (struct
   let option_name = "-stady"

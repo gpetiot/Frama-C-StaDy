@@ -187,8 +187,8 @@ class gather_insertions props swd = object(self)
     | LChr c -> [], Cil.new_exp ~loc (Const(CChr c))
     | LReal {r_literal=s; r_nearest=f; r_lower=l; r_upper=u} ->
        if l <> u then
-	 Options.Self.warning ~current:true ~once:true
-			      "approximating a real number by a float";
+	 Options.warning ~current:true ~once:true
+			 "approximating a real number by a float";
        [], Cil.new_exp ~loc (Const(CReal(f, FLongDouble, Some s)))
     | LEnum e -> [], Cil.new_exp ~loc (Const(CEnum e))
 
@@ -330,7 +330,7 @@ class gather_insertions props swd = object(self)
 	     let ins, v = self#translate_term t in
 	     ins, v.enode
 	   else
-	     Options.Self.not_yet_implemented
+	     Options.not_yet_implemented
 	       "Sd_insertions.gather_insertions#term_node \\at(%a,%s)"
 	       Debug.pp_term t stringlabel
     | _ -> raise Unsupported
@@ -478,7 +478,7 @@ class gather_insertions props swd = object(self)
 	 | Ctype (TArray (ty,_,_,_)) -> Ctype ty
 	 | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
 	 | ty ->
-	    Options.Self.feedback
+	    Options.feedback
 	      ~current:true "unsupported type %a" Printer.pp_logic_type ty;
 	    raise Unsupported
        in
@@ -671,7 +671,7 @@ class gather_insertions props swd = object(self)
 	 | Ctype (TArray (ty,_,_,_)) -> Ctype ty
 	 | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
 	 | ty ->
-	    Options.Self.feedback
+	    Options.feedback
 	      ~current:true "unsupported type %a" Printer.pp_logic_type ty;
 	    raise Unsupported
        in
@@ -916,19 +916,19 @@ class gather_insertions props swd = object(self)
     | Pat (p, LogicLabel(_,"Here")) -> self#translate_pnamed p
     | Pvalid (_,t) -> self#translate_valid t
     | Pvalid_read (_,t) ->
-       Options.Self.warning ~current:true
-			    "\\valid_read(%a) is interpreted as \\valid(%a)"
-			    Printer.pp_term t Printer.pp_term t;
+       Options.warning ~current:true
+		       "\\valid_read(%a) is interpreted as \\valid(%a)"
+		       Printer.pp_term t Printer.pp_term t;
        self#translate_valid t
     | Pforall _ ->
-       Options.Self.warning ~current:true
-			    "%a not of the form \\forall ...; a ==> b"
-			    Printer.pp_predicate p;
+       Options.warning ~current:true
+		       "%a not of the form \\forall ...; a ==> b"
+		       Printer.pp_predicate p;
        raise Unsupported
     | Pexists _ ->
-       Options.Self.warning ~current:true
-			    "%a not of the form \\exists ...; a && b"
-			    Printer.pp_predicate p;
+       Options.warning ~current:true
+		       "%a not of the form \\exists ...; a && b"
+		       Printer.pp_predicate p;
        raise Unsupported
     | Papp _
     | Pseparated _
@@ -973,7 +973,7 @@ class gather_insertions props swd = object(self)
 	  ins @ [Insertion.mk_if e [Insertion.mk_ret zero] []]
 	else ins
       with Unsupported ->
-	Options.Self.warning
+	Options.warning
 	  ~current:true "%a unsupported" Printer.pp_predicate pred.ip_content;
 	[]
     in
@@ -1036,7 +1036,7 @@ class gather_insertions props swd = object(self)
       | TArray (ty, _, _, _) -> Cil.stripConstLocalType ty
       | TNamed (ty, _) -> dig_type ty.ttype
       | ty ->
-	 Options.Self.feedback ~current:true "dig_type %a" Printer.pp_typ ty;
+	 Options.feedback ~current:true "dig_type %a" Printer.pp_typ ty;
 	 raise Unsupported
     in
     let rec strip_const = function
@@ -1204,7 +1204,7 @@ class gather_insertions props swd = object(self)
       translated_properties <- prop :: translated_properties;
       inserts_0 @ [insert_1]
     with Unsupported ->
-      Options.Self.warning
+      Options.warning
 	~current:true "%a unsupported" Printer.pp_predicate pred;
       []
 
@@ -1214,7 +1214,7 @@ class gather_insertions props swd = object(self)
       let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
       inserts_0 @ [ Insertion.mk_if e [ self#pc_ass "" 0 ] [] ]
     with Unsupported ->
-      Options.Self.warning
+      Options.warning
 	~current:true "%a unsupported" Printer.pp_predicate pred;
       []
 
@@ -1334,7 +1334,7 @@ class gather_insertions props swd = object(self)
   method private assigns_swd assigns =
     let merge_assigns ret = function
       | WritesAny ->
-	 Options.Self.warning ~current:true "assigns clause not precise enough";
+	 Options.warning ~current:true "assigns clause not precise enough";
 	 ret
       | Writes froms -> (List.map fst froms) @ ret
     in
@@ -1370,7 +1370,7 @@ class gather_insertions props swd = object(self)
 	 let aff = self#cnondet ty e in
 	 ins @ aff :: ret
       | _ ->
-	 Options.Self.warning
+	 Options.warning
 	   ~current:true "term %a in assigns clause unsupported"
 	   Printer.pp_term t;
 	 ret
@@ -1477,12 +1477,12 @@ let translate props swd precond_fname instru_fname =
   let print_insertions_at_label lab insertions =
     let dkey = Options.dkey_insertions in
     let f ins =
-      Options.Self.feedback
+      Options.feedback
 	~dkey "/* %a */ %a" Symbolic_label.pretty lab
 	(Insertion.pretty ~line_break:true) ins
     in
     Queue.iter f insertions;
-    Options.Self.feedback ~dkey "--------------------"
+    Options.feedback ~dkey "--------------------"
   in
   Hashtbl.iter print_insertions_at_label insertions;
   let add_global = Input_domain.add_global in
@@ -1498,8 +1498,8 @@ let translate props swd precond_fname instru_fname =
   printer#file fmt (Ast.get());
   let dkey = Options.dkey_generated_c in
   let out_file = open_out instru_fname in
-  Options.Self.debug ~dkey "generated C file:";
-  let dkeys = Options.Self.Debug_category.get() in
+  Options.debug ~dkey "generated C file:";
+  let dkeys = Options.Debug_category.get() in
   if Datatype.String.Set.mem "generated-c" dkeys then
     Buffer.output_buffer stdout buf;
   Buffer.output_buffer out_file buf;

@@ -78,9 +78,9 @@ let extract_guards var p =
   Extlib.the a, Extlib.the b, Extlib.the c, Extlib.the d
 
 
-let error_term t = Options.Self.abort "term: %a" Debug.pp_term t
-let error_toffset t = Options.Self.abort "toffset: %a" Debug.pp_toffset t
-let error_pred p = Options.Self.abort "pred: %a" Debug.pp_pred p
+let error_term t = Options.abort "term: %a" Debug.pp_term t
+let error_toffset t = Options.abort "toffset: %a" Debug.pp_toffset t
+let error_pred p = Options.abort "pred: %a" Debug.pp_pred p
 
 let is_one = function
   | {term_node=TConst(Integer(i,_))} when Integer.equal i Integer.one -> true
@@ -137,13 +137,13 @@ let rec extract_from_valid t =
        | Ctype (TArray (ty,_,_,_)) -> Ctype ty
        | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
        | ty ->
-	  Options.Self.abort
+	  Options.abort
 	    ~current:true "unsupported type %a" Printer.pp_logic_type ty
      in
      let ty = type_of_pointed (Cil.typeOfTermLval x') in
      let x' = Logic_const.term (TLval x') ty in
      extract_from_valid {t with term_node=(TBinOp(PlusPI,x',y))}
-  | _ -> Options.Self.debug "\\valid(%a)" Debug.pp_term t; assert false
+  | _ -> Options.debug "\\valid(%a)" Debug.pp_term t; assert false
 
 
 (* Computes and returns a hashtable such that :

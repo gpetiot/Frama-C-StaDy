@@ -7,7 +7,7 @@ let process_test_case s =
   let id_prop = int_of_string str_prop in
   let kind, s = try cut_sep '|' s with _ -> s, "" in
   if kind <> "IN" && kind <> "OUTCONC" && kind <> "OUTSYMB" then
-    Options.Self.warning "wrong value for kind: %s" kind
+    Options.warning "wrong value for kind: %s" kind
   else
     let add_var_val acc str =
       try let x, y = cut_sep '=' str in (x,y)::acc
@@ -61,7 +61,7 @@ let process_string s =
       else
 	if s = "FinalStatus|OK" then process_final_status ()
 	else assert false
-  with _ -> Options.Self.debug ~dkey:Options.dkey_socket "'%s' not processed" s
+  with _ -> Options.debug ~dkey:Options.dkey_socket "'%s' not processed" s
 
 
 (* filtre les chaînes de caractères reçues, on ne traite que celles qui
@@ -72,10 +72,10 @@ let rec process_channel c =
     begin
       if str <> "" then
 	let dkey = Options.dkey_socket in
-	Options.Self.debug ~dkey "'%s' received" str;
+	Options.debug ~dkey "'%s' received" str;
 	let prefix, suffix = Extlib.string_split str 3 in
 	if prefix = "@FC" then process_string suffix
-	else Options.Self.debug ~dkey "'%s' not processed" str
+	else Options.debug ~dkey "'%s' not processed" str
     end;
     process_channel c
   with End_of_file -> ()
@@ -94,7 +94,7 @@ let print_exit_code code =
     | Unix.WSIGNALED _ ->  "killed"
     | Unix.WSTOPPED _ -> "stopped"
   in
-  Options.Self.feedback ~dkey:Options.dkey_socket "PathCrawler %s!" str
+  Options.feedback ~dkey:Options.dkey_socket "PathCrawler %s!" str
 
 
 let run_cmd cmd =
@@ -117,7 +117,7 @@ let run_cmd cmd =
 	 aux 0
        with _ ->
 	 Unix.close socket;
-	 Options.Self.abort "unix socket now closed!"
+	 Options.abort "unix socket now closed!"
      end;
      Unix.close socket;
      Sys.remove name
@@ -138,7 +138,7 @@ let run_cmd cmd =
 	 aux 0
        with _ ->
 	 Unix.close socket;
-	 Options.Self.abort "internet socket now closed!"
+	 Options.abort "internet socket now closed!"
      end;
      Unix.close socket
   | _ (* stdio *) ->

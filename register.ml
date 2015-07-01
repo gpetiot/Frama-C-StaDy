@@ -25,7 +25,7 @@ let do_externals() =
   let mpz_t, externals = Project.on p' (fun () ->
     let old_verbose = Kernel.Verbose.get() in
     Kernel.GeneralVerbose.set 0;
-    let file = Options.Self.Share.file ~error:true "externals.c" in
+    let file = Options.Share.file ~error:true "externals.c" in
     let mpz_t_file = File.from_filename file in
     File.init_from_c_files [mpz_t_file];
     let tmp_mpz_t = ref None in
@@ -137,10 +137,10 @@ let compute_props ?(props=selected_props()) ?swd () =
 	match s.skind with
 	| Instr(Call _) | Loop _ -> sid :: acc
 	| _ ->
-	   Options.Self.feedback ~once:true "stmt %i not a Call nor a Loop" sid;
+	   Options.feedback ~once:true "stmt %i not a Call nor a Loop" sid;
 	   acc
       end
-    with _ -> Options.Self.feedback "%s: not a valid stmt id" sid; acc
+    with _ -> Options.feedback "%s: not a valid stmt id" sid; acc
   in
   let swd = List.fold_left valid_sid [] swd in
   let files = Kernel.Files.get() in
@@ -169,13 +169,13 @@ let compute_props ?(props=selected_props()) ?swd () =
       (Options.Timeout.get())
       stop_when_assert_violated
   in
-  Options.Self.debug ~dkey:Options.dkey_socket "cmd: %s" cmd;
+  Options.debug ~dkey:Options.dkey_socket "cmd: %s" cmd;
   Socket.run_cmd cmd;
   States.Nb_test_cases.mark_as_computed();
   States.NC_counter_examples.mark_as_computed();
   States.SW_counter_examples.mark_as_computed();
-  Options.Self.result "all-paths: %b" (States.All_Paths.get());
-  Options.Self.result "%i test cases" (States.Nb_test_cases.get());
+  Options.result "all-paths: %b" (States.All_Paths.get());
+  Options.result "%i test cases" (States.Nb_test_cases.get());
   let strengthened_precond =
     try
       let bhv = Utils.default_behavior kf in
@@ -188,7 +188,7 @@ let compute_props ?(props=selected_props()) ?swd () =
     begin
       match NCCE.one_for prop with
       | Some ncce ->
-	 Options.Self.result "%a" NCCE.pretty ncce;
+	 Options.result "%a" NCCE.pretty ncce;
 	 let status = Property_status.False_and_reachable in
 	 Property_status.emit emitter ~hyps:[] prop ~distinct:true status
       | None ->
@@ -198,7 +198,7 @@ let compute_props ?(props=selected_props()) ?swd () =
 	    && List.mem prop translated_props then
 	   Property_status.emit emitter ~hyps prop ~distinct:true status
     end;
-    Extlib.may (Options.Self.result "%a" SWCE.pretty) (SWCE.one_for prop)
+    Extlib.may (Options.result "%a" SWCE.pretty) (SWCE.one_for prop)
   in
   Property_status.iter on_prop
 

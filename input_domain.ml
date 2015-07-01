@@ -225,7 +225,7 @@ let rec input_from_type domains ty t =
       * not need it for the precondition *)
      input_from_type domains ty' (PLContAll t)
   | _ ->
-    Options.Self.warning
+    Options.warning
       ~current:true "unsupported input_from_type (%a) (%a)"
       Printer.pp_typ ty (new pl_printer)#term t;
     domains
@@ -249,7 +249,7 @@ let rec valid_to_prolog term =
        | Ctype (TArray (ty,_,_,_)) -> Ctype ty
        | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
        | ty ->
-	  Options.Self.abort
+	  Options.abort
 	    ~current:true "unsupported type %a" Printer.pp_logic_type ty
      in
      let ty = type_of_pointed (Cil.typeOfTermLval x') in
@@ -342,7 +342,7 @@ let compute_constraints() =
     try requires_to_prolog constraints pnamed
     with
     | _ ->
-      Options.Self.warning ~current:true
+      Options.warning ~current:true
 	"Native Precondition:@\n%a unsupported"
 	Printer.pp_predicate_named pnamed;
       (* this predicate has not been translated in Prolog, we must translate it
@@ -353,7 +353,7 @@ let compute_constraints() =
   let constraints = List.fold_left f [] typically_preds in
   let constraints = List.fold_left f constraints requires_preds in
   let dkey = Options.dkey_input_domain in
-  Options.Self.feedback ~dkey "non-default behaviors ignored!";
+  Options.feedback ~dkey "non-default behaviors ignored!";
   let split_constraints (d,q,uq) c = match c with
     | PLUnquantif x -> d, q, x::uq
     | PLQuantif x -> d, x::q, uq
@@ -469,8 +469,8 @@ let translate precond_file_name domains unquantifs quantifs =
   (* END OF PRINTING *)
   let dkey = Options.dkey_generated_pl in
   let out_file = open_out precond_file_name in
-  Options.Self.debug ~dkey "generated Prolog precondition:";
-  let dkeys = Options.Self.Debug_category.get() in
+  Options.debug ~dkey "generated Prolog precondition:";
+  let dkeys = Options.Debug_category.get() in
   if Datatype.String.Set.mem "generated-pl" dkeys then
     Buffer.output_buffer stdout buf;
   Buffer.output_buffer out_file buf;
