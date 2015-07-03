@@ -174,3 +174,9 @@ and term env t = {t with term_node=tnode env t.term_node}
 and pnamed env p = {p with content=pred env p.content}
 
 and id_pred env p = {p with ip_content=pred env p.ip_content}
+
+(* exported functions *)
+
+let pred p = pred empty_env p
+let pnamed p = pnamed empty_env p
+let id_pred p = id_pred empty_env p
