@@ -1490,7 +1490,7 @@ let translate props swd precond_fname instru_fname =
   Input_domain.translate precond_fname domains unquantifs quantifs;
   let old_unicode = Kernel.Unicode.get() in
   Kernel.Unicode.set false;
-  let printer = new Print.print_insertions insertions functions swd () in
+  let printer = new Print.print_insertions insertions functions swd in
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   printer#file fmt (Ast.get());

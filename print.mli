@@ -8,5 +8,4 @@ class print_insertions:
 	Function.t list ->
 	(* id of stmts, parameterizing the SWD *)
 	int list ->
-	unit ->
 	Printer.extensible_printer

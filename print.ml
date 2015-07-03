@@ -2,7 +2,7 @@
 open Cil_types
 
 
-class print_insertions insertions functions swd () = object(self)
+class print_insertions insertions functions swd = object(self)
   inherit Unname.printer () as super
 
   method private insertions_at fmt label =
