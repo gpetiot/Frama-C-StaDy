@@ -1330,13 +1330,14 @@ class gather_insertions props swd = object(self)
     Cil.DoChildren
 
   method private assigns_swd assigns =
-    let merge_assigns ret = function
+    let assigns_terms =
+      match List.fold_left Logic_utils.merge_assigns WritesAny assigns with
       | WritesAny ->
-	 Options.warning ~current:true "assigns clause not precise enough";
-	 ret
-      | Writes froms -> (List.map fst froms) @ ret
+	 Options.warning
+	   ~current:true ~once:true "assigns clause not precise enough";
+	 []
+      | Writes terms -> List.map fst terms
     in
-    let assigns = List.fold_left merge_assigns [] assigns in
     let on_term ret term =
       let t = term.it_content in
       match t.term_node with
@@ -1373,7 +1374,7 @@ class gather_insertions props swd = object(self)
 	   Printer.pp_term t;
 	 ret
     in
-    List.fold_left on_term [] assigns
+    List.fold_left on_term [] assigns_terms
 
   method! vstmt_aux stmt =
     let sim_funcs = Options.Simulate_Functions.get() in
