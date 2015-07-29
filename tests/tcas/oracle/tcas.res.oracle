@@ -732,77 +732,21 @@ int alt_sep_test(void)
 [pc] Starting lanceur_pathcrawler__alt_sep_test_precond (isc version)
 [pc] Starting lanceur_alt_sep_test (isc version)
 [pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
 [pc] generation finished
 [stady] all-paths: true
-[stady] 1224 test cases
-[stady] Non-Compliance of ensures \result ≢ 1 
-        LOCATION: tests/tcas/tcas.c:107
-        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_46.c
-        Alt_Layer_Value = 0
-        Climb_Inhibit = 1
-        Cur_Vertical_Sep = 16684
-        Down_Separation = 0
-        High_Confidence = 32464
-        Other_Capability = 0
-        Other_RAC = 0
-        Other_Tracked_Alt = 989
-        Own_Tracked_Alt = 722
-        Own_Tracked_Alt_Rate = 450
-        Positive_RA_Alt_Thresh[0] = 16434
-        Positive_RA_Alt_Thresh[1] = 0
-        Positive_RA_Alt_Thresh[2] = 0
-        Positive_RA_Alt_Thresh[3] = 0
-        Two_of_Three_Reports_Valid = 1
-        Up_Separation = -56
-        return value =  -- OUTPUT: 0 (0)
+[stady] 170 test cases
 [stady] Non-Compliance of ensures \result ≢ 1 
         LOCATION: tests/tcas/tcas.c:123
-        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_20.c
-        Alt_Layer_Value = 0
+        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_17.c
+        Alt_Layer_Value = 1
         Climb_Inhibit = 1
         Cur_Vertical_Sep = 16684
-        Down_Separation = 0
+        Down_Separation = -1073754907
         High_Confidence = 32464
         Other_Capability = 0
         Other_RAC = 2
-        Other_Tracked_Alt = 423
-        Own_Tracked_Alt = 304
-        Own_Tracked_Alt_Rate = 450
-        Positive_RA_Alt_Thresh[0] = 16434
-        Positive_RA_Alt_Thresh[1] = 0
-        Positive_RA_Alt_Thresh[2] = 0
-        Positive_RA_Alt_Thresh[3] = 0
-        Two_of_Three_Reports_Valid = 1
-        Up_Separation = 7260
-        return value =  -- OUTPUT: 0 (0)
-[stady] Non-Compliance of ensures \result ≢ 2 
-        LOCATION: tests/tcas/tcas.c:112
-        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_79.c
-        Alt_Layer_Value = 3
-        Climb_Inhibit = 1
-        Cur_Vertical_Sep = 16684
-        Down_Separation = 1073836762
-        High_Confidence = 32464
-        Other_Capability = 0
-        Other_RAC = 0
-        Other_Tracked_Alt = 890
-        Own_Tracked_Alt = 913
+        Other_Tracked_Alt = 520
+        Own_Tracked_Alt = 499
         Own_Tracked_Alt_Rate = 450
         Positive_RA_Alt_Thresh[0] = 16434
         Positive_RA_Alt_Thresh[1] = 0
@@ -810,53 +754,15 @@ int alt_sep_test(void)
         Positive_RA_Alt_Thresh[3] = 0
         Two_of_Three_Reports_Valid = 1
         Up_Separation = 0
-        return value =  -- OUTPUT: 1 (1)
-[stady] Non-Compliance of ensures \result ≢ 2 
-        LOCATION: tests/tcas/tcas.c:93
-        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_38.c
-        Alt_Layer_Value = 0
-        Climb_Inhibit = 1
-        Cur_Vertical_Sep = 16684
-        Down_Separation = 0
-        High_Confidence = 32464
-        Other_Capability = 0
-        Other_RAC = 2
-        Other_Tracked_Alt = 854
-        Own_Tracked_Alt = 994
-        Own_Tracked_Alt_Rate = 450
-        Positive_RA_Alt_Thresh[0] = 16434
-        Positive_RA_Alt_Thresh[1] = 0
-        Positive_RA_Alt_Thresh[2] = 0
-        Positive_RA_Alt_Thresh[3] = 0
-        Two_of_Three_Reports_Valid = 1
-        Up_Separation = 2147483606
-        return value =  -- OUTPUT: 1 (1)
+        return value =  -- OUTPUT: 0 (0)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'alt_sep_test'
 --------------------------------------------------------------------------------
 
-[   Bug   ] Post-condition for 'P1a' (file tests/tcas/tcas.c, line 93)
-            by StaDy.
-[   Bug   ] Post-condition for 'P2b' (file tests/tcas/tcas.c, line 107)
-            by StaDy.
-[   Bug   ] Post-condition for 'P3a' (file tests/tcas/tcas.c, line 112)
-            by StaDy.
 [   Bug   ] Post-condition for 'P4b' (file tests/tcas/tcas.c, line 123)
             by StaDy.
-[  Dead   ] Behavior 'P1a'
-            Locally invalid, but unreachable.
-            By Frama-C kernel because:
-             - Post-condition for 'P1a' (file tests/tcas/tcas.c, line 93)
-[  Dead   ] Behavior 'P2b'
-            Locally invalid, but unreachable.
-            By Frama-C kernel because:
-             - Post-condition for 'P2b' (file tests/tcas/tcas.c, line 107)
-[  Dead   ] Behavior 'P3a'
-            Locally invalid, but unreachable.
-            By Frama-C kernel because:
-             - Post-condition for 'P3a' (file tests/tcas/tcas.c, line 112)
 [  Dead   ] Behavior 'P4b'
             Locally invalid, but unreachable.
             By Frama-C kernel because:
@@ -868,7 +774,7 @@ int alt_sep_test(void)
 --- Status Report Summary
 --------------------------------------------------------------------------------
      1 Completely validated
-     4 Bugs found
-     4 Dead properties
-     9 Total
+     1 Bugs found
+     1 Dead property
+     3 Total
 --------------------------------------------------------------------------------

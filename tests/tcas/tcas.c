@@ -1,6 +1,6 @@
 
 /* run.config
-STDOPT: +"-main alt_sep_test -stady -stady-msg-key generated-c,generated-pl -then -report"
+STDOPT: +"-main alt_sep_test -stady -stady-stop-when-assert-violated -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 

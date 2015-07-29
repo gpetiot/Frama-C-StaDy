@@ -300,14 +300,14 @@ void __sd_sort_mod_0(int *a, int n) {
 [pc] Compiling pathcrawler___sd_instru_simulate_sort_main/lanceur_main utilities ...
 [pc] Compiling pathcrawler___sd_instru_simulate_sort_main/lanceur_main ...
 [pc] generating tests...
+[pc] Starting lanceur_main (isc version)
+[pc] Starting lanceur_pathcrawler__main_precond (isc version)
 before:	 after:
 -13 	 -13
 12 	 -11
 -11 	 10
 10 	 12
 
-[pc] Starting lanceur_main (isc version)
-[pc] Starting lanceur_pathcrawler__main_precond (isc version)
 [pc] generation finished
 [stady] all-paths: true
 [stady] 1256 test cases
