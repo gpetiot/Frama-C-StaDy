@@ -3,7 +3,7 @@ open Cil_types
 
 
 class print_insertions insertions functions swd = object(self)
-  inherit Unname.printer () as super
+  inherit Printer.extensible_printer () as super
 
   method private insertions_at fmt label =
     try Queue.iter (Insertion.pretty fmt) (Hashtbl.find insertions label)
