@@ -12,31 +12,22 @@
 
 dom(0,0,0,0).
 dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',_), [], int([-2147483648..2147483647])).
-dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',3), [], int([0])).
-dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',2), [], int([0])).
-dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',1), [], int([0])).
-dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',0), [], int([16434])).
-dom('alt_sep_test', dim('Positive_RA_Alt_Thresh'), [], int([4..4294967295])).
 dom('pathcrawler__alt_sep_test_precond',A,B,C) :-
   dom('alt_sep_test',A,B,C).
 create_input_vals('alt_sep_test', Ins):-
   create_input_val('Down_Separation', int([-2147483648..2147483647]),Ins),
-  create_input_val('Cur_Vertical_Sep', int([16684]),Ins),
-  create_input_val('Other_RAC', int([0..2]),Ins),
-  create_input_val(cont('Positive_RA_Alt_Thresh',3), int([0]),Ins),
-  create_input_val(cont('Positive_RA_Alt_Thresh',2), int([0]),Ins),
-  create_input_val(cont('Positive_RA_Alt_Thresh',1), int([0]),Ins),
-  create_input_val(cont('Positive_RA_Alt_Thresh',0), int([16434]),Ins),
-  create_input_val('Own_Tracked_Alt_Rate', int([450]),Ins),
-  create_input_val('Two_of_Three_Reports_Valid', int([0..1]),Ins),
-  create_input_val('Own_Tracked_Alt', int([300..1000]),Ins),
-  create_input_val('Climb_Inhibit', int([1]),Ins),
-  create_input_val('High_Confidence', int([32464]),Ins),
+  create_input_val('Cur_Vertical_Sep', int([-2147483648..2147483647]),Ins),
+  create_input_val('Other_RAC', int([-2147483648..2147483647]),Ins),
+  create_input_val('Two_of_Three_Reports_Valid', int([-2147483648..2147483647]),Ins),
+  create_input_val('Own_Tracked_Alt_Rate', int([-2147483648..2147483647]),Ins),
+  create_input_val('Own_Tracked_Alt', int([-2147483648..2147483647]),Ins),
+  create_input_val('High_Confidence', int([-2147483648..2147483647]),Ins),
+  create_input_val('Climb_Inhibit', int([-2147483648..2147483647]),Ins),
   create_input_val('Up_Separation', int([-2147483648..2147483647]),Ins),
-  create_input_val('Alt_Layer_Value', int([0..3]),Ins),
+  create_input_val('Alt_Layer_Value', int([-2147483648..2147483647]),Ins),
   create_input_val(dim('Positive_RA_Alt_Thresh'), int([4..4294967295]),Ins),
-  create_input_val('Other_Capability', int([0]),Ins),
-  create_input_val('Other_Tracked_Alt', int([300..1000]),Ins),
+  create_input_val('Other_Capability', int([-2147483648..2147483647]),Ins),
+  create_input_val('Other_Tracked_Alt', int([-2147483648..2147483647]),Ins),
   true.
 create_input_vals('pathcrawler__alt_sep_test_precond',Ins) :-
   create_input_vals('alt_sep_test',Ins).
@@ -49,7 +40,23 @@ quantif_preconds('pathcrawler__alt_sep_test_precond',A) :-
   quantif_preconds('alt_sep_test',A).
 unquantif_preconds('alt_sep_test',
   [
-
+    cond(infegal,'Other_Tracked_Alt',1000,pre),
+    cond(infegal,300,'Other_Tracked_Alt',pre),
+    cond(infegal,'Own_Tracked_Alt',1000,pre),
+    cond(infegal,300,'Own_Tracked_Alt',pre),
+    cond(inf,'Alt_Layer_Value',4,pre),
+    cond(infegal,0,'Alt_Layer_Value',pre),
+    cond(infegal,'Other_RAC',2,pre),    cond(infegal,0,'Other_RAC',pre),
+    cond(infegal,'Two_of_Three_Reports_Valid',1,pre),
+    cond(infegal,0,'Two_of_Three_Reports_Valid',pre),
+    cond(egal,'Other_Capability',0,pre),    cond(egal,'Climb_Inhibit',1,pre),
+    cond(egal,'Cur_Vertical_Sep',16684,pre),
+    cond(egal,'High_Confidence',32464,pre),
+    cond(egal,'Own_Tracked_Alt_Rate',450,pre),
+    cond(egal,cont('Positive_RA_Alt_Thresh',0),16434,pre),
+    cond(egal,cont('Positive_RA_Alt_Thresh',1),0,pre),
+    cond(egal,cont('Positive_RA_Alt_Thresh',2),0,pre),
+    cond(egal,cont('Positive_RA_Alt_Thresh',3),0,pre)
   ]
 ).
 unquantif_preconds('pathcrawler__alt_sep_test_precond',A) :-
@@ -738,7 +745,7 @@ int alt_sep_test(void)
 [stady] Non-Compliance of ensures \result ≢ 1 
         LOCATION: tests/tcas/tcas.c:123
         TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_17.c
-        Alt_Layer_Value = 1
+        Alt_Layer_Value = 3
         Climb_Inhibit = 1
         Cur_Vertical_Sep = 16684
         Down_Separation = -1073754907
@@ -746,7 +753,7 @@ int alt_sep_test(void)
         Other_Capability = 0
         Other_RAC = 2
         Other_Tracked_Alt = 520
-        Own_Tracked_Alt = 499
+        Own_Tracked_Alt = 390
         Own_Tracked_Alt_Rate = 450
         Positive_RA_Alt_Thresh[0] = 16434
         Positive_RA_Alt_Thresh[1] = 0

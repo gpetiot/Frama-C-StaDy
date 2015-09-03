@@ -11,17 +11,15 @@
 :- export precondition_of/2.
 
 dom(0,0,0,0).
-dom('f', cont('nondet_sint_val',_), [], int([-2147483648..2147483647])).
-dom('f', dim('nondet_sint_val'), [], int([0..4294967295])).
 dom('f', cont('t',_), [], int([-2147483648..2147483647])).
-dom('f', dim('t'), [], int([0..4294967295])).
+dom('f', cont('nondet_sint_val',_), [], int([-2147483648..2147483647])).
+dom('f', 'nondet_sint_cpt', [], int([0])).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
-  create_input_val('nondet_sint_cpt', int([0]),Ins),
-  create_input_val(dim('nondet_sint_val'), int([0..4294967295]),Ins),
-  create_input_val('n', int([3..5]),Ins),
+  create_input_val('n', int([-2147483648..2147483647]),Ins),
   create_input_val(dim('t'), int([0..4294967295]),Ins),
+  create_input_val(dim('nondet_sint_val'), int([0..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
@@ -34,7 +32,9 @@ quantif_preconds('pathcrawler__f_precond',A) :-
   quantif_preconds('f',A).
 unquantif_preconds('f',
   [
-    cond(egal,dim('t'),+(int(math), -(int(math), 'n', 1), 1),pre)
+    cond(supegal,'n',3,pre),
+    cond(egal,dim('t'),+(int(math), -(int(math), 'n', 1), 1),pre),
+    cond(inf,'n',6,pre)
   ]
 ).
 unquantif_preconds('pathcrawler__f_precond',A) :-
