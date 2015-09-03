@@ -3,50 +3,68 @@ open Cil_types
 
 
 type pl_constant =
-| PLInt of Integer.t
-| PLFloat of float
+  | PLInt of Integer.t
+  | PLFloat of float
 
 type pl_term =
-| PLBinOp of pl_term * binop * pl_term
-| PLConst of pl_constant
-| PLDim of pl_term
-| PLContAll of pl_term
-| PLCont of pl_term * pl_term
-| PLLVar of logic_var
-| PLCVar of varinfo
+  | PLBinOp of pl_term * binop * pl_term
+  | PLConst of pl_constant
+  | PLDim of pl_term
+  | PLContAll of pl_term
+  | PLCont of pl_term * pl_term
+  | PLLVar of logic_var
+  | PLCVar of varinfo
 
 type pl_domain =
-| PLIntDom of pl_term * Integer.t option * Integer.t option
-| PLFloatDom of pl_term * string option * string option
+  | PLIntDom of pl_term * Integer.t option * Integer.t option
+  | PLFloatDom of pl_term * string option * string option
+  | PLDoubleDom of pl_term * string option * string option
+
+type pl_input =
+  | PLIntInput of pl_term * Integer.t option * Integer.t option
+  | PLFloatInput of pl_term * string option * string option
+  | PLDoubleInput of pl_term * string option * string option
+
 
 type pl_rel = pl_term * relation * pl_term
 
 type pl_quantif = logic_var list * pl_rel list * pl_rel
 
 type pl_constraint =
-| PLUnquantif of pl_rel
-| PLQuantif of pl_quantif
-| PLDomain of pl_domain
+  | PLUnquantif of pl_rel
+  | PLQuantif of pl_quantif
+  | PLDomain of pl_domain
+  | PLInput of pl_input
 
 
+let rec is_cont = function
+  | PLBinOp (x,_,y) -> is_cont x || is_cont y
+  | PLConst _ -> false
+  | PLDim x -> is_cont x
+  | PLContAll _ -> true
+  | PLCont _ -> true
+  | PLLVar _ -> false
+  | PLCVar _ -> false
 
 
-
-
-let in_dom = function
-  | PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> match t with
-    | PLBinOp _ | PLDim _ | PLContAll _ | PLCont _ -> true
-    | PLConst _ | PLLVar _ | PLCVar _ -> false
-
-let in_create_input_val =
-  let rec aux = function
-    | PLBinOp (t1,_,t2) -> aux t1 && aux t2
-    | PLDim t -> aux t
-    | PLContAll _ -> false
-    | PLCont (t1,t2) -> aux t1 && aux t2
-    | PLConst _ | PLLVar _ | PLCVar _ -> true
+let split_constraints constraints =
+  let split (d,i,q,uq) c = match c with
+    | PLDomain x -> x::d, i, q, uq
+    | PLInput x -> d, x::i, q, uq
+    | PLQuantif x -> d, i, x::q, uq
+    | PLUnquantif x -> d, i, q, x::uq
   in
-  function | PLIntDom (t,_,_) | PLFloatDom (t,_,_) -> aux t
+  List.fold_left split ([],[],[],[]) constraints
+
+let merge_constraints domains inputs quantifs unquantifs =
+  let constraints = List.fold_left (fun x y -> (PLDomain y) :: x) [] domains in
+  let constraints =
+    List.fold_left (fun x y -> (PLInput y) :: x) constraints inputs in
+  let constraints =
+    List.fold_left (fun x y -> (PLUnquantif y) :: x) constraints unquantifs in
+  List.fold_left (fun x y -> (PLQuantif y) :: x) constraints quantifs
+
+
 
 class pl_printer = object(self)
   method constant fmt = function
@@ -90,13 +108,18 @@ class pl_printer = object(self)
   | None -> Format.fprintf fmt "?"
 
   method domain fmt = function
-  | PLIntDom (t',Some a,Some b) when Integer.equal a b ->
+  | PLIntInput (t',Some a,Some b) when Integer.equal a b ->
     Format.fprintf fmt "%a, int([%a])" self#term t' self#integer a
-  | PLIntDom (t',a,b) ->
+  | PLIntInput (t',a,b) ->
     Format.fprintf fmt "%a, int([%a..%a])"
       self#term t' (self#integer_opt false) a (self#integer_opt true) b
-  | PLFloatDom (t',str1,str2) ->
+  | PLFloatInput (t',str1,str2) ->
     Format.fprintf fmt "%a, float([(%s)..(%s)])"
+      self#term t'
+      (try Extlib.the str1 with _ -> "?")
+      (try Extlib.the str2 with _ -> "?")
+  | PLDoubleInput (t',str1,str2) ->
+    Format.fprintf fmt "%a, double([(%s)..(%s)])"
       self#term t'
       (try Extlib.the str1 with _ -> "?")
       (try Extlib.the str2 with _ -> "?")
@@ -109,6 +132,11 @@ class pl_printer = object(self)
       self#term t' (self#integer_opt false) a (self#integer_opt true) b
   | PLFloatDom (t',str1,str2) ->
     Format.fprintf fmt "%a, [], float([(%s)..(%s)])"
+      self#term t'
+      (try Extlib.the str1 with _ -> "?")
+      (try Extlib.the str2 with _ -> "?")
+  | PLDoubleDom (t',str1,str2) ->
+    Format.fprintf fmt "%a, [], double([(%s)..(%s)])"
       self#term t'
       (try Extlib.the str1 with _ -> "?")
       (try Extlib.the str2 with _ -> "?")
@@ -192,47 +220,89 @@ end
 
 let term_to_pl t = try (new to_pl)#term t with _ -> Utils.error_term t
 
-let rec input_from_type domains ty t =
-  let maxuint = Cil.max_unsigned_number (Utils.machdep()) in
-  let maxint = Cil.max_signed_number (Utils.machdep()) in
-  let minint = Cil.min_signed_number (Utils.machdep()) in
-  let ibounds = function
-    | IBool -> Integer.zero, Integer.one
-    | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
-    | IUChar -> Integer.zero, Integer.of_int 255
-    | ik when Cil.isSigned ik -> minint, maxint
-    | _ -> Integer.zero, maxuint
-  in
-  let fbounds = function
-    | FFloat -> "-3.40282347e+38", "3.40282347e+38"
-    | FDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
-    | FLongDouble -> "-1.7976931348623157e+308", "1.7976931348623157e+308"
-  in
-  match (Utils.unname ty) with
-  | TVoid _ -> PLIntDom (t, Some minint, Some maxint) :: domains
+
+let maxuint = Cil.max_unsigned_number (Utils.machdep())
+let maxint = Cil.max_signed_number (Utils.machdep())
+let minint = Cil.min_signed_number (Utils.machdep())
+
+let ibounds = function
+  | IBool -> Integer.zero, Integer.one
+  | IChar | ISChar -> Integer.of_int (-128), Integer.of_int 127
+  | IUChar -> Integer.zero, Integer.of_int 255
+  | ik when Cil.isSigned ik -> minint, maxint
+  | _ -> Integer.zero, maxuint
+
+let float_bounds = "-3.40282347e+38", "3.40282347e+38"
+let double_bounds = "-1.7976931348623157e+308", "1.7976931348623157e+308"
+let _long_double_bounds = "-1.7976931348623157e+308", "1.7976931348623157e+308"
+
+
+
+
+(******* constraints creation ******)
+
+
+let rec input_from_type constraints ty t is_cont =
+  match Cil.unrollType ty with
+  | TVoid _ ->
+     if is_cont then
+       PLDomain (PLIntDom (t, Some minint, Some maxint)) :: constraints
+     else
+       PLInput (PLIntInput (t, Some minint, Some maxint)) :: constraints
   | TEnum ({ekind=ik},_) | TInt (ik,_) ->
     let b_min, b_max = ibounds ik in
-    PLIntDom (t, Some b_min, Some b_max) :: domains
+    if is_cont then
+      PLDomain (PLIntDom (t, Some b_min, Some b_max)) :: constraints
+    else
+      PLInput (PLIntInput (t, Some b_min, Some b_max)) :: constraints
   | TFloat (fk,_) ->
-    let b_min, b_max = fbounds fk in
-    PLFloatDom (t, Some b_min, Some b_max) :: domains
-  | TComp (ci,_,_) -> input_from_fields domains Integer.zero t ci.cfields
+     begin
+       if is_cont then
+	 match fk with
+	 | FFloat ->
+	    let b_min, b_max = float_bounds in
+	    PLDomain (PLFloatDom (t, Some b_min, Some b_max)) :: constraints
+	 | FDouble ->
+	    let b_min, b_max = double_bounds in
+	    PLDomain (PLDoubleDom (t, Some b_min, Some b_max)) :: constraints
+	 | FLongDouble ->
+	    assert false
+       else
+	 match fk with
+	 | FFloat ->
+	    let b_min, b_max = float_bounds in
+	    PLInput (PLFloatInput (t, Some b_min, Some b_max)) :: constraints
+	 | FDouble ->
+	    let b_min, b_max = double_bounds in
+	    PLInput (PLDoubleInput (t, Some b_min, Some b_max)) :: constraints
+	 | FLongDouble ->
+	    assert false
+     end
+  | TComp (ci,_,_) ->
+     input_from_fields constraints Integer.zero t ci.cfields
   | TPtr (ty',_) ->
-     let d = PLIntDom (PLDim t, Some Integer.zero, Some maxuint) in
-     input_from_type (d :: domains) ty' (PLContAll t)
+     let d =
+       if is_cont then
+	 PLDomain (PLIntDom (PLDim t, Some Integer.zero, Some maxuint))
+       else
+	 PLInput (PLIntInput (PLDim t, Some Integer.zero, Some maxuint))
+     in
+     input_from_type (d :: constraints) ty' (PLContAll t) true
   | TArray (ty',_,_,_) ->
      (* attribute "arraylen" may contain the static size of the array but we do
       * not need it for the precondition *)
-     input_from_type domains ty' (PLContAll t)
+     input_from_type constraints ty' (PLContAll t) true
   | _ ->
     Options.warning
       ~current:true "unsupported input_from_type (%a) (%a)"
       Printer.pp_typ ty (new pl_printer)#term t;
-    domains
-and input_from_fields doms i t = function
-  | [] -> doms
+    constraints
+and input_from_fields constraints i t = function
+  | [] -> constraints
   | f :: fields ->
-     let d = input_from_type doms f.ftype (PLCont (t, PLConst(PLInt i))) in
+     let d =
+       input_from_type constraints f.ftype (PLCont (t, PLConst(PLInt i))) true
+     in
      input_from_fields d (Integer.succ i) t fields
     
 
@@ -241,7 +311,10 @@ let rec valid_to_prolog term =
   match term.term_node with
   | TLval _ ->
     let t = term_to_pl term in
-    [ PLDomain (PLIntDom (PLDim t, Some (Integer.one), Some maxuint)) ]
+    if is_cont t then
+      [ PLDomain (PLIntDom (PLDim t, Some (Integer.one), Some maxuint)) ]
+    else
+      [ PLInput (PLIntInput (PLDim t, Some (Integer.one), Some maxuint)) ]
   | TAddrOf (TMem x, TIndex (y, TNoOffset)) ->
      let x' = Cil.mkTermMem ~addr:x ~off:TNoOffset in
      let rec type_of_pointed = function
@@ -268,9 +341,12 @@ let rec valid_to_prolog term =
       match x' with
       | PLConst (PLInt i) ->
 	let i' = Integer.add i Integer.one in
-	[ PLDomain (PLIntDom (PLDim t', Some i', Some maxuint)) ]
+	if is_cont t' then
+	  [ PLDomain (PLIntDom (PLDim t', Some i', Some maxuint)) ]
+	else
+	  [ PLInput (PLIntInput (PLDim t', Some i', Some maxuint)) ]
       | _ ->
-	[ PLDomain (PLIntDom (PLDim t', Some (Integer.zero), Some maxuint));
+	[ PLInput (PLIntInput (PLDim t', Some (Integer.zero), Some maxuint));
 	  PLUnquantif (PLDim t', Req, PLBinOp (x', PlusA, one)) ]
     end
   | _ -> Utils.error_term term
@@ -278,45 +354,7 @@ let rec valid_to_prolog term =
 let rel_to_prolog rel term1 term2 =
   let var1 = term_to_pl term1 in
   let var2 = term_to_pl term2 in
-  let rec no_var = function
-    | PLBinOp (x,_,y) | PLCont (x,y) -> no_var x && no_var y
-    | PLDim x | PLContAll x -> no_var x
-    | PLLVar _ | PLCVar _ -> false
-    | PLConst _ -> true
-  in
-  match var1 with
-  | PLConst (PLInt x) ->
-    begin
-      match var2 with
-      | PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
-	begin
-	  match rel with
-	  | Rlt -> PLDomain (PLIntDom (var2, Some (Integer.succ x), None))
-	  | Rgt -> PLDomain (PLIntDom (var2, None, Some (Integer.pred x)))
-	  | Rle -> PLDomain (PLIntDom (var2, Some x, None))
-	  | Rge -> PLDomain (PLIntDom (var2, None, Some x))
-	  | Req -> PLDomain (PLIntDom (var2, Some x, Some x))
-	  | Rneq -> PLUnquantif (var1, rel, var2)
-	end
-      | _ -> PLUnquantif (var1, rel, var2)
-    end
-  | PLCont (_, off) when not (no_var off) -> PLUnquantif (var1, rel, var2)
-  | PLDim _ | PLContAll _ | PLCont _ | PLCVar _ ->
-    begin
-      match var2 with
-      | PLConst (PLInt y) ->
-	begin
-	  match rel with
-	  | Rlt -> PLDomain (PLIntDom (var1, None, Some (Integer.pred y)))
-	  | Rgt -> PLDomain (PLIntDom (var1, Some (Integer.succ y), None))
-	  | Rle -> PLDomain (PLIntDom (var1, None, Some y))
-	  | Rge -> PLDomain (PLIntDom (var1, Some y, None))
-	  | Req -> PLDomain (PLIntDom (var1, Some y, (Some y)))
-	  | Rneq -> PLUnquantif (var1, rel, var2)
-	end
-      | _ -> PLUnquantif (var1, rel, var2)
-    end
-  | _ -> PLUnquantif (var1, rel, var2)
+  PLUnquantif (var1, rel, var2)
 
 
 let rec requires_to_prolog constraints pred = match pred.content with
@@ -327,6 +365,66 @@ let rec requires_to_prolog constraints pred = match pred.content with
   | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
   | Pat(p,LogicLabel(_,"Here")) -> requires_to_prolog constraints p
   | _ -> assert false
+
+
+
+
+let merge_inputs inputs unquantifs =
+  let domains_tbl = Hashtbl.create 32 in
+  let is_int_domain = function PLIntInput _ -> true | _ -> false in
+  let int_doms, float_doms = List.partition is_int_domain inputs in
+  let merge_int f a b = match (a,b) with
+    | None, x -> x
+    | x, None -> x
+    | Some x, Some y -> Some (f x y)
+  in
+  let merge_int_doms = function
+    | PLIntInput (t, i1, i2) ->
+       begin
+	 try
+	   let lower, upper = Hashtbl.find domains_tbl t in
+	   let lower' = merge_int Integer.max lower i1 in
+	   let upper' = merge_int Integer.min upper i2 in
+	   Hashtbl.replace domains_tbl t (lower', upper')
+	 with _ -> Hashtbl.add domains_tbl t (i1, i2)
+       end
+    | _ -> assert false
+  in
+  List.iter merge_int_doms int_doms;
+  let extract_ops t =
+    let rec aux f = function
+      | PLCVar _ as t -> t, f
+      | PLBinOp (a,PlusA,PLConst (PLInt b)) -> aux (fun x -> Integer.add x b) a
+      | PLBinOp (a,MinusA,PLConst (PLInt b)) -> aux (fun x -> Integer.sub x b) a
+      | PLBinOp (a,Mult,PLConst (PLInt b)) -> aux (fun x -> Integer.mul x b) a
+      | _ -> assert false
+    in
+    aux Extlib.id t
+  in
+  let fixed_dims, unquantifs =
+    let rec aux ret1 ret2 = function
+      | ((PLDim t1, Req, t2) as unquantif) :: t ->
+	 begin
+	   try
+	     let t', to_apply = extract_ops t2 in
+	     let x, y = Hashtbl.find domains_tbl t' in
+	     let x = to_apply (Extlib.the x) in
+	     let y = to_apply (Extlib.the y) in
+	     if not (Integer.equal x y) then assert false;
+	     let x = Integer.succ x and y = Integer.succ y in
+	     let dom = PLIntInput (PLDim t1, Some x, Some y) in
+	     aux (dom::ret1) ret2 t
+	   with _ -> aux ret1 (unquantif::ret2) t
+	 end
+      | unquantif :: t -> aux ret1 (unquantif::ret2) t
+      | [] -> ret1, ret2
+    in
+    aux [] [] unquantifs
+  in
+  List.iter merge_int_doms fixed_dims;
+  let add_int_dom_to_list k (v,w) doms = PLIntInput (k,v,w) :: doms in
+  Hashtbl.fold add_int_dom_to_list domains_tbl float_doms, unquantifs
+
 
 
 let compute_constraints() =
@@ -354,86 +452,33 @@ let compute_constraints() =
   let constraints = List.fold_left f constraints requires_preds in
   let dkey = Options.dkey_input_domain in
   Options.feedback ~dkey "non-default behaviors ignored!";
-  let split_constraints (d,q,uq) c = match c with
-    | PLUnquantif x -> d, q, x::uq
-    | PLQuantif x -> d, x::q, uq
-    | PLDomain x -> x::d, q, uq
-  in
-  let domains, quantifs, unquantifs =
-    List.fold_left split_constraints ([],[],[]) constraints in
   let formals = Kernel_function.get_formals kf in
-  let create_input d v = input_from_type d v.vtype (PLCVar v) in
-  let domains = List.fold_left create_input domains formals in
-  let domains =
-    Globals.Vars.fold_in_file_order (fun v _ d -> create_input d v) domains in
-  let domains_tbl = Hashtbl.create 32 in
-  let is_int_domain = function PLIntDom _ -> true | _ -> false in
-  let int_doms, float_doms = List.partition is_int_domain domains in
-  let merge_int f a b = match (a,b) with
-    | None, x -> x
-    | x, None -> x
-    | Some x, Some y -> Some (f x y)
+  let create_input d v = input_from_type d v.vtype (PLCVar v) false in
+  let constraints = List.fold_left create_input constraints formals in
+  let constraints =
+    Globals.Vars.fold_in_file_order (fun v _ d -> create_input d v) constraints
   in
-  let merge_int_doms = function
-    | PLIntDom (t, i1, i2) ->
-      begin
-	try
-	  let lower, upper = Hashtbl.find domains_tbl t in
-	  let lower' = merge_int Integer.max lower i1 in
-	  let upper' = merge_int Integer.min upper i2 in
-	  Hashtbl.replace domains_tbl t (lower', upper')
-	with _ -> Hashtbl.add domains_tbl t (i1, i2)
-      end
-    | PLFloatDom _ -> assert false
-  in
-  List.iter merge_int_doms int_doms;
-  let extract_ops t =
-    let rec aux f = function
-      | PLCVar _ as t -> t, f
-      | PLBinOp (a,PlusA,PLConst (PLInt b)) -> aux (fun x -> Integer.add x b) a
-      | PLBinOp (a,MinusA,PLConst (PLInt b)) -> aux (fun x -> Integer.sub x b) a
-      | PLBinOp (a,Mult,PLConst (PLInt b)) -> aux (fun x -> Integer.mul x b) a
-      | _ -> assert false
-    in
-    aux Extlib.id t
-  in
-  let fixed_dims, unquantifs =
-    let rec aux ret1 ret2 = function
-      | ((PLDim t1, Req, t2) as unquantif) :: t ->
-	begin
-	  try
-	    let t', to_apply = extract_ops t2 in
-	    let x, y = Hashtbl.find domains_tbl t' in
-	    let x = to_apply (Extlib.the x) in
-	    let y = to_apply (Extlib.the y) in
-	    if not (Integer.equal x y) then assert false;
-	    let x = Integer.succ x and y = Integer.succ y in
-	    let dom = PLIntDom (PLDim t1, Some x, Some y) in
-	    aux (dom::ret1) ret2 t
-	  with _ -> aux ret1 (unquantif::ret2) t
-	end
-      | unquantif :: t -> aux ret1 (unquantif::ret2) t
-      | [] -> ret1, ret2
-    in
-    aux [] [] unquantifs
-  in
-  List.iter merge_int_doms fixed_dims;
-  let add_int_dom_to_list k (v,w) doms = PLIntDom (k,v,w) :: doms in
-  let domains = Hashtbl.fold add_int_dom_to_list domains_tbl float_doms in
-  domains, unquantifs, quantifs
+  let domains, inputs, quantifs, unquantifs = split_constraints constraints in
+  let inputs, unquantifs = merge_inputs inputs unquantifs in
+  let constraints = merge_constraints domains inputs quantifs unquantifs in
+  constraints
 
-let add_global domains v = input_from_type domains v.vtype (PLCVar v)
+let add_global constraints v =
+  input_from_type constraints v.vtype (PLCVar v) false
 
-let add_init_global domains v = match Utils.unname v.vtype with
-  | TInt _ -> PLIntDom (PLCVar v, Some Integer.zero, Some Integer.zero)::domains
+let add_init_global constraints v = match Utils.unname v.vtype with
+  | TInt _ ->
+     PLDomain (PLIntDom (PLCVar v, Some Integer.zero, Some Integer.zero))
+     ::constraints
   | _ -> assert false
 
-let translate precond_file_name domains unquantifs quantifs =
+let translate precond_file_name constraints =
   let buf = Buffer.create 512 in
   let fmt = Format.formatter_of_buffer buf in
   let kf = fst (Globals.entry_point()) in
   let func_name = Kernel_function.get_name kf in
   let precond_name = "pathcrawler__" ^ func_name ^ "_precond" in
+  let domains, inputs, quantifs, unquantifs = split_constraints constraints in
   let same_constraint_for_precond before after =
     Format.fprintf fmt "%s('%s',%s) :-\n  %s('%s',%s).\n"
       before precond_name after before func_name after
@@ -442,17 +487,15 @@ let translate precond_file_name domains unquantifs quantifs =
   (* PRINTING *)
   Format.fprintf fmt "%s" prolog_header;
   let on_complex_domain x =
-    if in_dom x then
-      Format.fprintf fmt "dom('%s', %a).\n" func_name printer#complex_domain x
+    Format.fprintf fmt "dom('%s', %a).\n" func_name printer#complex_domain x
   in
   List.iter on_complex_domain domains;
   same_constraint_for_precond "dom" "A,B,C";
   Format.fprintf fmt "create_input_vals('%s', Ins):-\n" func_name;
   let on_simple_domain x =
-    if in_create_input_val x then
-      Format.fprintf fmt "  create_input_val(%a,Ins),\n" printer#domain x
+    Format.fprintf fmt "  create_input_val(%a,Ins),\n" printer#domain x
   in
-  List.iter on_simple_domain domains;
+  List.iter on_simple_domain inputs;
   Format.fprintf fmt "  true.\n";
   same_constraint_for_precond "create_input_vals" "Ins";
   let pp_quantif fmt k = Format.fprintf fmt "    %a" printer#quantif k in
