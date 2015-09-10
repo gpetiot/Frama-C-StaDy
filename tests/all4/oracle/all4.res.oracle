@@ -588,14 +588,9 @@ int __sd_Frama_C_interval_mod_0(int min, int max) {
 __sd_instru_all4_F7.c:218:[kernel] warning: Floating-point constant 0.1 is not represented exactly. Will use 0x1.999999999999ap-4. See documentation for option -warn-decimal-float
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_all4_F7.c (with preprocessing)
-[pc] analyzing...
-[pc] Compiling pathcrawler___sd_instru_all4_F7/lanceur_F7 utilities ...
-[pc] Compiling pathcrawler___sd_instru_all4_F7/lanceur_F7 ...
-[pc] generating tests...
 [pc] Starting lanceur_F7 (isc version)
 [pc] Starting lanceur_pathcrawler__F7_precond (isc version)
 [pc] Starting lanceur_F7 (isc version)
-[pc] generation finished
 [stady] all-paths: true
 [stady] 53 test cases
 [stady] Non-Compliance of assert V22 ≢ 0; 

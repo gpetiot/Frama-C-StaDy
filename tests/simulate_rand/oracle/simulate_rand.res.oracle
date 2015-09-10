@@ -106,15 +106,10 @@ int __sd_rand_mod_0() {
 [kernel] Parsing __sd_instru_simulate_rand_main.c (with preprocessing)
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_simulate_rand_main.c (with preprocessing)
-[pc] analyzing...
-[pc] Compiling pathcrawler___sd_instru_simulate_rand_main/lanceur_main utilities ...
-[pc] Compiling pathcrawler___sd_instru_simulate_rand_main/lanceur_main ...
-[pc] generating tests...
 [pc] Starting lanceur_main (isc version)
 [pc] Starting lanceur_pathcrawler__main_precond (isc version)
 [pc] Starting lanceur_main (isc version)
 [pc] Starting lanceur_main (isc version)
-[pc] generation finished
 [stady] all-paths: true
 [stady] 6 test cases
 [stady] Non-Compliance of assert x ≡ y; 

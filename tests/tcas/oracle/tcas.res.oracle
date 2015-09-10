@@ -731,15 +731,10 @@ int alt_sep_test(void)
 [kernel] Parsing __sd_instru_tcas_alt_sep_test.c (with preprocessing)
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_tcas_alt_sep_test.c (with preprocessing)
-[pc] analyzing...
-[pc] Compiling pathcrawler___sd_instru_tcas_alt_sep_test/lanceur_alt_sep_test utilities ...
-[pc] Compiling pathcrawler___sd_instru_tcas_alt_sep_test/lanceur_alt_sep_test ...
-[pc] generating tests...
 [pc] Starting lanceur_alt_sep_test (isc version)
 [pc] Starting lanceur_pathcrawler__alt_sep_test_precond (isc version)
 [pc] Starting lanceur_alt_sep_test (isc version)
 [pc] Starting lanceur_alt_sep_test (isc version)
-[pc] generation finished
 [stady] all-paths: true
 [stady] 170 test cases
 [stady] Non-Compliance of ensures \result ≢ 1 

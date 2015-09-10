@@ -238,14 +238,9 @@ void __sd_sort_mod_0(int *A, int n) {
 [kernel] Parsing __sd_instru_spec_insuf_ko_f.c (with preprocessing)
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_spec_insuf_ko_f.c (with preprocessing)
-[pc] analyzing...
-[pc] Compiling pathcrawler___sd_instru_spec_insuf_ko_f/lanceur_f utilities ...
-[pc] Compiling pathcrawler___sd_instru_spec_insuf_ko_f/lanceur_f ...
-[pc] generating tests...
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
 [pc] Starting lanceur_f (isc version)
-[pc] generation finished
 [stady] all-paths: true
 [stady] 21 test cases
 [stady] Subcontract Weakness of sort(t,k); for ensures *(\old(t)+0) ≤ *(\old(t)+1) 

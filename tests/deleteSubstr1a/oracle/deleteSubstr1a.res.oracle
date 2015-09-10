@@ -1030,16 +1030,11 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [kernel] Parsing __sd_instru_deleteSubstr1a_delete_substr.c (with preprocessing)
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_deleteSubstr1a_delete_substr.c (with preprocessing)
-[pc] analyzing...
-[pc] Compiling pathcrawler___sd_instru_deleteSubstr1a_delete_substr/lanceur_delete_substr utilities ...
-[pc] Compiling pathcrawler___sd_instru_deleteSubstr1a_delete_substr/lanceur_delete_substr ...
-[pc] generating tests...
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] Starting lanceur_pathcrawler__delete_substr_precond (isc version)
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] Starting lanceur_delete_substr (isc version)
-[pc] generation finished
 [stady] all-paths: true
 [stady] 242 test cases
 [stady] Non-Compliance of ensures \result ≡ 0 

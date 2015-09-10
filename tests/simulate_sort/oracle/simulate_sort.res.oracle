@@ -295,10 +295,6 @@ void __sd_sort_mod_0(int *a, int n) {
 [kernel] Parsing __sd_instru_simulate_sort_main.c (with preprocessing)
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_simulate_sort_main.c (with preprocessing)
-[pc] analyzing...
-[pc] Compiling pathcrawler___sd_instru_simulate_sort_main/lanceur_main utilities ...
-[pc] Compiling pathcrawler___sd_instru_simulate_sort_main/lanceur_main ...
-[pc] generating tests...
 [pc] Starting lanceur_main (isc version)
 [pc] Starting lanceur_pathcrawler__main_precond (isc version)
 before:	 after:
@@ -307,6 +303,5 @@ before:	 after:
 -11 	 10
 10 	 12
 
-[pc] generation finished
 [stady] all-paths: true
 [stady] 1256 test cases
