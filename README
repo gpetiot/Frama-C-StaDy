@@ -1,4 +1,3 @@
-
 --------------------------------------------------------------------------------
                                 INSTALL
 --------------------------------------------------------------------------------
@@ -6,21 +5,20 @@
 autoconf
 ./configure
 make
-sudo make install
-
---------------------------------------------------------------------------------
-                                TEST
---------------------------------------------------------------------------------
-
-make tests
+make install
 
 --------------------------------------------------------------------------------
                                  USE
 --------------------------------------------------------------------------------
 
-PRINTING THE OPTIONS:
-  frama-c -stady-help
+NON-COMPLIANCE DETECTION
 
-BASIC USAGE:
-  frama-c     FILE -main FUNCTION -stady -then -report
-  frama-c-gui FILE -main FUNCTION -stady
+  frama-c FILE -main FUNCTION -stady
+
+SUBCONTRACT WEAKNESS DETECTION
+
+  frama-c FILE -main FUNCTION -stady -stady-swd 1,13,42
+
+where 1, 13 and 42 are statement ids of loops or function calls,
+and you want to replace their code with their specification to
+exhibit a contract weakness.
