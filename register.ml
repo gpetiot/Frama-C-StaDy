@@ -195,7 +195,16 @@ let run() =
       States.Property_To_Id.clear();
       States.Not_Translated_Predicates.clear();
       Utils.mpz_t_ref := None;
-      States.Externals.clear()
+      States.Externals.clear();
+      Options.PathCrawler_Options.clear();
+      Options.Socket_Type.clear();
+      Options.Timeout.clear();
+      Options.Stop_When_Assert_Violated.clear();
+      Options.Functions.clear();
+      Options.Behaviors.clear();
+      Options.Properties.clear();
+      Options.SWD.clear();
+      Options.Simulate_Functions.clear()
     end
 
 
@@ -208,7 +217,11 @@ let extern_run = Dynamic.register ~plugin:"stady" ~journalize:true "run_stady"
 
 
 let run =
-  let deps = [Ast.self; Options.Enabled.self] in
+  let deps = [Ast.self; Options.Enabled.self; Options.PathCrawler_Options.self;
+	      Options.Socket_Type.self; Options.Timeout.self;
+	      Options.Stop_When_Assert_Violated.self; Options.Functions.self;
+	      Options.Behaviors.self; Options.Properties.self;
+	      Options.SWD.self; Options.Simulate_Functions.self] in
   let f, _self = State_builder.apply_once "stady" deps run in
   f
     
