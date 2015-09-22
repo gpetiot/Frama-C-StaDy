@@ -1,0 +1,17 @@
+
+\newcommand{\vref}[1]{\ref{#1}}
+\newcommand{\vpageref}[1]{(page \pageref{#1})}
+
+%\newcommand{\nrightarrow}{\rightarrow}
+\newcommand{\implies}{\Rightarrow}
+
+\newcommand{\Bbb}[1]{\textcolor{Magenta}{\bf #1}}
+\newcommand{\mathbb}[1]{{\bf #1}}
+
+\newcommand{\hfill}{\hspace{2cm}}
+\newcommand{\xspace}{~}
+\newcommand{\thepage}{}
+
+\newcommand{\mathfrak}[1]{\textcolor{Magenta}{\bf #1}}
+
+\newenvironment{todo}{\begin{divstyle}{todo}}{\end{divstyle}}
