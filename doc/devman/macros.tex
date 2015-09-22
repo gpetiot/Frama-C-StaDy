@@ -1,0 +1,52 @@
+\newcommand{\framacversion}{\input{../../VERSION}}
+
+\newcommand{\tool}[1]{\textsf{#1}\xspace}
+
+\newcommand{\C}{\tool{C}}
+\newcommand{\caml}{\tool{OCaml}}
+\newcommand{\acsl}{\tool{ACSL}\index{ACSL@\tool{ACSL}}}
+\newcommand{\gcc}{\tool{GCC}}
+\newcommand{\Value}{\tool{Value}}
+
+\newenvironment{commands}%
+{\par\hspace{2cm}\begin{tabular}{l}}%
+{\end{tabular}}
+
+\newcommand{\via}{\emph{via}\xspace}
+\newcommand{\etc}{\emph{etc}\xspace}
+\newcommand{\ie}{\emph{i.e.}\xspace}
+\newcommand{\eg}{\emph{e.g.}\xspace}
+
+% Index
+
+\newcommand{\optionidx}[2]{\index{#2@\texttt{#1#2}}}
+\newcommand{\codeidx}[1]{\index{#1@\texttt{#1}}}
+\newcommand{\scodeidx}[2]{\index{#1@\texttt{#1}!#2@\texttt{#2}}}
+\newcommand{\sscodeidx}[3]{%
+  \index{#1@\texttt{#1}!#2@\texttt{#2}!#3@\texttt{#3}}}
+\newcommand{\bfit}[1]{\textbf{\textit{\hyperpage{#1}}}}
+\newcommand{\optionidxdef}[2]{\index{#2@\texttt{#1#2}|bfit}}
+\newcommand{\codeidxdef}[1]{\index{#1@\texttt{#1}|bfit}}
+\newcommand{\scodeidxdef}[2]{\index{#1@\texttt{#1}!#2@\texttt{#2}|bfit}}
+\newcommand{\sscodeidxdef}[3]{%
+  \index{#1@\texttt{#1}!#2@\texttt{#2}!#3@\texttt{#3}|bfit}}
+
+\newcommand{\pragmadef}[1]{\texttt{#1}\index{Pragma!#1@\texttt{#1}}}
+\newcommand{\optiondef}[2]{\texttt{#1#2}\optionidxdef{#1}{#2}}
+\newcommand{\textttdef}[1]{\texttt{#1}\codeidxdef{#1}}
+
+\newcommand{\optionuse}[2]{\texttt{#1#2}\optionidx{#1}{#2}}
+\newcommand{\textttuse}[1]{\texttt{#1}\codeidx{#1}}
+
+% Special environment
+\definecolor{gris}{gray}{0.85}
+
+\makeatletter
+\newenvironment{important}%
+{\hspace{5pt plus \linewidth minus \marginparsep}%
+ \begin{lrbox}{\@tempboxa}%
+   \begin{minipage}{\linewidth - 2\fboxsep}}
+{\end{minipage}\end{lrbox}\colorbox{gris}{\usebox{\@tempboxa}}}
+\makeatother
+
+\newtheorem{convention}{Recommendation}[chapter]
