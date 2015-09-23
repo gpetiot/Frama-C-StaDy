@@ -221,6 +221,28 @@ the loops preserve their loop invariants, and focus
 on other proof failures occurring during modular verification of $f$. 
 (The proposed techniques can be adapted to the verification of a loop contract.)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Installation}
+
+
+\stady requires \framac Sodium (20150201) and \pathcrawler Sodium. It also requires the GMP (Gnu Multi-Precision) library to be installed.
+
+You can check the version of \framac with :
+
+\begin{shell}
+  frama-c -version
+\end{shell}
+
+You can compile \stady from the sources this way :
+
+\begin{shell}
+  autoconf
+  ./configure
+  make
+  make install
+\end{shell}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
