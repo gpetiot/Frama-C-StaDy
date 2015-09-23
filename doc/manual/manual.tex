@@ -349,6 +349,256 @@ The function \lstinline[language=OCaml]'run' constructs the command line to invo
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\chapter{Examples}
+
+
+\section{Non-Compliance Detection}
+
+Let us consider a small example of an array access :
+
+\begin{ccode}
+/*@ requires \valid(buffer+(0..size-1)); */
+int f(int* buffer, int size, int ind) {
+  return buffer[ind];
+}
+\end{ccode}
+
+The function $f$ takes a buffer, its size, and an index. The precondition on the first line states that we can read and write in \lstinline'buffer[0]', ..., \lstinline'buffer[size-1]'.
+
+First, we apply the \tool{RTE} plug-in of \framac. \tool{RTE} adds an ACSL annotation just before the array access :
+
+\begin{ccode}
+  /*@ assert rte: mem_access: \valid_read(buffer+ind); */
+\end{ccode}
+
+meaning that buffer has to be large enough so that \lstinline'buffer[ind]' can be read.
+
+\stady is then applied. The full command with the call to \tool{RTE} is :
+
+\begin{shell}
+  frama-c buffer.c -main f -rte -then -stady -stady-stop-when-assert-violated
+\end{shell}
+
+The option \lstinline[language=shell]'-stady-stop-when-assert-violated' stops the test generation as soon as an annotation violation is detected.
+The assertion added by \tool{RTE} is reported as non-compliant with the code, here the output of \stady :
+
+\begin{shell}
+[stady] all-paths: true
+[stady] 2 test cases
+[stady] Non-Compliance of assert rte: mem_access: \valid_read(buffer+ind); 
+        LOCATION: buffer.c:4
+        TEST DRIVER: testcases___sd_instru_buffer_f/f/testdrivers/TC_1.c
+        ind = -214739
+        size = 0
+\end{shell}
+
+This means that for any buffer of size 0, trying to read the buffer at size 0, will lead to a runtime error.
+
+One can precise the precondition of f to get more meaningful results, we add the following annotations :
+
+\begin{ccode}
+  requires 0 <= ind;
+  requires 0 < size;
+\end{ccode}
+
+Applying \stady again stills exhibits a counter-example :
+
+\begin{shell}
+[stady] all-paths: true
+[stady] 4 test cases
+[stady] Non-Compliance of assert rte: mem_access: \valid_read(buffer+ind); 
+        LOCATION: buffer.c:7
+        TEST DRIVER: testcases___sd_instru_buffer_f/f/testdrivers/TC_1.c
+        buffer[0] = -214739
+        ind = 1073652710
+        size = 1
+\end{shell}
+
+This means that we cannot access \lstinline'buffer[1073652710]' for a buffer of size 1.
+
+We finally correct the precondition :
+
+\begin{ccode}
+  requires 0 <= ind < size;
+\end{ccode}
+
+This time, there are no more error, so we won't stop at the first annotation violation and we will try each size of buffer (as each size follows its own program path). Thus, we add a timeout to limit the exploration :
+
+\begin{shell}
+  frama-c buffer.c -main f -rte -then -stady -stady-stop-when-assert-violated
+  -stady-timeout 7
+\end{shell}
+
+The option \lstinline[language=shell]'-stady-timeout' limits the time allocated to test generation, here it cannot take more than 7 seconds.
+And \stady does not report any annotation violation :
+
+\begin{shell}
+[stady] all-paths: true
+[stady] 1177 test cases
+\end{shell}
+
+\section{Subcontract Weakness Detection}
+
+Let us now consider a more complex program. The function \lstinline'all_zeros' below returns a non-zero value if and only if, all the elements of the array $t$ of size $n$ are non-zero.
+
+\begin{ccode}
+/*@ requires n>=0 && \valid(t+(0..n-1));
+    assigns \nothing;
+    ensures \result != 0 <==> 
+      (\forall integer j; 0 <= j < n ==> t[j] == 0);
+*/
+int all_zeros(int t[], int n) {
+  int k;
+  /*@ loop invariant 0 <= k <= n;
+      loop assigns k;
+      loop variant n-k; 
+  */
+  for(k = 0; k < n; k++) 
+    if (t[k] != 0) 
+      return 0;
+  return 1;
+}
+\end{ccode}
+
+The deductive verification of the program by the \tool{Wp} plug-in of \framac does not succeed : the postcondition of the function \lstinline'all_zeros' is not verified.
+
+\begin{shell}
+[wp] Running WP plugin...
+[wp] Collecting axiomatic usage
+[wp] warning: Missing RTE guards
+[wp] 10 goals scheduled
+[wp] [Qed] Goal typed_all_zeros_loop_inv_established : Valid
+[wp] [Qed] Goal typed_all_zeros_loop_assign : Valid
+[wp] [Qed] Goal typed_all_zeros_assign_part1 : Valid
+[wp] [Qed] Goal typed_all_zeros_assign_part2 : Valid
+[wp] [Qed] Goal typed_all_zeros_assign_part3 : Valid (1ms)
+[wp] [Qed] Goal typed_all_zeros_assign_part4 : Valid (1ms)
+[wp] [Qed] Goal typed_all_zeros_loop_term_decrease : Valid (1ms)
+[wp] [Qed] Goal typed_all_zeros_loop_term_positive : Valid (1ms)
+[wp] [Alt-Ergo] Goal typed_all_zeros_loop_inv_preserved : Valid (Qed:1ms) (44ms) (17)
+[wp] [Alt-Ergo] Goal typed_all_zeros_post : Unknown (Qed:2ms) (507ms)
+[wp] Proved goals:    9 / 10
+     Qed:             8  (0ms-1ms)
+     Alt-Ergo:        1  (44ms-44ms) (17) (unknown: 1)
+\end{shell}
+
+We can apply \stady to look for a non-compliance between the code and its specification.
+
+\begin{shell}
+  frama-c all_zeros.c -main all_zeros -stady -stady-stop-when-assert-violated
+  -stady-timeout 5
+\end{shell}
+
+\begin{shell}
+[stady] all-paths: true
+[stady] 19246 test cases
+\end{shell}
+
+\stady did not exhibit any counter-example of non-compliance. An enlightened user may get the feeling that the program is correct but insufficiently specified.
+We re-apply \stady to look for counter-examples exhibiting subcontract weaknesses :
+
+\begin{shell}
+  frama-c all_zeros.c -main all_zeros -stady -stady-swd 2
+  -stady-stop-when-assert-violated
+\end{shell}
+
+Here, 2 is the identifier of the loop and its contract, it is retrieved by using the GUI of \framac :
+
+\begin{shell}
+  frama-c-gui all_zeros.c
+\end{shell}
+
+and clicking on the beginning of the while loop, \texttt{statement: 2} is displayed in the Information tab of the GUI. There is no other way to designate a contract for the Subcontract Weakness Detection mode of \stady at the moment.
+
+\begin{shell}
+[stady] all-paths: true
+[stady] 57 test cases
+[stady] Subcontract Weakness of stmt 2 for ensures
+                                           \result != 0 <==>
+                                           (\forall integer j;
+                                              0 <= j < \old(n) ==> *(\old(t)+j) == 0) 
+        LOCATION: all_zeros_unproved_1.c:12
+        TEST DRIVER: testcases___[...]/all_zeros/testdrivers/TC_9.c
+        n = 1
+        nondet_sint_val[0] = 1
+        return value =  -- OUTPUT: 1 (1)
+        t[0] = 6432
+\end{shell}
+
+This output means that the loop contract (stmt 2) is not strong enough for the postcondition of the function.
+The counter-example has to be read as follows :
+\begin{itemize}
+\item we consider as inputs : \lstinline'n = 1', \lstinline't[0] = 6432'
+\item we replace the execution of the loop by the most general code satisfying its loop contract, that is :
+  \begin{itemize}
+  \item only $k$ can be modified
+  \item the new value of $k$ has to satisfy : \lstinline'0 <= k <= n'
+  \end{itemize}
+\item a non-deterministic value is thus assigned to $k$ : \lstinline'k = 1' (designated by \lstinline'nondet_sint_val[0]' in the feedback of StaDy)
+\end{itemize}
+However, this new code for the loop does not change the return value of the function to 0 when one of the element is non-zero, so the new function always returns 1 (OUTPUT: 1 in the feedback of StaDy).
+
+We now realize that we might need a loop invariant over the values of the array elements. We add such a loop invariant (highlighted in yellow) :
+
+\begin{ccode}
+/*@ requires n>=0 && \valid(t+(0..n-1));
+    assigns \nothing;
+    ensures \result != 0 <==> 
+      (\forall integer j; 0 <= j < n ==> t[j] == 0);
+*/
+int all_zeros(int t[], int n) {
+  int k;
+  /*@ loop invariant 0 <= k <= n;
+      loop invariant \forall integer j; 0<=j<k ==> t[j]==0;
+      loop assigns k;
+      loop variant n-k; 
+  */
+  for(k = 0; k < n; k++) 
+    if (t[k] != 0) 
+      return 0;
+  return 1;
+}
+\end{ccode}
+
+With this new loop invariant, \stady does not exhibit any counter-example of contract weakness :
+
+\begin{shell}
+  frama-c all_zeros.c -main all_zeros -stady -stady-swd 2 -stady-timeout 5
+  -stady-stop-when-assert-violated
+\end{shell}
+
+\begin{shell}
+[stady] all-paths: true
+[stady] 30002 test cases
+\end{shell}
+
+And the program can now be formally verified with \tool{Wp} :
+
+\begin{shell}
+[wp] Running WP plugin...
+[wp] Collecting axiomatic usage
+[wp] warning: Missing RTE guards
+[wp] 12 goals scheduled
+[wp] [Qed] Goal typed_all_zeros_loop_inv_established : Valid
+[wp] [Qed] Goal typed_all_zeros_loop_inv_2_established : Valid
+[wp] [Qed] Goal typed_all_zeros_loop_assign : Valid
+[wp] [Alt-Ergo] Goal typed_all_zeros_loop_inv_2_preserved : Valid (Qed:1ms) (23ms) (24)
+[wp] [Alt-Ergo] Goal typed_all_zeros_loop_inv_preserved : Valid (Qed:1ms) (29ms) (17)
+[wp] [Alt-Ergo] Goal typed_all_zeros_post : Valid (Qed:3ms) (37ms) (54)
+[wp] [Qed] Goal typed_all_zeros_assign_part1 : Valid
+[wp] [Qed] Goal typed_all_zeros_assign_part2 : Valid
+[wp] [Qed] Goal typed_all_zeros_assign_part3 : Valid (1ms)
+[wp] [Qed] Goal typed_all_zeros_assign_part4 : Valid
+[wp] [Qed] Goal typed_all_zeros_loop_term_decrease : Valid (1ms)
+[wp] [Qed] Goal typed_all_zeros_loop_term_positive : Valid (1ms)
+[wp] Proved goals:   12 / 12
+     Qed:             9  (0ms-3ms)
+     Alt-Ergo:        3  (23ms-37ms) (54)
+\end{shell}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \appendix
 
