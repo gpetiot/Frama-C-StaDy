@@ -1,7 +1,6 @@
 \documentclass[web]{frama-c-book}
 
-\usepackage{graphicx}
-\usepackage{calc}
+\usepackage{graphicx,calc,wrapfig,tikz}
 
 \include{macros}
 
@@ -49,6 +48,179 @@ This work has been supported by the project STANCE (FP7 317753).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\chapter{Introduction}
+
+
+
+Among
+% the most powerful modern
+formal verification techniques, \emph{deductive verification}
+% can be used to prove
+consists in establishing a rigorous mathematical proof that a given
+% annotated
+program meets its specification. When no confusion is possible, one also says
+% for short
+that deductive verification consists in ``proving a program''. It requires that
+the program comes with a formal specification, usually given in special comments 
+called \emph{annotations,} including function contracts (with
+pre- and postconditions) and loop contracts (with loop variants and invariants).
+The \emph{weakest precondition calculus} proposed by
+Dijkstra~\cite{DBLP:books/ph/Dijkstra76} reduces any deductive verification
+problem to %the one of 
+establishing the validity of first-order
+formulas called \emph{verification conditions}.
+% is based on \emph{Weakest-Precondition calculus}
+% initiated by Hoare, Floyd and Dijkstra in the late 1960's
+%Hoare [Hoa69], Floyd [Flo67] and Dijkstra [Dij68]
+% (see e.g. \cite{Hoare1969}) and
+
+
+In modular deductive verification of a function $f$ calling another function
+$g$, the roles of the pre- and postconditions of $f$ and of the callee $g$ are
+dual.
+% (see Fig.~\ref{fig:VerifFuncCall}).
+The precondition of $f$ is assumed and its  postcondition must be proved, while
+at  any call of $g$ in $f$, %\commentNK{ambiguous otherwise} 
+the precondition of
+$g$ must be proved before the call and its postcondition is assumed after the
+call.
+The situation for a function $f$ with one call to $g$ is presented in
+Fig.~\ref{fig:verif-func-call}.
+An arrow in this figure informally indicates that its initial point provides a
+hypothesis for a proof of its final point.
+% in Fig.~\ref{fig:verif-func-call} informally indicate basic implications to be
+% proved for a function with one function call.
+For instance, the precondition $\textit{Pre}_f$ of $f$ and the postcondition
+$\textit{Post}_g$ of $g$ provide hypotheses for a proof of the postcondition
+$\textit{Post}_f$ of $f$.
+% formalizes this informal presentation).
+The called function $g$ is proved separately.
+
+
+%===========================================================
+\input FigVerifFuncCall.tex
+%===========================================================
+
+To reflect the fact that some contracts become hypotheses
+during deductive verification of $f$
+we use the term \emph{subcontracts for $f$} 
+to designate contracts of called functions and loops in $f$.
+
+
+\textbf{Motivation.} 
+One of the most important difficulties in deductive verification is the manual
+processing of proof failures 
+%that must be manually analyzed 
+by the verification engineer since proof failures may have several
+causes. 
+Indeed, a failure to prove $\textit{Pre}_g$ in Fig.~\ref{fig:verif-func-call} may be due to
+a \emph{non-compliance} of the code to the specification:
+an error in the code \lstinline'code1', or a 
+wrong specification $\textit{Pre}_f$ or $\textit{Pre}_g$ itself
+that may incorrectly formalize the requirements.
+The verification can also remain inconclusive because of 
+a \emph{prover incapacity} to finish
+a particular proof within an allocated time. 
+
+In many cases, it is extremely difficult for the verification engineer 
+to decide how to proceed: 
+either suspect a non-compliance and look for an error in the code or check the specification, 
+or suspect a prover incapacity, give up automatic proof and try to achieve an
+interactive proof with a proof assistant (like \textsc{Coq} \cite{coq}).
+
+A failure to prove the postcondition $\textit{Post}_f$ %in the situation shown in
+(cf. Fig.~\ref{fig:verif-func-call}) is even more complex to analyze: along with a
+prover incapacity or a non-compliance due to errors in the pieces of code
+\lstinline'code1' and \lstinline'code2' or an incorrect
+% due to an wrong
+specification $\textit{Pre}_f$ or $\textit{Post}_f$, the failure can
+also result from a \textit{too weak} postcondition $\textit{Post}_g$ of $g$, that
+does not fully express the intended behavior of $g$. Notice that in this last case, the proof of $g$ can
+still be successful. 
+%However, 
+The current automated tools for program proving
+do not provide a precise 
+% the verification engineer receives
+indication on the reason of the proof failure.
+%Some of them do not give any reason (like \framac/\Wp).
+The most advanced tools (like \textsc{Dafny} \cite{Leino/FIDE14}) produce a
+counter-example extracted from the underlying solver
+that cannot precisely indicate if the verification engineer should look for 
+a non-compliance,
+or strengthen subcontracts (and which one of them), 
+or consider adding additional lemmas or using interactive proof.
+So the verification engineer must basically consider all possible reasons one
+after another, maybe also trying a very costly interactive proof.
+For a loop, %(cf. Fig.~\ref{fig:verif-loop})
+the situation is similar,
+and offers an additional challenge:
+to prove the invariant preservation, whose failure 
+can be due to several reasons as well.
+
+
+The motivation of this work is twofold. First, we want to provide the
+verification engineer with a more precise feedback indicating the reason of each
+proof failure. Second, we look for a counter-example that either confirms the
+non-compliance and demonstrates that the unproven predicate can indeed fail on a
+test datum, or confirms a subcontract weakness
+% hypothesis (the contract of a called function or a loop invariant)
+showing on a test datum which subcontract is insufficient.
+%Absence of counter-examples (at least for a reduced program domain)
+%can indicate a prover incapacity to finish the unsuccessful proof.
+
+\textbf{Approach and goals.}
+%\commentAG{Ne pas mettre ce qu'on a fait (approach)
+%et ce qu'on voudrait atteindre (goal) dans le m\^eme paragraphe.} 
+%\commentNK{pas d'accord: comment on approche et pour quel objectif 
+%peuvent aller ensemble}
+The diagnosis of proof failures 
+based on a counter-example generated by a prover can be imprecise
+since from the prover's point of view,
+the code of callees and loops in $f$ is replaced by the corresponding
+subcontracts.
+To make this diagnosis more precise, one should  
+take into account their code as well as their contracts.
+A recent study~\cite{Tschannen/14} proposed to use function inlining and loop unrolling.
+We propose an alternative approach: to
+use advanced test generation techniques in order to diagnose 
+proof failures and produce counter-examples.
+Their usage requires a translation of the annotated
+%\commentAG{Ajouter une phrase
+%expliquant la notion d'annotation de sp\'ecification en commentaire dans les
+%langages de programmation usuels, ou ne jamais parler d'annotation.} 
+%\commentNK{fait}
+C program
+into an executable C code suitable for testing.
+%\commentAG{Cette notion de
+%``suitable for testing'' est à mieux définir ou à reformuler.} 
+%\commentNK{Not a term here, just English words}
+Previous work
+% \cite{Petiot/TAP14,Petiot/SCAM14}
+addressed the generation of counter-examples by testing only for a
+non-compli\-ance \cite{Petiot/TAP14} and proposed a rule-based formalization of
+annotation translation
+% into C code suitable to produce counter-examples by test generation
+in that case~\cite{Petiot/SCAM14}.
+The cases of subcontract weakness remained undetected and indistinguishable from
+a prover incapacity.
+
+The overall goal of the present work is to provide a methodology for a more
+precise  identification of proof failure reasons in all these cases, to
+implement it and to evaluate it in practice.
+The proposed method is composed of two steps. The first step looks for
+non-compliance. If no non-compliance is detected, the second step looks for a
+subcontract weakness.
+%\commentNK{Subcontract or Contract?} 
+Another goal is to make this method automatic and suitable for a non-expert verification
+engineer.
+Following the modular verification approach,
+we assume that the called functions have been verified before the caller $f$.
+%, and the called functions respect their contracts.
+To simplify the presentation, we also assume that 
+the loops preserve their loop invariants, and focus
+on other proof failures occurring during modular verification of $f$. 
+(The proposed techniques can be adapted to the verification of a loop contract.)
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -62,7 +234,7 @@ This work has been supported by the project STANCE (FP7 317753).
 \phantomsection
 \addcontentsline{toc}{chapter}{\bibname}
 \bibliographystyle{plain}
-\bibliography{./userman}
+\bibliography{./manual}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

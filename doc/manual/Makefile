@@ -1,5 +1,8 @@
 
-manual.pdf: manual.tex
+manual.pdf: manual.tex manual.bib FigVerifFuncCall.tex
+	pdflatex $^
+	bibtex manual
+	pdflatex $^
 	pdflatex $^
 
 clean:
