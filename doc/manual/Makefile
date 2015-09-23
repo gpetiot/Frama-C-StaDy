@@ -1,6 +1,6 @@
 
-userman.pdf: userman.tex
+manual.pdf: manual.tex
 	pdflatex $^
 
-clean::
-	rm *.aux *.cb *.cb2 *.idx *.lof *.log *.out *.toc *~ userman.pdf
+clean:
+	rm *.aux *.cb *.cb2 *.idx *.lof *.log *.out *.toc *~ manual.pdf
