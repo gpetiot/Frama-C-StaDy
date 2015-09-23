@@ -6,4 +6,4 @@ manual.pdf: manual.tex manual.bib FigVerifFuncCall.tex
 	pdflatex $^
 
 clean:
-	rm *.aux *.cb *.cb2 *.idx *.lof *.log *.out *.toc *~ manual.pdf
+	rm *.aux *.cb *.cb2 *.idx *.lof *.log *.out *.toc *.bbl *.blg *~ manual.pdf
