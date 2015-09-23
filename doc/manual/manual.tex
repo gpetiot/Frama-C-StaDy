@@ -222,8 +222,42 @@ on other proof failures occurring during modular verification of $f$.
 (The proposed techniques can be adapted to the verification of a loop contract.)
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Functioning and user interface}
+
+The StaDy prototype has two main functionalities : non-compliance detection and subcontract weakness detection.
+
+\section{Non-compliance detection}
+
+StaDy tries to exhibit a test case whose execution provokes an annotation violation. Non-compliance detection is the default mode of StaDy. One can detect non-compliances between the code and its specification in file F, starting with function M, using the command :
+
+\begin{shell}
+frama-c F -main M -stady
+\end{shell}
+
+In the user interface of Frama-C, an annotation violation is pictured with a red bullet, as we can see in Fig.~\ref{fig:gui}
+
+\begin{figure}\centering
+  \includegraphics[scale=.4]{ppt_invalid.png}
+  \caption{Invalid annotation in the Graphical User Interface of Frama-C
+    \label{fig:gui}}
+\end{figure}
+
+\section{Subcontract weakness detection}
+
+StaDy tries to exhibit a test case whose execution does not provoke an annotation violation but that is not proved by deductive verification because of a too weak subcontract (loop invariant or called function contract). The subcontract weakness detection in file F starting with function M is done with :
+
+\begin{shell}
+  frama-c F -main M -stady -stady-swd C
+\end{shell}
+
+where C is a comma-separated list of subcontract identifiers. The subcontract identifiers are the statement identifiers of the corresponding loops (for loop contracts) and function calls (for function contracts).
+
+For now, there is no strategy or heuristic implemented in StaDy to automatically submit a set of subcontract identifiers
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \appendix
 
