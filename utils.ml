@@ -1,35 +1,10 @@
 
-let no_repeat l =
-  let rec aux acc = function
-    | [] -> acc
-    | h :: t when List.mem h acc -> aux acc t
-    | h :: t -> aux (h :: acc) t
-  in
-  aux  [] l
-
-let fieldinfo_to_int fi =
-  let rec aux cpt = function
-    | {Cil_types.forig_name=s}::_ when s = fi.Cil_types.forig_name ->
-      Integer.of_int cpt
-    | _::t -> aux (cpt+1) t
-    | _ -> assert false
-  in
-  aux 0 fi.Cil_types.fcomp.Cil_types.cfields
-
 let machdep() = match Kernel.Machdep.get() with
   | "x86_64" -> 64
   | "x86_32" | "ppc_32" -> 32
   | "x86_16" -> 16
   | _ -> 32
 
-let default_behavior kf =
-  List.find Cil.is_default_behavior (Annotations.behaviors kf)
-
-let unguarded_behaviors kf =
-  let on_bhv _emitter bhv acc =
-    match bhv.Cil_types.b_assumes with [] -> bhv :: acc | _ -> acc
-  in
-  Annotations.fold_behaviors on_bhv kf []
 
 let typically_preds bhv =
   let is_typically (s,_,_) = s = "typically" in

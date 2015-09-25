@@ -49,6 +49,8 @@ let do_externals() =
   Utils.mpz_t_ref := mpz_t;
   List.iter (fun(a,b) -> States.Externals.add a b) externals
 
+let default_behavior kf =
+  List.find Cil.is_default_behavior (Annotations.behaviors kf)
 
 let setup_props_bijection () =
   States.Id_To_Property.clear();
@@ -69,7 +71,7 @@ let setup_props_bijection () =
   let kf = fst (Globals.entry_point()) in
   let strengthened_precond =
     try
-      let bhv = Utils.default_behavior kf in
+      let bhv = default_behavior kf in
       let typically_preds = Utils.typically_preds bhv in
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
@@ -160,7 +162,7 @@ let compute_props ?(props=selected_props()) ?swd () =
   Options.result "%i test cases" (States.Nb_test_cases.get());
   let strengthened_precond =
     try
-      let bhv = Utils.default_behavior kf in
+      let bhv = default_behavior kf in
       let typically_preds = Utils.typically_preds bhv in
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []

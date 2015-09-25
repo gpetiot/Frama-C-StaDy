@@ -46,6 +46,20 @@ let rec is_cont = function
   | PLLVar _ -> false
   | PLCVar _ -> false
 
+let fieldinfo_to_int fi =
+  let rec aux cpt = function
+    | {Cil_types.forig_name=s}::_ when s = fi.Cil_types.forig_name ->
+      Integer.of_int cpt
+    | _::t -> aux (cpt+1) t
+    | _ -> assert false
+  in
+  aux 0 fi.Cil_types.fcomp.Cil_types.cfields
+
+let unguarded_behaviors kf =
+  let on_bhv _emitter bhv acc =
+    match bhv.Cil_types.b_assumes with [] -> bhv :: acc | _ -> acc
+  in
+  Annotations.fold_behaviors on_bhv kf []
 
 let split_constraints constraints =
   let split (d,i,q,uq) c = match c with
@@ -180,7 +194,7 @@ class to_pl = object(self)
   method term_offset ret = function
   | TNoOffset -> List.rev ret
   | TField (fi, tof) ->
-    let i = PLConst (PLInt (Utils.fieldinfo_to_int fi)) in
+    let i = PLConst (PLInt (fieldinfo_to_int fi)) in
     self#term_offset (i :: ret) tof
   | TModel _ as t -> Utils.error_toffset t
   | TIndex (t, tof) -> self#term_offset ((self#term t) :: ret) tof
@@ -429,7 +443,7 @@ let merge_inputs inputs unquantifs =
 
 let compute_constraints() =
   let kf = fst (Globals.entry_point()) in
-  let bhvs = Utils.unguarded_behaviors kf in
+  let bhvs = unguarded_behaviors kf in
   let accumulate f =
     List.fold_left (fun l x -> List.rev_append (f x) l) [] bhvs in
   let requires_preds = accumulate (fun x -> x.b_requires) in

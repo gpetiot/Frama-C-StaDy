@@ -18,6 +18,14 @@ let cmp rel e1 e2 = Cil.mkBinOp ~loc (Utils.relation_to_binop rel) e1 e2
 
 let instru_affect a b = Insertion.mk_instru (Set(a,b,loc))
 
+let no_repeat l =
+  let rec aux acc = function
+    | [] -> acc
+    | h :: t when List.mem h acc -> aux acc t
+    | h :: t -> aux (h :: acc) t
+  in
+  aux  [] l
+
 let rec typename = function
   | TInt (ikind, _) ->
      begin
@@ -163,7 +171,7 @@ class gather_insertions props swd = object(self)
 
   method private fresh_fct_varinfo ty varname = self#fresh_varinfo ty varname
 
-  method translated_properties() = Utils.no_repeat translated_properties
+  method translated_properties() = no_repeat translated_properties
 
   method private translate_constant ty = function
     | Integer (i, str_opt) ->
