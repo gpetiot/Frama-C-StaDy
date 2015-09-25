@@ -80,7 +80,6 @@ let extract_guards var p =
 
 let error_term t = Options.abort "term: %a" Debug.pp_term t
 let error_toffset t = Options.abort "toffset: %a" Debug.pp_toffset t
-let error_pred p = Options.abort "pred: %a" Debug.pp_pred p
 
 let is_one = function
   | {term_node=TConst(Integer(i,_))} when Integer.equal i Integer.one -> true
