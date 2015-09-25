@@ -1053,7 +1053,7 @@ class gather_insertions props swd = object(self)
 	Cil.addOffsetLval (Index(exp, NoOffset)) lval
       else raise Unreachable
     in
-    let lengths = Utils.lengths_from_requires kf in
+    let lengths = Infer.lengths_from_requires kf in
     let terms = try Cil_datatype.Varinfo.Hashtbl.find lengths vi with _ -> [] in
     let do_varinfo v =
       let vtype = Utils.unname v.vtype in

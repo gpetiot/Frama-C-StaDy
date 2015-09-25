@@ -32,6 +32,7 @@ PLUGIN_CMO := \
 	unname \
 	function \
 	print \
+	infer \
 	translate \
 	register
 PLUGIN_GUI_CMO 	:= register_gui 
