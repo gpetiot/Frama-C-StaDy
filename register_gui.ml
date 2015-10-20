@@ -85,8 +85,7 @@ let pc_selector
 
 let main main_ui =
   try
-    Register.setup_props_bijection();
-    Register.do_externals();
+    Utils.initialize();
     let compute = Register.compute_props in
     main_ui#register_panel (pc_panel compute);
     main_ui#register_source_selector (pc_selector compute)

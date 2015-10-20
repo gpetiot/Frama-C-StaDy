@@ -18,68 +18,6 @@ let emitter =
   Emitter.create "StaDy" [Emitter.Property_status; Emitter.Funspec]
     ~correctness:[] ~tuning:[]
 
-
-let do_externals() =
-  States.Externals.clear();
-  let p' = Project.create "__stady_externals"  in
-  let mpz_t, externals = Project.on p' (fun () ->
-    let old_verbose = Kernel.Verbose.get() in
-    Kernel.GeneralVerbose.set 0;
-    let file = Options.Share.file ~error:true "externals.c" in
-    let mpz_t_file = File.from_filename file in
-    File.init_from_c_files [mpz_t_file];
-    let tmp_mpz_t = ref None in
-    let externals = ref [] in
-    let set_mpzt = object
-      inherit Cil.nopCilVisitor
-      method !vglob = function
-      | GType({ torig_name = "mpz_t" } as info, _) ->
-	tmp_mpz_t := Some (TNamed(info,[]));
-	Cil.SkipChildren
-      | GFun({svar=vi},_) ->
-	externals := (vi.vname, vi) :: !externals;
-	Cil.SkipChildren
-      | _ -> Cil.SkipChildren
-    end in
-    Cil.visitCilFileSameGlobals set_mpzt (Ast.get ());
-    Kernel.GeneralVerbose.set old_verbose;
-    !tmp_mpz_t, !externals
-  ) () in
-  Project.remove ~project:p' ();
-  Utils.mpz_t_ref := mpz_t;
-  List.iter (fun(a,b) -> States.Externals.add a b) externals
-
-let default_behavior kf =
-  List.find Cil.is_default_behavior (Annotations.behaviors kf)
-
-let setup_props_bijection () =
-  States.Id_To_Property.clear();
-  States.Property_To_Id.clear();
-  (* Bijection: unique_identifier <--> property *)
-  let property_id = ref 0 in
-  let fc_builtin = "__fc_builtin_for_normalization.i" in
-  let on_property property =
-    let pos1,_ = Property.location property in
-    if (Filename.basename pos1.Lexing.pos_fname) <> fc_builtin then
-      begin
-	States.Property_To_Id.add property !property_id;
-	States.Id_To_Property.add !property_id property;
-	property_id := !property_id + 1
-      end
-  in
-  Property_status.iter on_property;
-  let kf = fst (Globals.entry_point()) in
-  let strengthened_precond =
-    try
-      let bhv = default_behavior kf in
-      let typically_preds = Utils.typically_preds bhv in
-      List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
-    with _ -> []
-  in
-  let register p = try Property_status.register p with _ -> () in
-  List.iter register strengthened_precond
-
-
 let properties_of_behavior name =
   let gather p ret =
     match Property.get_behavior p with
@@ -162,7 +100,7 @@ let compute_props ?(props=selected_props()) ?swd () =
   Options.result "%i test cases" (States.Nb_test_cases.get());
   let strengthened_precond =
     try
-      let bhv = default_behavior kf in
+      let bhv = Utils.default_behavior kf in
       let typically_preds = Utils.typically_preds bhv in
       List.map (Property.ip_of_requires kf Kglobal bhv) typically_preds
     with _ -> []
@@ -190,23 +128,9 @@ let compute_props ?(props=selected_props()) ?swd () =
 let run() =
   if Options.Enabled.get() then
     begin
-      setup_props_bijection();
-      do_externals();
-      compute_props ();
-      States.Id_To_Property.clear();
-      States.Property_To_Id.clear();
-      States.Not_Translated_Predicates.clear();
-      Utils.mpz_t_ref := None;
-      States.Externals.clear();
-      Options.PathCrawler_Options.clear();
-      Options.Socket_Type.clear();
-      Options.Timeout.clear();
-      Options.Stop_When_Assert_Violated.clear();
-      Options.Functions.clear();
-      Options.Behaviors.clear();
-      Options.Properties.clear();
-      Options.SWD.clear();
-      Options.Simulate_Functions.clear()
+      Utils.initialize();
+      compute_props();
+      Utils.finalize()
     end
 
 

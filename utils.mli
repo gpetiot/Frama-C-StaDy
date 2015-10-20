@@ -17,7 +17,6 @@ val extract_guards:
 val error_term: Cil_types.term -> 'a
 val error_toffset: Cil_types.term_offset -> 'a
 
-val mpz_t_ref: Cil_types.typ option ref
 val mpz_t: unit -> Cil_types.typ
 
 val binop_to_relation: Cil_types.binop -> Cil_types.relation
@@ -25,3 +24,10 @@ val binop_to_fname: Cil_types.binop -> string
 
 val relation_to_binop: Cil_types.relation -> Cil_types.binop
 val relation_to_string: Cil_types.relation -> string
+
+val default_behavior:
+  Cil_types.kernel_function ->
+  (Cil_types.identified_predicate, Cil_types.identified_term) Cil_types.behavior
+
+val initialize: unit -> unit
+val finalize: unit -> unit
