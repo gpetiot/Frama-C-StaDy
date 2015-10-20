@@ -24,4 +24,4 @@ val binop_to_relation: Cil_types.binop -> Cil_types.relation
 val binop_to_fname: Cil_types.binop -> string
 
 val relation_to_binop: Cil_types.relation -> Cil_types.binop
-val rel_to_string: Cil_types.relation -> string
+val relation_to_string: Cil_types.relation -> string

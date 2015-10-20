@@ -560,7 +560,7 @@ class gather_insertions props swd = object(self)
     | Linteger, Ctype x ->
        let inserts_0, t1' = self#translate_term t1 in
        let inserts_1, t2' = self#translate_term t2 in
-       let varname = Utils.rel_to_string rel in
+       let varname = Utils.relation_to_string rel in
        let var = self#fresh_ctype_varinfo Cil.intType varname in
        let i_2 = Insertion.mk_decl var in
        let zcmp =
@@ -576,7 +576,7 @@ class gather_insertions props swd = object(self)
     | Ctype _, Linteger ->
        let inserts_0, t1' = self#as_logic_type Linteger t1 in
        let inserts_1, t2' = self#translate_term t2 in
-       let varname = Utils.rel_to_string rel in
+       let varname = Utils.relation_to_string rel in
        let var = self#fresh_ctype_varinfo Cil.intType varname in
        let i_4 = Insertion.mk_decl var in
        let i_5 = self#ccmp (Cil.var var) t1' t2' in

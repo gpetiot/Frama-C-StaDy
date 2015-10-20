@@ -136,7 +136,7 @@ let relation_to_binop = function
   | Req -> Eq
   | Rneq -> Ne
 
-let rel_to_string = function
+let relation_to_string = function
   | Rlt -> "lt"
   | Rgt -> "gt"
   | Rle -> "le"
