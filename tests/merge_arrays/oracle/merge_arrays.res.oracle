@@ -635,7 +635,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         __sd_and_10 = j <= l2;
       }
       if(! __sd_and_10) {
-        pathcrawler_assert_exception("not established",1);
+        pathcrawler_assert_exception("not established",0);
       }
       mpz_t __sd_Z_cst_21;
       __gmpz_init_set_str(__sd_Z_cst_21,"0",10);
@@ -717,7 +717,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
           __sd_and_11 = j <= l2;
         }
         if(! __sd_and_11) {
-          pathcrawler_assert_exception("not preserved",1);
+          pathcrawler_assert_exception("not preserved",0);
         }
         mpz_t __sd_Z_cst_22;
         __gmpz_init_set_str(__sd_Z_cst_22,"0",10);

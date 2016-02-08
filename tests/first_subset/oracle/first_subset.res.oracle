@@ -91,7 +91,7 @@ void firstSubset(int *s, int n)
         __sd_and_0 = k <= n;
       }
       if(! __sd_and_0) {
-        pathcrawler_assert_exception("not established",2);
+        pathcrawler_assert_exception("not established",3);
       }
       int __sd_forall_1;
       __sd_forall_1 = 1;
@@ -180,7 +180,7 @@ void firstSubset(int *s, int n)
           __sd_and_1 = k <= n;
         }
         if(! __sd_and_1) {
-          pathcrawler_assert_exception("not preserved",2);
+          pathcrawler_assert_exception("not preserved",3);
         }
         int __sd_forall_2;
         __sd_forall_2 = 1;

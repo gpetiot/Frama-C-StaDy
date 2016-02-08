@@ -264,7 +264,7 @@ int nextSubset(int *s, int n)
         __sd_and_3 = i <= n;
       }
       if(! __sd_and_3) {
-        pathcrawler_assert_exception("not established",8);
+        pathcrawler_assert_exception("not established",10);
       }
       int __sd_forall_4;
       __sd_forall_4 = 1;
@@ -321,7 +321,7 @@ int nextSubset(int *s, int n)
         __gmpz_clear(__sd_Z_to_Z_25);
       }
       if(! __sd_forall_4) {
-        pathcrawler_assert_exception("not established",10);
+        pathcrawler_assert_exception("not established",12);
       }
       while (1) {
         if (! (i < n)) break;mpz_t __sd_Z_to_Z_31;
@@ -336,7 +336,7 @@ int nextSubset(int *s, int n)
         int __sd_variant_pos_0;
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_2,0);
         if(__sd_variant_pos_0 < 0) {
-          pathcrawler_assert_exception("non positive",9);
+          pathcrawler_assert_exception("non positive",11);
         }
         *(s + i) = 0;
         i ++;mpz_t __sd_Z_to_Z_23;
@@ -360,7 +360,7 @@ int nextSubset(int *s, int n)
           __sd_and_4 = i <= n;
         }
         if(! __sd_and_4) {
-          pathcrawler_assert_exception("not preserved",8);
+          pathcrawler_assert_exception("not preserved",10);
         }
         int __sd_forall_5;
         __sd_forall_5 = 1;
@@ -417,7 +417,7 @@ int nextSubset(int *s, int n)
           __gmpz_clear(__sd_Z_to_Z_28);
         }
         if(! __sd_forall_5) {
-          pathcrawler_assert_exception("not preserved",10);
+          pathcrawler_assert_exception("not preserved",12);
         }
         mpz_t __sd_Z_to_Z_33;
         __gmpz_init_set_si(__sd_Z_to_Z_33,n);
@@ -431,7 +431,7 @@ int nextSubset(int *s, int n)
         int __sd_variant_decr_0;
         __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_3,__sd_Z_sub_2);
         if(__sd_variant_decr_0 >= 0) {
-          pathcrawler_assert_exception("non decreasing",9);
+          pathcrawler_assert_exception("non decreasing",11);
         }
         __gmpz_clear(__sd_Z_sub_2);
         }
@@ -495,7 +495,7 @@ int nextSubset(int *s, int n)
           __gmpz_clear(__sd_Z_to_Z_3);
         }
         if(! __sd_forall_1) {
-          pathcrawler_assert_exception("",11);
+          pathcrawler_assert_exception("",13);
         }
         mpz_t __sd_Z_cst_6;
         __gmpz_init_set_str(__sd_Z_cst_6,"1",10);
@@ -515,7 +515,7 @@ int nextSubset(int *s, int n)
           __sd_and_0 = __retres < old_n;
         }
         if(! __sd_and_0) {
-          pathcrawler_assert_exception("",13);
+          pathcrawler_assert_exception("",14);
         }
         int __sd_implies_0;
         __sd_implies_0 = 1;

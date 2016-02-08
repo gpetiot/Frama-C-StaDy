@@ -1,7 +1,13 @@
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/all4/all4.c (with preprocessing)
 tests/all4/all4.c:99:[kernel] warning: Floating-point constant 0.1 is not represented exactly. Will use 0x1.999999999999ap-4. See documentation for option -warn-decimal-float
-[kernel] Parsing FRAMAC_SHARE/builtin.c (with preprocessing)
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin.c (with preprocessing)
+FRAMAC_SHARE/libc/__fc_builtin.c:37:[kernel] warning: found two contracts. Merging them
+FRAMAC_SHARE/libc/__fc_builtin.h:52:[kernel] warning: location Frama_C_entropy_source is not present in all assigns clauses
+FRAMAC_SHARE/libc/__fc_builtin.c:49:[stady] warning: \is_finite(min) ∧ \is_finite(max) unsupported
+FRAMAC_SHARE/libc/__fc_builtin.c:49:[stady] warning: \is_finite(\result) ∧ \old(min) ≤ \result ≤ \old(max) unsupported
+FRAMAC_SHARE/libc/__fc_builtin.c:55:[stady] warning: \is_finite(min) ∧ \is_finite(max) unsupported
+FRAMAC_SHARE/libc/__fc_builtin.c:55:[stady] warning: \is_finite(\result) ∧ \old(min) ≤ \result ≤ \old(max) unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -60,6 +66,7 @@ typedef int T2;
 typedef int T3;
 typedef T1 T4[2];
 typedef T1 T5[12];
+typedef unsigned int size_t;
 int Frama_C_interval(int min, int max);
 
 T1 F2(T1 f3, T5 *f4, T5 *f5);
@@ -289,7 +296,7 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
           __gmpz_clear(__sd_Z_to_Z_0);
           __gmpz_clear(__sd_Z_cst_8);
           if(! (__sd_ne_0 != 0)) {
-            pathcrawler_assert_exception("",1);
+            pathcrawler_assert_exception("",25);
           }
           ;
         }
@@ -380,6 +387,135 @@ void F8(void)
 }
 
 int Frama_C_entropy_source;
+/*@ requires \valid(p+(0 .. l-1));
+    ensures \initialized(\old(p)+(0 .. \old(l)-1));
+    assigns *(p+(0 .. l-1)), Frama_C_entropy_source;
+    assigns *(p+(0 .. l-1)) \from Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern void Frama_C_make_unknown(char *p, size_t l);
+
+int Frama_C_nondet(int a, int b);
+
+void *Frama_C_nondet_ptr(void *a, void *b);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern int Frama_C_interval_split(int min, int max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern unsigned char Frama_C_unsigned_char_interval(unsigned char min,
+                                                    unsigned char max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern char Frama_C_char_interval(char min, char max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern unsigned short Frama_C_unsigned_short_interval(unsigned short min,
+                                                      unsigned short max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern short Frama_C_short_interval(short min, short max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern unsigned int Frama_C_unsigned_int_interval(unsigned int min,
+                                                  unsigned int max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern int Frama_C_int_interval(int min, int max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern unsigned long Frama_C_unsigned_long_interval(unsigned long min,
+                                                    unsigned long max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern long Frama_C_long_interval(long min, long max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern unsigned long long Frama_C_unsigned_long_long_interval(unsigned long long min,
+                                                              unsigned long long max);
+
+/*@ requires min <= max;
+    ensures \old(min) <= \result <= \old(max);
+    assigns \result, Frama_C_entropy_source;
+    assigns \result \from min, max, Frama_C_entropy_source;
+    assigns Frama_C_entropy_source \from Frama_C_entropy_source;
+ */
+extern long long Frama_C_long_long_interval(long long min, long long max);
+
+float Frama_C_float_interval(float min, float max);
+
+double Frama_C_double_interval(double min, double max);
+
+/*@ assigns *((char *)dest+(0 .. n-1)), \result;
+    assigns *((char *)dest+(0 .. n-1)) \from *((char *)src+(0 .. n-1));
+    assigns \result \from dest;
+ */
+extern void *Frama_C_memcpy(void *dest, void const *src, size_t n);
+
+/*@ assigns *((char *)p+(0 .. s-1)), \result;
+    assigns *((char *)p+(0 .. s-1)) \from c;
+    assigns \result \from p;
+ */
+extern void *Frama_C_memset(void *p, int c, size_t s);
+
+/*@ requires \false;
+    assigns \nothing; */
+extern  __attribute__((__noreturn__)) void Frama_C_abort(void);
+
+/*@ assigns \result;
+    assigns \result \from p; */
+extern size_t Frama_C_offset(void const *p);
+
 /*@ assigns Frama_C_entropy_source;
     assigns Frama_C_entropy_source \from Frama_C_entropy_source;
  */
@@ -405,6 +541,19 @@ int Frama_C_nondet(int a, int b)
     int tmp;
     Frama_C_update_entropy();
     if (Frama_C_entropy_source) tmp = a; else tmp = b;
+    {
+      int __sd_or_0;
+      __sd_or_0 = tmp == old_a;
+      if(__sd_or_0) {
+        
+      }
+      else {
+        __sd_or_0 = tmp == old_b;
+      }
+      if(! __sd_or_0) {
+        pathcrawler_assert_exception("",53);
+      }
+    }
     return tmp;
   }
 }
@@ -434,12 +583,28 @@ void *Frama_C_nondet_ptr(void *a, void *b)
     int tmp;
     tmp = Frama_C_nondet((int)a,(int)b);
     __retres = (void *)tmp;
+    {
+      int __sd_or_1;
+      __sd_or_1 = (unsigned int)__retres == (unsigned int)old_a;
+      if(__sd_or_1) {
+        
+      }
+      else {
+        __sd_or_1 = (unsigned int)__retres == (unsigned int)old_b;
+      }
+      if(! __sd_or_1) {
+        pathcrawler_assert_exception("",58);
+      }
+    }
     return __retres;
   }
 }
 
 int Frama_C_interval(int min, int max)
 {
+  if(! (min <= max)) {
+    pathcrawler_assert_exception("",27);
+  }
   int old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
@@ -469,7 +634,7 @@ int Frama_C_interval(int min, int max)
         __sd_and_2 = r <= old_max;
       }
       if(! __sd_and_2) {
-        pathcrawler_assert_exception("",9);
+        pathcrawler_assert_exception("",121);
       }
     }
     return r;
@@ -478,6 +643,9 @@ int Frama_C_interval(int min, int max)
 
 float Frama_C_float_interval(float min, float max)
 {
+  if(! (min <= max)) {
+    pathcrawler_assert_exception("",9);
+  }
   int old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
@@ -496,12 +664,16 @@ float Frama_C_float_interval(float min, float max)
     float tmp;
     Frama_C_update_entropy();
     if (Frama_C_entropy_source) tmp = min; else tmp = max;
+    
     return tmp;
   }
 }
 
 double Frama_C_double_interval(double min, double max)
 {
+  if(! (min <= max)) {
+    pathcrawler_assert_exception("",10);
+  }
   int old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
@@ -520,6 +692,7 @@ double Frama_C_double_interval(double min, double max)
     double tmp;
     Frama_C_update_entropy();
     if (Frama_C_entropy_source) tmp = min; else tmp = max;
+    
     return tmp;
   }
 }
@@ -542,6 +715,8 @@ int __sd_Frama_C_interval_mod_1(int min, int max) {
     old_ptr_G2 = G2;
     old_G1 = G1;
     old_ptr_G1 = G1;
+    Frama_C_entropy_source = nondet_sint();
+    __retres = nondet_sint();
     int __sd_and_1;
     __sd_and_1 = old_min <= __retres;
     if(__sd_and_1) {
@@ -571,6 +746,8 @@ int __sd_Frama_C_interval_mod_0(int min, int max) {
     old_ptr_G2 = G2;
     old_G1 = G1;
     old_ptr_G1 = G1;
+    Frama_C_entropy_source = nondet_sint();
+    __retres = nondet_sint();
     int __sd_and_0;
     __sd_and_0 = old_min <= __retres;
     if(__sd_and_0) {
@@ -585,65 +762,65 @@ int __sd_Frama_C_interval_mod_0(int min, int max) {
 
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_all4_F7.c (with preprocessing)
-__sd_instru_all4_F7.c:218:[kernel] warning: Floating-point constant 0.1 is not represented exactly. Will use 0x1.999999999999ap-4. See documentation for option -warn-decimal-float
+__sd_instru_all4_F7.c:219:[kernel] warning: Floating-point constant 0.1 is not represented exactly. Will use 0x1.999999999999ap-4. See documentation for option -warn-decimal-float
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_all4_F7.c (with preprocessing)
 [pc] Starting lanceur_F7 (isc version)
 [pc] Starting lanceur_pathcrawler__F7_precond (isc version)
 [pc] Starting lanceur_F7 (isc version)
 [stady] all-paths: true
-[stady] 53 test cases
+[stady] 48 test cases
 [stady] Non-Compliance of assert V22 ≢ 0; 
         LOCATION: tests/all4/all4.c:109
-        TEST DRIVER: testcases___sd_instru_all4_F7/F7/testdrivers/TC_4.c
-        Frama_C_entropy_source = -124915
-        G1[0] = 290
-        G1[10] = -379
-        G1[11] = -275
-        G1[1] = -127
-        G1[2] = 322
-        G1[3] = 282
-        G1[4] = 24
-        G1[5] = -133
-        G1[6] = -394
-        G1[7] = 62
-        G1[8] = 171
-        G1[9] = 228
-        G2[0] = -113
-        G2[10] = -84
-        G2[11] = 418
-        G2[1] = -472
-        G2[2] = -140
-        G2[3] = -128
-        G2[4] = -190
-        G2[5] = -319
-        G2[6] = -461
-        G2[7] = -157
-        G2[8] = -408
-        G2[9] = -351
-        f17 = 244
-        f18 = 0.29999999999999999
-        f19[0][0] = 118
-        f19[0][10] = -120
-        f19[0][11] = 144
-        f19[0][1] = 176
-        f19[0][2] = 34
-        f19[0][3] = -122
-        f19[0][4] = 175
-        f19[0][5] = 393
-        f19[0][6] = -179
-        f19[0][7] = -263
-        f19[0][8] = -285
-        f19[0][9] = 252
-        f20[0][0] = 0.40000000000000002
-        f20[0][10] = -367
-        f20[0][11] = -196
-        f20[0][1] = -453
-        f20[0][2] = -482
-        f20[0][3] = 438
-        f20[0][4] = -8
-        f20[0][5] = 284
-        f20[0][6] = 227
-        f20[0][7] = -355
-        f20[0][8] = -289
-        f20[0][9] = 78
+        TEST DRIVER: testcases___sd_instru_all4_F7/F7/testdrivers/TC_3.c
+        Frama_C_entropy_source = 43531
+        G1[0] = -1.7976931348623157e+308
+        G1[10] = -1.7976931348623157e+308
+        G1[11] = -1.7976931348623157e+308
+        G1[1] = -1.7976931348623157e+308
+        G1[2] = -1.7976931348623157e+308
+        G1[3] = -1.7976931348623157e+308
+        G1[4] = -1.7976931348623157e+308
+        G1[5] = -1.7976931348623157e+308
+        G1[6] = -1.7976931348623157e+308
+        G1[7] = -1.7976931348623157e+308
+        G1[8] = -1.7976931348623157e+308
+        G1[9] = -1.7976931348623157e+308
+        G2[0] = -1.7976931348623157e+308
+        G2[10] = -1.7976931348623157e+308
+        G2[11] = -1.7976931348623157e+308
+        G2[1] = -1.7976931348623157e+308
+        G2[2] = -1.7976931348623157e+308
+        G2[3] = -1.7976931348623157e+308
+        G2[4] = -1.7976931348623157e+308
+        G2[5] = -1.7976931348623157e+308
+        G2[6] = -1.7976931348623157e+308
+        G2[7] = -1.7976931348623157e+308
+        G2[8] = -1.7976931348623157e+308
+        G2[9] = -1.7976931348623157e+308
+        f17 = -1.7976931348623157e+308
+        f18 = -4.9406564584124654e-324
+        f19[0][0] = -1.7976931348623157e+308
+        f19[0][10] = -1.7976931348623157e+308
+        f19[0][11] = -1.7976931348623157e+308
+        f19[0][1] = -1.7976931348623157e+308
+        f19[0][2] = -1.7976931348623157e+308
+        f19[0][3] = -1.7976931348623157e+308
+        f19[0][4] = -1.7976931348623157e+308
+        f19[0][5] = -1.7976931348623157e+308
+        f19[0][6] = -1.7976931348623157e+308
+        f19[0][7] = -1.7976931348623157e+308
+        f19[0][8] = -1.7976931348623157e+308
+        f19[0][9] = -1.7976931348623157e+308
+        f20[0][0] = -1.7976931348623157e+308
+        f20[0][10] = -1.7976931348623157e+308
+        f20[0][11] = 4.9406564584124654e-324
+        f20[0][1] = -1.7976931348623157e+308
+        f20[0][2] = -1.7976931348623157e+308
+        f20[0][3] = -1.7976931348623157e+308
+        f20[0][4] = -1.7976931348623157e+308
+        f20[0][5] = -1.7976931348623157e+308
+        f20[0][6] = -1.7976931348623157e+308
+        f20[0][7] = -1.7976931348623157e+308
+        f20[0][8] = -1.7976931348623157e+308
+        f20[0][9] = -1.7976931348623157e+308

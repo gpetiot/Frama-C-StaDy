@@ -212,7 +212,7 @@ void f(int x)
               __sd_and_4 = __sd_lt_1 < 0;
             }
             if(! __sd_and_4) {
-              pathcrawler_assert_exception("",14);
+              pathcrawler_assert_exception("",13);
             }
           }
           
@@ -260,7 +260,7 @@ void f(int x)
             __sd_and_7 = __sd_le_13 <= 0;
           }
           if(! __sd_and_7) {
-            pathcrawler_assert_exception("",12);
+            pathcrawler_assert_exception("",11);
           }
         }
         
@@ -308,7 +308,7 @@ void f(int x)
           __sd_and_10 = __sd_le_19 <= 0;
         }
         if(! __sd_and_10) {
-          pathcrawler_assert_exception("",6);
+          pathcrawler_assert_exception("",4);
         }
       }
       mpz_t __sd_Z_to_Z_23;
@@ -329,7 +329,7 @@ void f(int x)
         __gmpz_clear(__sd_Z_to_Z_24);
         __gmpz_clear(__sd_Z_cst_24);
         if(! (__sd_ne_1 != 0)) {
-          pathcrawler_assert_exception("",13);
+          pathcrawler_assert_exception("",12);
         }
       }
       

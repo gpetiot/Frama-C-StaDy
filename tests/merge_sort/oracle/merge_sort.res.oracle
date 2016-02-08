@@ -80,7 +80,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   }
   __gmpz_clear(__sd_Z_sub_0);
   if(! __sd_valid_0) {
-    pathcrawler_assert_exception("",22);
+    pathcrawler_assert_exception("",23);
   }
   mpz_t __sd_Z_to_Z_1;
   __gmpz_init_set_si(__sd_Z_to_Z_1,iEnd);
@@ -108,7 +108,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   }
   __gmpz_clear(__sd_Z_sub_1);
   if(! __sd_valid_1) {
-    pathcrawler_assert_exception("",23);
+    pathcrawler_assert_exception("",24);
   }
   int *old_A;
   int *old_ptr_A;
@@ -230,7 +230,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         int __sd_variant_pos_0;
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_8,0);
         if(__sd_variant_pos_0 < 0) {
-          pathcrawler_assert_exception("non positive",4);
+          pathcrawler_assert_exception("non positive",3);
         }
         if (i0 < iRight) {
           if (i1 >= iEnd) goto _LOR;
@@ -320,7 +320,7 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
         int __sd_variant_decr_0;
         __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_9,__sd_Z_sub_8);
         if(__sd_variant_decr_0 >= 0) {
-          pathcrawler_assert_exception("non decreasing",4);
+          pathcrawler_assert_exception("non decreasing",3);
         }
         __gmpz_clear(__sd_Z_sub_8);
         }
@@ -446,7 +446,7 @@ void CopyArray(int *A, int *B, int n)
         __sd_and_6 = i <= n;
       }
       if(! __sd_and_6) {
-        pathcrawler_assert_exception("not established",16);
+        pathcrawler_assert_exception("not established",17);
       }
       while (1) {
         if (! (i < n)) break;mpz_t __sd_Z_to_Z_26;
@@ -478,7 +478,7 @@ void CopyArray(int *A, int *B, int n)
           __sd_and_7 = i <= n;
         }
         if(! __sd_and_7) {
-          pathcrawler_assert_exception("not preserved",16);
+          pathcrawler_assert_exception("not preserved",17);
         }
         mpz_t __sd_Z_to_Z_28;
         __gmpz_init_set_si(__sd_Z_to_Z_28,n);
@@ -579,7 +579,7 @@ void BottomUpSort(int n, int *A, int *B)
   __gmpz_clear(__sd_Z_cst_10);
   __gmpz_clear(__sd_Z_sub_15);
   if(! __sd_valid_5) {
-    pathcrawler_assert_exception("",18);
+    pathcrawler_assert_exception("",19);
   }
   int old_n;
   old_n = n;
@@ -653,7 +653,7 @@ void BottomUpSort(int n, int *A, int *B)
         __sd_and_10 = __sd_le_7 <= 0;
       }
       if(! __sd_and_10) {
-        pathcrawler_assert_exception("not established",3);
+        pathcrawler_assert_exception("not established",2);
       }
       while (1) {
         if (! (width < n)) break;mpz_t __sd_Z_to_Z_52;
@@ -847,7 +847,7 @@ void BottomUpSort(int n, int *A, int *B)
           __sd_and_11 = __sd_le_9 <= 0;
         }
         if(! __sd_and_11) {
-          pathcrawler_assert_exception("not preserved",3);
+          pathcrawler_assert_exception("not preserved",2);
         }
         mpz_t __sd_Z_to_Z_54;
         __gmpz_init_set_si(__sd_Z_to_Z_54,n);
@@ -960,7 +960,7 @@ void merge_sort(int *table, int l, int *ret)
         __gmpz_clear(__sd_Z_sub_24);
       }
       if(! __sd_forall_0) {
-        pathcrawler_assert_exception("",5);
+        pathcrawler_assert_exception("",4);
       }
     }
     free(old_ptr_table);

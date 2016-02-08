@@ -172,7 +172,7 @@ void f(int *t, int x)
         __sd_and_1 = __sd_le_3 <= 0;
       }
       if(! __sd_and_1) {
-        pathcrawler_assert_exception("3$not established",1);
+        pathcrawler_assert_exception("3$not established",0);
       }
       mpz_t __sd_Z_to_Z_8;
       __gmpz_init_set_si(__sd_Z_to_Z_8,found);
@@ -235,7 +235,7 @@ void f(int *t, int x)
           __sd_and_2 = __sd_le_5 <= 0;
         }
         if(! __sd_and_2) {
-          pathcrawler_assert_exception("3$not preserved",1);
+          pathcrawler_assert_exception("3$not preserved",0);
         }
         mpz_t __sd_Z_to_Z_10;
         __gmpz_init_set_si(__sd_Z_to_Z_10,found);

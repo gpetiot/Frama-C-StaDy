@@ -99,7 +99,7 @@ int num_of(int n, int *t)
         __sd_and_0 = i <= n;
       }
       if(! __sd_and_0) {
-        pathcrawler_assert_exception("not established",2);
+        pathcrawler_assert_exception("not established",3);
       }
       mpz_t __sd_Z_to_Z_6;
       __gmpz_init_set_si(__sd_Z_to_Z_6,num);
@@ -189,7 +189,7 @@ int num_of(int n, int *t)
           __sd_and_2 = i <= n;
         }
         if(! __sd_and_2) {
-          pathcrawler_assert_exception("not preserved",2);
+          pathcrawler_assert_exception("not preserved",3);
         }
         mpz_t __sd_Z_to_Z_9;
         __gmpz_init_set_si(__sd_Z_to_Z_9,num);

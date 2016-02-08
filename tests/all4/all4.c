@@ -1,5 +1,5 @@
 /* run.config
-STDOPT: +"-main F7 /usr/local/share/frama-c/builtin.c -cpp-extra-args=\"-I /usr/local/share/frama-c/\" -stady -stady-sim-fct Frama_C_interval -stady-stop-when-assert-violated -stady-msg-key generated-c,generated-pl"
+STDOPT: +"-main F7 /usr/local/share/frama-c/libc/__fc_builtin.c -cpp-extra-args=\"-I /usr/local/share/frama-c/\" -stady -stady-sim-fct Frama_C_interval -stady-stop-when-assert-violated -stady-msg-key generated-c,generated-pl"
 */
 
 typedef double T1;

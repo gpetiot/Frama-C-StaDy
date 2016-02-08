@@ -61,7 +61,7 @@ void sort(int *A, int n)
   __gmpz_clear(__sd_Z_to_Z_0);
   __gmpz_clear(__sd_Z_cst_0);
   if(! (__sd_eq_0 == 0)) {
-    pathcrawler_assert_exception("28$",6);
+    pathcrawler_assert_exception("28$",7);
   }
   mpz_t __sd_Z_cst_1;
   __gmpz_init_set_str(__sd_Z_cst_1,"0",10);
@@ -180,7 +180,7 @@ void f(int *t, int k)
       __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_cst_4);
       __gmpz_clear(__sd_Z_cst_4);
       if(! (*(old_t + __sd_to_ctype_1) <= *(old_t + __sd_to_ctype_2))) {
-        pathcrawler_assert_exception("28$",3);
+        pathcrawler_assert_exception("28$",5);
       }
     }
     free(old_ptr_t);

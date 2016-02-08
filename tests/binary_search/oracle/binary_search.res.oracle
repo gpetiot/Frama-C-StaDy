@@ -167,7 +167,7 @@ int binary_search(int *arr, int length, int query)
         __sd_and_2 = __sd_le_2 <= 0;
       }
       if(! __sd_and_2) {
-        pathcrawler_assert_exception("not established",3);
+        pathcrawler_assert_exception("not established",4);
       }
       mpz_t __sd_Z_to_Z_17;
       __gmpz_init_set_si(__sd_Z_to_Z_17,low);
@@ -220,7 +220,7 @@ int binary_search(int *arr, int length, int query)
         int __sd_variant_pos_0;
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_5,0);
         if(__sd_variant_pos_0 < 0) {
-          pathcrawler_assert_exception("non positive",6);
+          pathcrawler_assert_exception("non positive",7);
         }
         {
           int mean;
@@ -306,7 +306,7 @@ int binary_search(int *arr, int length, int query)
               __sd_implies_3 = __sd_forall_3;
             }
             if(! __sd_implies_3) {
-              pathcrawler_assert_exception("",7);
+              pathcrawler_assert_exception("",8);
             }
             ;
           }
@@ -344,7 +344,7 @@ int binary_search(int *arr, int length, int query)
           __sd_and_3 = __sd_le_4 <= 0;
         }
         if(! __sd_and_3) {
-          pathcrawler_assert_exception("not preserved",3);
+          pathcrawler_assert_exception("not preserved",4);
         }
         mpz_t __sd_Z_to_Z_21;
         __gmpz_init_set_si(__sd_Z_to_Z_21,low);
@@ -396,7 +396,7 @@ int binary_search(int *arr, int length, int query)
         int __sd_variant_decr_0;
         __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_6,__sd_Z_sub_5);
         if(__sd_variant_decr_0 >= 0) {
-          pathcrawler_assert_exception("non decreasing",6);
+          pathcrawler_assert_exception("non decreasing",7);
         }
         __gmpz_clear(__sd_Z_sub_5);
         }
@@ -489,7 +489,7 @@ int binary_search(int *arr, int length, int query)
           __sd_implies_1 = *(old_arr + __sd_to_ctype_3) == old_query;
         }
         if(! __sd_implies_1) {
-          pathcrawler_assert_exception("",5);
+          pathcrawler_assert_exception("",6);
         }
       }
       free(old_ptr_arr);

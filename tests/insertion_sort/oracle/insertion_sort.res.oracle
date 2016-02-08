@@ -94,7 +94,7 @@ void insertion_sort(int *t, int n)
         __sd_and_2 = i <= n;
       }
       if(! __sd_and_2) {
-        pathcrawler_assert_exception("not established",3);
+        pathcrawler_assert_exception("not established",4);
       }
       int __sd_forall_3;
       __sd_forall_3 = 1;
@@ -279,7 +279,7 @@ void insertion_sort(int *t, int n)
           __sd_and_3 = i <= n;
         }
         if(! __sd_and_3) {
-          pathcrawler_assert_exception("not preserved",3);
+          pathcrawler_assert_exception("not preserved",4);
         }
         int __sd_forall_4;
         __sd_forall_4 = 1;

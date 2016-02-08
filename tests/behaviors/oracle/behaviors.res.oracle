@@ -97,7 +97,7 @@ void f(int x, int y, int z)
           __sd_and_1 = old_z <= old_y;
         }
         if(! __sd_and_1) {
-          pathcrawler_assert_exception("",1);
+          pathcrawler_assert_exception("",3);
         }
       }
       if(z >= x && z >= y) {

@@ -948,6 +948,7 @@ class gather_insertions props swd = object(self)
     | Pdangling _
     | Pallocable _
     | Pfreeable _
+    | Pvalid_function _
     | Psubtype _ -> raise Unsupported
 
   (* modify result_varinfo when the function returns something *)
@@ -1431,7 +1432,6 @@ class gather_insertions props swd = object(self)
 	 let i1,i2,i3 = Globals.Vars.fold_in_file_order save_global ([],[],[])in
 	 let i1,i2,i3 = List.fold_left save_formal (i1,i2,i3) formals in
 	 let begin_save = i1 @ i2 and end_save = i3 in
-	 let affects = self#assigns_swd [bhv.b_assigns] in
 	 let ensures = bhv.b_post_cond in
 	 let on_post ins (_,{ip_content=p}) =
 	   let p = match ret with
@@ -1444,6 +1444,7 @@ class gather_insertions props swd = object(self)
 	   ins @ (self#pc_assume p)
 	 in
 	 let posts = List.fold_left on_post [] ensures in
+	 let affects = self#assigns_swd [bhv.b_assigns] in
 	 let i_then = begin_save @ affects @ posts @ end_save in
 	 let ins_bhv = Insertion.mk_if e_assumes i_then [] in
 	 ins @ ins_assumes @ [ins_bhv]
