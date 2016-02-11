@@ -81,6 +81,7 @@ and pred env = function
   | Pat (p,l) -> Pat (pnamed env p, label env l)
   | Pvalid_read (l,t) -> Pvalid_read (label env l, term env t)
   | Pvalid (l,t) -> Pvalid (label env l, term env t)
+  | Pvalid_function t -> Pvalid_function (term env t)
   | Pinitialized (l,t) -> Pinitialized(label env l, term env t)
   | Pdangling (l,t) -> Pdangling(label env l, term env t)
   | Pallocable (l,t) -> Pallocable (label env l, term env t)

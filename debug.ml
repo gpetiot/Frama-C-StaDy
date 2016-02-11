@@ -115,7 +115,8 @@ class debug_ast () = object(self)
   | Pvalid_read(l,t) -> Format.fprintf fmt "Pvalid_read(%a,%a)"
     self#logic_label l self#term t
   | Pvalid(l,t) -> Format.fprintf fmt "Pvalid(%a,%a)"
-    self#logic_label l self#term t
+     self#logic_label l self#term t
+  | Pvalid_function(t) -> Format.fprintf fmt "Pvalid_function(%a)" self#term t
   | Pinitialized(l,t) -> Format.fprintf fmt "Pinitialized(%a,%a)"
     self#logic_label l self#term t
   | Pdangling(l,t) -> Format.fprintf fmt "Pdangling(%a,%a)"
