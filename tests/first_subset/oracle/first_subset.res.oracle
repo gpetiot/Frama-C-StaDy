@@ -48,11 +48,11 @@ int firstSubset_precond(int *s, int n)
   return 1;
 }
 
-/*@ requires n >= 0 && n <= 3 && \valid(s+(0 .. n-1));
+/*@ requires n >= 0 && n <= 3 && \valid(s + (0 .. n - 1));
     ensures
       \forall integer i;
-        0 <= i < \old(n) ==> *(\old(s)+i) == 0 || *(\old(s)+i) == 1;
-    assigns *(s+(0 .. n-1));
+        0 <= i < \old(n) ==> *(\old(s) + i) == 0 || *(\old(s) + i) == 1;
+    assigns *(s + (0 .. n - 1));
  */
 void firstSubset(int *s, int n)
 {
@@ -313,7 +313,7 @@ void firstSubset(int *s, int n)
         __gmpz_clear(__sd_Z_to_Z_0);
       }
       if(! __sd_forall_0) {
-        pathcrawler_assert_exception("",5);
+        pathcrawler_assert_exception("",6);
       }
     }
     free(old_ptr_s);

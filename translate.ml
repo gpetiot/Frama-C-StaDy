@@ -554,7 +554,8 @@ class gather_insertions props swd = object(self)
     | Lreal -> raise Unsupported
     | _ -> aux()
 
-  method private translate_pnamed p = self#translate_predicate p.content
+  method private translate_predicate p =
+    self#translate_predicate_node p.pred_content
 
   method private translate_rel rel t1 t2 = match t1.term_type, t2.term_type with
     | Linteger, Ctype x ->
@@ -590,11 +591,11 @@ class gather_insertions props swd = object(self)
 
   method private translate_and p q =
     let var = self#fresh_pred_varinfo "and" in
-    let inserts_0, pred1_var = self#translate_pnamed p in
+    let inserts_0, pred1_var = self#translate_predicate p in
     let insert_1 = Insertion.mk_decl var in
     let lvar = Cil.var var in
     let insert_2 = instru_affect lvar pred1_var in
-    let inserts_b_0, pred2_var = self#translate_pnamed q in
+    let inserts_b_0, pred2_var = self#translate_predicate q in
     let insert_b_1 = instru_affect lvar pred2_var in
     let e_var = Cil.evar var in
     let insert_3 = Insertion.mk_if e_var (inserts_b_0 @ [insert_b_1]) [] in
@@ -602,11 +603,11 @@ class gather_insertions props swd = object(self)
 
   method private translate_or p q =
     let var = self#fresh_pred_varinfo "or"  in
-    let inserts_0, pred1_var = self#translate_pnamed p in
+    let inserts_0, pred1_var = self#translate_predicate p in
     let insert_1 = Insertion.mk_decl var in
     let lvar = Cil.var var in
     let insert_2 = instru_affect lvar pred1_var in
-    let inserts_b_0, pred2_var = self#translate_pnamed q in
+    let inserts_b_0, pred2_var = self#translate_predicate q in
     let insert_b_1 = instru_affect lvar pred2_var in
     let e_var = Cil.evar var in
     let insert_3 = Insertion.mk_if e_var [] (inserts_b_0 @ [insert_b_1]) in
@@ -617,15 +618,15 @@ class gather_insertions props swd = object(self)
     let insert_0 = Insertion.mk_decl var in
     let lvar = Cil.var var in
     let insert_1 = instru_affect lvar one in
-    let inserts_2, pred1_var = self#translate_pnamed p in
-    let inserts_b_0, pred2_var = self#translate_pnamed q in
+    let inserts_2, pred1_var = self#translate_predicate p in
+    let inserts_b_0, pred2_var = self#translate_predicate q in
     let insert_b_1 = instru_affect lvar pred2_var in
     let insert_3 = Insertion.mk_if pred1_var (inserts_b_0 @ [insert_b_1]) [] in
     insert_0 :: insert_1 :: inserts_2 @ [insert_3], Cil.evar var
 
   method private translate_equiv p q =
-    let inserts_0, pred1_var = self#translate_pnamed p in
-    let inserts_1, pred2_var = self#translate_pnamed q in
+    let inserts_0, pred1_var = self#translate_predicate p in
+    let inserts_1, pred2_var = self#translate_predicate q in
     let not_pred1_var = Cil.new_exp ~loc (UnOp(LNot, pred1_var, Cil.intType)) in
     let not_pred2_var = Cil.new_exp ~loc (UnOp(LNot, pred2_var, Cil.intType)) in
     let exp1 = Cil.mkBinOp ~loc LOr not_pred1_var pred2_var in
@@ -633,7 +634,7 @@ class gather_insertions props swd = object(self)
     inserts_0 @ inserts_1, Cil.mkBinOp ~loc LAnd exp1 exp2
 
   method private translate_not p =
-    let ins, p' = self#translate_pnamed p in
+    let ins, p' = self#translate_predicate p in
     ins, Cil.new_exp ~loc (UnOp(LNot, p', Cil.intType))
 
   method private translate_pif t p q =
@@ -652,11 +653,11 @@ class gather_insertions props swd = object(self)
 	 cmp Rneq t_var zero, [], []
       | _ -> raise Unreachable
     in
-    let inserts_then_0, pred1_var = self#translate_pnamed p in
+    let inserts_then_0, pred1_var = self#translate_predicate p in
     let lres_var = Cil.var res_var in
     let insert_then_1 = instru_affect lres_var pred1_var in
     let inserts_then = inserts_then_0 @ [insert_then_1] in
-    let inserts_else_0, pred2_var = self#translate_pnamed q in
+    let inserts_else_0, pred2_var = self#translate_predicate q in
     let insert_else_1 = instru_affect lres_var pred2_var in
     let inserts_else = inserts_else_0 @ [insert_else_1] in
     let insert_2 = Insertion.mk_if cond inserts_then inserts_else in
@@ -903,13 +904,13 @@ class gather_insertions props swd = object(self)
     in
     let i_before, e_cond, i_inside, i_after =
       List.fold_left on_lvar ([],cond,[],[]) logic_vars in
-    let ins_b_0, goal_var = self#translate_pnamed goal in
+    let ins_b_0, goal_var = self#translate_predicate goal in
     let ins_b_1 = instru_affect lvar goal_var in
     let i_inside = ins_b_0 @ ins_b_1 :: i_inside in
     let i_loop = Insertion.mk_loop e_cond i_inside in
     [i_0; i_1; Insertion.mk_block (i_before @ i_loop :: i_after)], e_var
 
-  method private translate_predicate p = match p with
+  method private translate_predicate_node p = match p with
     | Pfalse -> [], zero
     | Ptrue -> [], one
     | Prel (r,t1,t2) -> self#translate_rel r t1 t2
@@ -919,9 +920,10 @@ class gather_insertions props swd = object(self)
     | Piff(p,q) -> self#translate_equiv p q
     | Pnot p -> self#translate_not p
     | Pif(t,p,q) -> self#translate_pif t p q
-    | Pforall(vars,{content=Pimplies(h,g)}) -> self#translate_forall vars h g
-    | Pexists(vars,{content=Pand(h,g)}) -> self#translate_exists vars h g
-    | Pat (p, LogicLabel(_,"Here")) -> self#translate_pnamed p
+    | Pforall(vars,{pred_content=Pimplies(h,g)}) ->
+       self#translate_forall vars h g
+    | Pexists(vars,{pred_content=Pand(h,g)}) -> self#translate_exists vars h g
+    | Pat (p, LogicLabel(_,"Here")) -> self#translate_predicate p
     | Pvalid (_,t) -> self#translate_valid t
     | Pvalid_read (_,t) ->
        Options.warning ~current:true
@@ -931,12 +933,12 @@ class gather_insertions props swd = object(self)
     | Pforall _ ->
        Options.warning ~current:true
 		       "%a not of the form \\forall ...; a ==> b"
-		       Printer.pp_predicate p;
+		       Printer.pp_predicate_node p;
        raise Unsupported
     | Pexists _ ->
        Options.warning ~current:true
 		       "%a not of the form \\exists ...; a && b"
-		       Printer.pp_predicate p;
+		       Printer.pp_predicate_node p;
        raise Unsupported
     | Papp _
     | Pseparated _
@@ -1246,7 +1248,7 @@ class gather_insertions props swd = object(self)
   method private translate_assert kf stmt ca for_behaviors pred =
     let prop = Property.ip_of_code_annot_single kf stmt ca in
     if List.mem prop props then
-      let ins = self#pc_assert_exception pred.content "" prop in
+      let ins = self#pc_assert_exception pred "" prop in
       let inserts = self#for_behaviors for_behaviors ins in
       List.iter (self#insert (Symbolic_label.beg_stmt stmt.sid)) inserts
 
@@ -1254,7 +1256,7 @@ class gather_insertions props swd = object(self)
     let prop = Property.ip_of_code_annot_single kf stmt ca in
     if List.mem prop props then
       let f label msg =
-	let ins = self#pc_assert_exception pred.content msg prop in
+	let ins = self#pc_assert_exception pred msg prop in
 	let inserts = self#for_behaviors for_behaviors ins in
 	List.iter (self#insert label) inserts
       in
@@ -1407,7 +1409,7 @@ class gather_insertions props swd = object(self)
 	 let linvs = List.fold_left f_linvs [] ca_l in
 	 let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
 	 let affects = self#assigns_swd assigns in
-	 let on_inv ret p = ret @ (self#pc_assume p.content) in
+	 let on_inv ret p = ret @ (self#pc_assume p) in
 	 let ins_block = List.fold_left on_inv affects linvs in
 	 let ins_bhv = Insertion.mk_if e_assumes ins_block [] in
 	 ins @ ins_assumes @ [ins_bhv]

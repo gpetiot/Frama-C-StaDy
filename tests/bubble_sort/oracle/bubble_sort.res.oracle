@@ -49,11 +49,11 @@ int bubble_sort_precond(int *A, int n)
 }
 
 /*@ requires 0 < n <= 3;
-    requires \valid(A+(0 .. n-1));
+    requires \valid(A + (0 .. n - 1));
     ensures
       \forall integer i;
-        0 <= i < \old(n)-1 ==> *(\old(A)+i) <= *(\old(A)+(i+1));
-    assigns *(A+(0 .. n-1));
+        0 <= i < \old(n) - 1 ==> *(\old(A) + i) <= *(\old(A) + (i + 1));
+    assigns *(A + (0 .. n - 1));
  */
 void bubble_sort(int *A, int n)
 {
@@ -405,7 +405,7 @@ void bubble_sort(int *A, int n)
         __gmpz_clear(__sd_Z_sub_0);
       }
       if(! __sd_forall_0) {
-        pathcrawler_assert_exception("",10);
+        pathcrawler_assert_exception("",5);
       }
     }
     free(old_ptr_A);

@@ -48,12 +48,13 @@ precondition_of('f','pathcrawler__f_precond').
 #include "/usr/local/share/frama-c/stady/nondet.c"
 void __sd_sort_mod_0(int *A, int n);
 /*@ requires n == 4;
-    requires \valid(A+(0 .. n-1));
+    requires \valid(A + (0 .. n - 1));
     ensures
       \forall integer i;
         0 <= i < \old(n) ==>
-        (\forall integer j; i <= j < \old(n) ==> *(\old(A)+i) <= *(\old(A)+j));
-    assigns *(A+(0 .. n-1));
+        (\forall integer j;
+           i <= j < \old(n) ==> *(\old(A) + i) <= *(\old(A) + j));
+    assigns *(A + (0 .. n - 1));
  */
 void sort(int *A, int n)
 {
@@ -66,7 +67,7 @@ void sort(int *A, int n)
   __gmpz_clear(__sd_Z_to_Z_0);
   __gmpz_clear(__sd_Z_cst_0);
   if(! (__sd_eq_0 == 0)) {
-    pathcrawler_assert_exception("28$",9);
+    pathcrawler_assert_exception("28$",8);
   }
   mpz_t __sd_Z_cst_1;
   __gmpz_init_set_str(__sd_Z_cst_1,"0",10);
@@ -97,7 +98,7 @@ void sort(int *A, int n)
   __gmpz_clear(__sd_Z_cst_1);
   __gmpz_clear(__sd_Z_sub_0);
   if(! __sd_valid_0) {
-    pathcrawler_assert_exception("28$",5);
+    pathcrawler_assert_exception("28$",9);
   }
   int *old_A;
   int *old_ptr_A;
@@ -191,7 +192,7 @@ void sort(int *A, int n)
         __gmpz_clear(__sd_Z_to_Z_2);
       }
       if(! __sd_forall_0) {
-        pathcrawler_assert_exception("28$",8);
+        pathcrawler_assert_exception("28$",5);
       }
     }
     free(old_ptr_A);
@@ -240,7 +241,7 @@ void f(int *t, int k)
       __sd_to_ctype_4 = (int)__gmpz_get_si(__sd_Z_cst_5);
       __gmpz_clear(__sd_Z_cst_5);
       if(! (*(old_t + __sd_to_ctype_3) <= *(old_t + __sd_to_ctype_4))) {
-        pathcrawler_assert_exception("28$",3);
+        pathcrawler_assert_exception("28$",7);
       }
     }
     free(old_ptr_t);
@@ -361,11 +362,11 @@ void __sd_sort_mod_0(int *A, int n) {
 --- Properties of Function 'sort'
 --------------------------------------------------------------------------------
 
-[  Valid  ] Post-condition (file tests/spec_insuf_ok/spec_insuf_ok.c, line 9)
-            by StaDy.
 [  Valid  ] Pre-condition (file tests/spec_insuf_ok/spec_insuf_ok.c, line 6)
             by StaDy.
 [  Valid  ] Pre-condition (file tests/spec_insuf_ok/spec_insuf_ok.c, line 7)
+            by StaDy.
+[  Valid  ] Post-condition (file tests/spec_insuf_ok/spec_insuf_ok.c, line 9)
             by StaDy.
 [    -    ] Default behavior
             tried with Frama-C kernel.

@@ -49,9 +49,10 @@ int num_of_precond(int n, int *t)
 }
 
 /*@ requires n > 0;
-    requires \valid(t+(0 .. n-1));
+    requires \valid(t + (0 .. n - 1));
     ensures
-      \result == \numof(0, \old(n)-1, \lambda integer k; *(\old(t)+k)==0);
+      \result ==
+      \numof(0, \old(n) - 1, \lambda integer k; *(\old(t) + k) == 0);
     typically n <= 3;
     assigns \nothing;
  */
@@ -314,7 +315,7 @@ int num_of(int n, int *t)
       __gmpz_clear(__sd_Z_to_Z_0);
       __gmpz_clear(__sd_Z_numof_0);
       if(! (__sd_eq_0 == 0)) {
-        pathcrawler_assert_exception("",6);
+        pathcrawler_assert_exception("",4);
       }
     }
     free(old_ptr_t);

@@ -87,7 +87,7 @@ void f(int x, int y, int z)
           __sd_and_0 = old_z <= old_x;
         }
         if(! __sd_and_0) {
-          pathcrawler_assert_exception("",17);
+          pathcrawler_assert_exception("",13);
         }
       }
       if(y >= x && y >= z) {
@@ -97,7 +97,7 @@ void f(int x, int y, int z)
           __sd_and_1 = old_z <= old_y;
         }
         if(! __sd_and_1) {
-          pathcrawler_assert_exception("",3);
+          pathcrawler_assert_exception("",19);
         }
       }
       if(z >= x && z >= y) {
@@ -107,7 +107,7 @@ void f(int x, int y, int z)
           __sd_and_2 = old_y <= old_z;
         }
         if(! __sd_and_2) {
-          pathcrawler_assert_exception("",14);
+          pathcrawler_assert_exception("",16);
         }
       }
     }

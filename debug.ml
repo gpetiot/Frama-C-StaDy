@@ -81,7 +81,7 @@ class debug_ast () = object(self)
   | TIndex(t,o) -> Format.fprintf fmt "TIndex(%a,%a)"
     self#term t self#term_offset o
 
-  method! predicate fmt = function
+  method! predicate fmt p = match p.pred_content with
   | Pfalse -> Format.fprintf fmt "Pfalse"
   | Ptrue -> Format.fprintf fmt "Ptrue"
   | Papp(li,ll,tl) -> Format.fprintf fmt "Papp(%a,[%a],[%a])"
@@ -128,6 +128,8 @@ class debug_ast () = object(self)
   | Pfresh(l1,l2,t1,t2) -> Format.fprintf fmt "Pfresh(%a,%a,%a,%a)"
     self#logic_label l1 self#logic_label l2 self#term t1 self#term t2
   | Psubtype(t,u)-> Format.fprintf fmt "Psubtype(%a,%a)" self#term t self#term u
+
+  method predicate_named = self#predicate
 end
 
 let pp_term fmt t = (new debug_ast())#term fmt t

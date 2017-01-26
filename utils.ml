@@ -5,18 +5,29 @@ let machdep() = match Kernel.Machdep.get() with
   | "x86_16" -> 16
   | _ -> 32
 
-
-let typically_preds bhv =
-  let is_typically (s,_,_) = s = "typically" in
-  let typically = List.filter is_typically bhv.Cil_types.b_extended in
-  let typically = List.map (fun (_,_,pred) -> pred) typically in
-  List.fold_left List.rev_append [] typically
-
 let to_id = States.Property_To_Id.find
 let to_prop = States.Id_To_Property.find
 
 
 open Cil_types
+
+let typically_preds_memo = ref []
+let typically_preds_computed = ref false
+
+let typically_preds bhv =
+  if !typically_preds_computed then
+    !typically_preds_memo
+  else
+    let is_typically (str, kind) = match kind with
+      | Ext_preds _ -> str = "typically"
+      | _ -> false
+    in
+    let typically = List.filter is_typically bhv.Cil_types.b_extended in
+    let typically = List.map (fun (_,Ext_preds pred) -> pred) typically in
+    let typically = List.fold_left List.rev_append [] typically in
+    typically_preds_memo := List.map Logic_const.new_predicate typically;
+    typically_preds_computed := true;
+    !typically_preds_memo
 
 let rec unname = function
   | TNamed (x, _) -> unname x.ttype
@@ -35,7 +46,7 @@ let extract_guards var p =
     | TLval(TVar x, TNoOffset) -> Cil_datatype.Logic_var.equal x var
     | _ -> false
   in
-  let rec aux p = match p.content with
+  let rec aux p = match p.pred_content with
     | Pand(p1, p2) ->
       let a,b,c,d = aux p1 and e,f,g,h = aux p2 in
       merge a e, merge b f, merge c g, merge d h

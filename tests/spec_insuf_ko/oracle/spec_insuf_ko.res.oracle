@@ -48,8 +48,9 @@ precondition_of('f','pathcrawler__f_precond').
 #include "/usr/local/share/frama-c/stady/nondet.c"
 void __sd_sort_mod_0(int *A, int n);
 /*@ requires n == 4;
-    requires \valid(A+(0 .. n-1));
-    assigns *(A+(0 .. n-1)); */
+    requires \valid(A + (0 .. n - 1));
+    assigns *(A + (0 .. n - 1));
+ */
 void sort(int *A, int n)
 {
   mpz_t __sd_Z_to_Z_0;
@@ -180,7 +181,7 @@ void f(int *t, int k)
       __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_cst_4);
       __gmpz_clear(__sd_Z_cst_4);
       if(! (*(old_t + __sd_to_ctype_1) <= *(old_t + __sd_to_ctype_2))) {
-        pathcrawler_assert_exception("28$",5);
+        pathcrawler_assert_exception("28$",3);
       }
     }
     free(old_ptr_t);
@@ -243,7 +244,8 @@ void __sd_sort_mod_0(int *A, int n) {
 [pc] Starting lanceur_f (isc version)
 [stady] all-paths: true
 [stady] 21 test cases
-[stady] Subcontract Weakness of sort(t,k); for ensures *(\old(t)+0) ≤ *(\old(t)+1) 
+[stady] Subcontract Weakness of sort(t,k); for ensures
+                                               *(\old(t) + 0) ≤ *(\old(t) + 1) 
         LOCATION: tests/spec_insuf_ko/spec_insuf_ko.c:37
         TEST DRIVER: testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_5.c
         k = 4

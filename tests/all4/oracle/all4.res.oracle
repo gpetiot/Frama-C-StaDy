@@ -2,12 +2,12 @@
 [kernel] Parsing tests/all4/all4.c (with preprocessing)
 tests/all4/all4.c:99:[kernel] warning: Floating-point constant 0.1 is not represented exactly. Will use 0x1.999999999999ap-4. See documentation for option -warn-decimal-float
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin.c (with preprocessing)
-FRAMAC_SHARE/libc/__fc_builtin.c:37:[kernel] warning: found two contracts. Merging them
+FRAMAC_SHARE/libc/__fc_builtin.c:46:[kernel] warning: found two contracts. Merging them
 FRAMAC_SHARE/libc/__fc_builtin.h:52:[kernel] warning: location Frama_C_entropy_source is not present in all assigns clauses
-FRAMAC_SHARE/libc/__fc_builtin.c:49:[stady] warning: \is_finite(min) ∧ \is_finite(max) unsupported
-FRAMAC_SHARE/libc/__fc_builtin.c:49:[stady] warning: \is_finite(\result) ∧ \old(min) ≤ \result ≤ \old(max) unsupported
-FRAMAC_SHARE/libc/__fc_builtin.c:55:[stady] warning: \is_finite(min) ∧ \is_finite(max) unsupported
-FRAMAC_SHARE/libc/__fc_builtin.c:55:[stady] warning: \is_finite(\result) ∧ \old(min) ≤ \result ≤ \old(max) unsupported
+FRAMAC_SHARE/libc/__fc_builtin.c:58:[stady] warning: \is_finite(min) ∧ \is_finite(max) unsupported
+FRAMAC_SHARE/libc/__fc_builtin.c:58:[stady] warning: \is_finite(\result) ∧ \old(min) ≤ \result ≤ \old(max) unsupported
+FRAMAC_SHARE/libc/__fc_builtin.c:64:[stady] warning: \is_finite(min) ∧ \is_finite(max) unsupported
+FRAMAC_SHARE/libc/__fc_builtin.c:64:[stady] warning: \is_finite(\result) ∧ \old(min) ≤ \result ≤ \old(max) unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -386,11 +386,12 @@ void F8(void)
   }
 }
 
-int Frama_C_entropy_source;
-/*@ requires \valid(p+(0 .. l-1));
-    ensures \initialized(\old(p)+(0 .. \old(l)-1));
-    assigns *(p+(0 .. l-1)), Frama_C_entropy_source;
-    assigns *(p+(0 .. l-1)) \from Frama_C_entropy_source;
+int volatile Frama_C_entropy_source __attribute__((__unused__,
+                                                   __FRAMA_C_MODEL__));
+/*@ requires \valid(p + (0 .. l - 1));
+    ensures \initialized(\old(p) + (0 .. \old(l) - 1));
+    assigns *(p + (0 .. l - 1)), Frama_C_entropy_source;
+    assigns *(p + (0 .. l - 1)) \from Frama_C_entropy_source;
     assigns Frama_C_entropy_source \from Frama_C_entropy_source;
  */
 extern void Frama_C_make_unknown(char *p, size_t l);
@@ -496,14 +497,15 @@ float Frama_C_float_interval(float min, float max);
 
 double Frama_C_double_interval(double min, double max);
 
-/*@ assigns *((char *)dest+(0 .. n-1)), \result;
-    assigns *((char *)dest+(0 .. n-1)) \from *((char *)src+(0 .. n-1));
+/*@ assigns *((char *)dest + (0 .. n - 1)), \result;
+    assigns *((char *)dest + (0 .. n - 1))
+      \from *((char *)src + (0 .. n - 1));
     assigns \result \from dest;
  */
 extern void *Frama_C_memcpy(void *dest, void const *src, size_t n);
 
-/*@ assigns *((char *)p+(0 .. s-1)), \result;
-    assigns *((char *)p+(0 .. s-1)) \from c;
+/*@ assigns *((char *)p + (0 .. s - 1)), \result;
+    assigns *((char *)p + (0 .. s - 1)) \from c;
     assigns \result \from p;
  */
 extern void *Frama_C_memset(void *p, int c, size_t s);
@@ -523,7 +525,7 @@ extern void Frama_C_update_entropy(void);
 
 int Frama_C_nondet(int a, int b)
 {
-  int old_Frama_C_entropy_source;
+  int volatile old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
   double *old_ptr_G2;
@@ -560,7 +562,7 @@ int Frama_C_nondet(int a, int b)
 
 void *Frama_C_nondet_ptr(void *a, void *b)
 {
-  int old_Frama_C_entropy_source;
+  int volatile old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
   double *old_ptr_G2;
@@ -603,9 +605,9 @@ void *Frama_C_nondet_ptr(void *a, void *b)
 int Frama_C_interval(int min, int max)
 {
   if(! (min <= max)) {
-    pathcrawler_assert_exception("",27);
+    pathcrawler_assert_exception("",121);
   }
-  int old_Frama_C_entropy_source;
+  int volatile old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
   double *old_ptr_G2;
@@ -634,7 +636,7 @@ int Frama_C_interval(int min, int max)
         __sd_and_2 = r <= old_max;
       }
       if(! __sd_and_2) {
-        pathcrawler_assert_exception("",121);
+        pathcrawler_assert_exception("",27);
       }
     }
     return r;
@@ -644,9 +646,9 @@ int Frama_C_interval(int min, int max)
 float Frama_C_float_interval(float min, float max)
 {
   if(! (min <= max)) {
-    pathcrawler_assert_exception("",9);
+    pathcrawler_assert_exception("",30);
   }
-  int old_Frama_C_entropy_source;
+  int volatile old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
   double *old_ptr_G2;
@@ -672,9 +674,9 @@ float Frama_C_float_interval(float min, float max)
 double Frama_C_double_interval(double min, double max)
 {
   if(! (min <= max)) {
-    pathcrawler_assert_exception("",10);
+    pathcrawler_assert_exception("",7);
   }
-  int old_Frama_C_entropy_source;
+  int volatile old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
   double *old_ptr_G2;
@@ -703,7 +705,7 @@ int __sd_Frama_C_interval_mod_1(int min, int max) {
   if(1) {
     int old_max;
     int old_min;
-    int old_Frama_C_entropy_source;
+    int volatile old_Frama_C_entropy_source;
     double *old_G2;
     double *old_ptr_G2;
     double *old_G1;
@@ -734,7 +736,7 @@ int __sd_Frama_C_interval_mod_0(int min, int max) {
   if(1) {
     int old_max;
     int old_min;
-    int old_Frama_C_entropy_source;
+    int volatile old_Frama_C_entropy_source;
     double *old_G2;
     double *old_ptr_G2;
     double *old_G1;

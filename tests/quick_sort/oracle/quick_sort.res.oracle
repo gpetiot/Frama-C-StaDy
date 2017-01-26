@@ -53,12 +53,13 @@ int quick_sort_precond(int *arr, int elements, int *beg, int *end)
 }
 
 /*@ requires 0 <= elements;
-    requires \valid(arr+(0 .. elements-1));
-    requires \valid(beg+(0 .. 99));
-    requires \valid(end+(0 .. 99));
+    requires \valid(arr + (0 .. elements - 1));
+    requires \valid(beg + (0 .. 99));
+    requires \valid(end + (0 .. 99));
     ensures
       \forall integer i;
-        0 <= i < \old(elements)-1 ==> *(\old(arr)+i) <= *(\old(arr)+(i+1));
+        0 <= i < \old(elements) - 1 ==>
+        *(\old(arr) + i) <= *(\old(arr) + (i + 1));
     ensures \result == 0;
     typically elements <= 3;
  */
@@ -368,7 +369,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
           __gmpz_clear(__sd_Z_sub_0);
         }
         if(! __sd_forall_0) {
-          pathcrawler_assert_exception("",11);
+          pathcrawler_assert_exception("",2);
         }
         mpz_t __sd_Z_to_Z_1;
         __gmpz_init_set_si(__sd_Z_to_Z_1,__retres);
@@ -379,7 +380,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
         __gmpz_clear(__sd_Z_to_Z_1);
         __gmpz_clear(__sd_Z_cst_3);
         if(! (__sd_eq_0 == 0)) {
-          pathcrawler_assert_exception("",12);
+          pathcrawler_assert_exception("",7);
         }
       }
       free(old_ptr_arr);

@@ -155,7 +155,7 @@ void f(int x)
                 __gmpz_clear(__sd_Z_to_Z_4);
                 __gmpz_clear(__sd_Z_cst_4);
                 if(! (__sd_le_4 <= 0)) {
-                  pathcrawler_assert_exception("",18);
+                  pathcrawler_assert_exception("",5);
                 }
               }
             }
@@ -308,7 +308,7 @@ void f(int x)
           __sd_and_10 = __sd_le_19 <= 0;
         }
         if(! __sd_and_10) {
-          pathcrawler_assert_exception("",4);
+          pathcrawler_assert_exception("",3);
         }
       }
       mpz_t __sd_Z_to_Z_23;
@@ -329,7 +329,7 @@ void f(int x)
         __gmpz_clear(__sd_Z_to_Z_24);
         __gmpz_clear(__sd_Z_cst_24);
         if(! (__sd_ne_1 != 0)) {
-          pathcrawler_assert_exception("",12);
+          pathcrawler_assert_exception("",1);
         }
       }
       

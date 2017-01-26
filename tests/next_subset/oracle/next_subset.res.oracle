@@ -1,7 +1,7 @@
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/next_subset/next_subset.c (with preprocessing)
 tests/next_subset/next_subset.c:22:[stady] warning: Native Precondition:
-                 ∀ ℤ __q_i; 0 ≤ __q_i < n ⇒ *(s+__q_i) ≡ 0 ∨ *(s+__q_i) ≡ 1 unsupported
+                 ∀ ℤ __q_i; 0 ≤ __q_i < n ⇒ *(s + __q_i) ≡ 0 ∨ *(s + __q_i) ≡ 1 unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -47,14 +47,15 @@ precondition_of('nextSubset','pathcrawler__nextSubset_precond').
 #include "/usr/local/share/frama-c/stady/externals.h"
 /*@
 predicate is_dset{L}(int *a, integer n) =
-  \forall integer i; 0 <= i < n ==> *(a+i) == 0 || *(a+i) == 1;
+  \forall integer i; 0 <= i < n ==> *(a + i) == 0 || *(a + i) == 1;
  */
 /*@
 predicate is_eq{L1, L2}(int *a, integer n) =
-  \forall integer i; 0 <= i < n ==> \at(*(a+i),L1) == \at(*(a+i),L2);
+  \forall integer i; 0 <= i < n ==> \at(*(a + i),L1) == \at(*(a + i),L2);
  */
 /*@
-predicate lt{L1, L2}(int *a, integer i) = \at(*(a+i),L1) < \at(*(a+i),L2);
+predicate lt{L1, L2}(int *a, integer i) =
+  \at(*(a + i),L1) < \at(*(a + i),L2);
  */
 int nextSubset_precond(int *s, int n)
 {
@@ -118,14 +119,14 @@ int nextSubset_precond(int *s, int n)
   return 1;
 }
 
-/*@ requires n >= 0 && n <= 3 && \valid(s+(0 .. n-1));
+/*@ requires n >= 0 && n <= 3 && \valid(s + (0 .. n - 1));
     requires is_dset(s, n);
     ensures is_dset(\old(s), \old(n));
     ensures -1 <= \result < \old(n);
     ensures \result == -1 ==> is_eq{Pre, Post}(\old(s), \old(n));
     ensures \result != -1 ==> is_eq{Pre, Post}(\old(s), \result);
     ensures \result != -1 ==> lt{Pre, Post}(\old(s), \result);
-    assigns *(s+(0 .. n-1));
+    assigns *(s + (0 .. n - 1));
  */
 int nextSubset(int *s, int n)
 {
@@ -495,7 +496,7 @@ int nextSubset(int *s, int n)
           __gmpz_clear(__sd_Z_to_Z_3);
         }
         if(! __sd_forall_1) {
-          pathcrawler_assert_exception("",13);
+          pathcrawler_assert_exception("",6);
         }
         mpz_t __sd_Z_cst_6;
         __gmpz_init_set_str(__sd_Z_cst_6,"1",10);
@@ -515,7 +516,7 @@ int nextSubset(int *s, int n)
           __sd_and_0 = __retres < old_n;
         }
         if(! __sd_and_0) {
-          pathcrawler_assert_exception("",14);
+          pathcrawler_assert_exception("",5);
         }
         int __sd_implies_0;
         __sd_implies_0 = 1;
@@ -565,7 +566,7 @@ int nextSubset(int *s, int n)
           __sd_implies_0 = __sd_forall_2;
         }
         if(! __sd_implies_0) {
-          pathcrawler_assert_exception("",6);
+          pathcrawler_assert_exception("",3);
         }
         int __sd_implies_1;
         __sd_implies_1 = 1;
@@ -615,7 +616,7 @@ int nextSubset(int *s, int n)
           __sd_implies_1 = __sd_forall_3;
         }
         if(! __sd_implies_1) {
-          pathcrawler_assert_exception("",5);
+          pathcrawler_assert_exception("",7);
         }
         int __sd_implies_2;
         __sd_implies_2 = 1;
@@ -645,7 +646,7 @@ int nextSubset(int *s, int n)
           __sd_implies_2 = *(old_ptr_s + __sd_to_ctype_8) < *(old_s + __sd_to_ctype_9);
         }
         if(! __sd_implies_2) {
-          pathcrawler_assert_exception("",3);
+          pathcrawler_assert_exception("",2);
         }
       }
       free(old_ptr_s);

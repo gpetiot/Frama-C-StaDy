@@ -541,7 +541,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_2);
         __gmpz_clear(__sd_Z_cst_0);
         if(! (__sd_ne_0 != 0)) {
-          pathcrawler_assert_exception("",43);
+          pathcrawler_assert_exception("",44);
         }
       }
       mpz_t __sd_Z_to_Z_3;
@@ -565,7 +565,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_5);
         __gmpz_clear(__sd_Z_cst_1);
         if(! (__sd_ne_1 != 0)) {
-          pathcrawler_assert_exception("",19);
+          pathcrawler_assert_exception("",40);
         }
       }
       mpz_t __sd_Z_to_Z_6;
@@ -590,7 +590,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_8);
         __gmpz_clear(__sd_Z_cst_2);
         if(! (__sd_ne_2 != 0)) {
-          pathcrawler_assert_exception("",48);
+          pathcrawler_assert_exception("",11);
         }
       }
       mpz_t __sd_Z_to_Z_9;
@@ -615,7 +615,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_11);
         __gmpz_clear(__sd_Z_cst_3);
         if(! (__sd_ne_3 != 0)) {
-          pathcrawler_assert_exception("",9);
+          pathcrawler_assert_exception("",28);
         }
       }
       mpz_t __sd_Z_to_Z_12;
@@ -640,7 +640,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_14);
         __gmpz_clear(__sd_Z_cst_4);
         if(! (__sd_ne_4 != 0)) {
-          pathcrawler_assert_exception("",36);
+          pathcrawler_assert_exception("",46);
         }
       }
       mpz_t __sd_Z_to_Z_15;
@@ -665,7 +665,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_17);
         __gmpz_clear(__sd_Z_cst_5);
         if(! (__sd_ne_5 != 0)) {
-          pathcrawler_assert_exception("",15);
+          pathcrawler_assert_exception("",55);
         }
       }
       if(Own_Tracked_Alt > Other_Tracked_Alt) {
@@ -678,7 +678,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_18);
         __gmpz_clear(__sd_Z_cst_6);
         if(! (__sd_ne_6 != 0)) {
-          pathcrawler_assert_exception("",1);
+          pathcrawler_assert_exception("",2);
         }
       }
       if(Own_Tracked_Alt < Other_Tracked_Alt) {
@@ -691,7 +691,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_19);
         __gmpz_clear(__sd_Z_cst_7);
         if(! (__sd_ne_7 != 0)) {
-          pathcrawler_assert_exception("",26);
+          pathcrawler_assert_exception("",4);
         }
       }
       if(Up_Separation > Down_Separation) {
@@ -704,7 +704,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_20);
         __gmpz_clear(__sd_Z_cst_8);
         if(! (__sd_ne_8 != 0)) {
-          pathcrawler_assert_exception("",34);
+          pathcrawler_assert_exception("",35);
         }
       }
       if(Up_Separation < Down_Separation) {
@@ -717,7 +717,7 @@ int alt_sep_test(void)
         __gmpz_clear(__sd_Z_to_Z_21);
         __gmpz_clear(__sd_Z_cst_9);
         if(! (__sd_ne_9 != 0)) {
-          pathcrawler_assert_exception("",17);
+          pathcrawler_assert_exception("",8);
         }
       }
     }

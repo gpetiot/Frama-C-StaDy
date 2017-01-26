@@ -1,9 +1,9 @@
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/merge_arrays/merge_arrays.c (with preprocessing)
 tests/merge_arrays/merge_arrays.c:17:[stady] warning: Native Precondition:
-                 ∀ ℤ __q_i; 0 ≤ __q_i < l2-1 ⇒ *(t2+__q_i) ≤ *(t2+(__q_i+1)) unsupported
+                 ∀ ℤ __q_i; 0 ≤ __q_i < l2 - 1 ⇒ *(t2 + __q_i) ≤ *(t2 + (__q_i + 1)) unsupported
 tests/merge_arrays/merge_arrays.c:17:[stady] warning: Native Precondition:
-                 ∀ ℤ __q_i; 0 ≤ __q_i < l1-1 ⇒ *(t1+__q_i) ≤ *(t1+(__q_i+1)) unsupported
+                 ∀ ℤ __q_i; 0 ≤ __q_i < l1 - 1 ⇒ *(t1 + __q_i) ≤ *(t1 + (__q_i + 1)) unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -43,8 +43,8 @@ unquantif_preconds('merge_arrays',
     cond(egal,dim('t1'),+(int(math), -(int(math), 'l1', 1), 1),pre),
     cond(egal,dim('t2'),+(int(math), -(int(math), 'l2', 1), 1),pre),
     cond(egal,dim('t3'),+(int(math), -(int(math), +(int(math), 'l1', 'l2'), 1), 1),pre),
-    cond(infegal,'l2',3,pre),
-    cond(infegal,'l1',3,pre)
+    cond(infegal,'l1',3,pre),
+    cond(infegal,'l2',3,pre)
   ]
 ).
 unquantif_preconds('pathcrawler__merge_arrays_precond',A) :-
@@ -157,16 +157,19 @@ int merge_arrays_precond(int *t1, int *t2, int *t3, int l1, int l2)
 
 /*@ requires 0 <= l1;
     requires 0 <= l2;
-    requires \valid_read(t1+(0 .. l1-1));
-    requires \valid_read(t2+(0 .. l2-1));
-    requires \valid(t3+(0 .. (l1+l2)-1));
-    requires \forall integer i; 0 <= i < l1-1 ==> *(t1+i) <= *(t1+(i+1));
-    requires \forall integer i; 0 <= i < l2-1 ==> *(t2+i) <= *(t2+(i+1));
+    requires \valid_read(t1 + (0 .. l1 - 1));
+    requires \valid_read(t2 + (0 .. l2 - 1));
+    requires \valid(t3 + (0 .. (l1 + l2) - 1));
+    requires
+      \forall integer i; 0 <= i < l1 - 1 ==> *(t1 + i) <= *(t1 + (i + 1));
+    requires
+      \forall integer i; 0 <= i < l2 - 1 ==> *(t2 + i) <= *(t2 + (i + 1));
     ensures
       \forall integer i;
-        0 <= i < (\old(l1)+\old(l2))-1 ==> *(\old(t3)+i) <= *(\old(t3)+(i+1));
-    typically l2 <= 3;
+        0 <= i < (\old(l1) + \old(l2)) - 1 ==>
+        *(\old(t3) + i) <= *(\old(t3) + (i + 1));
     typically l1 <= 3;
+    typically l2 <= 3;
  */
 void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
 {
@@ -839,7 +842,7 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         __gmpz_clear(__sd_Z_sub_2);
       }
       if(! __sd_forall_2) {
-        pathcrawler_assert_exception("",17);
+        pathcrawler_assert_exception("",10);
       }
     }
     free(old_ptr_t1);

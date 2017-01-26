@@ -1,7 +1,7 @@
 
 val machdep: unit -> int
 
-val typically_preds: ('a, 'b) Cil_types.behavior -> 'a list
+val typically_preds: Cil_types.behavior -> Cil_types.identified_predicate list
 
 val to_id: States.Property_To_Id.key -> States.Property_To_Id.data
 
@@ -11,7 +11,7 @@ val unname: Cil_types.typ -> Cil_types.typ
 
 val extract_guards:
   Cil_datatype.Logic_var.t ->
-  Cil_types.predicate Cil_types.named ->
+  Cil_types.predicate ->
   Cil_types.term * Cil_types.relation * Cil_types.relation * Cil_types.term
 
 val error_term: Cil_types.term -> 'a
@@ -25,9 +25,7 @@ val binop_to_fname: Cil_types.binop -> string
 val relation_to_binop: Cil_types.relation -> Cil_types.binop
 val relation_to_string: Cil_types.relation -> string
 
-val default_behavior:
-  Cil_types.kernel_function ->
-  (Cil_types.identified_predicate, Cil_types.identified_term) Cil_types.behavior
+val default_behavior: Cil_types.kernel_function -> Cil_types.behavior
 
 val initialize: unit -> unit
 val finalize: unit -> unit

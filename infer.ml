@@ -73,10 +73,10 @@ let lengths_from_requires kf =
   let o = object
     inherit Visitor.frama_c_inplace
 
-    method! vpredicate_named p =
-      if List.mem "rte" p.name then Cil.SkipChildren else Cil.DoChildren
+    method! vpredicate p =
+      if List.mem "rte" p.pred_name then Cil.SkipChildren else Cil.DoChildren
 
-    method! vpredicate = function
+    method! vpredicate_node = function
     | Pvalid(_, t) | Pvalid_read(_, t) ->
       begin
 	try

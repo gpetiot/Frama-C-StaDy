@@ -44,17 +44,19 @@ precondition_of('main','pathcrawler__main_precond').
 #include "/usr/local/share/frama-c/stady/nondet.c"
 extern int printf(char const * , ...);
 
-/*@ requires \valid(a+(0 .. n-1));
+/*@ requires \valid(a + (0 .. n - 1));
     ensures
       \forall integer i;
-        0 <= i < \old(n)-1 ==> *(\old(a)+i) <= *(\old(a)+(i+1));
+        0 <= i < \old(n) - 1 ==> *(\old(a) + i) <= *(\old(a) + (i + 1));
     ensures
       \forall integer i;
         0 <= i < \old(n) ==>
-        \numof(0, \old(n)-1, \lambda integer k; *(\old(a)+k)==*(\old(a)+i))
+        \numof(0, \old(n) - 1,
+              \lambda integer k; *(\old(a) + k) == *(\old(a) + i))
         ==
-        \numof(0, \old(n)-1, \lambda integer k; \old(*(a+k))==*(\old(a)+i));
-    assigns *(a+(0 .. n-1));
+        \numof(0, \old(n) - 1,
+              \lambda integer k; \old(*(a + k)) == *(\old(a) + i));
+    assigns *(a + (0 .. n - 1));
  */
 extern void sort(int *a, int n);
 

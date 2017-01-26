@@ -371,7 +371,7 @@ let rel_to_prolog rel term1 term2 =
   PLUnquantif (var1, rel, var2)
 
 
-let rec requires_to_prolog constraints pred = match pred.content with
+let rec requires_to_prolog constraints pred = match pred.pred_content with
   | Pand (p, q) -> requires_to_prolog (requires_to_prolog constraints p) q
   | Ptrue -> constraints
   | Pvalid(_,t)
@@ -450,13 +450,13 @@ let compute_constraints() =
   let typically_preds = accumulate Utils.typically_preds in
   let f constraints id_pred =
     let pnamed = Logic_const.pred_of_id_pred id_pred in
-    let pnamed = Inline.pnamed pnamed in
+    let pnamed = Inline.pred pnamed in
     try requires_to_prolog constraints pnamed
     with
     | _ ->
       Options.warning ~current:true
 	"Native Precondition:@\n%a unsupported"
-	Printer.pp_predicate_named pnamed;
+	Printer.pp_predicate pnamed;
       (* this predicate has not been translated in Prolog, we must translate it
 	 in C. *)
       States.Not_Translated_Predicates.add id_pred.ip_id;

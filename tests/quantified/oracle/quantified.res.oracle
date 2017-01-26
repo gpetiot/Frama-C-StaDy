@@ -4,11 +4,11 @@ tests/quantified/quantified.c:13:[stady] warning: Native Precondition:
                  ∀ ℤ __q_i;
                    0 ≤ __q_i < n ⇒
                    (∃ ℤ __q_j;
-                      0 ≤ __q_j < n ∧ *(*(t+__q_i)+__q_j) ≡ 1 ∧
+                      0 ≤ __q_j < n ∧ *(*(t + __q_i) + __q_j) ≡ 1 ∧
                       (∀ ℤ __q_k;
-                         0 ≤ __q_k < n ⇒ __q_k ≢ __q_j ⇒ *(*(t+__q_i)+__q_k) ≡ 0)) unsupported
+                         0 ≤ __q_k < n ⇒ __q_k ≢ __q_j ⇒ *(*(t + __q_i) + __q_k) ≡ 0)) unsupported
 tests/quantified/quantified.c:13:[stady] warning: Native Precondition:
-                 ∀ ℤ __q_i; 0 ≤ __q_i < n ⇒ \valid(*(t+__q_i)+(0 .. n-1)) unsupported
+                 ∀ ℤ __q_i; 0 ≤ __q_i < n ⇒ \valid(*(t + __q_i) + (0 .. n - 1)) unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -210,14 +210,15 @@ int f_precond(int **t, int n)
 }
 
 /*@ requires 0 <= n <= 3;
-    requires \valid(t+(0 .. n-1));
-    requires \forall integer i; 0 <= i < n ==> \valid(*(t+i)+(0 .. n-1));
+    requires \valid(t + (0 .. n - 1));
+    requires
+      \forall integer i; 0 <= i < n ==> \valid(*(t + i) + (0 .. n - 1));
     requires
       \forall integer i;
         0 <= i < n ==>
         (\exists integer j;
-           0 <= j < n && *(*(t+i)+j) == 1 &&
-           (\forall integer k; 0 <= k < n ==> k != j ==> *(*(t+i)+k) == 0));
+           0 <= j < n && *(*(t + i) + j) == 1 &&
+           (\forall integer k; 0 <= k < n ==> k != j ==> *(*(t + i) + k) == 0));
  */
 void f(int **t, int n)
 {

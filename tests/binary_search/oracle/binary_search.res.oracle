@@ -1,7 +1,8 @@
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/binary_search/binary_search.c (with preprocessing)
 tests/binary_search/binary_search.c:16:[stady] warning: Native Precondition:
-                 ∀ ℤ __q_j; 0 ≤ __q_j < length-1 ⇒ *(arr+__q_j) ≤ *(arr+(__q_j+1)) unsupported
+                 ∀ ℤ __q_j;
+                   0 ≤ __q_j < length - 1 ⇒ *(arr + __q_j) ≤ *(arr + (__q_j + 1)) unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -99,15 +100,16 @@ int binary_search_precond(int *arr, int length, int query)
 }
 
 /*@ requires 0 < length <= 3;
-    requires \valid(arr+(0 .. length-1));
+    requires \valid(arr + (0 .. length - 1));
     requires
-      \forall integer j; 0 <= j < length-1 ==> *(arr+j) <= *(arr+(j+1));
+      \forall integer j;
+        0 <= j < length - 1 ==> *(arr + j) <= *(arr + (j + 1));
     ensures -1 <= \result < \old(length);
     ensures
       \result == -1 ==>
       (\forall integer i;
-         0 <= i < \old(length) ==> *(\old(arr)+i) != \old(query));
-    ensures \result >= 0 ==> *(\old(arr)+\result) == \old(query);
+         0 <= i < \old(length) ==> *(\old(arr) + i) != \old(query));
+    ensures \result >= 0 ==> *(\old(arr) + \result) == \old(query);
     assigns \nothing;
  */
 int binary_search(int *arr, int length, int query)
@@ -423,7 +425,7 @@ int binary_search(int *arr, int length, int query)
           __sd_and_0 = __retres < old_length;
         }
         if(! __sd_and_0) {
-          pathcrawler_assert_exception("",12);
+          pathcrawler_assert_exception("",5);
         }
         int __sd_implies_0;
         __sd_implies_0 = 1;
@@ -468,7 +470,7 @@ int binary_search(int *arr, int length, int query)
           __sd_implies_0 = __sd_forall_1;
         }
         if(! __sd_implies_0) {
-          pathcrawler_assert_exception("",13);
+          pathcrawler_assert_exception("",3);
         }
         int __sd_implies_1;
         __sd_implies_1 = 1;
@@ -489,7 +491,7 @@ int binary_search(int *arr, int length, int query)
           __sd_implies_1 = *(old_arr + __sd_to_ctype_3) == old_query;
         }
         if(! __sd_implies_1) {
-          pathcrawler_assert_exception("",6);
+          pathcrawler_assert_exception("",9);
         }
       }
       free(old_ptr_arr);
