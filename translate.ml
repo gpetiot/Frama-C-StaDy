@@ -1415,8 +1415,9 @@ class gather_insertions props swd = object(self)
 	 ins @ ins_assumes @ [ins_bhv]
        in
        let ins_h = Annotations.fold_behaviors on_bhv kf [] in
-       List.iter (self#insert (Symbolic_label.beg_stmt stmt.sid)) ins_h;
-       Cil.DoChildren
+       Cil.DoChildrenPost (fun s ->
+	 List.iter (self#insert (Symbolic_label.beg_stmt stmt.sid)) ins_h; s)
+	 
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
 	 when List.mem stmt.sid swd || List.mem fct_varinfo.vname sim_funcs ->
        let kf = Globals.Functions.get fct_varinfo in
