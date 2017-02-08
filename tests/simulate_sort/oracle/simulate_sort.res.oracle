@@ -134,7 +134,7 @@ void __sd_sort_mod_0(int *a, int n) {
     __sd_to_ctype_8 = (int)__gmpz_get_si(__sd_Z_sub_3);
     __gmpz_clear(__sd_Z_sub_3);
     while(__sd_iter_1 <= __sd_to_ctype_8) {
-      *(a + __sd_iter_1) = nondet_sint();
+      *(a + __sd_iter_1) = nondet_sint("*(a + __sd_iter_1)");
       __sd_iter_1 ++;
     }
     int __sd_forall_0;

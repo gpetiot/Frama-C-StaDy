@@ -110,8 +110,8 @@ void f(int *t, int x)
         pathcrawler_assert_exception("3$not established",1);
       }
       if(1) {
-        i = nondet_sint();
-        found = nondet_sint();
+        i = nondet_sint("i");
+        found = nondet_sint("found");
         mpz_t __sd_Z_cst_2;
         __gmpz_init_set_str(__sd_Z_cst_2,"0",10);
         mpz_t __sd_Z_to_Z_0;

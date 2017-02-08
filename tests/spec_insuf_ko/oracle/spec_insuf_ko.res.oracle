@@ -228,7 +228,7 @@ void __sd_sort_mod_0(int *A, int n) {
     __sd_to_ctype_6 = (int)__gmpz_get_si(__sd_Z_sub_1);
     __gmpz_clear(__sd_Z_sub_1);
     while(__sd_iter_3 <= __sd_to_ctype_6) {
-      *(A + __sd_iter_3) = nondet_sint();
+      *(A + __sd_iter_3) = nondet_sint("*(A + __sd_iter_3)");
       __sd_iter_3 ++;
     }
     free(old_ptr_A);

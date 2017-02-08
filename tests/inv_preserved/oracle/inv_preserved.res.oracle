@@ -198,10 +198,10 @@ void f(int n, int *t)
         __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_sub_0);
         __gmpz_clear(__sd_Z_sub_0);
         while(__sd_iter_1 <= __sd_to_ctype_2) {
-          *(t + __sd_iter_1) = nondet_sint();
+          *(t + __sd_iter_1) = nondet_sint("*(t + __sd_iter_1)");
           __sd_iter_1 ++;
         }
-        i = nondet_sint();
+        i = nondet_sint("i");
         mpz_t __sd_Z_cst_2;
         __gmpz_init_set_str(__sd_Z_cst_2,"3",10);
         mpz_t __sd_Z_to_Z_2;

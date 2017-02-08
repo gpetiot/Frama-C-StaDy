@@ -2,9 +2,13 @@
 #define __NONDET(TYPE,TYPENAME) \
 TYPE* nondet_##TYPENAME##_val; \
 static unsigned nondet_##TYPENAME##_cpt;	\
-TYPE nondet_##TYPENAME() { \
+TYPE nondet_##TYPENAME(const char* str) { \
   if(pathcrawler_dimension(nondet_##TYPENAME##_val) <= nondet_##TYPENAME##_cpt) { pathcrawler_assume_exception("nondet.c: Need more nondet values",0); } \
-  return nondet_##TYPENAME##_val[nondet_##TYPENAME##_cpt++]; \
+  char s[128];								\
+  sprintf(s, "@FC:VarDesc:nondet_" #TYPENAME "_val[%i]:%s",	\
+	  nondet_##TYPENAME##_cpt, str);				\
+  pathcrawler_to_framac(s);						\
+  return nondet_##TYPENAME##_val[nondet_##TYPENAME##_cpt++];		\
 }
 
 __NONDET(_Bool,bool)
