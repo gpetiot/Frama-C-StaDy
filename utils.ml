@@ -7,6 +7,11 @@ let machdep() = match Kernel.Machdep.get() with
 
 let to_id = States.Property_To_Id.find
 let to_prop = States.Id_To_Property.find
+let get_var_desc s =
+  if States.Var_Descriptions.mem s then
+    let s' = States.Var_Descriptions.find s in
+    if s' = "" then s else s'
+  else s
 
 
 open Cil_types
@@ -225,6 +230,7 @@ let finalize() =
   States.Not_Translated_Predicates.clear();
   mpz_t_ref := None;
   States.Externals.clear();
+  States.Var_Descriptions.clear();
   Options.PathCrawler_Options.clear();
   Options.Socket_Type.clear();
   Options.Timeout.clear();

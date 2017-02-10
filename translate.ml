@@ -18,6 +18,8 @@ let cmp rel e1 e2 = Cil.mkBinOp ~loc (Utils.relation_to_binop rel) e1 e2
 
 let instru_affect a b = Insertion.mk_instru (Set(a,b,loc))
 
+let mk_string s = Cil.mkString ~loc s
+  
 let no_repeat l =
   let rec aux acc = function
     | [] -> acc
@@ -111,7 +113,7 @@ class gather_insertions props swd = object(self)
   method ccmp_si x y z = self#call "__gmpz_cmp_si" (Some x) [y;z]
   method cmul_2exp x y z = self#call "__gmpz_mul_2exp" None [x;y;z]
   method cfdiv_q_2exp x y z = self#call "__gmpz_fdiv_q_2exp" None [x;y;z]
-  method cnondet ty x = self#call ("nondet_"^(typename ty)) (Some x) []
+  method cnondet ty x y = self#call ("nondet_"^(typename ty)) (Some x) [y]
 
   method private add_function_call vi =
     if List.mem vi fcts_called then () else fcts_called <- vi :: fcts_called
@@ -1369,7 +1371,9 @@ class gather_insertions props swd = object(self)
 	 assert (ll = []);
 	 let e = Cil.new_exp ~loc (BinOp(op, e_op1, e_it, ty)) in
 	 let y = Mem e, NoOffset in
-	 let i_f_1 = self#cnondet (Cil.typeOfLval y) y in
+	 Cil_printer.pp_lval Format.str_formatter y;
+	 let str = mk_string (Format.flush_str_formatter()) in
+	 let i_f_1 = self#cnondet (Cil.typeOfLval y) y str in
 	 let plus_one = Cil.mkBinOp ~loc PlusA e_it one in
 	 let i_f_2 = instru_affect l_it plus_one in
 	 let i_7 = Insertion.mk_loop cond [i_f_1; i_f_2] in
@@ -1377,7 +1381,9 @@ class gather_insertions props swd = object(self)
       | TLval lv ->
 	 let ty = match t.term_type with Ctype x -> x | _-> raise Unreachable in
 	 let ins, e = self#translate_lval lv in
-	 let aff = self#cnondet ty e in
+	 Cil_printer.pp_term_lval Format.str_formatter lv;
+	 let str = mk_string (Format.flush_str_formatter()) in
+	 let aff = self#cnondet ty e str in
 	 ins @ aff :: ret
       | _ ->
 	 Options.warning
@@ -1458,7 +1464,9 @@ class gather_insertions props swd = object(self)
 	    let ty = Cil.typeOfLval r in
 	    let retres = my_varinfo ty "__retres" in
 	    let e_retres = Cil.evar retres in
-	    let aff = self#cnondet ty (Cil.var retres) in
+	    let aff = self#cnondet ty (Cil.var retres)
+	      (mk_string ("\\return of function '" ^ fct_varinfo.vname ^ "'"))
+	    in
 	    [Insertion.mk_decl retres], [aff], [Insertion.mk_ret e_retres]
 	 | None -> [], [], []
        in

@@ -86,3 +86,14 @@ module Externals =
       let dependencies = [Ast.self]
       let size = 64
      end)
+
+module Var_Descriptions =
+  State_builder.Hashtbl
+    (Datatype.String.Hashtbl)
+    (Datatype.String)
+    (struct
+      let name = "Var_Descriptions"
+      let dependencies = [Ast.self]
+      let size = 64
+     end)
+    

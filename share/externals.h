@@ -39,3 +39,4 @@ extern void pathcrawler_to_framac(char*);
 extern int pathcrawler_assume_exception(char*,int);
 extern void* malloc(unsigned long);
 extern void free(void*);
+extern int sprintf(char *str, const char *format, ...);

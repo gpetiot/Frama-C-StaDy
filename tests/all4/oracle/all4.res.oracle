@@ -701,7 +701,7 @@ double Frama_C_double_interval(double min, double max)
 
 int __sd_Frama_C_interval_mod_1(int min, int max) {
   int __retres;
-  __retres = nondet_sint();
+  __retres = nondet_sint("\\return of function \'Frama_C_interval\'");
   if(1) {
     int old_max;
     int old_min;
@@ -717,8 +717,8 @@ int __sd_Frama_C_interval_mod_1(int min, int max) {
     old_ptr_G2 = G2;
     old_G1 = G1;
     old_ptr_G1 = G1;
-    Frama_C_entropy_source = nondet_sint();
-    __retres = nondet_sint();
+    Frama_C_entropy_source = nondet_sint("Frama_C_entropy_source");
+    __retres = nondet_sint("\\result");
     int __sd_and_1;
     __sd_and_1 = old_min <= __retres;
     if(__sd_and_1) {
@@ -732,7 +732,7 @@ int __sd_Frama_C_interval_mod_1(int min, int max) {
 }
 int __sd_Frama_C_interval_mod_0(int min, int max) {
   int __retres;
-  __retres = nondet_sint();
+  __retres = nondet_sint("\\return of function \'Frama_C_interval\'");
   if(1) {
     int old_max;
     int old_min;
@@ -748,8 +748,8 @@ int __sd_Frama_C_interval_mod_0(int min, int max) {
     old_ptr_G2 = G2;
     old_G1 = G1;
     old_ptr_G1 = G1;
-    Frama_C_entropy_source = nondet_sint();
-    __retres = nondet_sint();
+    Frama_C_entropy_source = nondet_sint("Frama_C_entropy_source");
+    __retres = nondet_sint("\\result");
     int __sd_and_0;
     __sd_and_0 = old_min <= __retres;
     if(__sd_and_0) {

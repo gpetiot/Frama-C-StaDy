@@ -88,17 +88,17 @@ void main(void)
 
 int __sd_rand_mod_2() {
   int __retres;
-  __retres = nondet_sint();
+  __retres = nondet_sint("\\return of function \'rand\'");
   return __retres;
 }
 int __sd_rand_mod_1() {
   int __retres;
-  __retres = nondet_sint();
+  __retres = nondet_sint("\\return of function \'rand\'");
   return __retres;
 }
 int __sd_rand_mod_0() {
   int __retres;
-  __retres = nondet_sint();
+  __retres = nondet_sint("\\return of function \'rand\'");
   return __retres;
 }
 
