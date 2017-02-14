@@ -211,10 +211,7 @@ void f(int *t, int x)
           pathcrawler_assume_exception("",0);
         }
       }
-      if(i <= 4) {
-        
-      }
-      else {
+      if(! (i <= 4)) {
         pathcrawler_assume_exception("",0);
       }
       if (*(t + i) == x) found = 1;
@@ -344,10 +341,7 @@ void f(int *t, int x)
           pathcrawler_assume_exception("",0);
         }
       }
-      if(! (i <= 4)) {
-        
-      }
-      else {
+      if(! (! (i <= 4))) {
         pathcrawler_assume_exception("",0);
       }
       
@@ -405,7 +399,7 @@ void f(int *t, int x)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
 [stady] all-paths: false
-[stady] 2437 test cases
+[stady] 2325 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

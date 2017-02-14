@@ -45,9 +45,7 @@ void f(int x)
           __gmpz_clear(__sd_Z_cst_14);
           __sd_and_6 = __sd_le_11 <= 0;
         }
-        if(__sd_and_6) {
-          
-        }
+        
         {
           mpz_t __sd_Z_cst_7;
           __gmpz_init_set_str(__sd_Z_cst_7,"100",10);
@@ -74,9 +72,7 @@ void f(int x)
             __gmpz_clear(__sd_Z_cst_8);
             __sd_and_3 = __sd_lt_0 < 0;
           }
-          if(__sd_and_3) {
-            
-          }
+          
           {
             mpz_t __sd_Z_cst_0;
             __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
@@ -99,9 +95,7 @@ void f(int x)
               __gmpz_clear(__sd_Z_cst_1);
               __sd_and_0 = __sd_le_1 <= 0;
             }
-            if(__sd_and_0) {
-              
-            }
+            
             y = x * 2;mpz_t __sd_Z_cst_5;
             __gmpz_init_set_str(__sd_Z_cst_5,"0",10);
             mpz_t __sd_Z_to_Z_5;
@@ -346,7 +340,7 @@ void f(int x)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
 [stady] all-paths: true
-[stady] 98 test cases
+[stady] 92 test cases
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

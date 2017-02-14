@@ -120,10 +120,7 @@ void firstSubset(int *s, int n)
           __gmpz_clear(__sd_Z_cst_6);
           int __sd_or_1;
           __sd_or_1 = __sd_eq_2 == 0;
-          if(__sd_or_1) {
-            
-          }
-          else {
+          if(! __sd_or_1) {
             mpz_t __sd_Z_lval_3;
             __gmpz_init_set(__sd_Z_lval_3,__q_i);
             int __sd_to_ctype_4;
@@ -209,10 +206,7 @@ void firstSubset(int *s, int n)
             __gmpz_clear(__sd_Z_cst_9);
             int __sd_or_2;
             __sd_or_2 = __sd_eq_4 == 0;
-            if(__sd_or_2) {
-              
-            }
-            else {
+            if(! __sd_or_2) {
               mpz_t __sd_Z_lval_5;
               __gmpz_init_set(__sd_Z_lval_5,__q_i);
               int __sd_to_ctype_6;
@@ -285,10 +279,7 @@ void firstSubset(int *s, int n)
           __gmpz_clear(__sd_Z_cst_1);
           int __sd_or_0;
           __sd_or_0 = __sd_eq_0 == 0;
-          if(__sd_or_0) {
-            
-          }
-          else {
+          if(! __sd_or_0) {
             mpz_t __sd_Z_lval_1;
             __gmpz_init_set(__sd_Z_lval_1,__q_i);
             int __sd_to_ctype_1;

@@ -86,10 +86,7 @@ int nextSubset_precond(int *s, int n)
       __gmpz_clear(__sd_Z_cst_1);
       int __sd_or_0;
       __sd_or_0 = __sd_eq_0 == 0;
-      if(__sd_or_0) {
-        
-      }
-      else {
+      if(! __sd_or_0) {
         mpz_t __sd_Z_lval_1;
         __gmpz_init_set(__sd_Z_lval_1,__q_i);
         int __sd_to_ctype_1;
@@ -294,10 +291,7 @@ int nextSubset(int *s, int n)
           __gmpz_clear(__sd_Z_cst_19);
           int __sd_or_2;
           __sd_or_2 = __sd_eq_5 == 0;
-          if(__sd_or_2) {
-            
-          }
-          else {
+          if(! __sd_or_2) {
             mpz_t __sd_Z_lval_9;
             __gmpz_init_set(__sd_Z_lval_9,__q_i);
             int __sd_to_ctype_12;
@@ -390,10 +384,7 @@ int nextSubset(int *s, int n)
             __gmpz_clear(__sd_Z_cst_22);
             int __sd_or_3;
             __sd_or_3 = __sd_eq_7 == 0;
-            if(__sd_or_3) {
-              
-            }
-            else {
+            if(! __sd_or_3) {
               mpz_t __sd_Z_lval_11;
               __gmpz_init_set(__sd_Z_lval_11,__q_i);
               int __sd_to_ctype_14;
@@ -468,10 +459,7 @@ int nextSubset(int *s, int n)
             __gmpz_clear(__sd_Z_cst_4);
             int __sd_or_1;
             __sd_or_1 = __sd_eq_2 == 0;
-            if(__sd_or_1) {
-              
-            }
-            else {
+            if(! __sd_or_1) {
               mpz_t __sd_Z_lval_3;
               __gmpz_init_set(__sd_Z_lval_3,__q_i);
               int __sd_to_ctype_3;

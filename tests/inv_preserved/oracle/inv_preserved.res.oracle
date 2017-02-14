@@ -143,10 +143,7 @@ void f(int n, int *t)
           __gmpz_clear(__sd_Z_sub_9);
           int __sd_or_2;
           __sd_or_2 = *(t + __sd_to_ctype_13) == *(t + __sd_to_ctype_14);
-          if(__sd_or_2) {
-            
-          }
-          else {
+          if(! __sd_or_2) {
             mpz_t __sd_Z_lval_10;
             __gmpz_init_set(__sd_Z_lval_10,__q_k);
             int __sd_to_ctype_15;
@@ -256,10 +253,7 @@ void f(int n, int *t)
             __gmpz_clear(__sd_Z_sub_2);
             int __sd_or_0;
             __sd_or_0 = *(t + __sd_to_ctype_3) == *(t + __sd_to_ctype_4);
-            if(__sd_or_0) {
-              
-            }
-            else {
+            if(! __sd_or_0) {
               mpz_t __sd_Z_lval_2;
               __gmpz_init_set(__sd_Z_lval_2,__q_k);
               int __sd_to_ctype_5;
@@ -291,10 +285,7 @@ void f(int n, int *t)
           pathcrawler_assume_exception("",0);
         }
       }
-      if(i < n) {
-        
-      }
-      else {
+      if(! (i < n)) {
         pathcrawler_assume_exception("",0);
       }
       mpz_t __sd_Z_to_Z_11;
@@ -366,10 +357,7 @@ void f(int n, int *t)
           __gmpz_clear(__sd_Z_sub_12);
           int __sd_or_3;
           __sd_or_3 = *(t + __sd_to_ctype_17) == *(t + __sd_to_ctype_18);
-          if(__sd_or_3) {
-            
-          }
-          else {
+          if(! __sd_or_3) {
             mpz_t __sd_Z_lval_14;
             __gmpz_init_set(__sd_Z_lval_14,__q_k);
             int __sd_to_ctype_19;
@@ -494,10 +482,7 @@ void f(int n, int *t)
             __gmpz_clear(__sd_Z_sub_6);
             int __sd_or_1;
             __sd_or_1 = *(t + __sd_to_ctype_9) == *(t + __sd_to_ctype_10);
-            if(__sd_or_1) {
-              
-            }
-            else {
+            if(! __sd_or_1) {
               mpz_t __sd_Z_lval_6;
               __gmpz_init_set(__sd_Z_lval_6,__q_k);
               int __sd_to_ctype_11;
@@ -529,10 +514,7 @@ void f(int n, int *t)
           pathcrawler_assume_exception("",0);
         }
       }
-      if(! (i < n)) {
-        
-      }
-      else {
+      if(! (! (i < n))) {
         pathcrawler_assume_exception("",0);
       }
       
@@ -551,8 +533,8 @@ void f(int n, int *t)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_f (isc version)
-[stady] all-paths: false
-[stady] 268 test cases
+[stady] all-paths: true
+[stady] 260 test cases
 [stady] Subcontract Weakness of stmt 9 for loop invariant
                                              ∀ ℤ k;
                                                2 ≤ k < i - 1 ⇒
@@ -572,7 +554,22 @@ void f(int n, int *t)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
+--- Properties of Function 'f'
+--------------------------------------------------------------------------------
+
+[ Partial ] Loop variant at loop (file tests/inv_preserved/inv_preserved.c, line 27)
+            By StaDy, with pending:
+             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 12)
+[ Partial ] Invariant (file tests/inv_preserved/inv_preserved.c, line 21)
+            By StaDy, with pending:
+             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 12)
+[ Partial ] Invariant (file tests/inv_preserved/inv_preserved.c, line 22)
+            By StaDy, with pending:
+             - Pre-condition (file tests/inv_preserved/inv_preserved.c, line 12)
+
+--------------------------------------------------------------------------------
 --- Status Report Summary
 --------------------------------------------------------------------------------
-     0 Total
+     3 Locally validated
+     3 Total
 --------------------------------------------------------------------------------

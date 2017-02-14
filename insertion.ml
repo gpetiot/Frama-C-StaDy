@@ -47,10 +47,20 @@ let rec pretty ?(line_break = true) fmt ins =
        if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
     | IIf (e,b1,b2) ->
        let print_if() =
-	 Format.fprintf
-	   fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b1;
-	 if b2 <> [] then
-	   Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
+	 match b1, b2 with
+	 | [], [] -> ()
+	 | b1, [] -> 
+	    Format.fprintf
+	      fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b1
+	 | [], b2 ->
+	    let loc = Cil_datatype.Location.unknown in
+	    let not_e = Cil.new_exp ~loc (UnOp(LNot, e, Cil.intType)) in
+	    Format.fprintf
+	      fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" Printer.pp_exp not_e aux b2
+	 | _ ->
+	    Format.fprintf
+	      fmt "@[<hov 2>if(%a) {@\n%a@]@\n}@\n@[<hov 2>else {@\n%a@]@\n}"
+	      Printer.pp_exp e aux b1 aux b2
        in
        begin
 	 match Cil.isInteger e with

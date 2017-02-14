@@ -546,10 +546,7 @@ int Frama_C_nondet(int a, int b)
     {
       int __sd_or_0;
       __sd_or_0 = tmp == old_a;
-      if(__sd_or_0) {
-        
-      }
-      else {
+      if(! __sd_or_0) {
         __sd_or_0 = tmp == old_b;
       }
       if(! __sd_or_0) {
@@ -588,10 +585,7 @@ void *Frama_C_nondet_ptr(void *a, void *b)
     {
       int __sd_or_1;
       __sd_or_1 = (unsigned int)__retres == (unsigned int)old_a;
-      if(__sd_or_1) {
-        
-      }
-      else {
+      if(! __sd_or_1) {
         __sd_or_1 = (unsigned int)__retres == (unsigned int)old_b;
       }
       if(! __sd_or_1) {
