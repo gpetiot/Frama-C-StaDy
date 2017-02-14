@@ -980,11 +980,8 @@ class gather_insertions props swd = object(self)
     let translate_as_return pred =
       try
 	let ins,v = self#translate_predicate (Inline.pred pred.ip_content) in
-	(* untreated predicates are translated as True *)
-	if not (Cil_datatype.Exp.equal v one) then
-	  let e = Cil.new_exp ~loc (UnOp (LNot, v, Cil.intType)) in
-	  ins @ [Insertion.mk_if e [Insertion.mk_ret zero] []]
-	else ins
+	let e = Cil.new_exp ~loc (UnOp (LNot, v, Cil.intType)) in
+	ins @ [Insertion.mk_if e [Insertion.mk_ret zero] []]
       with Unsupported ->
 	Options.warning
 	  ~current:true "%a unsupported" Printer.pp_predicate pred.ip_content;
@@ -1244,7 +1241,7 @@ class gather_insertions props swd = object(self)
 	List.iter (self#insert (Symbolic_label.beg_stmt stmt.sid)) ins;
 	let ins = self#post kf stmt_bhvs (Kstmt stmt) in
 	let ins = if bhvs = [] then ins else self#for_behaviors bhvs ins in
-	List.iter (self#insert (Symbolic_label.end_stmt stmt.sid)) ins;
+	List.iter (self#insert (Symbolic_label.end_stmt stmt.sid)) ins
       end
 
   method private translate_assert kf stmt ca for_behaviors pred =
