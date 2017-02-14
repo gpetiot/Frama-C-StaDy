@@ -1396,11 +1396,17 @@ class gather_insertions props swd = object(self)
   method! vstmt_aux stmt =
     let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
-    | Loop _ when List.mem stmt.sid swd ->
+    | Loop (_,b,_,_,_) when List.mem stmt.sid swd ->
+       let cond =
+	 match b.bstmts with
+	 | {skind = If (e, _, _, _)} :: _ -> e
+	 | _ -> assert false
+       in
+       let not_cond = Cil.new_exp ~loc (UnOp(LNot, cond, Cil.intType)) in
        let kf = Kernel_function.find_englobing_kf stmt in
        let ca_l = Annotations.code_annot stmt in
        let ca_l = List.map (fun x -> x.annot_content) ca_l in
-       let on_bhv _ bhv ins =
+       let on_bhv cond _ bhv ins =
 	 let bhv_in l =
 	   List.mem bhv.b_name l || (Cil.is_default_behavior bhv && l = []) in
 	 let f_assigns ret = function
@@ -1418,11 +1424,16 @@ class gather_insertions props swd = object(self)
 	 let on_inv ret p = ret @ (self#pc_assume p) in
 	 let ins_block = List.fold_left on_inv affects linvs in
 	 let ins_bhv = Insertion.mk_if e_assumes ins_block [] in
-	 ins @ ins_assumes @ [ins_bhv]
+	 let ins_assume_cond = Insertion.mk_if cond [] [ self#pc_ass "" 0 ] in
+	 ins @ ins_assumes @ [ins_bhv; ins_assume_cond]
        in
-       let ins_h = Annotations.fold_behaviors on_bhv kf [] in
+       let ins_h_before = Annotations.fold_behaviors (on_bhv cond) kf [] in
+       let ins_h_after = Annotations.fold_behaviors (on_bhv not_cond) kf [] in
        Cil.DoChildrenPost (fun s ->
-	 List.iter (self#insert (Symbolic_label.beg_stmt stmt.sid)) ins_h; s)
+	 List.iter (self#insert(Symbolic_label.beg_stmt stmt.sid)) ins_h_before;
+	 List.iter (self#insert(Symbolic_label.end_stmt stmt.sid)) ins_h_after;
+	 s
+       )
 	 
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
 	 when List.mem stmt.sid swd || List.mem fct_varinfo.vname sim_funcs ->
