@@ -85,28 +85,28 @@ void f(int *t, int x)
     found = 0;
     i = 0;
     {
-      mpz_t __sd_Z_cst_4;
-      __gmpz_init_set_str(__sd_Z_cst_4,"0",10);
-      mpz_t __sd_Z_to_Z_2;
-      __gmpz_init_set_si(__sd_Z_to_Z_2,i);
-      int __sd_le_2;
-      __sd_le_2 = __gmpz_cmp(__sd_Z_cst_4,__sd_Z_to_Z_2);
-      __gmpz_clear(__sd_Z_cst_4);
-      __gmpz_clear(__sd_Z_to_Z_2);
-      int __sd_and_1;
-      __sd_and_1 = __sd_le_2 <= 0;
-      if(__sd_and_1) {
-        mpz_t __sd_Z_to_Z_3;
-        __gmpz_init_set_si(__sd_Z_to_Z_3,i);
-        mpz_t __sd_Z_cst_5;
-        __gmpz_init_set_str(__sd_Z_cst_5,"5",10);
-        int __sd_le_3;
-        __sd_le_3 = __gmpz_cmp(__sd_Z_to_Z_3,__sd_Z_cst_5);
-        __gmpz_clear(__sd_Z_to_Z_3);
-        __gmpz_clear(__sd_Z_cst_5);
-        __sd_and_1 = __sd_le_3 <= 0;
+      mpz_t __sd_Z_cst_6;
+      __gmpz_init_set_str(__sd_Z_cst_6,"0",10);
+      mpz_t __sd_Z_to_Z_4;
+      __gmpz_init_set_si(__sd_Z_to_Z_4,i);
+      int __sd_le_4;
+      __sd_le_4 = __gmpz_cmp(__sd_Z_cst_6,__sd_Z_to_Z_4);
+      __gmpz_clear(__sd_Z_cst_6);
+      __gmpz_clear(__sd_Z_to_Z_4);
+      int __sd_and_2;
+      __sd_and_2 = __sd_le_4 <= 0;
+      if(__sd_and_2) {
+        mpz_t __sd_Z_to_Z_5;
+        __gmpz_init_set_si(__sd_Z_to_Z_5,i);
+        mpz_t __sd_Z_cst_7;
+        __gmpz_init_set_str(__sd_Z_cst_7,"5",10);
+        int __sd_le_5;
+        __sd_le_5 = __gmpz_cmp(__sd_Z_to_Z_5,__sd_Z_cst_7);
+        __gmpz_clear(__sd_Z_to_Z_5);
+        __gmpz_clear(__sd_Z_cst_7);
+        __sd_and_2 = __sd_le_5 <= 0;
       }
-      if(! __sd_and_1) {
+      if(! __sd_and_2) {
         pathcrawler_assert_exception("3$not established",1);
       }
       if(1) {
@@ -137,55 +137,93 @@ void f(int *t, int x)
           pathcrawler_assume_exception("",0);
         }
       }
-      while (1) {
-        if (! (i <= 4)) break;if (*(t + i) == x) found = 1;
-                              i ++;mpz_t __sd_Z_cst_6;
-        __gmpz_init_set_str(__sd_Z_cst_6,"0",10);
-        mpz_t __sd_Z_to_Z_4;
-        __gmpz_init_set_si(__sd_Z_to_Z_4,i);
-        int __sd_le_4;
-        __sd_le_4 = __gmpz_cmp(__sd_Z_cst_6,__sd_Z_to_Z_4);
-        __gmpz_clear(__sd_Z_cst_6);
-        __gmpz_clear(__sd_Z_to_Z_4);
-        int __sd_and_2;
-        __sd_and_2 = __sd_le_4 <= 0;
-        if(__sd_and_2) {
-          mpz_t __sd_Z_to_Z_5;
-          __gmpz_init_set_si(__sd_Z_to_Z_5,i);
-          mpz_t __sd_Z_cst_7;
-          __gmpz_init_set_str(__sd_Z_cst_7,"5",10);
-          int __sd_le_5;
-          __sd_le_5 = __gmpz_cmp(__sd_Z_to_Z_5,__sd_Z_cst_7);
-          __gmpz_clear(__sd_Z_to_Z_5);
-          __gmpz_clear(__sd_Z_cst_7);
-          __sd_and_2 = __sd_le_5 <= 0;
+      if(i <= 4) {
+        
+      }
+      else {
+        pathcrawler_assume_exception("",0);
+      }
+      if (*(t + i) == x) found = 1;
+      i ++;mpz_t __sd_Z_cst_8;
+      __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
+      mpz_t __sd_Z_to_Z_6;
+      __gmpz_init_set_si(__sd_Z_to_Z_6,i);
+      int __sd_le_6;
+      __sd_le_6 = __gmpz_cmp(__sd_Z_cst_8,__sd_Z_to_Z_6);
+      __gmpz_clear(__sd_Z_cst_8);
+      __gmpz_clear(__sd_Z_to_Z_6);
+      int __sd_and_3;
+      __sd_and_3 = __sd_le_6 <= 0;
+      if(__sd_and_3) {
+        mpz_t __sd_Z_to_Z_7;
+        __gmpz_init_set_si(__sd_Z_to_Z_7,i);
+        mpz_t __sd_Z_cst_9;
+        __gmpz_init_set_str(__sd_Z_cst_9,"5",10);
+        int __sd_le_7;
+        __sd_le_7 = __gmpz_cmp(__sd_Z_to_Z_7,__sd_Z_cst_9);
+        __gmpz_clear(__sd_Z_to_Z_7);
+        __gmpz_clear(__sd_Z_cst_9);
+        __sd_and_3 = __sd_le_7 <= 0;
+      }
+      if(! __sd_and_3) {
+        pathcrawler_assert_exception("3$not preserved",1);
+      }
+      if(1) {
+        i = nondet_sint("i");
+        found = nondet_sint("found");
+        mpz_t __sd_Z_cst_4;
+        __gmpz_init_set_str(__sd_Z_cst_4,"0",10);
+        mpz_t __sd_Z_to_Z_2;
+        __gmpz_init_set_si(__sd_Z_to_Z_2,i);
+        int __sd_le_2;
+        __sd_le_2 = __gmpz_cmp(__sd_Z_cst_4,__sd_Z_to_Z_2);
+        __gmpz_clear(__sd_Z_cst_4);
+        __gmpz_clear(__sd_Z_to_Z_2);
+        int __sd_and_1;
+        __sd_and_1 = __sd_le_2 <= 0;
+        if(__sd_and_1) {
+          mpz_t __sd_Z_to_Z_3;
+          __gmpz_init_set_si(__sd_Z_to_Z_3,i);
+          mpz_t __sd_Z_cst_5;
+          __gmpz_init_set_str(__sd_Z_cst_5,"5",10);
+          int __sd_le_3;
+          __sd_le_3 = __gmpz_cmp(__sd_Z_to_Z_3,__sd_Z_cst_5);
+          __gmpz_clear(__sd_Z_to_Z_3);
+          __gmpz_clear(__sd_Z_cst_5);
+          __sd_and_1 = __sd_le_3 <= 0;
         }
-        if(! __sd_and_2) {
-          pathcrawler_assert_exception("3$not preserved",1);
+        if(! __sd_and_1) {
+          pathcrawler_assume_exception("",0);
         }
-        }
-         
+      }
+      if(! (i <= 4)) {
+        
+      }
+      else {
+        pathcrawler_assume_exception("",0);
+      }
+      
     }
     {
-      mpz_t __sd_Z_to_Z_6;
-      __gmpz_init_set_si(__sd_Z_to_Z_6,found);
-      mpz_t __sd_Z_cst_8;
-      __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
+      mpz_t __sd_Z_to_Z_8;
+      __gmpz_init_set_si(__sd_Z_to_Z_8,found);
+      mpz_t __sd_Z_cst_10;
+      __gmpz_init_set_str(__sd_Z_cst_10,"0",10);
       int __sd_ne_0;
-      __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_6,__sd_Z_cst_8);
-      __gmpz_clear(__sd_Z_to_Z_6);
-      __gmpz_clear(__sd_Z_cst_8);
+      __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_8,__sd_Z_cst_10);
+      __gmpz_clear(__sd_Z_to_Z_8);
+      __gmpz_clear(__sd_Z_cst_10);
       int __sd_exists_0;
       __sd_exists_0 = 0;
       {
         mpz_t __q_i;
-        mpz_t __sd_Z_cst_9;
-        __gmpz_init_set_str(__sd_Z_cst_9,"0",10);
-        mpz_t __sd_Z_cst_10;
-        __gmpz_init_set_str(__sd_Z_cst_10,"4",10);
-        __gmpz_init_set(__q_i,__sd_Z_cst_9);
+        mpz_t __sd_Z_cst_11;
+        __gmpz_init_set_str(__sd_Z_cst_11,"0",10);
+        mpz_t __sd_Z_cst_12;
+        __gmpz_init_set_str(__sd_Z_cst_12,"4",10);
+        __gmpz_init_set(__q_i,__sd_Z_cst_11);
         int __sd_exists_cmp_0;
-        __sd_exists_cmp_0 = __gmpz_cmp(__q_i,__sd_Z_cst_10);
+        __sd_exists_cmp_0 = __gmpz_cmp(__q_i,__sd_Z_cst_12);
         while(__sd_exists_cmp_0 <= 0 && ! __sd_exists_0) {
           mpz_t __sd_Z_lval_0;
           __gmpz_init_set(__sd_Z_lval_0,__q_i);
@@ -194,11 +232,11 @@ void f(int *t, int x)
           __gmpz_clear(__sd_Z_lval_0);
           __sd_exists_0 = *(t + __sd_to_ctype_1) == x;
           __gmpz_add_ui(__q_i,__q_i,1);
-          __sd_exists_cmp_0 = __gmpz_cmp(__q_i,__sd_Z_cst_10);
+          __sd_exists_cmp_0 = __gmpz_cmp(__q_i,__sd_Z_cst_12);
         }
         __gmpz_clear(__q_i);
-        __gmpz_clear(__sd_Z_cst_9);
-        __gmpz_clear(__sd_Z_cst_10);
+        __gmpz_clear(__sd_Z_cst_11);
+        __gmpz_clear(__sd_Z_cst_12);
       }
       if(! ((! (__sd_ne_0 != 0) || __sd_exists_0) && (! __sd_exists_0 || 
                                                       __sd_ne_0 != 0))) {
@@ -219,44 +257,37 @@ void f(int *t, int x)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
 [pc] Starting lanceur_f (isc version)
-[pc] Starting lanceur_f (isc version)
-[pc] Starting lanceur_f (isc version)
-[pc] Starting lanceur_f (isc version)
-[pc] Starting lanceur_f (isc version)
-[pc] Starting lanceur_f (isc version)
-[stady] all-paths: true
-[stady] 55 test cases
+[stady] all-paths: false
+[stady] 43 test cases
 [stady] Subcontract Weakness of stmt 3 for assert
                                            found ≢ 0 ⇔
                                            (∃ ℤ i;
                                               0 ≤ i ≤ 4 ∧ *(t + i) ≡ x); 
         LOCATION: tests/inv_insuf_ko/inv_insuf_ko.c:18
-        TEST DRIVER: testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_4.c
-        found = 198227 -- OUTPUT: 172458 (nondet_sint_val[1])
+        TEST DRIVER: testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_8.c
+        found = 175617 -- OUTPUT: 85264 (nondet_sint_val[3])
         nondet_sint_val[0] = 0
-        nondet_sint_val[1] = 172458
-        t[0] = 153754
-        t[1] = -88465
-        t[2] = 187365
-        t[3] = -36660
-        t[4] = 174739
-        x = -144005
+        nondet_sint_val[1] = -37802
+        nondet_sint_val[2] = 5
+        nondet_sint_val[3] = 85264
+        t[0] = -1073636102
+        t[1] = -144344
+        t[2] = -70932
+        t[3] = -18991
+        t[4] = 33096
+        x = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
 --- Properties of Function 'f'
 --------------------------------------------------------------------------------
 
-[  Valid  ] Invariant (file tests/inv_insuf_ko/inv_insuf_ko.c, line 14)
-            by StaDy.
-[  Valid  ] Assertion (file tests/inv_insuf_ko/inv_insuf_ko.c, line 23)
-            by StaDy.
 [  Valid  ] Default behavior
             by Frama-C kernel.
 
 --------------------------------------------------------------------------------
 --- Status Report Summary
 --------------------------------------------------------------------------------
-     3 Completely validated
-     3 Total
+     1 Completely validated
+     1 Total
 --------------------------------------------------------------------------------
