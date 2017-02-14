@@ -146,7 +146,7 @@ void f(int *t, int x)
                                                       __sd_ne_2 != 0))) {
         pathcrawler_assert_exception("3$not established",5);
       }
-      if(1) {
+      {
         i = nondet_sint("i");
         found = nondet_sint("found");
         mpz_t __sd_Z_cst_2;
@@ -279,7 +279,7 @@ void f(int *t, int x)
                                                       __sd_ne_3 != 0))) {
         pathcrawler_assert_exception("3$not preserved",5);
       }
-      if(1) {
+      {
         i = nondet_sint("i");
         found = nondet_sint("found");
         mpz_t __sd_Z_cst_6;

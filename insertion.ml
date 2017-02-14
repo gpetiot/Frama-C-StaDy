@@ -46,10 +46,24 @@ let rec pretty ?(line_break = true) fmt ins =
     | IBlock b ->
        if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
     | IIf (e,b1,b2) ->
-       Format.fprintf
-	 fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b1;
-       if b2 <> [] then
-	 Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
+       let print_if() =
+	 Format.fprintf
+	   fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b1;
+	 if b2 <> [] then
+	   Format.fprintf fmt "@\n@[<hov 2>else {@\n%a@]@\n}" aux b2
+       in
+       begin
+	 match Cil.isInteger e with
+	 | None -> print_if()
+	 | Some i ->
+	    if Integer.equal i Integer.zero then
+	      (if b2 <> [] then
+		  Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b2)
+	    else if Integer.equal i Integer.one then
+	      (if b1 <> [] then
+		  Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b1)
+	    else print_if()
+       end
     | ILoop (e,b) ->
        Format.fprintf
 	 fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b

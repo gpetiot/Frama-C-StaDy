@@ -250,7 +250,7 @@ void f(int *t, int k)
 }
 
 void __sd_sort_mod_0(int *A, int n) {
-  if(1) {
+  {
     int old_n;
     int *old_A;
     int *old_ptr_A;

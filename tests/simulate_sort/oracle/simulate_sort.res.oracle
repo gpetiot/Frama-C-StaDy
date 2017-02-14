@@ -96,7 +96,7 @@ void main(void)
 }
 
 void __sd_sort_mod_0(int *a, int n) {
-  if(1) {
+  {
     int old_n;
     int *old_a;
     int *old_ptr_a;

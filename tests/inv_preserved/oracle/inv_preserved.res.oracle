@@ -177,7 +177,7 @@ void f(int n, int *t)
       if(! __sd_forall_2) {
         pathcrawler_assert_exception("9$not established",7);
       }
-      if(1) {
+      {
         int __sd_iter_1;
         mpz_t __sd_Z_cst_0;
         __gmpz_init_set_str(__sd_Z_cst_0,"3",10);
@@ -415,7 +415,7 @@ void f(int n, int *t)
         pathcrawler_assert_exception("9$non decreasing",0);
       }
       __gmpz_clear(__sd_Z_sub_14);
-      if(1) {
+      {
         int __sd_iter_2;
         mpz_t __sd_Z_cst_7;
         __gmpz_init_set_str(__sd_Z_cst_7,"3",10);
