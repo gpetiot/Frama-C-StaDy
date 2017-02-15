@@ -1,6 +1,6 @@
 
 /* run.config
-STDOPT: +"-main f -stady -stady-swd 28 -stady-msg-key generated-c,generated-pl -then -report"
+STDOPT: +"-main f -stady -stady-swd call_sort -stady-msg-key generated-c,generated-pl -then -report"
 */
 
 /*@ requires n == 4;
@@ -34,5 +34,6 @@ void sort(int *A, int n)
   @ ensures t[0] <= t[1];
   @*/
 void f(int* t, int k) {
+ call_sort:
   sort(t, k);
 }

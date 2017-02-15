@@ -225,10 +225,10 @@ void f(int *t, int k)
   int old_k;
   old_k = k;
   {
-    {
-      __sd_sort_mod_0(t,k);
-      
-    }
+    call_sort: {
+                 __sd_sort_mod_0(t,k);
+                 
+               }
     {
       mpz_t __sd_Z_cst_4;
       __gmpz_init_set_str(__sd_Z_cst_4,"0",10);

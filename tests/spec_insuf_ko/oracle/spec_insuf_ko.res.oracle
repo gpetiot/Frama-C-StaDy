@@ -165,10 +165,10 @@ void f(int *t, int k)
   int old_k;
   old_k = k;
   {
-    {
-      __sd_sort_mod_0(t,k);
-      
-    }
+    call_sort: {
+                 __sd_sort_mod_0(t,k);
+                 
+               }
     {
       mpz_t __sd_Z_cst_3;
       __gmpz_init_set_str(__sd_Z_cst_3,"0",10);
@@ -244,9 +244,10 @@ void __sd_sort_mod_0(int *A, int n) {
 [pc] Starting lanceur_f (isc version)
 [stady] all-paths: true
 [stady] 21 test cases
-[stady] Subcontract Weakness of sort(t,k); for ensures
-                                               *(\old(t) + 0) ≤ *(\old(t) + 1) 
-        LOCATION: tests/spec_insuf_ko/spec_insuf_ko.c:37
+[stady] Subcontract Weakness of call_sort: sort(t,k); for ensures
+                                                          *(\old(t) + 0) ≤
+                                                          *(\old(t) + 1) 
+        LOCATION: tests/spec_insuf_ko/spec_insuf_ko.c:38
         TEST DRIVER: testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_5.c
         k = 4
         nondet_sint_val[0] = 174739

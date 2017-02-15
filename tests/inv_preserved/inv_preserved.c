@@ -1,5 +1,5 @@
 /* run.config
-STDOPT: +"-main f -stady -stady-msg-key generated-c,generated-pl -stady-swd 9 -stady-stop-when-assert-violated -then -report"
+STDOPT: +"-main f -stady -stady-msg-key generated-c,generated-pl -stady-swd first_loop -stady-stop-when-assert-violated -then -report"
 */
 
 int fmax(int x, int y) {
@@ -17,6 +17,7 @@ void f(int n, int * t) {
 
   t[2] = fmax(t[1], t[0]);
 
+ first_loop:
   /*@
       loop invariant 3 <= i <= n;
       loop invariant \forall integer k; 2 <= k < i-1 ==>
