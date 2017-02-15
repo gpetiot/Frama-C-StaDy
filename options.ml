@@ -52,7 +52,7 @@ end)
 module SWD = Self.String_list (struct
   let option_name = "-stady-swd"
   let help = "detect contract weaknesses"
-  let arg_name = "i,..."
+  let arg_name = "label,..."
 end)
 
 module Simulate_Functions =

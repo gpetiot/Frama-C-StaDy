@@ -66,23 +66,28 @@ let selected_props() =
 
 let compute_props ?(props=selected_props()) ?swd () =
   let swd = match swd with
-    | Some x -> List.map string_of_int x
-    | None -> Options.SWD.get()
+    | Some x -> x
+    | None ->
+       let labels = Options.SWD.get() in
+       let on_label acc l =
+	 let on_kf kf = function
+	   | Some x -> Some x
+	   | None ->
+	      try Some !(Kernel_function.find_label kf l)
+	      with Not_found -> None
+	 in
+	 try
+	   let stmt = Extlib.the (Globals.Functions.fold on_kf None) in
+	   match stmt.skind with
+	   | Instr(Call _) | Loop _ -> stmt.sid :: acc
+	   | _ ->
+	      Options.feedback
+		~once:true "label %s does not refer to a Call nor a Loop" l;
+	     acc
+	 with _ -> Options.feedback ~once:true "label %s does not exist" l; acc
+       in
+       List.fold_left on_label [] labels
   in
-  let valid_sid acc sid =
-    try
-      let sid = int_of_string sid in
-      let s, _ = Kernel_function.find_from_sid sid in
-      begin
-	match s.skind with
-	| Instr(Call _) | Loop _ -> sid :: acc
-	| _ ->
-	   Options.feedback ~once:true "stmt %i not a Call nor a Loop" sid;
-	   acc
-      end
-    with _ -> Options.feedback "%s: not a valid stmt id" sid; acc
-  in
-  let swd = List.fold_left valid_sid [] swd in
   let files = Kernel.Files.get() in
   let fname = Filename.chop_extension (Filename.basename (List.hd files)) in
   let kf = fst (Globals.entry_point()) in
