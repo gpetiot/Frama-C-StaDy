@@ -274,7 +274,7 @@ In the user interface of \framac, an annotation violation is pictured with a red
   frama-c F -main M -stady -stady-swd C
 \end{shell}
 
-where C is a comma-separated list of subcontract identifiers. The subcontract identifiers are the statement identifiers of the corresponding loops (for loop contracts) and function calls (for function contracts).
+where C is a comma-separated list of labels referring to loops (for loop contracts) or function calls (for function contracts).
 
 For now, there is no strategy or heuristic implemented in \stady to automatically submit a set of subcontract identifiers.
 
@@ -470,12 +470,13 @@ Let us now consider a more complex program. The function \lstinline'all_zeros' b
       (\forall integer j; 0 <= j < n ==> t[j] == 0);
 */
 int all_zeros(int t[], int n) {
-  int k;
+  int k = 0;
+ first_loop:
   /*@ loop invariant 0 <= k <= n;
       loop assigns k;
       loop variant n-k; 
   */
-  for(k = 0; k < n; k++) 
+  for(; k < n; k++) 
     if (t[k] != 0) 
       return 0;
   return 1;
@@ -520,17 +521,11 @@ We can apply \stady to look for a non-compliance between the code and its specif
 We re-apply \stady to look for counter-examples exhibiting subcontract weaknesses :
 
 \begin{shell}
-  frama-c all_zeros.c -main all_zeros -stady -stady-swd 2
+  frama-c all_zeros.c -main all_zeros -stady -stady-swd first_loop
   -stady-stop-when-assert-violated
 \end{shell}
 
-Here, 2 is the identifier of the loop and its contract, it is retrieved by using the GUI of \framac :
-
-\begin{shell}
-  frama-c-gui all_zeros.c
-\end{shell}
-
-and clicking on the beginning of the while loop, \texttt{statement: 2} is displayed in the Information tab of the GUI. There is no other way to designate a contract for the Subcontract Weakness Detection mode of \stady at the moment.
+Here, \lstinline'first_loop' is the label of the loop.
 
 \begin{shell}
 [stady] all-paths: true
@@ -569,13 +564,14 @@ We now realize that we might need a loop invariant over the values of the array 
       (\forall integer j; 0 <= j < n ==> t[j] == 0);
 */
 int all_zeros(int t[], int n) {
-  int k;
+  int k = 0;
+ first_loop:
   /*@ loop invariant 0 <= k <= n;
       loop invariant \forall integer j; 0<=j<k ==> t[j]==0;
       loop assigns k;
       loop variant n-k; 
   */
-  for(k = 0; k < n; k++) 
+  for(; k < n; k++) 
     if (t[k] != 0) 
       return 0;
   return 1;
@@ -585,7 +581,7 @@ int all_zeros(int t[], int n) {
 With this new loop invariant, \stady does not exhibit any counter-example of contract weakness :
 
 \begin{shell}
-  frama-c all_zeros.c -main all_zeros -stady -stady-swd 2 -stady-timeout 5
+  frama-c all_zeros.c -main all_zeros -stady -stady-swd first_loop -stady-timeout 5
   -stady-stop-when-assert-violated
 \end{shell}
 
