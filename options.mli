@@ -6,6 +6,7 @@ module PathCrawler_Options: Parameter_sig.String
 module Socket_Type: Parameter_sig.String
 module Timeout: Parameter_sig.Int
 module Stop_When_Assert_Violated: Parameter_sig.Bool
+module Precondition: Parameter_sig.String
 
 (* Property selection *)
 module Functions: Parameter_sig.String_list

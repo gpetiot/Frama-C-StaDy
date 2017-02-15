@@ -146,7 +146,8 @@ let run =
 	      Options.Socket_Type.self; Options.Timeout.self;
 	      Options.Stop_When_Assert_Violated.self; Options.Functions.self;
 	      Options.Behaviors.self; Options.Properties.self;
-	      Options.SWD.self; Options.Simulate_Functions.self] in
+	      Options.SWD.self; Options.Simulate_Functions.self;
+	      Options.Precondition.self] in
   let f, _self = State_builder.apply_once "stady" deps run in
   f
     

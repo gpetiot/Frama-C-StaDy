@@ -80,6 +80,15 @@ module Stop_When_Assert_Violated =
       let help = "stop the test generation at the first violated assertion"
     end)
 
+module Precondition =
+  Self.String
+    (struct
+      let option_name = "-stady-precondition"
+      let help = "add a precondition to the entry point function"
+      let arg_name = "predicate"
+      let default = ""
+     end)
+
 (* Debug Keys *)
 
 let dkey_input_domain = Self.register_category "input_domain"

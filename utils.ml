@@ -16,6 +16,50 @@ let get_var_desc s =
 
 open Cil_types
 
+(* interpreting string as precondition predicates *)
+let type_str_precond kf pred_as_string =
+  let module M = Logic_typing.Make(struct
+    let is_loop() = false
+    let anonCompFieldName = Cabs2cil.anonCompFieldName
+    let conditionalConversion = Cabs2cil.logicConditionalConversion
+    let find_macro _ = raise Not_found
+    let find_var x =
+      let vi =
+	try Globals.Vars.find_from_astinfo x (VLocal kf)
+	with Not_found ->
+	  try Globals.Vars.find_from_astinfo x (VFormal kf)
+	  with Not_found -> Globals.Vars.find_from_astinfo x VGlobal
+      in
+      Cil.cvar_to_lvar vi
+    let find_enum_tag x =
+      try Globals.Types.find_enum_tag x
+      with Not_found -> failwith ("Unbound variable " ^ x)
+    let find_type = Globals.Types.find_type
+    let find_comp_field info s = Field(Cil.getCompField info s,NoOffset)
+    let find_label s = Kernel_function.find_label kf s
+    let remove_logic_function = Logic_env.remove_logic_function
+    let remove_logic_type = Logic_env.remove_logic_type
+    let remove_logic_ctor = Logic_env.remove_logic_ctor
+    let add_logic_function = Logic_utils.add_logic_function
+    let add_logic_type = Logic_env.add_logic_type
+    let add_logic_ctor = Logic_env.add_logic_ctor
+    let find_all_logic_functions = Logic_env.find_all_logic_functions
+    let find_logic_type = Logic_env.find_logic_type
+    let find_logic_ctor = Logic_env.find_logic_ctor
+    let integral_cast ty t =
+      failwith
+        (Pretty_utils.sfprintf
+           "term %a has type %a, but %a is expected."
+           Printer.pp_term t
+	   Printer.pp_logic_type Linteger Printer.pp_typ ty)
+    exception Error of Cil_types.location * string
+    let error loc = Pretty_utils.ksfprintf (fun e -> raise (Error (loc, e)))
+  end)
+  in
+  let lenv = Logic_typing.Lenv.empty() in
+  let _, lexpr = Logic_lexer.lexpr (Lexing.dummy_pos, pred_as_string) in
+  M.predicate lenv lexpr
+    
 let typically_preds_memo = ref []
 let typically_preds_computed = ref false
 
@@ -30,6 +74,14 @@ let typically_preds bhv =
     let typically = List.filter is_typically bhv.Cil_types.b_extended in
     let typically = List.map (fun (_,Ext_preds pred) -> pred) typically in
     let typically = List.fold_left List.rev_append [] typically in
+    let typically =
+      if not (Options.Precondition.is_default()) then
+	try
+	  let kf = fst (Globals.entry_point()) in
+	  (type_str_precond kf (Options.Precondition.get())) :: typically
+	with _ -> typically
+      else typically
+    in
     typically_preds_memo := List.map Logic_const.new_predicate typically;
     typically_preds_computed := true;
     !typically_preds_memo
@@ -79,53 +131,6 @@ let mpz_t() =
   let ty = !ty in
   let ty = Extlib.the ty in
   ty
-
-
-(* unused: interpreting string as precondition predicates *)
-(* let type_str_precond kf pred_as_string = *)
-(*   let module M = Logic_typing.Make(struct *)
-(*     let is_loop() = false *)
-(*     let anonCompFieldName = Cabs2cil.anonCompFieldName *)
-(*     let conditionalConversion = Cabs2cil.logicConditionalConversion *)
-(*     let find_macro _ = raise Not_found *)
-(*     let find_var x = *)
-(*       let vi = *)
-(* 	try Globals.Vars.find_from_astinfo x (VLocal kf) *)
-(* 	with Not_found -> *)
-(* 	  try Globals.Vars.find_from_astinfo x (VFormal kf) *)
-(* 	  with Not_found -> Globals.Vars.find_from_astinfo x VGlobal *)
-(*       in *)
-(*       Cil.cvar_to_lvar vi *)
-(*     let find_enum_tag x = *)
-(*       try Globals.Types.find_enum_tag x *)
-(*       with Not_found -> failwith ("Unbound variable " ^ x) *)
-(*     let find_type = Globals.Types.find_type *)
-(*     let find_comp_field info s = Field(Cil.getCompField info s,NoOffset) *)
-(*     let find_label s = Kernel_function.find_label kf s *)
-
-(*     let remove_logic_function = Logic_env.remove_logic_function *)
-(*     let remove_logic_type = Logic_env.remove_logic_type *)
-(*     let remove_logic_ctor = Logic_env.remove_logic_ctor *)
-
-(*     let add_logic_function = Logic_utils.add_logic_function *)
-(*     let add_logic_type = Logic_env.add_logic_type *)
-(*     let add_logic_ctor = Logic_env.add_logic_ctor *)
-
-(*     let find_all_logic_functions = Logic_env.find_all_logic_functions *)
-(*     let find_logic_type = Logic_env.find_logic_type *)
-(*     let find_logic_ctor = Logic_env.find_logic_ctor *)
-
-(*     let integral_cast ty t = *)
-(*       failwith *)
-(*         (Pretty_utils.sfprintf *)
-(*            "term %a has type %a, but %a is expected." *)
-(*            Printer.pp_term t *)
-(* 	   Printer.pp_logic_type Linteger Printer.pp_typ ty) *)
-(*   end) *)
-(*   in *)
-(*   let lenv = Logic_typing.Lenv.empty() in *)
-(*   let _, lexpr = Logic_lexer.lexpr (Lexing.dummy_pos, pred_as_string) in *)
-(*   M.predicate lenv lexpr *)
 
 let binop_to_relation = function
   | Lt -> Rlt
@@ -239,4 +244,5 @@ let finalize() =
   Options.Behaviors.clear();
   Options.Properties.clear();
   Options.SWD.clear();
+  Options.Precondition.clear();
   Options.Simulate_Functions.clear()
