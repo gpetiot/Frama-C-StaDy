@@ -197,6 +197,15 @@ let do_externals() =
 
 let default_behavior kf =
   List.find Cil.is_default_behavior (Annotations.behaviors kf)
+    
+let loop_condition stmt = match stmt.skind with
+  | Loop (_,b,_,_,_) ->
+     begin
+     match b.bstmts with
+     | {skind = If (e, _, {bstmts = {skind = Break _} :: _}, _)} :: _ -> e
+     | _ -> assert false
+     end
+  | _ -> assert false
 
 let setup_props_bijection () =
   States.Id_To_Property.clear();

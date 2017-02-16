@@ -30,5 +30,7 @@ val relation_to_string: Cil_types.relation -> string
 
 val default_behavior: Cil_types.kernel_function -> Cil_types.behavior
 
+val loop_condition: Cil_types.stmt -> Cil_types.exp
+
 val initialize: unit -> unit
 val finalize: unit -> unit

@@ -1394,12 +1394,9 @@ class gather_insertions props swd = object(self)
     let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
     | Loop (_,b,_,_,_) when List.mem stmt.sid swd ->
-       let cond =
-	 match b.bstmts with
-	 | {skind = If (e, _, _, _)} :: _ -> e
-	 | _ -> assert false
-       in
-       let not_cond = Cil.new_exp ~loc (UnOp(LNot, cond, Cil.intType)) in
+       let loop_cond = Utils.loop_condition stmt in
+       let not_loop_cond =
+	 Cil.new_exp ~loc (UnOp(LNot, loop_cond, Cil.typeOf loop_cond)) in
        let kf = Kernel_function.find_englobing_kf stmt in
        let ca_l = Annotations.code_annot stmt in
        let ca_l = List.map (fun x -> x.annot_content) ca_l in
@@ -1424,8 +1421,9 @@ class gather_insertions props swd = object(self)
 	 let ins_assume_cond = Insertion.mk_if cond [] [ self#pc_ass "" 0 ] in
 	 ins @ ins_assumes @ [ins_bhv; ins_assume_cond]
        in
-       let ins_h_before = Annotations.fold_behaviors (on_bhv cond) kf [] in
-       let ins_h_after = Annotations.fold_behaviors (on_bhv not_cond) kf [] in
+       let ins_h_before = Annotations.fold_behaviors (on_bhv loop_cond) kf [] in
+       let ins_h_after =
+	 Annotations.fold_behaviors (on_bhv not_loop_cond) kf [] in
        Cil.DoChildrenPost (fun s ->
 	 List.iter (self#insert(Symbolic_label.beg_stmt stmt.sid)) ins_h_before;
 	 List.iter (self#insert(Symbolic_label.end_stmt stmt.sid)) ins_h_after;
