@@ -51,13 +51,18 @@ class print_insertions insertions functions swd = object(self)
     self#insertions_at fmt (Symbolic_label.beg_stmt stmt.sid);
     begin
       match stmt.skind with
-      | Loop (_,b,_,_,_) when List.mem stmt.sid swd ->
+      | Loop (_,b,l,_,_) when List.mem stmt.sid swd ->
+	 let line_directive fmt = self#line_directive fmt in
+	 let loop_cond = Utils.loop_condition stmt in
+	 Format.fprintf fmt "%a@[<v 2>if (%a) {@\n" line_directive l
+	   super#exp loop_cond;
 	 let braces = false in
 	 self#insertions_at fmt (Symbolic_label.beg_iter stmt.sid);
 	 let new_b = {b with bstmts = List.tl b.bstmts} in
 	 let new_b = {new_b with blocals = []} in
 	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
-	 self#insertions_at fmt (Symbolic_label.end_iter stmt.sid)
+	 self#insertions_at fmt (Symbolic_label.end_iter stmt.sid);
+	 Format.fprintf fmt "}@\n @]"
       | Loop(_,b,l,_,_) ->
 	 let line_directive fmt = self#line_directive fmt in
 	 Format.fprintf fmt "%a@[<v 2>while (1) {@\n" line_directive l;

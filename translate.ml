@@ -1425,7 +1425,7 @@ class gather_insertions props swd = object(self)
        let ins_h_after =
 	 Annotations.fold_behaviors (on_bhv not_loop_cond) kf [] in
        Cil.DoChildrenPost (fun s ->
-	 List.iter (self#insert(Symbolic_label.beg_stmt stmt.sid)) ins_h_before;
+	 List.iter (self#insert(Symbolic_label.beg_iter stmt.sid)) ins_h_before;
 	 List.iter (self#insert(Symbolic_label.end_stmt stmt.sid)) ins_h_after;
 	 s
        )
