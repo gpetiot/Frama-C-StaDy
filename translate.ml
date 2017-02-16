@@ -1503,8 +1503,7 @@ let translate props swd precond_fname instru_fname =
     let dkey = Options.dkey_insertions in
     let f ins =
       Options.feedback
-	~dkey "/* %a */ %a" Symbolic_label.pretty lab
-	(Insertion.pretty ~line_break:true) ins
+	~dkey "/* %a */ %a" Symbolic_label.pretty lab Insertion.pretty ins
     in
     Queue.iter f insertions;
     Options.feedback ~dkey "--------------------"

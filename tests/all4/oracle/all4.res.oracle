@@ -213,23 +213,23 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
   unsigned long __sd_iter_0;
   old_ptr_f19 = (double **)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(double *));
   __sd_iter_0 = 0;
-  while(__sd_iter_0 < __sd_to_ctype_0) {
+  while (__sd_iter_0 < __sd_to_ctype_0) {
     mpz_t __sd_Z_cst_1;
-    __gmpz_init_set_str(__sd_Z_cst_1,"11",10);
     mpz_t __sd_Z_cst_2;
-    __gmpz_init_set_str(__sd_Z_cst_2,"1",10);
     mpz_t __sd_Z_add_0;
+    unsigned long __sd_to_ctype_1;
+    unsigned long __sd_iter_1;
+    __gmpz_init_set_str(__sd_Z_cst_1,"11",10);
+    __gmpz_init_set_str(__sd_Z_cst_2,"1",10);
     __gmpz_init(__sd_Z_add_0);
     __gmpz_add(__sd_Z_add_0,__sd_Z_cst_1,__sd_Z_cst_2);
     __gmpz_clear(__sd_Z_cst_1);
     __gmpz_clear(__sd_Z_cst_2);
-    unsigned long __sd_to_ctype_1;
     __sd_to_ctype_1 = __gmpz_get_ui(__sd_Z_add_0);
     __gmpz_clear(__sd_Z_add_0);
-    unsigned long __sd_iter_1;
     *(old_ptr_f19 + __sd_iter_0) = (double *)malloc(__sd_to_ctype_1 * (unsigned long)sizeof(double));
     __sd_iter_1 = 0;
-    while(__sd_iter_1 < __sd_to_ctype_1) {
+    while (__sd_iter_1 < __sd_to_ctype_1) {
       *(*(old_ptr_f19 + __sd_iter_0) + __sd_iter_1) = (*(f19 + __sd_iter_0))[__sd_iter_1];
       __sd_iter_1 ++;
     }
@@ -246,23 +246,23 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
   unsigned long __sd_iter_3;
   old_ptr_f20 = (double **)malloc(__sd_to_ctype_3 * (unsigned long)sizeof(double *));
   __sd_iter_3 = 0;
-  while(__sd_iter_3 < __sd_to_ctype_3) {
+  while (__sd_iter_3 < __sd_to_ctype_3) {
     mpz_t __sd_Z_cst_5;
-    __gmpz_init_set_str(__sd_Z_cst_5,"11",10);
     mpz_t __sd_Z_cst_6;
-    __gmpz_init_set_str(__sd_Z_cst_6,"1",10);
     mpz_t __sd_Z_add_1;
+    unsigned long __sd_to_ctype_4;
+    unsigned long __sd_iter_4;
+    __gmpz_init_set_str(__sd_Z_cst_5,"11",10);
+    __gmpz_init_set_str(__sd_Z_cst_6,"1",10);
     __gmpz_init(__sd_Z_add_1);
     __gmpz_add(__sd_Z_add_1,__sd_Z_cst_5,__sd_Z_cst_6);
     __gmpz_clear(__sd_Z_cst_5);
     __gmpz_clear(__sd_Z_cst_6);
-    unsigned long __sd_to_ctype_4;
     __sd_to_ctype_4 = __gmpz_get_ui(__sd_Z_add_1);
     __gmpz_clear(__sd_Z_add_1);
-    unsigned long __sd_iter_4;
     *(old_ptr_f20 + __sd_iter_3) = (double *)malloc(__sd_to_ctype_4 * (unsigned long)sizeof(double));
     __sd_iter_4 = 0;
-    while(__sd_iter_4 < __sd_to_ctype_4) {
+    while (__sd_iter_4 < __sd_to_ctype_4) {
       *(*(old_ptr_f20 + __sd_iter_3) + __sd_iter_4) = (*(f20 + __sd_iter_3))[__sd_iter_4];
       __sd_iter_4 ++;
     }
@@ -295,9 +295,7 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
           __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_0,__sd_Z_cst_8);
           __gmpz_clear(__sd_Z_to_Z_0);
           __gmpz_clear(__sd_Z_cst_8);
-          if(! (__sd_ne_0 != 0)) {
-            pathcrawler_assert_exception("",25);
-          }
+          if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",25);
           ;
         }
       }
@@ -309,7 +307,7 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
     __sd_to_ctype_2 = __gmpz_get_ui(__sd_Z_cst_3);
     __gmpz_clear(__sd_Z_cst_3);
     __sd_iter_2 = 0;
-    while(__sd_iter_2 < __sd_to_ctype_2) {
+    while (__sd_iter_2 < __sd_to_ctype_2) {
       free(*(old_ptr_f19 + __sd_iter_2));
       __sd_iter_2 ++;
     }
@@ -321,7 +319,7 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
     __sd_to_ctype_5 = __gmpz_get_ui(__sd_Z_cst_7);
     __gmpz_clear(__sd_Z_cst_7);
     __sd_iter_5 = 0;
-    while(__sd_iter_5 < __sd_to_ctype_5) {
+    while (__sd_iter_5 < __sd_to_ctype_5) {
       free(*(old_ptr_f20 + __sd_iter_5));
       __sd_iter_5 ++;
     }
@@ -546,12 +544,8 @@ int Frama_C_nondet(int a, int b)
     {
       int __sd_or_0;
       __sd_or_0 = tmp == old_a;
-      if(! __sd_or_0) {
-        __sd_or_0 = tmp == old_b;
-      }
-      if(! __sd_or_0) {
-        pathcrawler_assert_exception("",53);
-      }
+      if (! __sd_or_0) __sd_or_0 = tmp == old_b;
+      if (! __sd_or_0) pathcrawler_assert_exception("",53);
     }
     return tmp;
   }
@@ -585,12 +579,8 @@ void *Frama_C_nondet_ptr(void *a, void *b)
     {
       int __sd_or_1;
       __sd_or_1 = (unsigned int)__retres == (unsigned int)old_a;
-      if(! __sd_or_1) {
-        __sd_or_1 = (unsigned int)__retres == (unsigned int)old_b;
-      }
-      if(! __sd_or_1) {
-        pathcrawler_assert_exception("",58);
-      }
+      if (! __sd_or_1) __sd_or_1 = (unsigned int)__retres == (unsigned int)old_b;
+      if (! __sd_or_1) pathcrawler_assert_exception("",58);
     }
     return __retres;
   }
@@ -598,9 +588,7 @@ void *Frama_C_nondet_ptr(void *a, void *b)
 
 int Frama_C_interval(int min, int max)
 {
-  if(! (min <= max)) {
-    pathcrawler_assert_exception("",121);
-  }
+  if (! (min <= max)) pathcrawler_assert_exception("",121);
   int volatile old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
@@ -626,12 +614,8 @@ int Frama_C_interval(int min, int max)
     {
       int __sd_and_2;
       __sd_and_2 = old_min <= r;
-      if(__sd_and_2) {
-        __sd_and_2 = r <= old_max;
-      }
-      if(! __sd_and_2) {
-        pathcrawler_assert_exception("",27);
-      }
+      if (__sd_and_2) __sd_and_2 = r <= old_max;
+      if (! __sd_and_2) pathcrawler_assert_exception("",27);
     }
     return r;
   }
@@ -639,9 +623,7 @@ int Frama_C_interval(int min, int max)
 
 float Frama_C_float_interval(float min, float max)
 {
-  if(! (min <= max)) {
-    pathcrawler_assert_exception("",30);
-  }
+  if (! (min <= max)) pathcrawler_assert_exception("",30);
   int volatile old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
@@ -660,16 +642,14 @@ float Frama_C_float_interval(float min, float max)
     float tmp;
     Frama_C_update_entropy();
     if (Frama_C_entropy_source) tmp = min; else tmp = max;
-    
+    ;
     return tmp;
   }
 }
 
 double Frama_C_double_interval(double min, double max)
 {
-  if(! (min <= max)) {
-    pathcrawler_assert_exception("",7);
-  }
+  if (! (min <= max)) pathcrawler_assert_exception("",7);
   int volatile old_Frama_C_entropy_source;
   old_Frama_C_entropy_source = Frama_C_entropy_source;
   double *old_G2;
@@ -688,7 +668,7 @@ double Frama_C_double_interval(double min, double max)
     double tmp;
     Frama_C_update_entropy();
     if (Frama_C_entropy_source) tmp = min; else tmp = max;
-    
+    ;
     return tmp;
   }
 }
@@ -696,7 +676,7 @@ double Frama_C_double_interval(double min, double max)
 int __sd_Frama_C_interval_mod_1(int min, int max) {
   int __retres;
   __retres = nondet_sint("\\return of function \'Frama_C_interval\'");
-  {
+  if (1) {
     int old_max;
     int old_min;
     int volatile old_Frama_C_entropy_source;
@@ -704,6 +684,7 @@ int __sd_Frama_C_interval_mod_1(int min, int max) {
     double *old_ptr_G2;
     double *old_G1;
     double *old_ptr_G1;
+    int __sd_and_1;
     old_max = max;
     old_min = min;
     old_Frama_C_entropy_source = Frama_C_entropy_source;
@@ -713,21 +694,17 @@ int __sd_Frama_C_interval_mod_1(int min, int max) {
     old_ptr_G1 = G1;
     Frama_C_entropy_source = nondet_sint("Frama_C_entropy_source");
     __retres = nondet_sint("\\result");
-    int __sd_and_1;
     __sd_and_1 = old_min <= __retres;
-    if(__sd_and_1) {
-      __sd_and_1 = __retres <= old_max;
-    }
-    if(! __sd_and_1) {
-      pathcrawler_assume_exception("",0);
-    }
+    if (__sd_and_1) __sd_and_1 = __retres <= old_max;
+    if (! __sd_and_1) pathcrawler_assume_exception("",0);
   }
   return __retres;
+  
 }
 int __sd_Frama_C_interval_mod_0(int min, int max) {
   int __retres;
   __retres = nondet_sint("\\return of function \'Frama_C_interval\'");
-  {
+  if (1) {
     int old_max;
     int old_min;
     int volatile old_Frama_C_entropy_source;
@@ -735,6 +712,7 @@ int __sd_Frama_C_interval_mod_0(int min, int max) {
     double *old_ptr_G2;
     double *old_G1;
     double *old_ptr_G1;
+    int __sd_and_0;
     old_max = max;
     old_min = min;
     old_Frama_C_entropy_source = Frama_C_entropy_source;
@@ -744,16 +722,12 @@ int __sd_Frama_C_interval_mod_0(int min, int max) {
     old_ptr_G1 = G1;
     Frama_C_entropy_source = nondet_sint("Frama_C_entropy_source");
     __retres = nondet_sint("\\result");
-    int __sd_and_0;
     __sd_and_0 = old_min <= __retres;
-    if(__sd_and_0) {
-      __sd_and_0 = __retres <= old_max;
-    }
-    if(! __sd_and_0) {
-      pathcrawler_assume_exception("",0);
-    }
+    if (__sd_and_0) __sd_and_0 = __retres <= old_max;
+    if (! __sd_and_0) pathcrawler_assume_exception("",0);
   }
   return __retres;
+  
 }
 
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)

@@ -76,7 +76,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   unsigned long __sd_iter_0;
   old_ptr_arr = (int *)malloc(__sd_to_ctype_2 * (unsigned long)sizeof(int));
   __sd_iter_0 = 0;
-  while(__sd_iter_0 < __sd_to_ctype_2) {
+  while (__sd_iter_0 < __sd_to_ctype_2) {
     *(old_ptr_arr + __sd_iter_0) = *(arr + __sd_iter_0);
     __sd_iter_0 ++;
   }
@@ -100,7 +100,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   unsigned long __sd_iter_1;
   old_ptr_beg = (int *)malloc(__sd_to_ctype_3 * (unsigned long)sizeof(int));
   __sd_iter_1 = 0;
-  while(__sd_iter_1 < __sd_to_ctype_3) {
+  while (__sd_iter_1 < __sd_to_ctype_3) {
     *(old_ptr_beg + __sd_iter_1) = *(beg + __sd_iter_1);
     __sd_iter_1 ++;
   }
@@ -122,7 +122,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
   unsigned long __sd_iter_2;
   old_ptr_end = (int *)malloc(__sd_to_ctype_4 * (unsigned long)sizeof(int));
   __sd_iter_2 = 0;
-  while(__sd_iter_2 < __sd_to_ctype_4) {
+  while (__sd_iter_2 < __sd_to_ctype_4) {
     *(old_ptr_end + __sd_iter_2) = *(end + __sd_iter_2);
     __sd_iter_2 ++;
   }
@@ -146,10 +146,8 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                 goto return_label;
                               }
                               {
-                                if(! (L <= R)) {
-                                  pathcrawler_assert_exception("not established",
-                                                               3);
-                                }
+                                if (! (L <= R)) pathcrawler_assert_exception
+                                                ("not established",3);
                                 while (1) {
                                   if (! (L < R)) break;mpz_t __sd_Z_to_Z_11;
                                   __gmpz_init_set_si(__sd_Z_to_Z_11,R);
@@ -164,15 +162,12 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                   int __sd_variant_pos_2;
                                   __sd_variant_pos_2 = __gmpz_cmp_ui(__sd_Z_sub_5,
                                                                     0);
-                                  if(__sd_variant_pos_2 < 0) {
-                                    pathcrawler_assert_exception("non positive",
-                                                                 9);
-                                  }
+                                  if (__sd_variant_pos_2 < 0) pathcrawler_assert_exception
+                                                              ("non positive",
+                                                               9);
                                   {
-                                    if(! (L <= R)) {
-                                      pathcrawler_assert_exception("not established",
-                                                                   1);
-                                    }
+                                    if (! (L <= R)) pathcrawler_assert_exception
+                                                    ("not established",1);
                                     while (1) {
                                       if (*(arr + R) >= piv) {
                                         if (! (L < R)) break;
@@ -190,14 +185,12 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                       int __sd_variant_pos_0;
                                       __sd_variant_pos_0 = __gmpz_cmp_ui
                                       (__sd_Z_sub_1,0);
-                                      if(__sd_variant_pos_0 < 0) {
-                                        pathcrawler_assert_exception("non positive",
-                                                                    6);
-                                      }
-                                      R --;if(! (L <= R)) {
-                                             pathcrawler_assert_exception
-                                             ("not preserved",1);
-                                      }
+                                      if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception
+                                                                  ("non positive",
+                                                                   6);
+                                      R --;if (! (L <= R)) pathcrawler_assert_exception
+                                                           ("not preserved",
+                                                            1);
                                       mpz_t __sd_Z_to_Z_5;
                                       __gmpz_init_set_si(__sd_Z_to_Z_5,R);
                                       mpz_t __sd_Z_to_Z_6;
@@ -211,10 +204,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                       int __sd_variant_decr_0;
                                       __sd_variant_decr_0 = __gmpz_cmp
                                       (__sd_Z_sub_2,__sd_Z_sub_1);
-                                      if(__sd_variant_decr_0 >= 0) {
-                                        pathcrawler_assert_exception("non decreasing",
+                                      if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception
+                                                                    ("non decreasing",
                                                                     6);
-                                      }
                                       __gmpz_clear(__sd_Z_sub_1);
                                       }
                                        
@@ -228,10 +220,8 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                     }
                                   }
                                   {
-                                    if(! (L <= R)) {
-                                      pathcrawler_assert_exception("not established",
-                                                                   10);
-                                    }
+                                    if (! (L <= R)) pathcrawler_assert_exception
+                                                    ("not established",10);
                                     while (1) {
                                       if (*(arr + L) <= piv) {
                                         if (! (L < R)) break;
@@ -249,14 +239,12 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                       int __sd_variant_pos_1;
                                       __sd_variant_pos_1 = __gmpz_cmp_ui
                                       (__sd_Z_sub_3,0);
-                                      if(__sd_variant_pos_1 < 0) {
-                                        pathcrawler_assert_exception("non positive",
-                                                                    8);
-                                      }
-                                      L ++;if(! (L <= R)) {
-                                             pathcrawler_assert_exception
-                                             ("not preserved",10);
-                                      }
+                                      if (__sd_variant_pos_1 < 0) pathcrawler_assert_exception
+                                                                  ("non positive",
+                                                                   8);
+                                      L ++;if (! (L <= R)) pathcrawler_assert_exception
+                                                           ("not preserved",
+                                                            10);
                                       mpz_t __sd_Z_to_Z_9;
                                       __gmpz_init_set_si(__sd_Z_to_Z_9,R);
                                       mpz_t __sd_Z_to_Z_10;
@@ -270,10 +258,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                       int __sd_variant_decr_1;
                                       __sd_variant_decr_1 = __gmpz_cmp
                                       (__sd_Z_sub_4,__sd_Z_sub_3);
-                                      if(__sd_variant_decr_1 >= 0) {
-                                        pathcrawler_assert_exception("non decreasing",
+                                      if (__sd_variant_decr_1 >= 0) pathcrawler_assert_exception
+                                                                    ("non decreasing",
                                                                     8);
-                                      }
                                       __gmpz_clear(__sd_Z_sub_3);
                                       }
                                        
@@ -285,10 +272,8 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                       R --;
                                       *(arr + tmp_0) = *(arr + L);
                                     }
-                                  }if(! (L <= R)) {
-                                     pathcrawler_assert_exception("not preserved",
-                                                                  3);
-                                  }
+                                  }if (! (L <= R)) pathcrawler_assert_exception
+                                                   ("not preserved",3);
                                   mpz_t __sd_Z_to_Z_13;
                                   __gmpz_init_set_si(__sd_Z_to_Z_13,R);
                                   mpz_t __sd_Z_to_Z_14;
@@ -302,10 +287,9 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                   int __sd_variant_decr_2;
                                   __sd_variant_decr_2 = __gmpz_cmp(__sd_Z_sub_6,
                                                                    __sd_Z_sub_5);
-                                  if(__sd_variant_decr_2 >= 0) {
-                                    pathcrawler_assert_exception("non decreasing",
+                                  if (__sd_variant_decr_2 >= 0) pathcrawler_assert_exception
+                                                                ("non decreasing",
                                                                  9);
-                                  }
                                   __gmpz_clear(__sd_Z_sub_5);
                                   }
                                    
@@ -325,39 +309,42 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
     return_label:
       {
         int __sd_forall_0;
+        mpz_t __sd_Z_to_Z_1;
+        mpz_t __sd_Z_cst_3;
+        int __sd_eq_0;
         __sd_forall_0 = 1;
         {
           mpz_t __q_i;
           mpz_t __sd_Z_cst_0;
-          __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
           mpz_t __sd_Z_to_Z_0;
-          __gmpz_init_set_si(__sd_Z_to_Z_0,old_elements);
           mpz_t __sd_Z_cst_1;
-          __gmpz_init_set_str(__sd_Z_cst_1,"1",10);
           mpz_t __sd_Z_sub_0;
+          int __sd_forall_cmp_0;
+          __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
+          __gmpz_init_set_si(__sd_Z_to_Z_0,old_elements);
+          __gmpz_init_set_str(__sd_Z_cst_1,"1",10);
           __gmpz_init(__sd_Z_sub_0);
           __gmpz_sub(__sd_Z_sub_0,__sd_Z_to_Z_0,__sd_Z_cst_1);
           __gmpz_clear(__sd_Z_to_Z_0);
           __gmpz_clear(__sd_Z_cst_1);
           __gmpz_init_set(__q_i,__sd_Z_cst_0);
-          int __sd_forall_cmp_0;
           __sd_forall_cmp_0 = __gmpz_cmp(__q_i,__sd_Z_sub_0);
-          while(__sd_forall_cmp_0 < 0 && __sd_forall_0) {
+          while (__sd_forall_cmp_0 < 0 && __sd_forall_0) {
             mpz_t __sd_Z_lval_0;
-            __gmpz_init_set(__sd_Z_lval_0,__q_i);
             int __sd_to_ctype_0;
+            mpz_t __sd_Z_lval_1;
+            mpz_t __sd_Z_cst_2;
+            mpz_t __sd_Z_add_0;
+            int __sd_to_ctype_1;
+            __gmpz_init_set(__sd_Z_lval_0,__q_i);
             __sd_to_ctype_0 = (int)__gmpz_get_si(__sd_Z_lval_0);
             __gmpz_clear(__sd_Z_lval_0);
-            mpz_t __sd_Z_lval_1;
             __gmpz_init_set(__sd_Z_lval_1,__q_i);
-            mpz_t __sd_Z_cst_2;
             __gmpz_init_set_str(__sd_Z_cst_2,"1",10);
-            mpz_t __sd_Z_add_0;
             __gmpz_init(__sd_Z_add_0);
             __gmpz_add(__sd_Z_add_0,__sd_Z_lval_1,__sd_Z_cst_2);
             __gmpz_clear(__sd_Z_lval_1);
             __gmpz_clear(__sd_Z_cst_2);
-            int __sd_to_ctype_1;
             __sd_to_ctype_1 = (int)__gmpz_get_si(__sd_Z_add_0);
             __gmpz_clear(__sd_Z_add_0);
             __sd_forall_0 = *(old_arr + __sd_to_ctype_0) <= *(old_arr + __sd_to_ctype_1);
@@ -368,20 +355,13 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
           __gmpz_clear(__sd_Z_cst_0);
           __gmpz_clear(__sd_Z_sub_0);
         }
-        if(! __sd_forall_0) {
-          pathcrawler_assert_exception("",2);
-        }
-        mpz_t __sd_Z_to_Z_1;
+        if (! __sd_forall_0) pathcrawler_assert_exception("",2);
         __gmpz_init_set_si(__sd_Z_to_Z_1,__retres);
-        mpz_t __sd_Z_cst_3;
         __gmpz_init_set_str(__sd_Z_cst_3,"0",10);
-        int __sd_eq_0;
         __sd_eq_0 = __gmpz_cmp(__sd_Z_to_Z_1,__sd_Z_cst_3);
         __gmpz_clear(__sd_Z_to_Z_1);
         __gmpz_clear(__sd_Z_cst_3);
-        if(! (__sd_eq_0 == 0)) {
-          pathcrawler_assert_exception("",7);
-        }
+        if (! (__sd_eq_0 == 0)) pathcrawler_assert_exception("",7);
       }
       free(old_ptr_arr);
       free(old_ptr_beg);

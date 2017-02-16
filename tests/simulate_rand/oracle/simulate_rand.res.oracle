@@ -71,15 +71,11 @@ void main(void)
       
     }
     {
-      if(! (x == y)) {
-        pathcrawler_assert_exception("",0);
-      }
+      if (! (x == y)) pathcrawler_assert_exception("",0);
       ;
     }
     {
-      if(! (x != z)) {
-        pathcrawler_assert_exception("",1);
-      }
+      if (! (x != z)) pathcrawler_assert_exception("",1);
       ;
     }
     return;
@@ -90,16 +86,19 @@ int __sd_rand_mod_2() {
   int __retres;
   __retres = nondet_sint("\\return of function \'rand\'");
   return __retres;
+  
 }
 int __sd_rand_mod_1() {
   int __retres;
   __retres = nondet_sint("\\return of function \'rand\'");
   return __retres;
+  
 }
 int __sd_rand_mod_0() {
   int __retres;
   __retres = nondet_sint("\\return of function \'rand\'");
   return __retres;
+  
 }
 
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)

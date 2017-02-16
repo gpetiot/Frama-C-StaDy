@@ -79,37 +79,23 @@ void f(int x, int y, int z)
   int old_z;
   old_z = z;
   {
-    {
-      if(x >= y && x >= z) {
-        int __sd_and_0;
-        __sd_and_0 = old_y <= old_x;
-        if(__sd_and_0) {
-          __sd_and_0 = old_z <= old_x;
-        }
-        if(! __sd_and_0) {
-          pathcrawler_assert_exception("",13);
-        }
-      }
-      if(y >= x && y >= z) {
-        int __sd_and_1;
-        __sd_and_1 = old_x <= old_y;
-        if(__sd_and_1) {
-          __sd_and_1 = old_z <= old_y;
-        }
-        if(! __sd_and_1) {
-          pathcrawler_assert_exception("",19);
-        }
-      }
-      if(z >= x && z >= y) {
-        int __sd_and_2;
-        __sd_and_2 = old_x <= old_z;
-        if(__sd_and_2) {
-          __sd_and_2 = old_y <= old_z;
-        }
-        if(! __sd_and_2) {
-          pathcrawler_assert_exception("",16);
-        }
-      }
+    if (x >= y && x >= z) {
+      int __sd_and_0;
+      __sd_and_0 = old_y <= old_x;
+      if (__sd_and_0) __sd_and_0 = old_z <= old_x;
+      if (! __sd_and_0) pathcrawler_assert_exception("",13);
+    }
+    if (y >= x && y >= z) {
+      int __sd_and_1;
+      __sd_and_1 = old_x <= old_y;
+      if (__sd_and_1) __sd_and_1 = old_z <= old_y;
+      if (! __sd_and_1) pathcrawler_assert_exception("",19);
+    }
+    if (z >= x && z >= y) {
+      int __sd_and_2;
+      __sd_and_2 = old_x <= old_z;
+      if (__sd_and_2) __sd_and_2 = old_y <= old_z;
+      if (! __sd_and_2) pathcrawler_assert_exception("",16);
     }
     return;
   }

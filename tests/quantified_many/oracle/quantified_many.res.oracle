@@ -92,29 +92,29 @@ void f(int default_value)
       {
         mpz_t __q_b;
         mpz_t __sd_Z_cst_0;
-        __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
         mpz_t __sd_Z_cst_1;
-        __gmpz_init_set_str(__sd_Z_cst_1,"5",10);
-        __gmpz_init_set(__q_b,__sd_Z_cst_0);
         int __sd_forall_cmp_0;
-        __sd_forall_cmp_0 = __gmpz_cmp(__q_b,__sd_Z_cst_1);
         mpz_t __q_a;
         mpz_t __sd_Z_cst_2;
-        __gmpz_init_set_str(__sd_Z_cst_2,"0",10);
         mpz_t __sd_Z_cst_3;
+        int __sd_forall_cmp_1;
+        __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
+        __gmpz_init_set_str(__sd_Z_cst_1,"5",10);
+        __gmpz_init_set(__q_b,__sd_Z_cst_0);
+        __sd_forall_cmp_0 = __gmpz_cmp(__q_b,__sd_Z_cst_1);
+        __gmpz_init_set_str(__sd_Z_cst_2,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_3,"5",10);
         __gmpz_init_set(__q_a,__sd_Z_cst_2);
-        int __sd_forall_cmp_1;
         __sd_forall_cmp_1 = __gmpz_cmp(__q_a,__sd_Z_cst_3);
-        while(__sd_forall_cmp_1 < 0 && (__sd_forall_cmp_0 < 0 && __sd_forall_0)) {
+        while (__sd_forall_cmp_1 < 0 && (__sd_forall_cmp_0 < 0 && __sd_forall_0)) {
           mpz_t __sd_Z_lval_0;
-          __gmpz_init_set(__sd_Z_lval_0,__q_a);
           int __sd_to_ctype_0;
+          mpz_t __sd_Z_lval_1;
+          int __sd_to_ctype_1;
+          __gmpz_init_set(__sd_Z_lval_0,__q_a);
           __sd_to_ctype_0 = (int)__gmpz_get_si(__sd_Z_lval_0);
           __gmpz_clear(__sd_Z_lval_0);
-          mpz_t __sd_Z_lval_1;
           __gmpz_init_set(__sd_Z_lval_1,__q_b);
-          int __sd_to_ctype_1;
           __sd_to_ctype_1 = (int)__gmpz_get_si(__sd_Z_lval_1);
           __gmpz_clear(__sd_Z_lval_1);
           __sd_forall_0 = min <= t[__sd_to_ctype_0][__sd_to_ctype_1];
@@ -130,9 +130,7 @@ void f(int default_value)
         __gmpz_clear(__sd_Z_cst_2);
         __gmpz_clear(__sd_Z_cst_3);
       }
-      if(! __sd_forall_0) {
-        pathcrawler_assert_exception("",0);
-      }
+      if (! __sd_forall_0) pathcrawler_assert_exception("",0);
       ;
     }
     {
@@ -141,29 +139,29 @@ void f(int default_value)
       {
         mpz_t __q_b;
         mpz_t __sd_Z_cst_4;
-        __gmpz_init_set_str(__sd_Z_cst_4,"0",10);
         mpz_t __sd_Z_cst_5;
-        __gmpz_init_set_str(__sd_Z_cst_5,"5",10);
-        __gmpz_init_set(__q_b,__sd_Z_cst_4);
         int __sd_exists_cmp_0;
-        __sd_exists_cmp_0 = __gmpz_cmp(__q_b,__sd_Z_cst_5);
         mpz_t __q_a;
         mpz_t __sd_Z_cst_6;
-        __gmpz_init_set_str(__sd_Z_cst_6,"0",10);
         mpz_t __sd_Z_cst_7;
+        int __sd_exists_cmp_1;
+        __gmpz_init_set_str(__sd_Z_cst_4,"0",10);
+        __gmpz_init_set_str(__sd_Z_cst_5,"5",10);
+        __gmpz_init_set(__q_b,__sd_Z_cst_4);
+        __sd_exists_cmp_0 = __gmpz_cmp(__q_b,__sd_Z_cst_5);
+        __gmpz_init_set_str(__sd_Z_cst_6,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_7,"5",10);
         __gmpz_init_set(__q_a,__sd_Z_cst_6);
-        int __sd_exists_cmp_1;
         __sd_exists_cmp_1 = __gmpz_cmp(__q_a,__sd_Z_cst_7);
-        while(__sd_exists_cmp_1 < 0 && (__sd_exists_cmp_0 < 0 && ! __sd_exists_0)) {
+        while (__sd_exists_cmp_1 < 0 && (__sd_exists_cmp_0 < 0 && ! __sd_exists_0)) {
           mpz_t __sd_Z_lval_2;
-          __gmpz_init_set(__sd_Z_lval_2,__q_a);
           int __sd_to_ctype_2;
+          mpz_t __sd_Z_lval_3;
+          int __sd_to_ctype_3;
+          __gmpz_init_set(__sd_Z_lval_2,__q_a);
           __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_lval_2);
           __gmpz_clear(__sd_Z_lval_2);
-          mpz_t __sd_Z_lval_3;
           __gmpz_init_set(__sd_Z_lval_3,__q_b);
-          int __sd_to_ctype_3;
           __sd_to_ctype_3 = (int)__gmpz_get_si(__sd_Z_lval_3);
           __gmpz_clear(__sd_Z_lval_3);
           __sd_exists_0 = min == t[__sd_to_ctype_2][__sd_to_ctype_3];
@@ -179,9 +177,7 @@ void f(int default_value)
         __gmpz_clear(__sd_Z_cst_6);
         __gmpz_clear(__sd_Z_cst_7);
       }
-      if(! __sd_exists_0) {
-        pathcrawler_assert_exception("",2);
-      }
+      if (! __sd_exists_0) pathcrawler_assert_exception("",2);
       ;
     }
     return;

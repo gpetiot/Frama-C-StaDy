@@ -18,6 +18,33 @@ let mk_block b = IBlock b
 let mk_if a b c = IIf (a, b, c)
 let mk_loop a b = ILoop (a, b)
 
+let loc = Cil_datatype.Location.unknown
+
+let split_decl_instr l =
+  List.fold_left (fun (decl,instr) i ->
+    match i with
+    | Decl v -> (v :: decl,instr)
+    | _ -> (decl, i::instr)
+  ) ([],[]) l
+
+let rec to_stmt = function
+  | Instru i -> Cil.mkStmt (Instr i)
+  | IRet e -> Cil.mkStmt (Return (Some e, loc))
+  | Decl _ -> assert false
+  | IBlock i -> Cil.mkStmt (Block (ilist_to_block i))
+  | IIf (e, b1, b2) ->
+     Cil.mkStmt (If(e, ilist_to_block b1, ilist_to_block b2, loc))
+  | ILoop (e, b) ->
+     let break_stmt = Cil.mkStmt (Break loc) in
+     let b1 = Cil.mkBlock [] and b2 = Cil.mkBlock [break_stmt] in
+     let i = Cil.mkStmt (If(e, b1, b2, loc)) in
+     let b' = ilist_to_block b in
+     Cil.mkStmt (Loop ([], {b' with bstmts = i :: b'.bstmts}, loc, None, None))
+       
+and ilist_to_block il =
+  let vars, instr = split_decl_instr il in
+  {battrs=[]; blocals=(List.rev vars); bstmts=List.map to_stmt (List.rev instr)}
+
 let rec is_nondet = function
   | Instru(Call (_,{enode=Lval(Var v,_)},_,_)) ->
      begin try (String.sub v.vname 0 7) = "nondet_" with _ -> false end
@@ -32,54 +59,12 @@ and is_nondet_list = function
   | h :: _ when is_nondet h -> true
   | _ :: t -> is_nondet_list t
 
-let rec pretty ?(line_break = true) fmt ins =
-  begin
-    match ins with
-    | Instru i -> Format.fprintf fmt "@[%a@]" Printer.pp_instr i
-    | IRet e -> Format.fprintf fmt "@[return %a;@]" Printer.pp_exp e
-    | Decl v ->
-       let ty = Cil.stripConstLocalType v.vtype in
-       let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
-       let ty = array_to_ptr ty in
-       let v' = {v with vtype = ty} in
-       Format.fprintf fmt "@[%a;@]" (new Printer.extensible_printer())#vdecl v'
-    | IBlock b ->
-       if b <> [] then Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b
-    | IIf (e,b1,b2) ->
-       let print_if() =
-	 match b1, b2 with
-	 | [], [] -> ()
-	 | b1, [] -> 
-	    Format.fprintf
-	      fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b1
-	 | [], b2 ->
-	    let loc = Cil_datatype.Location.unknown in
-	    let not_e = Cil.new_exp ~loc (UnOp(LNot, e, Cil.intType)) in
-	    Format.fprintf
-	      fmt "@[<hov 2>if(%a) {@\n%a@]@\n}" Printer.pp_exp not_e aux b2
-	 | _ ->
-	    Format.fprintf
-	      fmt "@[<hov 2>if(%a) {@\n%a@]@\n}@\n@[<hov 2>else {@\n%a@]@\n}"
-	      Printer.pp_exp e aux b1 aux b2
-       in
-       begin
-	 match Cil.isInteger e with
-	 | None -> print_if()
-	 | Some i ->
-	    if Integer.equal i Integer.zero then
-	      (if b2 <> [] then
-		  Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b2)
-	    else if Integer.equal i Integer.one then
-	      (if b1 <> [] then
-		  Format.fprintf fmt "@[<hov 2>{@\n%a@]@\n}" aux b1)
-	    else print_if()
-       end
-    | ILoop (e,b) ->
-       Format.fprintf
-	 fmt "@[<hov 2>while(%a) {@\n%a@]@\n}" Printer.pp_exp e aux b
-  end;
-  if line_break then Format.fprintf fmt "@\n"
-and aux fmt = function
-  | [] -> ()
-  | [ h ] -> pretty ~line_break:false fmt h
-  | h :: t -> pretty fmt h; aux fmt t
+let pretty fmt ins =
+  match ins with
+  | Decl v ->
+     let ty = Cil.stripConstLocalType v.vtype in
+     let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
+     let ty = array_to_ptr ty in
+     let v' = {v with vtype = ty} in
+     Format.fprintf fmt "@[%a;@]@\n" (new Printer.extensible_printer())#vdecl v'
+  | _ -> Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt (to_stmt ins)

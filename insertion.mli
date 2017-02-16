@@ -10,4 +10,4 @@ val mk_loop : Cil_types.exp -> t list -> t
 
 val is_nondet : t -> bool
 
-val pretty : ?line_break:bool -> Format.formatter -> t -> unit
+val pretty : Format.formatter -> t -> unit

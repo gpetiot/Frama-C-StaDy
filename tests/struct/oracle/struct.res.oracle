@@ -80,7 +80,7 @@ int f(struct S *s, struct S *s2, int n)
   unsigned long __sd_iter_0;
   old_ptr_s = (struct S *)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(struct S));
   __sd_iter_0 = 0;
-  while(__sd_iter_0 < __sd_to_ctype_0) {
+  while (__sd_iter_0 < __sd_to_ctype_0) {
     *(old_ptr_s + __sd_iter_0) = *(s + __sd_iter_0);
     __sd_iter_0 ++;
   }
@@ -95,7 +95,7 @@ int f(struct S *s, struct S *s2, int n)
   unsigned long __sd_iter_1;
   old_ptr_s2 = (struct S *)malloc(__sd_to_ctype_1 * (unsigned long)sizeof(struct S));
   __sd_iter_1 = 0;
-  while(__sd_iter_1 < __sd_to_ctype_1) {
+  while (__sd_iter_1 < __sd_to_ctype_1) {
     *(old_ptr_s2 + __sd_iter_1) = *(s2 + __sd_iter_1);
     __sd_iter_1 ++;
   }
