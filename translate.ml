@@ -1234,33 +1234,30 @@ class gather_insertions props swd = object(self)
 
   method private translate_stmt_spec kf stmt bhvs spec =
     if self#at_least_one_prop kf spec.spec_behavior (Kstmt stmt) then
-      begin
-	let stmt_bhvs = spec.spec_behavior in
-	let ins = self#pre ~pre_entry_point:false kf stmt_bhvs (Kstmt stmt) in
-	let ins = self#for_behaviors bhvs ins in
-	List.iter (self#insert (Symbolic_label.beg_stmt stmt.sid)) ins;
-	let ins = self#post kf stmt_bhvs (Kstmt stmt) in
-	let ins = if bhvs = [] then ins else self#for_behaviors bhvs ins in
-	List.iter (self#insert (Symbolic_label.end_stmt stmt.sid)) ins
-      end
+      let stmt_bhvs = spec.spec_behavior in
+      let ins_1 = self#pre ~pre_entry_point:false kf stmt_bhvs (Kstmt stmt) in
+      let ins_1 = self#for_behaviors bhvs ins_1 in
+      let ins_2 = self#post kf stmt_bhvs (Kstmt stmt) in
+      let ins_2 = if bhvs = [] then ins_2 else self#for_behaviors bhvs ins_2 in
+      [(Symbolic_label.beg_stmt stmt.sid), ins_1;
+       (Symbolic_label.end_stmt stmt.sid), ins_2]
+    else []
 
   method private translate_assert kf stmt ca for_behaviors pred =
     let prop = Property.ip_of_code_annot_single kf stmt ca in
     if List.mem prop props then
       let ins = self#pc_assert_exception pred "" prop in
-      let inserts = self#for_behaviors for_behaviors ins in
-      List.iter (self#insert (Symbolic_label.beg_stmt stmt.sid)) inserts
+      [(Symbolic_label.beg_stmt stmt.sid), self#for_behaviors for_behaviors ins]
+    else []
 
   method private translate_invariant kf stmt ca for_behaviors pred =
     let prop = Property.ip_of_code_annot_single kf stmt ca in
     if List.mem prop props then
-      let f label msg =
-	let ins = self#pc_assert_exception pred msg prop in
-	let inserts = self#for_behaviors for_behaviors ins in
-	List.iter (self#insert label) inserts
-      in
-      f (Symbolic_label.beg_stmt stmt.sid) "not established";
-      f (Symbolic_label.end_iter stmt.sid) "not preserved"
+      let i_1 = self#pc_assert_exception pred "not established" prop in
+      let i_2 = self#pc_assert_exception pred "not preserved" prop in
+      [(Symbolic_label.beg_stmt stmt.sid), self#for_behaviors for_behaviors i_1;
+       (Symbolic_label.end_iter stmt.sid), self#for_behaviors for_behaviors i_2]
+    else []
 
   method private translate_variant kf stmt ca term =
     let prop = Property.ip_of_code_annot_single kf stmt ca in
@@ -1272,53 +1269,38 @@ class gather_insertions props swd = object(self)
       match term.term_type with
       | Linteger ->
 	 (* at BegIter *)
-	 let inserts_1, beg_variant = self#translate_term term in
-	 List.iter (self#insert beg_label) inserts_1;
-	 let cmp_variant_zero =
-	   self#fresh_ctype_varinfo Cil.intType "variant_pos" in
-	 let e_cmp_variant_zero = Cil.evar cmp_variant_zero in
-	 let l_cmp_variant_zero = Cil.var cmp_variant_zero in
-	 let instr = self#pc_exc "non positive" id in
-	 self#insert beg_label (Insertion.mk_decl cmp_variant_zero);
-	 let i_2 = self#ccmp_ui l_cmp_variant_zero beg_variant zero in
-	 self#insert beg_label i_2;
-	 let cond = cmp Rlt e_cmp_variant_zero zero in
-	 self#insert beg_label (Insertion.mk_if cond [instr] []);
+	 let ins_1, beg_variant = self#translate_term term in
+	 let var_1 = self#fresh_ctype_varinfo Cil.intType "variant_pos" in
+	 let pce_1 = self#pc_exc "non positive" id in
+	 let cmp_1 = self#ccmp_ui (Cil.var var_1) beg_variant zero in
+	 let cond_1 = cmp Rlt (Cil.evar var_1) zero in
 	 (* at EndIter *)
-	 let inserts_4, end_variant = self#translate_term term in
-	 List.iter (self#insert end_label) inserts_4;
-	 let cmp_variants =
-	   self#fresh_ctype_varinfo Cil.intType "variant_decr" in
-	 let e_cmp_variants = Cil.evar cmp_variants in
-	 let l_cmp_variants = Cil.var cmp_variants in
-	 let instr = self#pc_exc "non decreasing" id in
-	 self#insert end_label (Insertion.mk_decl cmp_variants);
-	 let i_4 = self#ccmp l_cmp_variants end_variant beg_variant in
-	 self#insert end_label i_4;
-	 let cond = cmp Rge e_cmp_variants zero in
-	 self#insert end_label (Insertion.mk_if cond [instr] []);
-	 self#insert end_label (self#cclear beg_variant)
+	 let ins_2, end_variant = self#translate_term term in
+	 let var_2 = self#fresh_ctype_varinfo Cil.intType "variant_decr" in
+	 let pce_2 = self#pc_exc "non decreasing" id in
+	 let cmp_2 = self#ccmp (Cil.var var_2) end_variant beg_variant in
+	 let cond_2 = cmp Rge (Cil.evar var_2) zero in
+	 [(beg_label, ins_1 @ [(Insertion.mk_decl var_1); cmp_1;
+			       (Insertion.mk_if cond_1 [pce_1] [])]);
+	  (end_label, ins_2 @ [(Insertion.mk_decl var_2); cmp_2;
+			       (Insertion.mk_if cond_2 [pce_2] []);
+			       (self#cclear beg_variant)])]
       | Lreal -> raise Unsupported
       | _ ->
 	 (* at BegIter *)
-	 let inserts_1, beg_variant = self#translate_term term in
-	 List.iter (self#insert beg_label) inserts_1;
-	 let cond = cmp Rlt beg_variant zero in
-	 let instr = self#pc_exc "non positive" id in
-	 self#insert beg_label (Insertion.mk_if cond [instr] []);
-	 let save_variant =
-	   self#fresh_ctype_varinfo Cil.intType "variant_save" in
-	 let l_save_variant = Cil.var save_variant in
-	 let e_save_variant = Cil.evar save_variant in
-	 self#insert beg_label (Insertion.mk_decl save_variant);
-	 let insert = instru_affect l_save_variant beg_variant in
-	 self#insert beg_label insert;
+	 let ins_1, beg_variant = self#translate_term term in
+	 let cond_1 = cmp Rlt beg_variant zero in
+	 let pce_1 = self#pc_exc "non positive" id in
+	 let var_1 = self#fresh_ctype_varinfo Cil.intType "variant_save" in
+	 let aff_1 = instru_affect (Cil.var var_1) beg_variant in
 	 (* at EndIter *)
-	 let inserts_2, end_variant = self#translate_term term in
-	 List.iter (self#insert end_label) inserts_2;
-	 let cond = cmp Rge end_variant e_save_variant in
-	 let instr = self#pc_exc "non decreasing" id in
-	 self#insert end_label (Insertion.mk_if cond [instr] [])
+	 let ins_2, end_variant = self#translate_term term in
+	 let cond_2 = cmp Rge end_variant (Cil.evar var_1) in
+	 let pce_2 = self#pc_exc "non decreasing" id in
+	 [(beg_label, ins_1 @ [(Insertion.mk_if cond_1 [pce_1] []);
+			       (Insertion.mk_decl var_1); aff_1]);
+	  (end_label, ins_2 @ [Insertion.mk_if cond_2 [pce_2] []])]
+    else []
 
   method! vcode_annot ca =
     let stmt = Extlib.the self#current_stmt in
@@ -1329,14 +1311,15 @@ class gather_insertions props swd = object(self)
     let on_behavior s _ b ret = if b.b_name = s then b.b_assumes else ret in
     let on_behavior_name s = Annotations.fold_behaviors (on_behavior s) kf [] in
     let bhvs = List.map on_behavior_name bhv_names in
-    begin
-      match ca.annot_content with
+    let ins = match ca.annot_content with
       | AStmtSpec(_,spec) -> self#translate_stmt_spec kf stmt bhvs spec
       | AAssert(_,pred) -> self#translate_assert kf stmt ca bhvs pred
       | AInvariant(_,true,pred) -> self#translate_invariant kf stmt ca bhvs pred
       | AVariant(term,_) -> self#translate_variant kf stmt ca term
-      | _ -> ()
-    end;
+      | _ -> []
+    in
+    let on_labeled_ins (label, ins) = List.iter (self#insert label) ins in
+    List.iter on_labeled_ins ins;
     Cil.DoChildren
 
   method private assigns_swd assigns =
