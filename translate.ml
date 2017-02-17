@@ -374,23 +374,11 @@ class gather_insertions props swd = object(self)
     if Ctype ty = t.term_type then self#translate_term t
     else let i, e = self#translate_coerce t ty in i, Cil.new_exp ~loc e
 
-  method private translate_lambda li lower upper q t =
+  method private translate_lambda li lower upper q t init vname compute clear =
     assert(lower.term_type = Linteger && upper.term_type = Linteger);
-    let name = li.l_var_info.lv_name in
-    let do_op op r l = self#cbinop op r r l in
-    let init_val, varname, compute, clear = match name with
-      | "\\sum" -> zero, "sum", (do_op PlusA), (fun l -> [self#cclear l])
-      | "\\product" -> one, "product", (do_op Mult), (fun l -> [self#cclear l])
-      | "\\numof" ->
-	 zero, "numof",
-	 (fun r l ->
-	 Insertion.mk_if (cmp Rneq l zero) [self#cbinop_ui PlusA r r one] []),
-	 (fun _ -> [])
-      | _ -> raise Unsupported
-    in
-    let ret = self#fresh_Z_varinfo varname in
+    let ret = self#fresh_Z_varinfo vname in
     let i_0 = Insertion.mk_decl ret in
-    let i_1 = self#cinit_set_si (Cil.evar ret) init_val in
+    let i_1 = self#cinit_set_si (Cil.evar ret) init in
     let i_3, low = self#translate_term lower in
     let i_4, up = self#translate_term upper in
     let iter = my_Z_varinfo q.lv_name in
@@ -398,7 +386,7 @@ class gather_insertions props swd = object(self)
     let i_6 = self#cinit_set (Cil.evar iter) low in
     let ins_b_0, lambda_t = self#translate_term t in
     let ins_b_2 = self#cbinop_ui PlusA (Cil.evar iter) (Cil.evar iter) one in
-    let tmp = self#fresh_ctype_varinfo Cil.intType (varname ^ "_cmp") in
+    let tmp = self#fresh_ctype_varinfo Cil.intType (vname ^ "_cmp") in
     let ii_1 = Insertion.mk_decl tmp in
     let ii_2 = self#ccmp (Cil.var tmp) (Cil.evar iter) up in
     let ii_3 = self#ccmp (Cil.var tmp) (Cil.evar iter) up in
@@ -415,6 +403,9 @@ class gather_insertions props swd = object(self)
   method private translate_app li _ params =
     let s = li.l_var_info.lv_name in
     let ty = Extlib.the li.l_type in
+    let do_op op r l = self#cbinop op r r l in
+    let inc_if r l =
+      Insertion.mk_if (cmp Rneq l zero) [self#cbinop_ui PlusA r r one] [] in
     match ty, params, s with
     | Linteger, [param], "\\abs" ->
        let i_0, x = self#translate_term param in
@@ -424,10 +415,14 @@ class gather_insertions props swd = object(self)
        let i_3 = self#cabs (Cil.evar ret) x in
        let i_4 = self#cclear x in
        i_0 @ [i_1; i_2; i_3; i_4], (Cil.evar ret).enode
-    | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\sum"
-    | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\product"
+    | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\sum" ->
+       self#translate_lambda
+	 li l u q t zero "sum" (do_op PlusA) (fun l -> [self#cclear l])
+    | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\product" ->
+       self#translate_lambda
+	 li l u q t one "product" (do_op Mult) (fun l -> [self#cclear l])
     | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\numof" ->
-       self#translate_lambda li l u q t
+       self#translate_lambda li l u q t zero "numof" inc_if (fun _ -> [])
     | Linteger, _, _ -> raise Unsupported
     | Lreal, _, _ -> raise Unsupported
     | _ -> raise Unreachable
