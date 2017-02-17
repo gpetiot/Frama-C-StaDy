@@ -55,6 +55,14 @@ let rec typename = function
   | TNamed (ty, _) -> typename ty.ttype
   | _ -> raise Unreachable
 
+let rec type_of_pointed = function
+  | Ctype (TPtr (ty,_)) -> Ctype ty
+  | Ctype (TArray (ty,_,_,_)) -> Ctype ty
+  | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
+  | ty ->
+     Options.feedback
+       ~current:true "unsupported type %a" Printer.pp_logic_type ty;
+    raise Unsupported
 
 class gather_insertions props swd = object(self)
   inherit Visitor.frama_c_inplace
@@ -457,15 +465,6 @@ class gather_insertions props swd = object(self)
     | TCastE (ty,t) -> self#translate_cast ty t
     | TAddrOf (TMem x, TIndex (y, TNoOffset)) ->
        let x' = Cil.mkTermMem ~addr:x ~off:TNoOffset in
-       let rec type_of_pointed = function
-	 | Ctype (TPtr (ty,_)) -> Ctype ty
-	 | Ctype (TArray (ty,_,_,_)) -> Ctype ty
-	 | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
-	 | ty ->
-	    Options.feedback
-	      ~current:true "unsupported type %a" Printer.pp_logic_type ty;
-	    raise Unsupported
-       in
        let ty = type_of_pointed (Cil.typeOfTermLval x') in
        let x' = Logic_const.term (TLval x') ty in
        self#translate_term_node {t with term_node=(TBinOp(PlusPI,x',y))}
@@ -645,15 +644,6 @@ class gather_insertions props swd = object(self)
     | TLval _ -> self#translate_valid_ptr term
     | TAddrOf (TMem x, TIndex (y, TNoOffset)) ->
        let x' = Cil.mkTermMem ~addr:x ~off:TNoOffset in
-       let rec type_of_pointed = function
-	 | Ctype (TPtr (ty,_)) -> Ctype ty
-	 | Ctype (TArray (ty,_,_,_)) -> Ctype ty
-	 | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
-	 | ty ->
-	    Options.feedback
-	      ~current:true "unsupported type %a" Printer.pp_logic_type ty;
-	    raise Unsupported
-       in
        let ty = type_of_pointed (Cil.typeOfTermLval x') in
        let x' = Logic_const.term (TLval x') ty in
        self#translate_valid {term with term_node=(TBinOp(PlusPI,x',y))}
