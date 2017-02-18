@@ -15,6 +15,11 @@ module Enabled = Self.False (struct
   let help = ""
 end)
 
+module Version = Self.False (struct
+  let option_name = "-stady-version"
+  let help = "print the version"
+end)
+
 module PathCrawler_Options = Self.String (struct
   let option_name = "-stady-pc-options"
   let help = "command line options for PathCrawler"

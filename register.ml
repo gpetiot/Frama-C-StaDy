@@ -130,7 +130,9 @@ let compute_props ?(props=selected_props()) ?swd () =
 
 
 let run() =
-  if Options.Enabled.get() then
+  if Options.Version.get() then
+    Format.printf "%s@." Local_config.version
+  else if Options.Enabled.get() then
     begin
       Utils.initialize();
       compute_props();
@@ -152,7 +154,7 @@ let run =
 	      Options.Stop_When_Assert_Violated.self; Options.Functions.self;
 	      Options.Behaviors.self; Options.Properties.self;
 	      Options.SWD.self; Options.Simulate_Functions.self;
-	      Options.Precondition.self] in
+	      Options.Precondition.self; Options.Version.self] in
   let f, _self = State_builder.apply_once "stady" deps run in
   f
     

@@ -2,6 +2,7 @@
 include Plugin.S
 
 module Enabled: Parameter_sig.Bool
+module Version: Parameter_sig.Bool
 module PathCrawler_Options: Parameter_sig.String
 module Socket_Type: Parameter_sig.String
 module Timeout: Parameter_sig.Int
