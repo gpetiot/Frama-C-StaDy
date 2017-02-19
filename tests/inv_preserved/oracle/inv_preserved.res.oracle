@@ -50,8 +50,8 @@ precondition_of('f','pathcrawler__f_precond').
 int fmax(int x, int y)
 {
   int old_x;
-  old_x = x;
   int old_y;
+  old_x = x;
   old_y = y;
   {
     int tmp;
@@ -68,16 +68,16 @@ int f_precond(int n, int *t)
 void f(int n, int *t)
 {
   int old_n;
-  old_n = n;
   int *old_t;
   int *old_ptr_t;
-  old_t = t;
   mpz_t __sd_Z_to_Z_0;
-  __gmpz_init_set_si(__sd_Z_to_Z_0,n);
   unsigned long __sd_to_ctype_0;
+  unsigned long __sd_iter_0;
+  old_n = n;
+  old_t = t;
+  __gmpz_init_set_si(__sd_Z_to_Z_0,n);
   __sd_to_ctype_0 = __gmpz_get_ui(__sd_Z_to_Z_0);
   __gmpz_clear(__sd_Z_to_Z_0);
-  unsigned long __sd_iter_0;
   old_ptr_t = (int *)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(int));
   __sd_iter_0 = 0;
   while (__sd_iter_0 < __sd_to_ctype_0) {
@@ -91,18 +91,18 @@ void f(int n, int *t)
     first_loop:
       {
         mpz_t __sd_Z_cst_14;
-        __gmpz_init_set_str(__sd_Z_cst_14,"3",10);
         mpz_t __sd_Z_to_Z_7;
-        __gmpz_init_set_si(__sd_Z_to_Z_7,i);
         int __sd_le_2;
+        int __sd_and_2;
+        int __sd_forall_2;
+        __gmpz_init_set_str(__sd_Z_cst_14,"3",10);
+        __gmpz_init_set_si(__sd_Z_to_Z_7,i);
         __sd_le_2 = __gmpz_cmp(__sd_Z_cst_14,__sd_Z_to_Z_7);
         __gmpz_clear(__sd_Z_cst_14);
         __gmpz_clear(__sd_Z_to_Z_7);
-        int __sd_and_2;
         __sd_and_2 = __sd_le_2 <= 0;
         if (__sd_and_2) __sd_and_2 = i <= n;
         if (! __sd_and_2) pathcrawler_assert_exception("9$not established",1);
-        int __sd_forall_2;
         __sd_forall_2 = 1;
         {
           mpz_t __q_k;
@@ -172,15 +172,15 @@ void f(int n, int *t)
                                                           7);
         if (i < n) {
           mpz_t __sd_Z_to_Z_11;
-          __gmpz_init_set_si(__sd_Z_to_Z_11,n);
           mpz_t __sd_Z_to_Z_12;
-          __gmpz_init_set_si(__sd_Z_to_Z_12,i);
           mpz_t __sd_Z_sub_14;
+          int __sd_variant_pos_0;
+          __gmpz_init_set_si(__sd_Z_to_Z_11,n);
+          __gmpz_init_set_si(__sd_Z_to_Z_12,i);
           __gmpz_init(__sd_Z_sub_14);
           __gmpz_sub(__sd_Z_sub_14,__sd_Z_to_Z_11,__sd_Z_to_Z_12);
           __gmpz_clear(__sd_Z_to_Z_11);
           __gmpz_clear(__sd_Z_to_Z_12);
-          int __sd_variant_pos_0;
           __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_14,0);
           if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("9$non positive",
                                                                    0);
@@ -292,18 +292,22 @@ void f(int n, int *t)
           if (! (i < n)) pathcrawler_assume_exception("",0);
           *(t + i) = fmax(*(t + (i - 1)),*(t + (i - 2)));
           i ++;mpz_t __sd_Z_cst_15;
-          __gmpz_init_set_str(__sd_Z_cst_15,"3",10);
           mpz_t __sd_Z_to_Z_8;
-          __gmpz_init_set_si(__sd_Z_to_Z_8,i);
           int __sd_le_3;
+          int __sd_and_3;
+          int __sd_forall_3;
+          mpz_t __sd_Z_to_Z_13;
+          mpz_t __sd_Z_to_Z_14;
+          mpz_t __sd_Z_sub_15;
+          int __sd_variant_decr_0;
+          __gmpz_init_set_str(__sd_Z_cst_15,"3",10);
+          __gmpz_init_set_si(__sd_Z_to_Z_8,i);
           __sd_le_3 = __gmpz_cmp(__sd_Z_cst_15,__sd_Z_to_Z_8);
           __gmpz_clear(__sd_Z_cst_15);
           __gmpz_clear(__sd_Z_to_Z_8);
-          int __sd_and_3;
           __sd_and_3 = __sd_le_3 <= 0;
           if (__sd_and_3) __sd_and_3 = i <= n;
           if (! __sd_and_3) pathcrawler_assert_exception("9$not preserved",1);
-          int __sd_forall_3;
           __sd_forall_3 = 1;
           {
             mpz_t __q_k;
@@ -371,16 +375,12 @@ void f(int n, int *t)
           }
           if (! __sd_forall_3) pathcrawler_assert_exception("9$not preserved",
                                                             7);
-          mpz_t __sd_Z_to_Z_13;
           __gmpz_init_set_si(__sd_Z_to_Z_13,n);
-          mpz_t __sd_Z_to_Z_14;
           __gmpz_init_set_si(__sd_Z_to_Z_14,i);
-          mpz_t __sd_Z_sub_15;
           __gmpz_init(__sd_Z_sub_15);
           __gmpz_sub(__sd_Z_sub_15,__sd_Z_to_Z_13,__sd_Z_to_Z_14);
           __gmpz_clear(__sd_Z_to_Z_13);
           __gmpz_clear(__sd_Z_to_Z_14);
-          int __sd_variant_decr_0;
           __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_15,__sd_Z_sub_14);
           if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception("9$non decreasing",
                                                                     0);

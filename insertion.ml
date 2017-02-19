@@ -59,12 +59,26 @@ and is_nondet_list = function
   | h :: _ when is_nondet h -> true
   | _ :: t -> is_nondet_list t
 
+let rec is_stmt_nondet stmt = match stmt.skind with
+  | Instr (Call (_,{enode=Lval(Var v,_)},_,_)) ->
+     begin try (String.sub v.vname 0 7) = "nondet_" with _ -> false end
+  | If (_, b1, b2, _) ->
+     if List.fold_left (fun acc s -> acc || is_stmt_nondet s) false b1.bstmts
+     then
+       true
+     else List.fold_left (fun acc s -> acc || is_stmt_nondet s) false b2.bstmts
+  | Loop (_, b, _, _, _) ->
+     List.fold_left (fun acc s -> acc || is_stmt_nondet s) false b.bstmts
+  | _ -> false
+
+let pretty_var fmt v =
+  let ty = Cil.stripConstLocalType v.vtype in
+  let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
+  let ty = array_to_ptr ty in
+  let v' = {v with vtype = ty} in
+  Format.fprintf fmt "@[%a;@]@\n" (new Printer.extensible_printer())#vdecl v'
+     
 let pretty fmt ins =
   match ins with
-  | Decl v ->
-     let ty = Cil.stripConstLocalType v.vtype in
-     let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
-     let ty = array_to_ptr ty in
-     let v' = {v with vtype = ty} in
-     Format.fprintf fmt "@[%a;@]@\n" (new Printer.extensible_printer())#vdecl v'
+  | Decl v -> pretty_var fmt v
   | _ -> Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt (to_stmt ins)

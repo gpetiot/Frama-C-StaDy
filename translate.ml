@@ -153,12 +153,21 @@ class gather_insertions props swd = object(self)
     in
     List.fold_left on_varinfo [] fcts_called
 
-  method private insert label str =
-    try Queue.add str (Hashtbl.find insertions label)
+  method private insert label ins =
+    let vars, ins = Insertion.split_decl_instr ins in
+    let stmts = List.map Insertion.to_stmt ins in
+    let vars = List.rev vars and stmts = List.rev stmts in
+    let add q x = Queue.add x q in
+    try
+      let v, s = Hashtbl.find insertions label in
+      List.iter (add v) vars;
+      List.iter (add s) stmts
     with Not_found ->
-      let q = Queue.create() in
-      Queue.add str q;
-      Hashtbl.add insertions label q
+      let v = Queue.create() in
+      let s = Queue.create() in
+      List.iter (add v) vars;
+      List.iter (add s) stmts;
+      Hashtbl.add insertions label (v, s)
 
   method private fresh_varinfo ty varname =
     let varname = "__sd_" ^ varname in
@@ -1066,20 +1075,20 @@ class gather_insertions props swd = object(self)
     let fname = if pre_entry_point then fprename else f.svar.vname in
     let label_pre = Symbolic_label.beg_func fname in
     let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
-    List.iter (self#insert label_pre) inserts_pre;
+    self#insert label_pre inserts_pre;
     if self#at_least_one_prop kf behaviors Kglobal then
       begin
 	let inserts = self#post kf behaviors Kglobal in
 	let label = Symbolic_label.end_func f.svar.vname in
-	self#insert label (Insertion.mk_block inserts)
+	self#insert label [Insertion.mk_block inserts]
       end;
     let do_varinfo v =
       let inserts_decl,inserts_before,inserts_after = self#save_varinfo kf v in
       let beg_label = Symbolic_label.beg_func f.svar.vname
       and end_label = Symbolic_label.end_func f.svar.vname in
-      List.iter (self#insert beg_label) inserts_decl;
-      List.iter (self#insert beg_label) inserts_before;
-      List.iter (self#insert end_label) inserts_after
+      self#insert beg_label inserts_decl;
+      self#insert beg_label inserts_before;
+      self#insert end_label inserts_after
     in
     List.iter do_varinfo visited_globals;
     List.iter do_varinfo (Kernel_function.get_formals kf);
@@ -1238,7 +1247,7 @@ class gather_insertions props swd = object(self)
       | AVariant(term,_) -> self#translate_variant kf stmt ca term
       | _ -> []
     in
-    let on_labeled_ins (label, ins) = List.iter (self#insert label) ins in
+    let on_labeled_ins (label, ins) = self#insert label ins in
     List.iter on_labeled_ins ins;
     Cil.DoChildren
 
@@ -1326,8 +1335,8 @@ class gather_insertions props swd = object(self)
        let ins_h_after =
 	 Annotations.fold_behaviors (on_bhv not_loop_cond) kf [] in
        Cil.DoChildrenPost (fun s ->
-	 List.iter (self#insert(Symbolic_label.beg_iter stmt.sid)) ins_h_before;
-	 List.iter (self#insert(Symbolic_label.end_stmt stmt.sid)) ins_h_after;
+	 self#insert (Symbolic_label.beg_iter stmt.sid) ins_h_before;
+	 self#insert (Symbolic_label.end_stmt stmt.sid) ins_h_after;
 	 s
        )
 	 
@@ -1380,7 +1389,7 @@ class gather_insertions props swd = object(self)
        let new_f = Function.make new_f_vi formals locals ins_full_body in
        functions <- new_f :: functions;
        let i_call = Insertion.mk_instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
-       self#insert (Symbolic_label.end_stmt stmt.sid) i_call;
+       self#insert (Symbolic_label.end_stmt stmt.sid) [i_call];
        Cil.SkipChildren
     | _ -> Cil.DoChildren
 
@@ -1399,16 +1408,6 @@ let translate props swd precond_fname instru_fname =
   and translated_props = gatherer#translated_properties()
   and new_globals = gatherer#get_new_globals()
   and new_init_globals = gatherer#get_new_init_globals() in
-  let print_insertions_at_label lab insertions =
-    let dkey = Options.dkey_insertions in
-    let f ins =
-      Options.feedback
-	~dkey "/* %a */ %a" Symbolic_label.pretty lab Insertion.pretty ins
-    in
-    Queue.iter f insertions;
-    Options.feedback ~dkey "--------------------"
-  in
-  Hashtbl.iter print_insertions_at_label insertions;
   let add_global = Input_domain.add_global in
   let add_init_global = Input_domain.add_init_global in 
   let constraints = List.fold_left add_global constraints new_globals in

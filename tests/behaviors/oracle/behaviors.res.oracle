@@ -73,10 +73,10 @@ int f_precond(int x, int y, int z)
 void f(int x, int y, int z)
 {
   int old_x;
-  old_x = x;
   int old_y;
-  old_y = y;
   int old_z;
+  old_x = x;
+  old_y = y;
   old_z = z;
   {
     if (x >= y && x >= z) {
