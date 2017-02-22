@@ -113,7 +113,7 @@ let run ~entry_point ~precondition_filename ~instrumented_filename  =
   in
   let cmd =
     Printf.sprintf
-      "frama-c -add-path /usr/local/lib/frama-c/plugins %s -main %s -lib-entry \
+      "frama-c %s -main %s -lib-entry \
        -pc -pc-gmp -pc-validate-asserts -pc-test-params %s -pc-com %s \
        -pc-no-xml -pc-deter -pc-session-timeout=%i %s -pc-verbose 0 %s"
       instrumented_filename
