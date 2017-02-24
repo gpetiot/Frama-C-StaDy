@@ -109,10 +109,8 @@ class print_insertions insertions functions swd = object(self)
     let nondet = List.fold_left on_func nondet functions in
     let externals_file = Options.Share.file ~error:true "externals.h" in
     let nondet_file = Options.Share.file ~error:true "nondet.c" in
-    let headers = [ nondet, ("#include \"" ^ nondet_file ^ "\"") ] in
     Format.fprintf fmt "#include \"%s\"@\n" externals_file;
-    let do_header (print, s) = if print then Format.fprintf fmt "%s@\n" s in
-    List.iter do_header headers
+    if nondet then Format.fprintf fmt "#include \"%s\"@\n" nondet_file
 
   val mutable first_global = true
 
