@@ -29,7 +29,6 @@ PLUGIN_CMO := \
 	symbolic_label \
 	input_domain \
 	insertion \
-	unname \
 	function \
 	print \
 	infer \
