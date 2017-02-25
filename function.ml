@@ -14,16 +14,10 @@ let pretty fmt f =
   let ty = f.func_var.vtype in
   let vname = f.func_var.vname in
   let print fmt = Format.fprintf fmt "%s" vname in
-  Format.fprintf
-    fmt "@[<v 2>%a {@\n" ((new Unname.printer ())#typ (Some print)) ty;
+  Format.fprintf fmt "@[<v 2>%a {@\n"
+    ((new Printer.extensible_printer ())#typ (Some print)) ty;
   List.iter (Insertion.pretty fmt) f.func_stmts;
   Format.fprintf fmt "@]@\n}@\n"
-
-let pretty_header fmt f =
-  let ty = f.func_var.vtype in
-  let vname = f.func_var.vname in
-  let print fmt = Format.fprintf fmt "%s" vname in
-  Format.fprintf fmt "@[%a;@\n@]" ((new Unname.printer ())#typ (Some print)) ty
 
 let is_nondet f =
   let is_nondet b i = b || Insertion.is_nondet i in

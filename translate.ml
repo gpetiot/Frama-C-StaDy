@@ -1070,12 +1070,25 @@ class gather_insertions props swd = object(self)
     let kf = Globals.Functions.find_by_name f.svar.vname in
     let behaviors = Annotations.behaviors kf in
     self#compute_result_varinfo f;
-    let pre_entry_point = f.svar.vname = entry_point in
-    let fprename = f.svar.vname ^ "_precond" in
-    let fname = if pre_entry_point then fprename else f.svar.vname in
-    let label_pre = Symbolic_label.beg_func fname in
-    let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
-    self#insert label_pre inserts_pre;
+    begin
+      let pre_entry_point = f.svar.vname = entry_point in
+      if pre_entry_point then
+	let pre_varinfo = match f.svar.vtype with
+	  | TFun(_,x,y,z) ->
+	     {f.svar with vname = f.svar.vname ^ "_precond";
+	       vtype = TFun(Cil.intType,x,y,z)}
+	  | _ -> assert false
+	in
+	let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
+	let return_1 = Insertion.mk_ret one in
+	let pre_fun =
+	  Function.make pre_varinfo f.sformals [] (inserts_pre @ [return_1]) in
+	functions <- pre_fun :: functions;
+      else
+	let label_pre = Symbolic_label.beg_func f.svar.vname in
+	let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
+	self#insert label_pre inserts_pre
+    end;
     if self#at_least_one_prop kf behaviors Kglobal then
       begin
 	let inserts = self#post kf behaviors Kglobal in

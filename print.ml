@@ -13,26 +13,9 @@ class print_insertions insertions functions swd = object(self)
     with _ -> ()
 
   method private fundecl fmt f =
-    let entry_point_name=Kernel_function.get_name(fst(Globals.entry_point())) in
     let old_is_ghost = is_ghost in
     is_ghost <- true;
-    (* BEGIN precond (entry-point) *)
-    if f.svar.vname = entry_point_name then
-      begin
-	let precond = f.svar.vname ^ "_precond" in
-	let x,y,z =
-	  match f.svar.vtype with TFun(_,x,y,z) -> x,y,z | _ -> assert false
-	in
-	let print fmt = Format.fprintf fmt "%s" precond in
-	Format.fprintf fmt "%a@ @[<hov 2>{@\n" (self#typ (Some print))
-		       (TFun(Cil.intType,x,y,z));
-	self#insertions_at fmt (Symbolic_label.beg_func precond);
-	Format.fprintf fmt "@[return 1;@]";
-	Format.fprintf fmt "@]@\n}@\n@\n"
-      end;
-    (* END precond (entry-point) *)
     Format.fprintf fmt "@[%t%a@\n@[<v 2>" ignore self#vdecl f.svar;
-    (* body. *)
     Format.fprintf fmt "@[<hov 2>{@\n";
     self#insertions_at fmt (Symbolic_label.beg_func f.svar.vname);
     self#block ~braces:true fmt f.sbody;
@@ -96,8 +79,9 @@ class print_insertions insertions functions swd = object(self)
 
   method! file fmt f =
     self#headers fmt;
-    Cil.iterGlobals f (fun g -> self#global fmt g);
-    List.iter (fun x -> Function.pretty fmt x) functions
+    let is_gfun = function GFun _ -> true | _ -> false in
+    Cil.iterGlobals f (fun g -> if not (is_gfun g) then self#global fmt g);
+    Cil.iterGlobals f (fun g -> if is_gfun g then self#global fmt g)
 
   method private headers fmt =
     let is_nondet b i = b || Insertion.is_stmt_nondet i in
@@ -117,7 +101,7 @@ class print_insertions insertions functions swd = object(self)
     | GFun (fundec, l) ->
        if first_global then
 	 begin
-	   List.iter (fun x -> Function.pretty_header fmt x) functions;
+	   List.iter (fun x -> Function.pretty fmt x) functions;
 	   first_global <- false
 	 end;
        let oldattr = fundec.svar.vattr in
