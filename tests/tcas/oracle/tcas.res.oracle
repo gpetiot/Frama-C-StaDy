@@ -81,6 +81,10 @@ int Down_Separation;
 int Other_RAC;
 int Other_Capability;
 int Climb_Inhibit;
+int alt_sep_test_precond(void) {
+  return 1;
+  
+}
 int Own_Below_Threat(void)
 {
   int old_Climb_Inhibit;
@@ -393,11 +397,6 @@ int Non_Crossing_Biased_Descend(void)
     }
     return result;
   }
-}
-
-int alt_sep_test_precond(void)
-{
-  return 1;
 }
 
 int alt_sep_test(void)

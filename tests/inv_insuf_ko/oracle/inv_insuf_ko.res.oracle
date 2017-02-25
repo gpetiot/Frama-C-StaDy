@@ -47,11 +47,10 @@ precondition_of('f','pathcrawler__f_precond').
 #include "/usr/local/share/frama-c/stady/nondet.c"
 
 int found;
-int f_precond(int *t, int x)
-{
+int f_precond(int *t, int x) {
   return 1;
+  
 }
-
 void f(int *t, int x)
 {
   int old_found;

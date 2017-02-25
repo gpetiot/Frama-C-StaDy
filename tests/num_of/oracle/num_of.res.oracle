@@ -43,11 +43,10 @@ precondition_of('num_of','pathcrawler__num_of_precond').
 [stady:generated-c] generated C file:
 #include "/usr/local/share/frama-c/stady/externals.h"
 
-int num_of_precond(int n, int *t)
-{
+int num_of_precond(int n, int *t) {
   return 1;
+  
 }
-
 /*@ requires n > 0;
     requires \valid(t + (0 .. n - 1));
     ensures

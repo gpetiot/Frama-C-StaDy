@@ -44,14 +44,28 @@ precondition_of('main','pathcrawler__main_precond').
 
 extern int rand();
 
-int __sd_rand_mod_2();
-int __sd_rand_mod_1();
-int __sd_rand_mod_0();
-int main_precond(void)
-{
-  return 1;
+int __sd_rand_mod_2() {
+  int __retres;
+  __retres = nondet_sint("\\return of function \'rand\'");
+  return __retres;
+  
 }
-
+int __sd_rand_mod_1() {
+  int __retres;
+  __retres = nondet_sint("\\return of function \'rand\'");
+  return __retres;
+  
+}
+int __sd_rand_mod_0() {
+  int __retres;
+  __retres = nondet_sint("\\return of function \'rand\'");
+  return __retres;
+  
+}
+int main_precond(void) {
+  return 1;
+  
+}
 void main(void)
 {
   {
@@ -80,25 +94,6 @@ void main(void)
     }
     return;
   }
-}
-
-int __sd_rand_mod_2() {
-  int __retres;
-  __retres = nondet_sint("\\return of function \'rand\'");
-  return __retres;
-  
-}
-int __sd_rand_mod_1() {
-  int __retres;
-  __retres = nondet_sint("\\return of function \'rand\'");
-  return __retres;
-  
-}
-int __sd_rand_mod_0() {
-  int __retres;
-  __retres = nondet_sint("\\return of function \'rand\'");
-  return __retres;
-  
 }
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_simulate_rand_main.c (with preprocessing)

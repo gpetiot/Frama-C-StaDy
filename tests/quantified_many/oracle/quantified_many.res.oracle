@@ -39,11 +39,10 @@ precondition_of('f','pathcrawler__f_precond').
 [stady:generated-c] generated C file:
 #include "/usr/local/share/frama-c/stady/externals.h"
 
-int f_precond(int default_value)
-{
+int f_precond(int default_value) {
   return 1;
+  
 }
-
 void f(int default_value)
 {
   int old_default_value;

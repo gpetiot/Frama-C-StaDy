@@ -73,29 +73,6 @@ T1 F2(T1 f3, T5 *f4, T5 *f5);
 
 T1 F3(T1 f6, T1 f7, T1 f8, T1 f9, T1 f10);
 
-int __sd_Frama_C_interval_mod_1(int min, int max);
-int __sd_Frama_C_interval_mod_0(int min, int max);
-T1 F3(T1 f6, T1 f7, T1 f8, T1 f9, T1 f10)
-{
-  double old_f6;
-  double old_f7;
-  double old_f8;
-  double old_f9;
-  double old_f10;
-  old_f6 = f6;
-  old_f7 = f7;
-  old_f8 = f8;
-  old_f9 = f9;
-  old_f10 = f10;
-  {
-    T1 V1;
-    T1 V2;
-    V2 = ((f6 - f7) * (f8 - f9)) * (f8 - f9);
-    V1 = V2 + f9;
-    return V1;
-  }
-}
-
 T1 F4(T1 f11);
 
 T2 F5(T1 f12, T5 *f13);
@@ -104,286 +81,8 @@ T1 F6(T1 f14, T5 *f15, T5 *f16);
 
 void F7(T1 f17, T1 f18, T5 *f19, T5 *f20);
 
-T2 F5(T1 f12, T5 *f13)
-{
-  double old_f12;
-  double **old_f13;
-  double **old_ptr_f13;
-  old_f12 = f12;
-  old_f13 = f13;
-  old_ptr_f13 = f13;
-  {
-    T2 V3;
-    V3 = 5;
-    return V3;
-  }
-}
-
-T1 F2(T1 f3, T5 *f4, T5 *f5)
-{
-  double old_f3;
-  double **old_f4;
-  double **old_ptr_f4;
-  double **old_f5;
-  double **old_ptr_f5;
-  old_f3 = f3;
-  old_f4 = f4;
-  old_ptr_f4 = f4;
-  old_f5 = f5;
-  old_ptr_f5 = f5;
-  {
-    T3 V4;
-    T3 V5;
-    T1 V6;
-    V5 = f3 < (*f4)[0];
-    if (V5) V6 = (*f5)[0];
-    else {
-      V4 = f3 > (*f4)[11];
-      if (V4) V6 = (*f5)[11]; else V6 = F6(f3,f4,f5);
-    }
-    return V6;
-  }
-}
-
-T1 F4(T1 f11)
-{
-  double old_f11;
-  old_f11 = f11;
-  {
-    T3 V7;
-    T1 V8;
-    V7 = f11 >= 0.;
-    if (V7) V8 = f11; else V8 = - f11;
-    return V8;
-  }
-}
-
-T1 F6(T1 f14, T5 *f15, T5 *f16)
-{
-  double old_f14;
-  double **old_f15;
-  double **old_ptr_f15;
-  double **old_f16;
-  double **old_ptr_f16;
-  old_f14 = f14;
-  old_f15 = f15;
-  old_ptr_f15 = f15;
-  old_f16 = f16;
-  old_ptr_f16 = f16;
-  {
-    T1 V9;
-    T1 V10;
-    T1 V11;
-    T1 V12;
-    T2 V13;
-    T2 V14;
-    T1 V15;
-    V13 = F5(f14,f15);
-    if (V13 == 0) V14 = 1; else V14 = V13;
-    if (V14 == 12) V13 = 11; else V13 = V14;
-    V14 = V13 - 1;
-    V9 = (*f15)[V13];
-    V11 = (*f16)[V13];
-    V10 = (*f15)[V14];
-    V12 = (*f16)[V14];
-    V15 = F3(f14,V9,V10,V11,V12);
-    return V15;
-  }
-}
-
-int F7_precond(T1 f17, T1 f18, T5 *f19, T5 *f20)
-{
-  return 1;
-}
-
-void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
-{
-  double old_f17;
-  double old_f18;
-  double **old_f19;
-  double **old_ptr_f19;
-  mpz_t __sd_Z_cst_0;
-  unsigned long __sd_to_ctype_0;
-  unsigned long __sd_iter_0;
-  double **old_f20;
-  double **old_ptr_f20;
-  mpz_t __sd_Z_cst_4;
-  unsigned long __sd_to_ctype_3;
-  unsigned long __sd_iter_3;
-  old_f17 = f17;
-  old_f18 = f18;
-  old_f19 = f19;
-  __gmpz_init_set_str(__sd_Z_cst_0,"1",10);
-  __sd_to_ctype_0 = __gmpz_get_ui(__sd_Z_cst_0);
-  __gmpz_clear(__sd_Z_cst_0);
-  old_ptr_f19 = (double **)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(double *));
-  __sd_iter_0 = 0;
-  while (__sd_iter_0 < __sd_to_ctype_0) {
-    mpz_t __sd_Z_cst_1;
-    mpz_t __sd_Z_cst_2;
-    mpz_t __sd_Z_add_0;
-    unsigned long __sd_to_ctype_1;
-    unsigned long __sd_iter_1;
-    __gmpz_init_set_str(__sd_Z_cst_1,"11",10);
-    __gmpz_init_set_str(__sd_Z_cst_2,"1",10);
-    __gmpz_init(__sd_Z_add_0);
-    __gmpz_add(__sd_Z_add_0,__sd_Z_cst_1,__sd_Z_cst_2);
-    __gmpz_clear(__sd_Z_cst_1);
-    __gmpz_clear(__sd_Z_cst_2);
-    __sd_to_ctype_1 = __gmpz_get_ui(__sd_Z_add_0);
-    __gmpz_clear(__sd_Z_add_0);
-    *(old_ptr_f19 + __sd_iter_0) = (double *)malloc(__sd_to_ctype_1 * (unsigned long)sizeof(double));
-    __sd_iter_1 = 0;
-    while (__sd_iter_1 < __sd_to_ctype_1) {
-      *(*(old_ptr_f19 + __sd_iter_0) + __sd_iter_1) = (*(f19 + __sd_iter_0))[__sd_iter_1];
-      __sd_iter_1 ++;
-    }
-    __sd_iter_0 ++;
-  }
-  old_f20 = f20;
-  __gmpz_init_set_str(__sd_Z_cst_4,"1",10);
-  __sd_to_ctype_3 = __gmpz_get_ui(__sd_Z_cst_4);
-  __gmpz_clear(__sd_Z_cst_4);
-  old_ptr_f20 = (double **)malloc(__sd_to_ctype_3 * (unsigned long)sizeof(double *));
-  __sd_iter_3 = 0;
-  while (__sd_iter_3 < __sd_to_ctype_3) {
-    mpz_t __sd_Z_cst_5;
-    mpz_t __sd_Z_cst_6;
-    mpz_t __sd_Z_add_1;
-    unsigned long __sd_to_ctype_4;
-    unsigned long __sd_iter_4;
-    __gmpz_init_set_str(__sd_Z_cst_5,"11",10);
-    __gmpz_init_set_str(__sd_Z_cst_6,"1",10);
-    __gmpz_init(__sd_Z_add_1);
-    __gmpz_add(__sd_Z_add_1,__sd_Z_cst_5,__sd_Z_cst_6);
-    __gmpz_clear(__sd_Z_cst_5);
-    __gmpz_clear(__sd_Z_cst_6);
-    __sd_to_ctype_4 = __gmpz_get_ui(__sd_Z_add_1);
-    __gmpz_clear(__sd_Z_add_1);
-    *(old_ptr_f20 + __sd_iter_3) = (double *)malloc(__sd_to_ctype_4 * (unsigned long)sizeof(double));
-    __sd_iter_4 = 0;
-    while (__sd_iter_4 < __sd_to_ctype_4) {
-      *(*(old_ptr_f20 + __sd_iter_3) + __sd_iter_4) = (*(f20 + __sd_iter_3))[__sd_iter_4];
-      __sd_iter_4 ++;
-    }
-    __sd_iter_3 ++;
-  }
-  {
-    T3 V16;
-    T4 V17;
-    T3 V18;
-    T1 V19;
-    T1 V20;
-    T1 V21;
-    int V22;
-    V21 = f17 * 0.1;
-    V19 = V21 - 0.1;
-    V20 = F2(V19,f19,f20);
-    V18 = f18 < - V20;
-    if (! V18) {
-      V16 = f18 < V20;
-      if (V16) {
-        V17[0] = - V20;
-        V17[1] = V20;
-        V22 = V17[0] + 1. <= V17[1];
-        {
-          mpz_t __sd_Z_to_Z_0;
-          mpz_t __sd_Z_cst_8;
-          int __sd_ne_0;
-          __gmpz_init_set_si(__sd_Z_to_Z_0,V22);
-          __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
-          __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_0,__sd_Z_cst_8);
-          __gmpz_clear(__sd_Z_to_Z_0);
-          __gmpz_clear(__sd_Z_cst_8);
-          if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",25);
-          ;
-        }
-      }
-    }
-    unsigned long __sd_iter_2;
-    mpz_t __sd_Z_cst_3;
-    unsigned long __sd_to_ctype_2;
-    unsigned long __sd_iter_5;
-    mpz_t __sd_Z_cst_7;
-    unsigned long __sd_to_ctype_5;
-    __gmpz_init_set_str(__sd_Z_cst_3,"1",10);
-    __sd_to_ctype_2 = __gmpz_get_ui(__sd_Z_cst_3);
-    __gmpz_clear(__sd_Z_cst_3);
-    __sd_iter_2 = 0;
-    while (__sd_iter_2 < __sd_to_ctype_2) {
-      free(*(old_ptr_f19 + __sd_iter_2));
-      __sd_iter_2 ++;
-    }
-    free(old_ptr_f19);
-    __gmpz_init_set_str(__sd_Z_cst_7,"1",10);
-    __sd_to_ctype_5 = __gmpz_get_ui(__sd_Z_cst_7);
-    __gmpz_clear(__sd_Z_cst_7);
-    __sd_iter_5 = 0;
-    while (__sd_iter_5 < __sd_to_ctype_5) {
-      free(*(old_ptr_f20 + __sd_iter_5));
-      __sd_iter_5 ++;
-    }
-    free(old_ptr_f20);
-    return;
-  }
-}
-
 T5 G1;
 T5 G2;
-void F8(void)
-{
-  double *old_G2;
-  double *old_ptr_G2;
-  double *old_G1;
-  double *old_ptr_G1;
-  old_G2 = G2;
-  old_ptr_G2 = G2;
-  old_G1 = G1;
-  old_ptr_G1 = G1;
-  {
-    T1 V23;
-    T1 V24;
-    int V25;
-    int V26;
-    {
-      V25 = __sd_Frama_C_interval_mod_0(0,1);
-      
-    }
-    if (V25) V23 = 0.5; else V23 = 5.;
-    {
-      V26 = __sd_Frama_C_interval_mod_1(0,1);
-      
-    }
-    if (V26) V24 = - 100.0; else V24 = 100.0;
-    G1[0] = 0.;
-    G1[1] = 1.;
-    G1[2] = 2.;
-    G1[3] = 3.;
-    G1[4] = 4.;
-    G1[5] = 5.;
-    G1[6] = 6.;
-    G1[7] = 7.;
-    G1[8] = 8.;
-    G1[9] = 9.;
-    G1[10] = 10.;
-    G1[11] = 11.;
-    G2[0] = 0.;
-    G2[1] = 1.;
-    G2[2] = 2.;
-    G2[3] = 3.;
-    G2[4] = 4.;
-    G2[5] = 5.;
-    G2[6] = 6.;
-    G2[7] = 7.;
-    G2[8] = 8.;
-    G2[9] = 9.;
-    G2[10] = 10.;
-    G2[11] = 11.;
-    F7(V23,V24,& G1,& G2);
-    return;
-  }
-}
-
 int volatile Frama_C_entropy_source __attribute__((__unused__,
                                                    __FRAMA_C_MODEL__));
 /*@ requires \valid(p + (0 .. l - 1));
@@ -520,6 +219,360 @@ extern size_t Frama_C_offset(void const *p);
     assigns Frama_C_entropy_source \from Frama_C_entropy_source;
  */
 extern void Frama_C_update_entropy(void);
+
+int __sd_Frama_C_interval_mod_1(int min, int max) {
+  int __retres;
+  __retres = nondet_sint("\\return of function \'Frama_C_interval\'");
+  if (1) {
+    int old_max;
+    int old_min;
+    int volatile old_Frama_C_entropy_source;
+    double *old_G2;
+    double *old_ptr_G2;
+    double *old_G1;
+    double *old_ptr_G1;
+    int __sd_and_1;
+    old_max = max;
+    old_min = min;
+    old_Frama_C_entropy_source = Frama_C_entropy_source;
+    old_G2 = G2;
+    old_ptr_G2 = G2;
+    old_G1 = G1;
+    old_ptr_G1 = G1;
+    Frama_C_entropy_source = nondet_sint("Frama_C_entropy_source");
+    __retres = nondet_sint("\\result");
+    __sd_and_1 = old_min <= __retres;
+    if (__sd_and_1) __sd_and_1 = __retres <= old_max;
+    if (! __sd_and_1) pathcrawler_assume_exception("",0);
+  }
+  return __retres;
+  
+}
+int __sd_Frama_C_interval_mod_0(int min, int max) {
+  int __retres;
+  __retres = nondet_sint("\\return of function \'Frama_C_interval\'");
+  if (1) {
+    int old_max;
+    int old_min;
+    int volatile old_Frama_C_entropy_source;
+    double *old_G2;
+    double *old_ptr_G2;
+    double *old_G1;
+    double *old_ptr_G1;
+    int __sd_and_0;
+    old_max = max;
+    old_min = min;
+    old_Frama_C_entropy_source = Frama_C_entropy_source;
+    old_G2 = G2;
+    old_ptr_G2 = G2;
+    old_G1 = G1;
+    old_ptr_G1 = G1;
+    Frama_C_entropy_source = nondet_sint("Frama_C_entropy_source");
+    __retres = nondet_sint("\\result");
+    __sd_and_0 = old_min <= __retres;
+    if (__sd_and_0) __sd_and_0 = __retres <= old_max;
+    if (! __sd_and_0) pathcrawler_assume_exception("",0);
+  }
+  return __retres;
+  
+}
+int F7_precond(T1 f17, T1 f18, T5 *f19, T5 *f20) {
+  return 1;
+  
+}
+T1 F3(T1 f6, T1 f7, T1 f8, T1 f9, T1 f10)
+{
+  double old_f6;
+  double old_f7;
+  double old_f8;
+  double old_f9;
+  double old_f10;
+  old_f6 = f6;
+  old_f7 = f7;
+  old_f8 = f8;
+  old_f9 = f9;
+  old_f10 = f10;
+  {
+    T1 V1;
+    T1 V2;
+    V2 = ((f6 - f7) * (f8 - f9)) * (f8 - f9);
+    V1 = V2 + f9;
+    return V1;
+  }
+}
+
+T2 F5(T1 f12, T5 *f13)
+{
+  double old_f12;
+  double **old_f13;
+  double **old_ptr_f13;
+  old_f12 = f12;
+  old_f13 = f13;
+  old_ptr_f13 = f13;
+  {
+    T2 V3;
+    V3 = 5;
+    return V3;
+  }
+}
+
+T1 F2(T1 f3, T5 *f4, T5 *f5)
+{
+  double old_f3;
+  double **old_f4;
+  double **old_ptr_f4;
+  double **old_f5;
+  double **old_ptr_f5;
+  old_f3 = f3;
+  old_f4 = f4;
+  old_ptr_f4 = f4;
+  old_f5 = f5;
+  old_ptr_f5 = f5;
+  {
+    T3 V4;
+    T3 V5;
+    T1 V6;
+    V5 = f3 < (*f4)[0];
+    if (V5) V6 = (*f5)[0];
+    else {
+      V4 = f3 > (*f4)[11];
+      if (V4) V6 = (*f5)[11]; else V6 = F6(f3,f4,f5);
+    }
+    return V6;
+  }
+}
+
+T1 F4(T1 f11)
+{
+  double old_f11;
+  old_f11 = f11;
+  {
+    T3 V7;
+    T1 V8;
+    V7 = f11 >= 0.;
+    if (V7) V8 = f11; else V8 = - f11;
+    return V8;
+  }
+}
+
+T1 F6(T1 f14, T5 *f15, T5 *f16)
+{
+  double old_f14;
+  double **old_f15;
+  double **old_ptr_f15;
+  double **old_f16;
+  double **old_ptr_f16;
+  old_f14 = f14;
+  old_f15 = f15;
+  old_ptr_f15 = f15;
+  old_f16 = f16;
+  old_ptr_f16 = f16;
+  {
+    T1 V9;
+    T1 V10;
+    T1 V11;
+    T1 V12;
+    T2 V13;
+    T2 V14;
+    T1 V15;
+    V13 = F5(f14,f15);
+    if (V13 == 0) V14 = 1; else V14 = V13;
+    if (V14 == 12) V13 = 11; else V13 = V14;
+    V14 = V13 - 1;
+    V9 = (*f15)[V13];
+    V11 = (*f16)[V13];
+    V10 = (*f15)[V14];
+    V12 = (*f16)[V14];
+    V15 = F3(f14,V9,V10,V11,V12);
+    return V15;
+  }
+}
+
+void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
+{
+  double old_f17;
+  double old_f18;
+  double **old_f19;
+  double **old_ptr_f19;
+  mpz_t __sd_Z_cst_0;
+  unsigned long __sd_to_ctype_0;
+  unsigned long __sd_iter_0;
+  double **old_f20;
+  double **old_ptr_f20;
+  mpz_t __sd_Z_cst_4;
+  unsigned long __sd_to_ctype_3;
+  unsigned long __sd_iter_3;
+  old_f17 = f17;
+  old_f18 = f18;
+  old_f19 = f19;
+  __gmpz_init_set_str(__sd_Z_cst_0,"1",10);
+  __sd_to_ctype_0 = __gmpz_get_ui(__sd_Z_cst_0);
+  __gmpz_clear(__sd_Z_cst_0);
+  old_ptr_f19 = (double **)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(double *));
+  __sd_iter_0 = 0;
+  while (__sd_iter_0 < __sd_to_ctype_0) {
+    mpz_t __sd_Z_cst_1;
+    mpz_t __sd_Z_cst_2;
+    mpz_t __sd_Z_add_0;
+    unsigned long __sd_to_ctype_1;
+    unsigned long __sd_iter_1;
+    __gmpz_init_set_str(__sd_Z_cst_1,"11",10);
+    __gmpz_init_set_str(__sd_Z_cst_2,"1",10);
+    __gmpz_init(__sd_Z_add_0);
+    __gmpz_add(__sd_Z_add_0,__sd_Z_cst_1,__sd_Z_cst_2);
+    __gmpz_clear(__sd_Z_cst_1);
+    __gmpz_clear(__sd_Z_cst_2);
+    __sd_to_ctype_1 = __gmpz_get_ui(__sd_Z_add_0);
+    __gmpz_clear(__sd_Z_add_0);
+    *(old_ptr_f19 + __sd_iter_0) = (double *)malloc(__sd_to_ctype_1 * (unsigned long)sizeof(double));
+    __sd_iter_1 = 0;
+    while (__sd_iter_1 < __sd_to_ctype_1) {
+      *(*(old_ptr_f19 + __sd_iter_0) + __sd_iter_1) = (*(f19 + __sd_iter_0))[__sd_iter_1];
+      __sd_iter_1 ++;
+    }
+    __sd_iter_0 ++;
+  }
+  old_f20 = f20;
+  __gmpz_init_set_str(__sd_Z_cst_4,"1",10);
+  __sd_to_ctype_3 = __gmpz_get_ui(__sd_Z_cst_4);
+  __gmpz_clear(__sd_Z_cst_4);
+  old_ptr_f20 = (double **)malloc(__sd_to_ctype_3 * (unsigned long)sizeof(double *));
+  __sd_iter_3 = 0;
+  while (__sd_iter_3 < __sd_to_ctype_3) {
+    mpz_t __sd_Z_cst_5;
+    mpz_t __sd_Z_cst_6;
+    mpz_t __sd_Z_add_1;
+    unsigned long __sd_to_ctype_4;
+    unsigned long __sd_iter_4;
+    __gmpz_init_set_str(__sd_Z_cst_5,"11",10);
+    __gmpz_init_set_str(__sd_Z_cst_6,"1",10);
+    __gmpz_init(__sd_Z_add_1);
+    __gmpz_add(__sd_Z_add_1,__sd_Z_cst_5,__sd_Z_cst_6);
+    __gmpz_clear(__sd_Z_cst_5);
+    __gmpz_clear(__sd_Z_cst_6);
+    __sd_to_ctype_4 = __gmpz_get_ui(__sd_Z_add_1);
+    __gmpz_clear(__sd_Z_add_1);
+    *(old_ptr_f20 + __sd_iter_3) = (double *)malloc(__sd_to_ctype_4 * (unsigned long)sizeof(double));
+    __sd_iter_4 = 0;
+    while (__sd_iter_4 < __sd_to_ctype_4) {
+      *(*(old_ptr_f20 + __sd_iter_3) + __sd_iter_4) = (*(f20 + __sd_iter_3))[__sd_iter_4];
+      __sd_iter_4 ++;
+    }
+    __sd_iter_3 ++;
+  }
+  {
+    T3 V16;
+    T4 V17;
+    T3 V18;
+    T1 V19;
+    T1 V20;
+    T1 V21;
+    int V22;
+    V21 = f17 * 0.1;
+    V19 = V21 - 0.1;
+    V20 = F2(V19,f19,f20);
+    V18 = f18 < - V20;
+    if (! V18) {
+      V16 = f18 < V20;
+      if (V16) {
+        V17[0] = - V20;
+        V17[1] = V20;
+        V22 = V17[0] + 1. <= V17[1];
+        {
+          mpz_t __sd_Z_to_Z_0;
+          mpz_t __sd_Z_cst_8;
+          int __sd_ne_0;
+          __gmpz_init_set_si(__sd_Z_to_Z_0,V22);
+          __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
+          __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_0,__sd_Z_cst_8);
+          __gmpz_clear(__sd_Z_to_Z_0);
+          __gmpz_clear(__sd_Z_cst_8);
+          if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",25);
+          ;
+        }
+      }
+    }
+    unsigned long __sd_iter_2;
+    mpz_t __sd_Z_cst_3;
+    unsigned long __sd_to_ctype_2;
+    unsigned long __sd_iter_5;
+    mpz_t __sd_Z_cst_7;
+    unsigned long __sd_to_ctype_5;
+    __gmpz_init_set_str(__sd_Z_cst_3,"1",10);
+    __sd_to_ctype_2 = __gmpz_get_ui(__sd_Z_cst_3);
+    __gmpz_clear(__sd_Z_cst_3);
+    __sd_iter_2 = 0;
+    while (__sd_iter_2 < __sd_to_ctype_2) {
+      free(*(old_ptr_f19 + __sd_iter_2));
+      __sd_iter_2 ++;
+    }
+    free(old_ptr_f19);
+    __gmpz_init_set_str(__sd_Z_cst_7,"1",10);
+    __sd_to_ctype_5 = __gmpz_get_ui(__sd_Z_cst_7);
+    __gmpz_clear(__sd_Z_cst_7);
+    __sd_iter_5 = 0;
+    while (__sd_iter_5 < __sd_to_ctype_5) {
+      free(*(old_ptr_f20 + __sd_iter_5));
+      __sd_iter_5 ++;
+    }
+    free(old_ptr_f20);
+    return;
+  }
+}
+
+void F8(void)
+{
+  double *old_G2;
+  double *old_ptr_G2;
+  double *old_G1;
+  double *old_ptr_G1;
+  old_G2 = G2;
+  old_ptr_G2 = G2;
+  old_G1 = G1;
+  old_ptr_G1 = G1;
+  {
+    T1 V23;
+    T1 V24;
+    int V25;
+    int V26;
+    {
+      V25 = __sd_Frama_C_interval_mod_0(0,1);
+      
+    }
+    if (V25) V23 = 0.5; else V23 = 5.;
+    {
+      V26 = __sd_Frama_C_interval_mod_1(0,1);
+      
+    }
+    if (V26) V24 = - 100.0; else V24 = 100.0;
+    G1[0] = 0.;
+    G1[1] = 1.;
+    G1[2] = 2.;
+    G1[3] = 3.;
+    G1[4] = 4.;
+    G1[5] = 5.;
+    G1[6] = 6.;
+    G1[7] = 7.;
+    G1[8] = 8.;
+    G1[9] = 9.;
+    G1[10] = 10.;
+    G1[11] = 11.;
+    G2[0] = 0.;
+    G2[1] = 1.;
+    G2[2] = 2.;
+    G2[3] = 3.;
+    G2[4] = 4.;
+    G2[5] = 5.;
+    G2[6] = 6.;
+    G2[7] = 7.;
+    G2[8] = 8.;
+    G2[9] = 9.;
+    G2[10] = 10.;
+    G2[11] = 11.;
+    F7(V23,V24,& G1,& G2);
+    return;
+  }
+}
 
 int Frama_C_nondet(int a, int b)
 {
@@ -672,66 +725,9 @@ double Frama_C_double_interval(double min, double max)
     return tmp;
   }
 }
-
-int __sd_Frama_C_interval_mod_1(int min, int max) {
-  int __retres;
-  __retres = nondet_sint("\\return of function \'Frama_C_interval\'");
-  if (1) {
-    int old_max;
-    int old_min;
-    int volatile old_Frama_C_entropy_source;
-    double *old_G2;
-    double *old_ptr_G2;
-    double *old_G1;
-    double *old_ptr_G1;
-    int __sd_and_1;
-    old_max = max;
-    old_min = min;
-    old_Frama_C_entropy_source = Frama_C_entropy_source;
-    old_G2 = G2;
-    old_ptr_G2 = G2;
-    old_G1 = G1;
-    old_ptr_G1 = G1;
-    Frama_C_entropy_source = nondet_sint("Frama_C_entropy_source");
-    __retres = nondet_sint("\\result");
-    __sd_and_1 = old_min <= __retres;
-    if (__sd_and_1) __sd_and_1 = __retres <= old_max;
-    if (! __sd_and_1) pathcrawler_assume_exception("",0);
-  }
-  return __retres;
-  
-}
-int __sd_Frama_C_interval_mod_0(int min, int max) {
-  int __retres;
-  __retres = nondet_sint("\\return of function \'Frama_C_interval\'");
-  if (1) {
-    int old_max;
-    int old_min;
-    int volatile old_Frama_C_entropy_source;
-    double *old_G2;
-    double *old_ptr_G2;
-    double *old_G1;
-    double *old_ptr_G1;
-    int __sd_and_0;
-    old_max = max;
-    old_min = min;
-    old_Frama_C_entropy_source = Frama_C_entropy_source;
-    old_G2 = G2;
-    old_ptr_G2 = G2;
-    old_G1 = G1;
-    old_ptr_G1 = G1;
-    Frama_C_entropy_source = nondet_sint("Frama_C_entropy_source");
-    __retres = nondet_sint("\\result");
-    __sd_and_0 = old_min <= __retres;
-    if (__sd_and_0) __sd_and_0 = __retres <= old_max;
-    if (! __sd_and_0) pathcrawler_assume_exception("",0);
-  }
-  return __retres;
-  
-}
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_all4_F7.c (with preprocessing)
-__sd_instru_all4_F7.c:219:[kernel] warning: Floating-point constant 0.1 is not represented exactly. Will use 0x1.999999999999ap-4. See documentation for option -warn-decimal-float
+__sd_instru_all4_F7.c:411:[kernel] warning: Floating-point constant 0.1 is not represented exactly. Will use 0x1.999999999999ap-4. See documentation for option -warn-decimal-float
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_all4_F7.c (with preprocessing)
 [pc] Starting lanceur_F7 (isc version)

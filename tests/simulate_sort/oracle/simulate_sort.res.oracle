@@ -60,41 +60,6 @@ extern int printf(char const * , ...);
  */
 extern void sort(int *a, int n);
 
-void __sd_sort_mod_0(int *a, int n);
-int main_precond(void)
-{
-  return 1;
-}
-
-void main(void)
-{
-  {
-    int t[4];
-    int t_before[4];
-    int i;
-    int n;
-    n = 4;
-    i = 0;
-    while (1) {
-      if (! (i < n)) break;t[i] = (13 - i) * ((i % 2) * 2 - 1);
-                           t_before[i] = t[i];
-                           i ++;}
-       
-    {
-      __sd_sort_mod_0(t,n);
-      
-    }
-    printf("before:\t after:\n");
-    i = 0;
-    while (1) {
-      if (! (i < n)) break;printf("%i \t %i\n",t_before[i],t[i]);
-                           i ++;}
-       
-    printf("\n");
-    return;
-  }
-}
-
 void __sd_sort_mod_0(int *a, int n) {
   if (1) {
     int old_n;
@@ -286,6 +251,38 @@ void __sd_sort_mod_0(int *a, int n) {
     free(old_ptr_a);
   }
   
+}
+int main_precond(void) {
+  return 1;
+  
+}
+void main(void)
+{
+  {
+    int t[4];
+    int t_before[4];
+    int i;
+    int n;
+    n = 4;
+    i = 0;
+    while (1) {
+      if (! (i < n)) break;t[i] = (13 - i) * ((i % 2) * 2 - 1);
+                           t_before[i] = t[i];
+                           i ++;}
+       
+    {
+      __sd_sort_mod_0(t,n);
+      
+    }
+    printf("before:\t after:\n");
+    i = 0;
+    while (1) {
+      if (! (i < n)) break;printf("%i \t %i\n",t_before[i],t[i]);
+                           i ++;}
+       
+    printf("\n");
+    return;
+  }
 }
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_simulate_sort_main.c (with preprocessing)

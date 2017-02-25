@@ -43,11 +43,10 @@ precondition_of('insertion_sort','pathcrawler__insertion_sort_precond').
 [stady:generated-c] generated C file:
 #include "/usr/local/share/frama-c/stady/externals.h"
 
-int insertion_sort_precond(int *t, int n)
-{
+int insertion_sort_precond(int *t, int n) {
   return 1;
+  
 }
-
 /*@ requires 1 <= n <= 3;
     requires \valid(t + (0 .. n - 1));
     ensures

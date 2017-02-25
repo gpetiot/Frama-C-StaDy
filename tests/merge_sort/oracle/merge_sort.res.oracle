@@ -49,6 +49,10 @@ precondition_of('merge_sort','pathcrawler__merge_sort_precond').
 [stady:generated-c] generated C file:
 #include "/usr/local/share/frama-c/stady/externals.h"
 
+int merge_sort_precond(int *table, int l, int *ret) {
+  return 1;
+  
+}
 /*@ requires \valid(A + (iLeft .. iRight - 1));
     requires \valid(B + (iLeft .. iEnd - 1));
  */
@@ -799,11 +803,6 @@ void BottomUpSort(int n, int *A, int *B)
     free(old_ptr_B);
     return;
   }
-}
-
-int merge_sort_precond(int *table, int l, int *ret)
-{
-  return 1;
 }
 
 void merge_sort(int *table, int l, int *ret)

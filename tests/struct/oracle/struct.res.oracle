@@ -55,11 +55,10 @@ struct S {
    int i ;
    int *p ;
 };
-int f_precond(struct S *s, struct S *s2, int n)
-{
+int f_precond(struct S *s, struct S *s2, int n) {
   return 1;
+  
 }
-
 /*@ requires \valid(s);
     requires 0 <= n <= 5;
     requires 0 <= s->i <= 10;

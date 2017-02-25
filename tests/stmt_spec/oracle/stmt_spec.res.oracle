@@ -3,11 +3,10 @@
 [stady:generated-c] generated C file:
 #include "/usr/local/share/frama-c/stady/externals.h"
 
-int f_precond(int x)
-{
+int f_precond(int x) {
   return 1;
+  
 }
-
 /*@ requires -100 <= x <= 100;
     
     behavior pos:

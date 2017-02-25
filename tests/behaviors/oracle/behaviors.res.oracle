@@ -41,11 +41,10 @@ precondition_of('f','pathcrawler__f_precond').
 [stady:generated-c] generated C file:
 #include "/usr/local/share/frama-c/stady/externals.h"
 
-int f_precond(int x, int y, int z)
-{
+int f_precond(int x, int y, int z) {
   return 1;
+  
 }
-
 /*@ behavior X:
       assumes x >= y;
       assumes x >= z;

@@ -43,11 +43,10 @@ precondition_of('firstSubset','pathcrawler__firstSubset_precond').
 [stady:generated-c] generated C file:
 #include "/usr/local/share/frama-c/stady/externals.h"
 
-int firstSubset_precond(int *s, int n)
-{
+int firstSubset_precond(int *s, int n) {
   return 1;
+  
 }
-
 /*@ requires n >= 0 && n <= 3 && \valid(s + (0 .. n - 1));
     ensures
       \forall integer i;

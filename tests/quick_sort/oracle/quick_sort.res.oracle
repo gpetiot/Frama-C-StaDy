@@ -47,11 +47,10 @@ precondition_of('quick_sort','pathcrawler__quick_sort_precond').
 [stady:generated-c] generated C file:
 #include "/usr/local/share/frama-c/stady/externals.h"
 
-int quick_sort_precond(int *arr, int elements, int *beg, int *end)
-{
+int quick_sort_precond(int *arr, int elements, int *beg, int *end) {
   return 1;
+  
 }
-
 /*@ requires 0 <= elements;
     requires \valid(arr + (0 .. elements - 1));
     requires \valid(beg + (0 .. 99));

@@ -47,6 +47,10 @@ precondition_of('f','pathcrawler__f_precond').
 #include "/usr/local/share/frama-c/stady/externals.h"
 #include "/usr/local/share/frama-c/stady/nondet.c"
 
+int f_precond(int n, int *t) {
+  return 1;
+  
+}
 int fmax(int x, int y)
 {
   int old_x;
@@ -58,11 +62,6 @@ int fmax(int x, int y)
     if (x >= y) tmp = x; else tmp = y;
     return tmp;
   }
-}
-
-int f_precond(int n, int *t)
-{
-  return 1;
 }
 
 void f(int n, int *t)
