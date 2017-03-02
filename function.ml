@@ -2,23 +2,21 @@
 open Cil_types
 
 type t = {
-  mutable func_var: varinfo;
-  mutable func_formals: varinfo list;
-  mutable func_locals: varinfo list;
-  mutable func_stmts: Insertion.t list;
+  mutable var: varinfo;
+  mutable formals: varinfo list;
+  mutable locals: varinfo list;
+  mutable stmts: Insertion.t list;
 }
 
-let make v f l s = {func_var=v; func_formals=f; func_locals=l; func_stmts=s;}
+let make v ~formals ~locals s = {var=v; formals; locals; stmts=s;}
 
 let pretty fmt f =
-  let ty = f.func_var.vtype in
-  let vname = f.func_var.vname in
-  let print fmt = Format.fprintf fmt "%s" vname in
+  let print fmt = Format.fprintf fmt "%s" f.var.vname in
   Format.fprintf fmt "@[<v 2>%a {@\n"
-    ((new Printer.extensible_printer ())#typ (Some print)) ty;
-  List.iter (Insertion.pretty fmt) f.func_stmts;
+    ((new Printer.extensible_printer ())#typ (Some print)) f.var.vtype ;
+  List.iter (Insertion.pretty fmt) f.stmts;
   Format.fprintf fmt "@]@\n}@\n"
 
 let is_nondet f =
   let is_nondet b i = b || Insertion.is_nondet i in
-  List.fold_left is_nondet false f.func_stmts
+  List.fold_left is_nondet false f.stmts

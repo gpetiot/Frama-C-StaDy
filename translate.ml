@@ -1070,9 +1070,9 @@ class gather_insertions props swd = object(self)
 	  | _ -> assert false
 	in
 	let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
-	let return_1 = Insertion.mk_ret one in
-	let pre_fun =
-	  Function.make pre_varinfo f.sformals [] (inserts_pre @ [return_1]) in
+	let stmts = inserts_pre @ [Insertion.mk_ret one] in
+	let formals = f.sformals and locals = [] in
+	let pre_fun = Function.make pre_varinfo ~formals ~locals stmts in
 	functions <- pre_fun :: functions;
       else
 	let label_pre = Symbolic_label.beg_func f.svar.vname in
@@ -1389,7 +1389,7 @@ class gather_insertions props swd = object(self)
 	 | None -> [], [], []
        in
        let ins_full_body = decl_retres @ aff_retres @ ins_body @ ret_retres in
-       let new_f = Function.make new_f_vi formals locals ins_full_body in
+       let new_f = Function.make new_f_vi ~formals ~locals ins_full_body in
        functions <- new_f :: functions;
        let i_call = Insertion.mk_instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
        self#insert (Symbolic_label.end_stmt stmt.sid) [i_call];
