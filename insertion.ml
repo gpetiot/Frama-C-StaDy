@@ -40,7 +40,7 @@ let rec to_stmt = function
      let i = Cil.mkStmt (If(e, b1, b2, loc)) in
      let b' = ilist_to_block b in
      Cil.mkStmt (Loop ([], {b' with bstmts = i :: b'.bstmts}, loc, None, None))
-       
+
 and ilist_to_block il =
   let vars, instr = split_decl_instr il in
   {battrs=[]; blocals=(List.rev vars); bstmts=List.map to_stmt (List.rev instr)}
@@ -56,20 +56,6 @@ let list_to_cil ins =
   in
   let vars, stmts = List.fold_left f ([], []) ins in
   List.rev vars, List.rev stmts
-
-let rec is_nondet = function
-  | Instru(Call (_,{enode=Lval(Var v,_)},_,_)) ->
-     begin try (String.sub v.vname 0 7) = "nondet_" with _ -> false end
-  | Instru _ -> false
-  | IRet _ -> false
-  | Decl _ -> false
-  | IBlock i -> is_nondet_list i
-  | IIf (_, i1, i2) -> is_nondet_list (List.rev_append i1 i2)
-  | ILoop (_, i) -> is_nondet_list i
-and is_nondet_list = function
-  | [] -> false
-  | h :: _ when is_nondet h -> true
-  | _ :: t -> is_nondet_list t
 
 let rec is_stmt_nondet stmt = match stmt.skind with
   | Instr (Call (_,{enode=Lval(Var v,_)},_,_)) ->
@@ -89,8 +75,4 @@ let pretty_var fmt v =
   let ty = array_to_ptr ty in
   let v' = {v with vtype = ty} in
   Format.fprintf fmt "@[%a;@]@\n" (new Printer.extensible_printer())#vdecl v'
-     
-let pretty fmt ins =
-  match ins with
-  | Decl v -> pretty_var fmt v
-  | _ -> Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt (to_stmt ins)
+ 
