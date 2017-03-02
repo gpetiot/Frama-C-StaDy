@@ -55,6 +55,7 @@ precondition_of('f','pathcrawler__f_precond').
 
 int f_precond(int **t, int n) {
   int __sd_forall_0;
+  int __sd_forall_1;
   __sd_forall_0 = 1;
   {
     mpz_t __q_i;
@@ -106,7 +107,6 @@ int f_precond(int **t, int n) {
     __gmpz_clear(__sd_Z_to_Z_0);
   }
   if (! __sd_forall_0) return 0;
-  int __sd_forall_1;
   __sd_forall_1 = 1;
   {
     mpz_t __q_i;

@@ -1071,7 +1071,8 @@ class gather_insertions props swd = object(self)
 	in
 	let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
 	let stmts = inserts_pre @ [Insertion.mk_ret one] in
-	let formals = f.sformals and locals = [] in
+	let locals, stmts = Insertion.list_to_cil stmts in
+	let formals = f.sformals in
 	let pre_fun = Function.make pre_varinfo ~formals ~locals stmts in
 	functions <- pre_fun :: functions;
       else
@@ -1347,7 +1348,6 @@ class gather_insertions props swd = object(self)
 	 when List.mem stmt.sid swd || List.mem fct_varinfo.vname sim_funcs ->
        let kf = Globals.Functions.get fct_varinfo in
        let formals = Kernel_function.get_formals kf in
-       let locals = [] in
        let varname = fct_varinfo.vname ^ "_mod" in
        let new_f_vi = self#fresh_fct_varinfo fct_varinfo.vtype varname in
        let on_bhv _ bhv ins =
@@ -1389,7 +1389,8 @@ class gather_insertions props swd = object(self)
 	 | None -> [], [], []
        in
        let ins_full_body = decl_retres @ aff_retres @ ins_body @ ret_retres in
-       let new_f = Function.make new_f_vi ~formals ~locals ins_full_body in
+       let locals, stmts = Insertion.list_to_cil ins_full_body in
+       let new_f = Function.make new_f_vi ~formals ~locals stmts in
        functions <- new_f :: functions;
        let i_call = Insertion.mk_instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
        self#insert (Symbolic_label.end_stmt stmt.sid) [i_call];

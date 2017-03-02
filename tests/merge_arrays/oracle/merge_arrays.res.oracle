@@ -58,6 +58,7 @@ precondition_of('merge_arrays','pathcrawler__merge_arrays_precond').
 
 int merge_arrays_precond(int *t1, int *t2, int *t3, int l1, int l2) {
   int __sd_forall_0;
+  int __sd_forall_1;
   __sd_forall_0 = 1;
   {
     mpz_t __q_i;
@@ -102,7 +103,6 @@ int merge_arrays_precond(int *t1, int *t2, int *t3, int l1, int l2) {
     __gmpz_clear(__sd_Z_sub_0);
   }
   if (! __sd_forall_0) return 0;
-  int __sd_forall_1;
   __sd_forall_1 = 1;
   {
     mpz_t __q_i;
