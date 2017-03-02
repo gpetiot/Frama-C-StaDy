@@ -146,9 +146,7 @@ class gather_insertions props swd = object(self)
     List.fold_left on_varinfo [] fcts_called
 
   method private insert label ins =
-    let vars, ins = Insertion.split_decl_instr ins in
-    let stmts = List.map Insertion.to_stmt ins in
-    let vars = List.rev vars and stmts = List.rev stmts in
+    let vars, stmts = Insertion.list_to_cil ins in
     let add q x = Queue.add x q in
     try
       let v, s = Hashtbl.find insertions label in

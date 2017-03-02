@@ -11,8 +11,8 @@ val mk_loop : Cil_types.exp -> t list -> t
 val is_stmt_nondet : Cil_types.stmt -> bool
 val is_nondet : t -> bool
 
-val split_decl_instr : t list -> Cil_types.varinfo list * t list
-val to_stmt : t -> Cil_types.stmt
+val to_cil : t -> Cil_types.varinfo list * Cil_types.stmt list
+val list_to_cil : t list -> Cil_types.varinfo list * Cil_types.stmt list
 
 val pretty : Format.formatter -> t -> unit
 val pretty_var : Format.formatter -> Cil_types.varinfo -> unit

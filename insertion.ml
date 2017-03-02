@@ -21,11 +21,11 @@ let mk_loop a b = ILoop (a, b)
 let loc = Cil_datatype.Location.unknown
 
 let split_decl_instr l =
-  List.fold_left (fun (decl,instr) i ->
-    match i with
-    | Decl v -> (v :: decl,instr)
-    | _ -> (decl, i::instr)
-  ) ([],[]) l
+  let f (decl,instr) = function
+    | Decl v -> (v :: decl, instr)
+    | i -> (decl, i::instr)
+  in
+  List.fold_left f ([],[]) l
 
 let rec to_stmt = function
   | Instru i -> Cil.mkStmt (Instr i)
@@ -44,6 +44,18 @@ let rec to_stmt = function
 and ilist_to_block il =
   let vars, instr = split_decl_instr il in
   {battrs=[]; blocals=(List.rev vars); bstmts=List.map to_stmt (List.rev instr)}
+
+let to_cil = function
+  | Decl v -> [v], []
+  | i -> [], [to_stmt i]
+
+let list_to_cil ins =
+  let f (vs, ss) i =
+    let v, s = to_cil i in
+    List.rev_append v vs, List.rev_append s ss
+  in
+  let vars, stmts = List.fold_left f ([], []) ins in
+  List.rev vars, List.rev stmts
 
 let rec is_nondet = function
   | Instru(Call (_,{enode=Lval(Var v,_)},_,_)) ->
