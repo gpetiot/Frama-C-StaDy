@@ -69,6 +69,10 @@ let rec is_stmt_nondet stmt = match stmt.skind with
      List.fold_left (fun acc s -> acc || is_stmt_nondet s) false b.bstmts
   | _ -> false
 
+let is_fundec_nondet f =
+  let is_nondet b i = b || is_stmt_nondet i in
+  List.fold_left is_nondet false f.sbody.bstmts
+
 let pretty_var fmt v =
   let ty = Cil.stripConstLocalType v.vtype in
   let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in

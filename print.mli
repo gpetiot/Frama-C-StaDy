@@ -6,7 +6,7 @@ class print_insertions:
   (Symbolic_label.t,
    (Cil_types.varinfo Queue.t * Cil_types.stmt Queue.t)) Hashtbl.t ->
     (* new functions *)
-    Function.t list ->
+    Cil_types.fundec list ->
       (* id of stmts, parameterizing the SWD *)
       int list ->
 	Printer.extensible_printer

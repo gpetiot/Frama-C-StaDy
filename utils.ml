@@ -119,6 +119,10 @@ let extract_guards var p =
   Extlib.the a, Extlib.the b, Extlib.the c, Extlib.the d
 
 
+let mk_fundec v ~formals ~locals s =
+  {svar=v; sformals=formals; slocals=locals; smaxid=0; sbody=Cil.mkBlock s;
+   smaxstmtid=None; sallstmts=[]; sspec=Cil.empty_funspec()}
+
 let error_term t = Options.abort "term: %a" Debug.pp_term t
 let error_toffset t = Options.abort "toffset: %a" Debug.pp_toffset t
 

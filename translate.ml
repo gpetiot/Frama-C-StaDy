@@ -60,7 +60,7 @@ class gather_insertions props swd = object(self)
   inherit Visitor.frama_c_inplace
 
   val insertions = Hashtbl.create 64
-  val mutable functions = ([] : Function.t list)
+  val mutable functions = ([] : Cil_types.fundec list)
   val mutable result_varinfo = None
   val mutable in_old_term = false
   val mutable in_old_ptr = false
@@ -1073,7 +1073,7 @@ class gather_insertions props swd = object(self)
 	let stmts = inserts_pre @ [Insertion.mk_ret one] in
 	let locals, stmts = Insertion.list_to_cil stmts in
 	let formals = f.sformals in
-	let pre_fun = Function.make pre_varinfo ~formals ~locals stmts in
+	let pre_fun = Utils.mk_fundec pre_varinfo ~formals ~locals stmts in
 	functions <- pre_fun :: functions;
       else
 	let label_pre = Symbolic_label.beg_func f.svar.vname in
@@ -1390,7 +1390,7 @@ class gather_insertions props swd = object(self)
        in
        let ins_full_body = decl_retres @ aff_retres @ ins_body @ ret_retres in
        let locals, stmts = Insertion.list_to_cil ins_full_body in
-       let new_f = Function.make new_f_vi ~formals ~locals stmts in
+       let new_f = Utils.mk_fundec new_f_vi ~formals ~locals stmts in
        functions <- new_f :: functions;
        let i_call = Insertion.mk_instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
        self#insert (Symbolic_label.end_stmt stmt.sid) [i_call];

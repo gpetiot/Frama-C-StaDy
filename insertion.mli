@@ -9,6 +9,7 @@ val mk_if : Cil_types.exp -> t list -> t list -> t
 val mk_loop : Cil_types.exp -> t list -> t
 
 val is_stmt_nondet : Cil_types.stmt -> bool
+val is_fundec_nondet : Cil_types.fundec -> bool
 
 val to_cil : t -> Cil_types.varinfo list * Cil_types.stmt list
 val list_to_cil : t list -> Cil_types.varinfo list * Cil_types.stmt list

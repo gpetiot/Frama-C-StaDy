@@ -17,6 +17,9 @@ val extract_guards:
   Cil_types.predicate ->
   Cil_types.term * Cil_types.relation * Cil_types.relation * Cil_types.term
 
+val mk_fundec: Cil_types.varinfo -> formals:Cil_types.varinfo list ->
+  locals:Cil_types.varinfo list -> Cil_types.stmt list -> Cil_types.fundec
+
 val error_term: Cil_types.term -> 'a
 val error_toffset: Cil_types.term_offset -> 'a
 

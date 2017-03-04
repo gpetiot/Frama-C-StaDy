@@ -11,7 +11,15 @@ class print_insertions insertions functions swd = object(self)
       Queue.iter (Insertion.pretty_var fmt) vars;
       Queue.iter (Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt) stmts
     with _ -> ()
-
+      
+  method private generated_fundecl fmt f =
+    let print fmt = Format.fprintf fmt "%s" f.svar.vname in
+    Format.fprintf fmt "@[<v 2>%a {@\n"
+      ((new Printer.extensible_printer ())#typ (Some print)) f.svar.vtype;
+    List.iter (Insertion.pretty_var fmt) f.slocals;
+    List.iter (Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt) f.sbody.bstmts;
+    Format.fprintf fmt "@]@\n}@\n"
+    
   method private fundecl fmt f =
     let old_is_ghost = is_ghost in
     is_ghost <- true;
@@ -86,7 +94,7 @@ class print_insertions insertions functions swd = object(self)
   method private headers fmt =
     let is_nondet b i = b || Insertion.is_stmt_nondet i in
     let on_hash _ (_,q) b = b || Queue.fold is_nondet b q in
-    let on_func b f = b || Function.is_nondet f in
+    let on_func b f = b || Insertion.is_fundec_nondet f in
     let nondet = Hashtbl.fold on_hash insertions false in
     let nondet = List.fold_left on_func nondet functions in
     let externals_file = Options.Share.file ~error:true "externals.h" in
@@ -101,7 +109,7 @@ class print_insertions insertions functions swd = object(self)
     | GFun (fundec, l) ->
        if first_global then
 	 begin
-	   List.iter (fun x -> Function.pretty fmt x) functions;
+	   List.iter (fun x -> self#generated_fundecl fmt x) functions;
 	   first_global <- false
 	 end;
        let oldattr = fundec.svar.vattr in
