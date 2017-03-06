@@ -8,7 +8,7 @@ class print_insertions insertions functions swd = object(self)
   method private insertions_at fmt label =
     try
       let vars, stmts = Hashtbl.find insertions label in
-      Queue.iter (Insertion.pretty_var fmt) vars;
+      Queue.iter (Utils.pretty_var fmt) vars;
       Queue.iter (Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt) stmts
     with _ -> ()
       
@@ -16,7 +16,7 @@ class print_insertions insertions functions swd = object(self)
     let print fmt = Format.fprintf fmt "%s" f.svar.vname in
     Format.fprintf fmt "@[<v 2>%a {@\n"
       ((new Printer.extensible_printer ())#typ (Some print)) f.svar.vtype;
-    List.iter (Insertion.pretty_var fmt) f.slocals;
+    List.iter (Utils.pretty_var fmt) f.slocals;
     List.iter (Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt) f.sbody.bstmts;
     Format.fprintf fmt "@]@\n}@\n"
     
@@ -92,9 +92,9 @@ class print_insertions insertions functions swd = object(self)
     Cil.iterGlobals f (fun g -> if is_gfun g then self#global fmt g)
 
   method private headers fmt =
-    let is_nondet b i = b || Insertion.is_stmt_nondet i in
+    let is_nondet b i = b || Utils.is_stmt_nondet i in
     let on_hash _ (_,q) b = b || Queue.fold is_nondet b q in
-    let on_func b f = b || Insertion.is_fundec_nondet f in
+    let on_func b f = b || Utils.is_fundec_nondet f in
     let nondet = Hashtbl.fold on_hash insertions false in
     let nondet = List.fold_left on_func nondet functions in
     let externals_file = Options.Share.file ~error:true "externals.h" in

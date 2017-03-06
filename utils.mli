@@ -35,5 +35,10 @@ val default_behavior: Cil_types.kernel_function -> Cil_types.behavior
 
 val loop_condition: Cil_types.stmt -> Cil_types.exp
 
+val is_stmt_nondet : Cil_types.stmt -> bool
+val is_fundec_nondet : Cil_types.fundec -> bool
+
+val pretty_var : Format.formatter -> Cil_types.varinfo -> unit
+
 val initialize: unit -> unit
 val finalize: unit -> unit

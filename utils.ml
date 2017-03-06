@@ -201,7 +201,7 @@ let do_externals() =
 
 let default_behavior kf =
   List.find Cil.is_default_behavior (Annotations.behaviors kf)
-    
+
 let loop_condition stmt = match stmt.skind with
   | Loop (_,b,_,_,_) ->
      begin
@@ -210,6 +210,29 @@ let loop_condition stmt = match stmt.skind with
      | _ -> assert false
      end
   | _ -> assert false
+
+let rec is_stmt_nondet stmt = match stmt.skind with
+  | Instr (Call (_,{enode=Lval(Var v,_)},_,_)) ->
+     begin try (String.sub v.vname 0 7) = "nondet_" with _ -> false end
+  | If (_, b1, b2, _) ->
+     if List.fold_left (fun acc s -> acc || is_stmt_nondet s) false b1.bstmts
+     then
+       true
+     else List.fold_left (fun acc s -> acc || is_stmt_nondet s) false b2.bstmts
+  | Loop (_, b, _, _, _) ->
+     List.fold_left (fun acc s -> acc || is_stmt_nondet s) false b.bstmts
+  | _ -> false
+
+let is_fundec_nondet f =
+  let is_nondet b i = b || is_stmt_nondet i in
+  List.fold_left is_nondet false f.sbody.bstmts
+
+let pretty_var fmt v =
+  let ty = Cil.stripConstLocalType v.vtype in
+  let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
+  let ty = array_to_ptr ty in
+  let v' = {v with vtype = ty} in
+  Format.fprintf fmt "@[%a;@]@\n" (new Printer.extensible_printer())#vdecl v'
 
 let setup_props_bijection () =
   States.Id_To_Property.clear();

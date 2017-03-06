@@ -28,7 +28,6 @@ PLUGIN_CMO := \
 	test_generation \
 	symbolic_label \
 	input_domain \
-	insertion \
 	print \
 	infer \
 	translate \
