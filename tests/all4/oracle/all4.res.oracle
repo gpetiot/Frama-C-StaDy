@@ -492,12 +492,12 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
         }
       }
     }
-    unsigned long __sd_iter_2;
     mpz_t __sd_Z_cst_3;
     unsigned long __sd_to_ctype_2;
-    unsigned long __sd_iter_5;
+    unsigned long __sd_iter_2;
     mpz_t __sd_Z_cst_7;
     unsigned long __sd_to_ctype_5;
+    unsigned long __sd_iter_5;
     __gmpz_init_set_str(__sd_Z_cst_3,"1",10);
     __sd_to_ctype_2 = __gmpz_get_ui(__sd_Z_cst_3);
     __gmpz_clear(__sd_Z_cst_3);

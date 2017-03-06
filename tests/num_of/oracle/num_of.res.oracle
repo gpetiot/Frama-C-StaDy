@@ -132,10 +132,10 @@ int num_of(int n, int *t)
           __sd_binop_1 = __sd_binop_cmp_1 == 0;
           __gmpz_clear(__sd_Z_to_Z_8);
           __gmpz_clear(__sd_Z_cst_7);
-          if (__sd_binop_1 != 0) __gmpz_add_ui(__sd_Z_numof_1,__sd_Z_numof_1,
-                                               1);
           __gmpz_add_ui(k,k,1);
           __sd_numof_cmp_1 = __gmpz_cmp(k,__sd_Z_sub_1);
+          if (__sd_binop_1 != 0) __gmpz_add_ui(__sd_Z_numof_1,__sd_Z_numof_1,
+                                               1);
         }
         __gmpz_clear(k);
         __gmpz_clear(__sd_Z_cst_5);
@@ -217,10 +217,10 @@ int num_of(int n, int *t)
             __sd_binop_2 = __sd_binop_cmp_2 == 0;
             __gmpz_clear(__sd_Z_to_Z_11);
             __gmpz_clear(__sd_Z_cst_10);
-            if (__sd_binop_2 != 0) __gmpz_add_ui(__sd_Z_numof_2,
-                                                 __sd_Z_numof_2,1);
             __gmpz_add_ui(k,k,1);
             __sd_numof_cmp_2 = __gmpz_cmp(k,__sd_Z_sub_2);
+            if (__sd_binop_2 != 0) __gmpz_add_ui(__sd_Z_numof_2,
+                                                 __sd_Z_numof_2,1);
           }
           __gmpz_clear(k);
           __gmpz_clear(__sd_Z_cst_8);
@@ -282,10 +282,10 @@ int num_of(int n, int *t)
           __sd_binop_0 = __sd_binop_cmp_0 == 0;
           __gmpz_clear(__sd_Z_to_Z_2);
           __gmpz_clear(__sd_Z_cst_2);
-          if (__sd_binop_0 != 0) __gmpz_add_ui(__sd_Z_numof_0,__sd_Z_numof_0,
-                                               1);
           __gmpz_add_ui(k,k,1);
           __sd_numof_cmp_0 = __gmpz_cmp(k,__sd_Z_sub_0);
+          if (__sd_binop_0 != 0) __gmpz_add_ui(__sd_Z_numof_0,__sd_Z_numof_0,
+                                               1);
         }
         __gmpz_clear(k);
         __gmpz_clear(__sd_Z_cst_0);

@@ -311,11 +311,11 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
         int __sd_eq_0;
         __sd_forall_0 = 1;
         {
-          mpz_t __q_i;
           mpz_t __sd_Z_cst_0;
           mpz_t __sd_Z_to_Z_0;
           mpz_t __sd_Z_cst_1;
           mpz_t __sd_Z_sub_0;
+          mpz_t __q_i;
           int __sd_forall_cmp_0;
           __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
           __gmpz_init_set_si(__sd_Z_to_Z_0,old_elements);

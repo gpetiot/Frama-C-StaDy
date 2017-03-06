@@ -200,9 +200,9 @@ void f(int *t, int x)
       __gmpz_clear(__sd_Z_cst_10);
       __sd_exists_0 = 0;
       {
-        mpz_t __q_i;
         mpz_t __sd_Z_cst_11;
         mpz_t __sd_Z_cst_12;
+        mpz_t __q_i;
         int __sd_exists_cmp_0;
         __gmpz_init_set_str(__sd_Z_cst_11,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_12,"4",10);

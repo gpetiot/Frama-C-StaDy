@@ -54,13 +54,13 @@ void __sd_sort_mod_0(int *A, int n) {
     mpz_t __sd_Z_to_Z_4;
     unsigned long __sd_to_ctype_4;
     unsigned long __sd_iter_2;
-    int __sd_iter_3;
     mpz_t __sd_Z_cst_5;
     int __sd_to_ctype_5;
     mpz_t __sd_Z_to_Z_5;
     mpz_t __sd_Z_cst_6;
     mpz_t __sd_Z_sub_1;
     int __sd_to_ctype_6;
+    int __sd_iter_3;
     old_n = n;
     old_A = A;
     __gmpz_init_set_si(__sd_Z_to_Z_4,n);
@@ -75,7 +75,6 @@ void __sd_sort_mod_0(int *A, int n) {
     __gmpz_init_set_str(__sd_Z_cst_5,"0",10);
     __sd_to_ctype_5 = (int)__gmpz_get_si(__sd_Z_cst_5);
     __gmpz_clear(__sd_Z_cst_5);
-    __sd_iter_3 = __sd_to_ctype_5;
     __gmpz_init_set_si(__sd_Z_to_Z_5,n);
     __gmpz_init_set_str(__sd_Z_cst_6,"1",10);
     __gmpz_init(__sd_Z_sub_1);
@@ -84,6 +83,7 @@ void __sd_sort_mod_0(int *A, int n) {
     __gmpz_clear(__sd_Z_cst_6);
     __sd_to_ctype_6 = (int)__gmpz_get_si(__sd_Z_sub_1);
     __gmpz_clear(__sd_Z_sub_1);
+    __sd_iter_3 = __sd_to_ctype_5;
     while (__sd_iter_3 <= __sd_to_ctype_6) {
       *(A + __sd_iter_3) = nondet_sint("*(A + __sd_iter_3)");
       __sd_iter_3 ++;
@@ -109,8 +109,8 @@ void sort(int *A, int n)
   mpz_t __sd_Z_to_Z_1;
   mpz_t __sd_Z_cst_2;
   mpz_t __sd_Z_sub_0;
-  int __sd_valid_0;
   int __sd_valid_cmp_0;
+  int __sd_valid_0;
   int *old_A;
   int *old_ptr_A;
   mpz_t __sd_Z_to_Z_2;

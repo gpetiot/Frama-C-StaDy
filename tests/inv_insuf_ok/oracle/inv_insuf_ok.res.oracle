@@ -118,9 +118,9 @@ void f(int *t, int x)
         __gmpz_clear(__sd_Z_cst_14);
         __sd_exists_2 = 0;
         {
-          mpz_t __q_k;
           mpz_t __sd_Z_cst_15;
           mpz_t __sd_Z_to_Z_13;
+          mpz_t __q_k;
           int __sd_exists_cmp_2;
           __gmpz_init_set_str(__sd_Z_cst_15,"0",10);
           __gmpz_init_set_si(__sd_Z_to_Z_13,i);
@@ -180,9 +180,9 @@ void f(int *t, int x)
             __gmpz_clear(__sd_Z_cst_4);
             __sd_exists_0 = 0;
             {
-              mpz_t __q_k;
               mpz_t __sd_Z_cst_5;
               mpz_t __sd_Z_to_Z_3;
+              mpz_t __q_k;
               int __sd_exists_cmp_0;
               __gmpz_init_set_str(__sd_Z_cst_5,"0",10);
               __gmpz_init_set_si(__sd_Z_to_Z_3,i);
@@ -241,9 +241,9 @@ void f(int *t, int x)
           __gmpz_clear(__sd_Z_cst_16);
           __sd_exists_3 = 0;
           {
-            mpz_t __q_k;
             mpz_t __sd_Z_cst_17;
             mpz_t __sd_Z_to_Z_15;
+            mpz_t __q_k;
             int __sd_exists_cmp_3;
             __gmpz_init_set_str(__sd_Z_cst_17,"0",10);
             __gmpz_init_set_si(__sd_Z_to_Z_15,i);
@@ -303,9 +303,9 @@ void f(int *t, int x)
              __gmpz_clear(__sd_Z_cst_8);
              __sd_exists_1 = 0;
              {
-               mpz_t __q_k;
                mpz_t __sd_Z_cst_9;
                mpz_t __sd_Z_to_Z_7;
+               mpz_t __q_k;
                int __sd_exists_cmp_1;
                __gmpz_init_set_str(__sd_Z_cst_9,"0",10);
                __gmpz_init_set_si(__sd_Z_to_Z_7,i);
@@ -344,9 +344,9 @@ void f(int *t, int x)
       __gmpz_clear(__sd_Z_cst_18);
       __sd_exists_4 = 0;
       {
-        mpz_t __q_i;
         mpz_t __sd_Z_cst_19;
         mpz_t __sd_Z_cst_20;
+        mpz_t __q_i;
         int __sd_exists_cmp_4;
         __gmpz_init_set_str(__sd_Z_cst_19,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_20,"4",10);

@@ -89,13 +89,13 @@ void f(int default_value)
       int __sd_forall_0;
       __sd_forall_0 = 1;
       {
-        mpz_t __q_b;
         mpz_t __sd_Z_cst_0;
         mpz_t __sd_Z_cst_1;
+        mpz_t __q_b;
         int __sd_forall_cmp_0;
-        mpz_t __q_a;
         mpz_t __sd_Z_cst_2;
         mpz_t __sd_Z_cst_3;
+        mpz_t __q_a;
         int __sd_forall_cmp_1;
         __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_1,"5",10);
@@ -136,13 +136,13 @@ void f(int default_value)
       int __sd_exists_0;
       __sd_exists_0 = 0;
       {
-        mpz_t __q_b;
         mpz_t __sd_Z_cst_4;
         mpz_t __sd_Z_cst_5;
+        mpz_t __q_b;
         int __sd_exists_cmp_0;
-        mpz_t __q_a;
         mpz_t __sd_Z_cst_6;
         mpz_t __sd_Z_cst_7;
+        mpz_t __q_a;
         int __sd_exists_cmp_1;
         __gmpz_init_set_str(__sd_Z_cst_4,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_5,"5",10);

@@ -149,9 +149,9 @@ void bubble_sort(int *A, int n)
           if (! __sd_and_0) pathcrawler_assert_exception("not established",8);
           __sd_forall_1 = 1;
           {
-            mpz_t __q_a;
             mpz_t __sd_Z_cst_7;
             mpz_t __sd_Z_to_Z_10;
+            mpz_t __q_a;
             int __sd_forall_cmp_1;
             __gmpz_init_set_str(__sd_Z_cst_7,"0",10);
             __gmpz_init_set_si(__sd_Z_to_Z_10,j);
@@ -259,9 +259,9 @@ void bubble_sort(int *A, int n)
             if (! __sd_and_1) pathcrawler_assert_exception("not preserved",8);
             __sd_forall_2 = 1;
             {
-              mpz_t __q_a;
               mpz_t __sd_Z_cst_8;
               mpz_t __sd_Z_to_Z_12;
+              mpz_t __q_a;
               int __sd_forall_cmp_2;
               __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
               __gmpz_init_set_si(__sd_Z_to_Z_12,j);
@@ -344,11 +344,11 @@ void bubble_sort(int *A, int n)
       int __sd_forall_0;
       __sd_forall_0 = 1;
       {
-        mpz_t __q_i;
         mpz_t __sd_Z_cst_0;
         mpz_t __sd_Z_to_Z_0;
         mpz_t __sd_Z_cst_1;
         mpz_t __sd_Z_sub_0;
+        mpz_t __q_i;
         int __sd_forall_cmp_0;
         __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
         __gmpz_init_set_si(__sd_Z_to_Z_0,old_n);

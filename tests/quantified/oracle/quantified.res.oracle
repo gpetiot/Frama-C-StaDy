@@ -58,9 +58,9 @@ int f_precond(int **t, int n) {
   int __sd_forall_1;
   __sd_forall_0 = 1;
   {
-    mpz_t __q_i;
     mpz_t __sd_Z_cst_0;
     mpz_t __sd_Z_to_Z_0;
+    mpz_t __q_i;
     int __sd_forall_cmp_0;
     __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
     __gmpz_init_set_si(__sd_Z_to_Z_0,n);
@@ -73,8 +73,8 @@ int f_precond(int **t, int n) {
       mpz_t __sd_Z_to_Z_1;
       mpz_t __sd_Z_cst_2;
       mpz_t __sd_Z_sub_0;
-      int __sd_valid_0;
       int __sd_valid_cmp_0;
+      int __sd_valid_0;
       __gmpz_init_set(__sd_Z_lval_0,__q_i);
       __sd_to_ctype_0 = (int)__gmpz_get_si(__sd_Z_lval_0);
       __gmpz_clear(__sd_Z_lval_0);
@@ -109,9 +109,9 @@ int f_precond(int **t, int n) {
   if (! __sd_forall_0) return 0;
   __sd_forall_1 = 1;
   {
-    mpz_t __q_i;
     mpz_t __sd_Z_cst_3;
     mpz_t __sd_Z_to_Z_2;
+    mpz_t __q_i;
     int __sd_forall_cmp_1;
     __gmpz_init_set_str(__sd_Z_cst_3,"0",10);
     __gmpz_init_set_si(__sd_Z_to_Z_2,n);
@@ -121,9 +121,9 @@ int f_precond(int **t, int n) {
       int __sd_exists_0;
       __sd_exists_0 = 0;
       {
-        mpz_t __q_j;
         mpz_t __sd_Z_cst_4;
         mpz_t __sd_Z_to_Z_3;
+        mpz_t __q_j;
         int __sd_exists_cmp_0;
         __gmpz_init_set_str(__sd_Z_cst_4,"0",10);
         __gmpz_init_set_si(__sd_Z_to_Z_3,n);
@@ -133,25 +133,25 @@ int f_precond(int **t, int n) {
           int __sd_forall_2;
           __sd_forall_2 = 1;
           {
-            mpz_t __q_k;
             mpz_t __sd_Z_cst_5;
             mpz_t __sd_Z_to_Z_4;
+            mpz_t __q_k;
             int __sd_forall_cmp_2;
             __gmpz_init_set_str(__sd_Z_cst_5,"0",10);
             __gmpz_init_set_si(__sd_Z_to_Z_4,n);
             __gmpz_init_set(__q_k,__sd_Z_cst_5);
             __sd_forall_cmp_2 = __gmpz_cmp(__q_k,__sd_Z_to_Z_4);
             while (__sd_forall_cmp_2 < 0 && __sd_forall_2) {
-              int __sd_implies_0;
               mpz_t __sd_Z_lval_1;
               mpz_t __sd_Z_lval_2;
               int __sd_ne_0;
-              __sd_implies_0 = 1;
+              int __sd_implies_0;
               __gmpz_init_set(__sd_Z_lval_1,__q_k);
               __gmpz_init_set(__sd_Z_lval_2,__q_j);
               __sd_ne_0 = __gmpz_cmp(__sd_Z_lval_1,__sd_Z_lval_2);
               __gmpz_clear(__sd_Z_lval_1);
               __gmpz_clear(__sd_Z_lval_2);
+              __sd_implies_0 = 1;
               if (__sd_ne_0 != 0) {
                 mpz_t __sd_Z_lval_3;
                 int __sd_to_ctype_1;
@@ -244,9 +244,9 @@ void f(int **t, int n)
   }
   old_n = n;
   {
-    unsigned long __sd_iter_2;
     mpz_t __sd_Z_to_Z_8;
     unsigned long __sd_to_ctype_5;
+    unsigned long __sd_iter_2;
     __gmpz_init_set_si(__sd_Z_to_Z_8,n);
     __sd_to_ctype_5 = __gmpz_get_ui(__sd_Z_to_Z_8);
     __gmpz_clear(__sd_Z_to_Z_8);

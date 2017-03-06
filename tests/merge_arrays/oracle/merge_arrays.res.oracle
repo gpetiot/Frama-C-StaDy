@@ -61,11 +61,11 @@ int merge_arrays_precond(int *t1, int *t2, int *t3, int l1, int l2) {
   int __sd_forall_1;
   __sd_forall_0 = 1;
   {
-    mpz_t __q_i;
     mpz_t __sd_Z_cst_0;
     mpz_t __sd_Z_to_Z_0;
     mpz_t __sd_Z_cst_1;
     mpz_t __sd_Z_sub_0;
+    mpz_t __q_i;
     int __sd_forall_cmp_0;
     __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
     __gmpz_init_set_si(__sd_Z_to_Z_0,l1);
@@ -105,11 +105,11 @@ int merge_arrays_precond(int *t1, int *t2, int *t3, int l1, int l2) {
   if (! __sd_forall_0) return 0;
   __sd_forall_1 = 1;
   {
-    mpz_t __q_i;
     mpz_t __sd_Z_cst_3;
     mpz_t __sd_Z_to_Z_1;
     mpz_t __sd_Z_cst_4;
     mpz_t __sd_Z_sub_1;
+    mpz_t __q_i;
     int __sd_forall_cmp_1;
     __gmpz_init_set_str(__sd_Z_cst_3,"0",10);
     __gmpz_init_set_si(__sd_Z_to_Z_1,l2);
@@ -732,13 +732,13 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       int __sd_forall_2;
       __sd_forall_2 = 1;
       {
-        mpz_t __q_i;
         mpz_t __sd_Z_cst_6;
         mpz_t __sd_Z_to_Z_2;
         mpz_t __sd_Z_to_Z_3;
         mpz_t __sd_Z_add_2;
         mpz_t __sd_Z_cst_7;
         mpz_t __sd_Z_sub_2;
+        mpz_t __q_i;
         int __sd_forall_cmp_2;
         __gmpz_init_set_str(__sd_Z_cst_6,"0",10);
         __gmpz_init_set_si(__sd_Z_to_Z_2,old_l1);

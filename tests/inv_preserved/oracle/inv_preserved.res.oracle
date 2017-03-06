@@ -104,11 +104,11 @@ void f(int n, int *t)
         if (! __sd_and_2) pathcrawler_assert_exception("9$not established",1);
         __sd_forall_2 = 1;
         {
-          mpz_t __q_k;
           mpz_t __sd_Z_cst_16;
           mpz_t __sd_Z_to_Z_9;
           mpz_t __sd_Z_cst_17;
           mpz_t __sd_Z_sub_8;
+          mpz_t __q_k;
           int __sd_forall_cmp_2;
           __gmpz_init_set_str(__sd_Z_cst_16,"2",10);
           __gmpz_init_set_si(__sd_Z_to_Z_9,i);
@@ -184,13 +184,13 @@ void f(int n, int *t)
           if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("9$non positive",
                                                                    0);
           if (1) {
-            int __sd_iter_1;
             mpz_t __sd_Z_cst_0;
             int __sd_to_ctype_1;
             mpz_t __sd_Z_to_Z_1;
             mpz_t __sd_Z_cst_1;
             mpz_t __sd_Z_sub_0;
             int __sd_to_ctype_2;
+            int __sd_iter_1;
             mpz_t __sd_Z_cst_2;
             mpz_t __sd_Z_to_Z_2;
             int __sd_le_0;
@@ -199,7 +199,6 @@ void f(int n, int *t)
             __gmpz_init_set_str(__sd_Z_cst_0,"3",10);
             __sd_to_ctype_1 = (int)__gmpz_get_si(__sd_Z_cst_0);
             __gmpz_clear(__sd_Z_cst_0);
-            __sd_iter_1 = __sd_to_ctype_1;
             __gmpz_init_set_si(__sd_Z_to_Z_1,n);
             __gmpz_init_set_str(__sd_Z_cst_1,"1",10);
             __gmpz_init(__sd_Z_sub_0);
@@ -208,6 +207,7 @@ void f(int n, int *t)
             __gmpz_clear(__sd_Z_cst_1);
             __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_sub_0);
             __gmpz_clear(__sd_Z_sub_0);
+            __sd_iter_1 = __sd_to_ctype_1;
             while (__sd_iter_1 <= __sd_to_ctype_2) {
               *(t + __sd_iter_1) = nondet_sint("*(t + __sd_iter_1)");
               __sd_iter_1 ++;
@@ -223,11 +223,11 @@ void f(int n, int *t)
             if (! __sd_and_0) pathcrawler_assume_exception("",0);
             __sd_forall_0 = 1;
             {
-              mpz_t __q_k;
               mpz_t __sd_Z_cst_3;
               mpz_t __sd_Z_to_Z_3;
               mpz_t __sd_Z_cst_4;
               mpz_t __sd_Z_sub_1;
+              mpz_t __q_k;
               int __sd_forall_cmp_0;
               __gmpz_init_set_str(__sd_Z_cst_3,"2",10);
               __gmpz_init_set_si(__sd_Z_to_Z_3,i);
@@ -309,11 +309,11 @@ void f(int n, int *t)
           if (! __sd_and_3) pathcrawler_assert_exception("9$not preserved",1);
           __sd_forall_3 = 1;
           {
-            mpz_t __q_k;
             mpz_t __sd_Z_cst_20;
             mpz_t __sd_Z_to_Z_10;
             mpz_t __sd_Z_cst_21;
             mpz_t __sd_Z_sub_11;
+            mpz_t __q_k;
             int __sd_forall_cmp_3;
             __gmpz_init_set_str(__sd_Z_cst_20,"2",10);
             __gmpz_init_set_si(__sd_Z_to_Z_10,i);
@@ -386,13 +386,13 @@ void f(int n, int *t)
           __gmpz_clear(__sd_Z_sub_14);
           }
            if (1) {
-             int __sd_iter_2;
              mpz_t __sd_Z_cst_7;
              int __sd_to_ctype_7;
              mpz_t __sd_Z_to_Z_4;
              mpz_t __sd_Z_cst_8;
              mpz_t __sd_Z_sub_4;
              int __sd_to_ctype_8;
+             int __sd_iter_2;
              mpz_t __sd_Z_cst_9;
              mpz_t __sd_Z_to_Z_5;
              int __sd_le_1;
@@ -401,7 +401,6 @@ void f(int n, int *t)
              __gmpz_init_set_str(__sd_Z_cst_7,"3",10);
              __sd_to_ctype_7 = (int)__gmpz_get_si(__sd_Z_cst_7);
              __gmpz_clear(__sd_Z_cst_7);
-             __sd_iter_2 = __sd_to_ctype_7;
              __gmpz_init_set_si(__sd_Z_to_Z_4,n);
              __gmpz_init_set_str(__sd_Z_cst_8,"1",10);
              __gmpz_init(__sd_Z_sub_4);
@@ -410,6 +409,7 @@ void f(int n, int *t)
              __gmpz_clear(__sd_Z_cst_8);
              __sd_to_ctype_8 = (int)__gmpz_get_si(__sd_Z_sub_4);
              __gmpz_clear(__sd_Z_sub_4);
+             __sd_iter_2 = __sd_to_ctype_7;
              while (__sd_iter_2 <= __sd_to_ctype_8) {
                *(t + __sd_iter_2) = nondet_sint("*(t + __sd_iter_2)");
                __sd_iter_2 ++;
@@ -425,11 +425,11 @@ void f(int n, int *t)
              if (! __sd_and_1) pathcrawler_assume_exception("",0);
              __sd_forall_1 = 1;
              {
-               mpz_t __q_k;
                mpz_t __sd_Z_cst_10;
                mpz_t __sd_Z_to_Z_6;
                mpz_t __sd_Z_cst_11;
                mpz_t __sd_Z_sub_5;
+               mpz_t __q_k;
                int __sd_forall_cmp_1;
                __gmpz_init_set_str(__sd_Z_cst_10,"2",10);
                __gmpz_init_set_si(__sd_Z_to_Z_6,i);

@@ -91,9 +91,9 @@ void firstSubset(int *s, int n)
       if (! __sd_and_0) pathcrawler_assert_exception("not established",3);
       __sd_forall_1 = 1;
       {
-        mpz_t __q_i;
         mpz_t __sd_Z_cst_5;
         mpz_t __sd_Z_to_Z_6;
+        mpz_t __q_i;
         int __sd_forall_cmp_1;
         __gmpz_init_set_str(__sd_Z_cst_5,"0",10);
         __gmpz_init_set_si(__sd_Z_to_Z_6,k);
@@ -174,9 +174,9 @@ void firstSubset(int *s, int n)
         if (! __sd_and_1) pathcrawler_assert_exception("not preserved",3);
         __sd_forall_2 = 1;
         {
-          mpz_t __q_i;
           mpz_t __sd_Z_cst_8;
           mpz_t __sd_Z_to_Z_9;
+          mpz_t __q_i;
           int __sd_forall_cmp_2;
           __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
           __gmpz_init_set_si(__sd_Z_to_Z_9,k);
@@ -240,9 +240,9 @@ void firstSubset(int *s, int n)
       int __sd_forall_0;
       __sd_forall_0 = 1;
       {
-        mpz_t __q_i;
         mpz_t __sd_Z_cst_0;
         mpz_t __sd_Z_to_Z_0;
+        mpz_t __q_i;
         int __sd_forall_cmp_0;
         __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
         __gmpz_init_set_si(__sd_Z_to_Z_0,old_n);

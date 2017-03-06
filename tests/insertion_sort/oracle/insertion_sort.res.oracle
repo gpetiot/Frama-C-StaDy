@@ -94,11 +94,11 @@ void insertion_sort(int *t, int n)
       if (! __sd_and_2) pathcrawler_assert_exception("not established",4);
       __sd_forall_3 = 1;
       {
-        mpz_t __q_x;
         mpz_t __sd_Z_cst_7;
         mpz_t __sd_Z_to_Z_10;
         mpz_t __sd_Z_cst_8;
         mpz_t __sd_Z_sub_1;
+        mpz_t __q_x;
         int __sd_forall_cmp_3;
         __gmpz_init_set_str(__sd_Z_cst_7,"0",10);
         __gmpz_init_set_si(__sd_Z_to_Z_10,i);
@@ -168,9 +168,9 @@ void insertion_sort(int *t, int n)
           if (! __sd_and_0) pathcrawler_assert_exception("not established",7);
           __sd_forall_1 = 1;
           {
-            mpz_t __q_k;
             mpz_t __sd_Z_to_Z_4;
             mpz_t __sd_Z_to_Z_5;
+            mpz_t __q_k;
             int __sd_forall_cmp_1;
             __gmpz_init_set_si(__sd_Z_to_Z_4,j);
             __gmpz_init_set_si(__sd_Z_to_Z_5,i);
@@ -213,9 +213,9 @@ void insertion_sort(int *t, int n)
             if (! __sd_and_1) pathcrawler_assert_exception("not preserved",7);
             __sd_forall_2 = 1;
             {
-              mpz_t __q_k;
               mpz_t __sd_Z_to_Z_6;
               mpz_t __sd_Z_to_Z_7;
+              mpz_t __q_k;
               int __sd_forall_cmp_2;
               __gmpz_init_set_si(__sd_Z_to_Z_6,j);
               __gmpz_init_set_si(__sd_Z_to_Z_7,i);
@@ -262,11 +262,11 @@ void insertion_sort(int *t, int n)
         if (! __sd_and_3) pathcrawler_assert_exception("not preserved",4);
         __sd_forall_4 = 1;
         {
-          mpz_t __q_x;
           mpz_t __sd_Z_cst_10;
           mpz_t __sd_Z_to_Z_11;
           mpz_t __sd_Z_cst_11;
           mpz_t __sd_Z_sub_2;
+          mpz_t __q_x;
           int __sd_forall_cmp_4;
           __gmpz_init_set_str(__sd_Z_cst_10,"0",10);
           __gmpz_init_set_si(__sd_Z_to_Z_11,i);
@@ -321,11 +321,11 @@ void insertion_sort(int *t, int n)
       int __sd_forall_0;
       __sd_forall_0 = 1;
       {
-        mpz_t __q_x;
         mpz_t __sd_Z_cst_0;
         mpz_t __sd_Z_to_Z_0;
         mpz_t __sd_Z_cst_1;
         mpz_t __sd_Z_sub_0;
+        mpz_t __q_x;
         int __sd_forall_cmp_0;
         __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
         __gmpz_init_set_si(__sd_Z_to_Z_0,old_n);

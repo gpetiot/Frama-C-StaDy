@@ -80,9 +80,9 @@ int sum_array(int *t, int n)
           __sd_to_ctype_4 = (int)__gmpz_get_si(__sd_Z_lval_1);
           __gmpz_clear(__sd_Z_lval_1);
           __gmpz_init_set_si(__sd_Z_to_Z_17,*(t + __sd_to_ctype_4));
-          __gmpz_add(__sd_Z_sum_1,__sd_Z_sum_1,__sd_Z_to_Z_17);
           __gmpz_add_ui(k,k,1);
           __sd_sum_cmp_1 = __gmpz_cmp(k,__sd_Z_sub_1);
+          __gmpz_add(__sd_Z_sum_1,__sd_Z_sum_1,__sd_Z_to_Z_17);
           __gmpz_clear(__sd_Z_to_Z_17);
         }
         __gmpz_clear(k);
@@ -228,9 +228,9 @@ int sum_array(int *t, int n)
             __sd_to_ctype_5 = (int)__gmpz_get_si(__sd_Z_lval_2);
             __gmpz_clear(__sd_Z_lval_2);
             __gmpz_init_set_si(__sd_Z_to_Z_20,*(t + __sd_to_ctype_5));
-            __gmpz_add(__sd_Z_sum_2,__sd_Z_sum_2,__sd_Z_to_Z_20);
             __gmpz_add_ui(k,k,1);
             __sd_sum_cmp_2 = __gmpz_cmp(k,__sd_Z_sub_2);
+            __gmpz_add(__sd_Z_sum_2,__sd_Z_sum_2,__sd_Z_to_Z_20);
             __gmpz_clear(__sd_Z_to_Z_20);
           }
           __gmpz_clear(k);
@@ -285,9 +285,9 @@ int sum_array(int *t, int n)
           __sd_to_ctype_0 = (int)__gmpz_get_si(__sd_Z_lval_0);
           __gmpz_clear(__sd_Z_lval_0);
           __gmpz_init_set_si(__sd_Z_to_Z_2,*(old_t + __sd_to_ctype_0));
-          __gmpz_add(__sd_Z_sum_0,__sd_Z_sum_0,__sd_Z_to_Z_2);
           __gmpz_add_ui(k,k,1);
           __sd_sum_cmp_0 = __gmpz_cmp(k,__sd_Z_sub_0);
+          __gmpz_add(__sd_Z_sum_0,__sd_Z_sum_0,__sd_Z_to_Z_2);
           __gmpz_clear(__sd_Z_to_Z_2);
         }
         __gmpz_clear(k);
