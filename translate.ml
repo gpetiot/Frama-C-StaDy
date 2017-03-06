@@ -362,8 +362,9 @@ class gather_insertions props swd = object(self)
        let env, v = self#translate_term t in
        let ret = self#fresh_Z_varinfo "to_Z" in
        let init_set = match ty with
-	 | Ctype x when Cil.isUnsignedInteger x -> self#cinit_set_ui
-	 | Ctype x when Cil.isSignedInteger x -> self#cinit_set_si
+	 | Ctype x ->
+	    if Cil.isUnsignedInteger x then self#cinit_set_ui
+	    else self#cinit_set_si
 	 | _ -> raise Unsupported
        in
        let i_1 = init_set (Cil.evar ret) v in
@@ -376,11 +377,8 @@ class gather_insertions props swd = object(self)
     | Linteger ->
        let env, v = self#translate_term t in
        let ret = self#fresh_ctype_varinfo ty "to_ctype" in
-       let get = match ty with
-	 | x when Cil.isUnsignedInteger x -> self#cget_ui
-	 | x when Cil.isSignedInteger x -> self#cget_si
-	 | _ -> raise Unsupported
-       in
+       let get =
+	 if Cil.isUnsignedInteger ty then self#cget_ui else self#cget_si in
        let i_1 = get (Cil.var ret) v in
        let i_2 = self#cclear v in
        Env.merge env ([ret], [i_1; i_2]), (Cil.evar ret).enode
@@ -450,11 +448,8 @@ class gather_insertions props swd = object(self)
     | Linteger ->
        let env, e = self#translate_term t in
        let ret = self#fresh_ctype_varinfo ty "cast" in
-       let get = match ty with (* dest type *)
-	 | x when Cil.isUnsignedInteger x -> self#cget_ui
-	 | x when Cil.isSignedInteger x -> self#cget_si
-	 | _ -> raise Unsupported
-       in
+       let get =
+	 if Cil.isUnsignedInteger ty then self#cget_ui else self#cget_si in
        let i_1 = get (Cil.var ret) e in
        let i_2 = self#cclear e in
        Env.merge env ([ret], [i_1; i_2]), (Cil.evar ret).enode
@@ -547,10 +542,7 @@ class gather_insertions props swd = object(self)
        let varname = Utils.relation_to_string rel in
        let v = self#fresh_ctype_varinfo Cil.intType varname in
        let zcmp =
-	 if Cil.isUnsignedInteger x then self#ccmp_ui
-	 else if Cil.isSignedInteger x then self#ccmp_si
-	 else raise Unsupported
-       in
+	 if Cil.isUnsignedInteger x then self#ccmp_ui else self#ccmp_si in
        let i1 = zcmp (Cil.var v) t1' t2' in
        let i2 = self#cclear t1' in
        Env.merge env1 (Env.merge env2 ([v], [i1;i2])), cmp rel (Cil.evar v) zero
