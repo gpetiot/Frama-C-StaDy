@@ -207,23 +207,23 @@ class gather_insertions props swd = object(self)
 	    let fresh_var = self#fresh_Z_varinfo "cst" in
 	    let str = try Extlib.the str_opt with _ -> Integer.to_string i in
 	    let str = Cil.mkString ~loc str in
-	    let ten = CInt64(Integer.of_int 10, Cil_types.IInt, Some "10") in
+	    let ten = CInt64 (Integer.of_int 10, Cil_types.IInt, Some "10") in
 	    let e_ten = Cil.new_exp ~loc (Const ten) in
+	    (* TODO: must be freed *)
 	    let i_1 = self#cinit_set_str (Cil.evar fresh_var) str e_ten in
-	    ([fresh_var], [i_1]), Cil.evar fresh_var
-	 | Ctype(TInt(ik,_)) ->
-	    Env.empty, Cil.new_exp ~loc (Const(CInt64(i,ik,str_opt)))
+	    ([fresh_var], [i_1]), Lval (Var fresh_var, NoOffset)
+	 | Ctype (TInt (ik, _)) -> Env.empty, Const (CInt64 (i, ik, str_opt))
 	 | _ -> raise Unreachable
        end
-    | LStr str -> Env.empty, Cil.new_exp ~loc (Const(CStr str))
-    | LWStr i64_l -> Env.empty, Cil.new_exp ~loc (Const(CWStr i64_l))
-    | LChr c -> Env.empty, Cil.new_exp ~loc (Const(CChr c))
+    | LStr str -> Env.empty, Const (CStr str)
+    | LWStr i64_l -> Env.empty, Const (CWStr i64_l)
+    | LChr c -> Env.empty, Const (CChr c)
     | LReal {r_literal=s; r_nearest=f; r_lower=l; r_upper=u} ->
        if l <> u then
 	 Options.warning ~current:true ~once:true
-			 "approximating a real number by a float";
-       Env.empty, Cil.new_exp ~loc (Const(CReal(f, FLongDouble, Some s)))
-    | LEnum e -> Env.empty, Cil.new_exp ~loc (Const(CEnum e))
+	   "approximating a real number by a float";
+      Env.empty, Const (CReal (f, FLongDouble, Some s))
+    | LEnum e -> Env.empty, Const (CEnum e)
 
   method private translate_var lv =
     let varname = match self#current_func with
@@ -463,7 +463,7 @@ class gather_insertions props swd = object(self)
     | _ -> raise Unreachable
 
   method private translate_term_node t = match t.term_node with
-    | TConst c -> let i, e = self#translate_constant t.term_type c in i, e.enode
+    | TConst c -> let i, e = self#translate_constant t.term_type c in i, e
     | TLval tl -> let env, lv = self#translate_lval tl in env, Lval lv
     | TSizeOf ty -> Env.empty, SizeOf ty
     | TSizeOfE t -> let env, e = self#translate_term t in env, SizeOfE e
