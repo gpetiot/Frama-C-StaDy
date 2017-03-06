@@ -16,7 +16,21 @@ let zero = Cil.zero ~loc
 let one = Cil.one ~loc
 let cmp rel e1 e2 = Cil.mkBinOp ~loc (Utils.relation_to_binop rel) e1 e2
 
-let instru_affect a b = Insertion.mk_instru (Set(a,b,loc))
+let mk_affect a b = Cil.mkStmt (Instr (Set (a, b, loc)))
+let mk_ret e = Cil.mkStmt (Return (Some e, loc))
+let mk_if e (v1, s1) (v2, s2) =
+  let b1 = Cil.mkBlock s1 and b2 = Cil.mkBlock s2 in
+  Cil.mkStmt (If (e, {b1 with blocals = v1}, {b2 with blocals = v2}, loc))
+let mk_block (v, s) =
+  let b = Cil.mkBlock s in
+  Cil.mkStmt (Block {b with blocals = v})
+let mk_loop e (v, s) =
+  let break_stmt = Cil.mkStmt (Break loc) in
+  let b1 = Cil.mkBlock [] and b2 = Cil.mkBlock [break_stmt] in
+  let i = Cil.mkStmt (If(e, b1, b2, loc)) in
+  let b = Cil.mkBlock s in
+  let b = {b with blocals = v} in
+  Cil.mkStmt (Loop ([], {b with bstmts = i :: b.bstmts}, loc, None, None))
 
 let mk_string s = Cil.mkString ~loc s
 
@@ -56,6 +70,14 @@ let rec type_of_pointed = function
        ~current:true "unsupported type %a" Printer.pp_logic_type ty;
     raise Unsupported
 
+module Env = struct
+  type t = Cil_types.varinfo list * Cil_types.stmt list
+  let empty = ([], [] : t)
+  let merge (v1, s1 : t) (v2, s2 : t) : t =
+    List.rev_append (List.rev v1) v2, List.rev_append (List.rev s1) s2
+end
+
+
 class gather_insertions props swd = object(self)
   inherit Visitor.frama_c_inplace
 
@@ -74,7 +96,7 @@ class gather_insertions props swd = object(self)
   method private call fct ret args =
     let vi = States.Externals.find fct in
     self#add_function_call vi;
-    Insertion.mk_instru (Call(ret, Cil.evar vi, args, loc))
+    Cil.mkStmt (Instr(Call(ret, Cil.evar vi, args, loc)))
   method cmalloc x y = self#call "malloc" (Some x) [y]
   method cfree x = self#call "free" None [x]
   method cpc_dim x y = self#call "pathcrawler_dimension" (Some x) [y]
@@ -145,8 +167,7 @@ class gather_insertions props swd = object(self)
     in
     List.fold_left on_varinfo [] fcts_called
 
-  method private insert label ins =
-    let vars, stmts = Insertion.list_to_cil ins in
+  method private insert label (vars, stmts) =
     let add q x = Queue.add x q in
     try
       let v, s = Hashtbl.find insertions label in
@@ -183,25 +204,25 @@ class gather_insertions props swd = object(self)
 	 match ty with
 	 | Linteger ->
 	    let fresh_var = self#fresh_Z_varinfo "cst" in
-	    let i_0 = Insertion.mk_decl fresh_var in
 	    let str = try Extlib.the str_opt with _ -> Integer.to_string i in
 	    let str = Cil.mkString ~loc str in
 	    let ten = CInt64(Integer.of_int 10, Cil_types.IInt, Some "10") in
 	    let e_ten = Cil.new_exp ~loc (Const ten) in
 	    let i_1 = self#cinit_set_str (Cil.evar fresh_var) str e_ten in
-	    [i_0; i_1], Cil.evar fresh_var
-	 | Ctype(TInt(ik,_)) ->[],Cil.new_exp ~loc (Const(CInt64(i,ik,str_opt)))
+	    ([fresh_var], [i_1]), Cil.evar fresh_var
+	 | Ctype(TInt(ik,_)) ->
+	    Env.empty, Cil.new_exp ~loc (Const(CInt64(i,ik,str_opt)))
 	 | _ -> raise Unreachable
        end
-    | LStr str -> [], Cil.new_exp ~loc (Const(CStr str))
-    | LWStr i64_l -> [], Cil.new_exp ~loc (Const(CWStr i64_l))
-    | LChr c -> [], Cil.new_exp ~loc (Const(CChr c))
+    | LStr str -> Env.empty, Cil.new_exp ~loc (Const(CStr str))
+    | LWStr i64_l -> Env.empty, Cil.new_exp ~loc (Const(CWStr i64_l))
+    | LChr c -> Env.empty, Cil.new_exp ~loc (Const(CChr c))
     | LReal {r_literal=s; r_nearest=f; r_lower=l; r_upper=u} ->
        if l <> u then
 	 Options.warning ~current:true ~once:true
 			 "approximating a real number by a float";
-       [], Cil.new_exp ~loc (Const(CReal(f, FLongDouble, Some s)))
-    | LEnum e -> [], Cil.new_exp ~loc (Const(CEnum e))
+       Env.empty, Cil.new_exp ~loc (Const(CReal(f, FLongDouble, Some s)))
+    | LEnum e -> Env.empty, Cil.new_exp ~loc (Const(CEnum e))
 
   method private translate_var lv =
     let varname = match self#current_func with
@@ -225,91 +246,87 @@ class gather_insertions props swd = object(self)
   method private translate_unop op t = match t.term_type with
     | Linteger ->
        assert(op = Neg);
-       let i_0, e = self#translate_term t in
+       let env, e = self#translate_term t in
        let ret = self#fresh_Z_varinfo "neg" in
-       let i_1 = Insertion.mk_decl ret in
-       let i_2 = self#cinit (Cil.evar ret) in
-       let i_3 = self#cui_sub (Cil.evar ret) zero e in
-       let i_4 = self#cclear e in
-       i_0 @ [i_1; i_2; i_3; i_4], Lval(Cil.var ret)
+       let i_1 = self#cinit (Cil.evar ret) in
+       let i_2 = self#cui_sub (Cil.evar ret) zero e in
+       let i_3 = self#cclear e in
+       Env.merge env ([ret], [i_1; i_2; i_3]), Lval(Cil.var ret)
     | Lreal -> raise Unsupported
     | _ -> let ins, e = self#translate_term t in ins, UnOp(op,e,(Cil.typeOf e))
 
   method private translate_shift ty varname shift a b = match ty with
     | Linteger ->
+       let env1, x = self#as_logic_type Linteger a in
+       let env2, y = self#as_c_type Cil.ulongLongType b in
+       let env = Env.merge env1 env2 in
        let ret = self#fresh_Z_varinfo varname in
-       let i_0 = Insertion.mk_decl ret in
        let i_1 = self#cinit (Cil.evar ret) in
-       let i_2, x = self#as_logic_type Linteger a in
-       let i_3, y = self#as_c_type Cil.ulongLongType b in
-       let i_4 = shift (Cil.evar ret) x y in
-       let i_5 = self#cclear x in
-       i_0 :: i_1 :: i_2 @ i_3 @ [i_4 ; i_5], (Cil.evar ret).enode
+       let i_2 = shift (Cil.evar ret) x y in
+       let i_3 = self#cclear x in
+       Env.merge env ([ret], [i_1; i_2; i_3]), (Cil.evar ret).enode
     | _ -> raise Unreachable
 
   method private translate_binop ty op a b = match op with
     | IndexPI
     | PlusPI
     | MinusPI ->
-       let i_0, a' = self#translate_term a in
-       let i_1, b' = self#as_c_type Cil.intType b in
-       i_0 @ i_1, BinOp (op, a', b', (Cil.typeOf a'))
+       let env, a' = self#translate_term a in
+       let env', b' = self#as_c_type Cil.intType b in
+       Env.merge env env', BinOp (op, a', b', (Cil.typeOf a'))
     | Shiftlt -> self#translate_shift ty "lshift" self#cmul_2exp a b
     | Shiftrt -> self#translate_shift ty "rshift" self#cfdiv_q_2exp a b
     | _ ->
        match ty with
        | Linteger ->
-	  let i_0, x = self#as_logic_type Linteger a in
-	  let i_1, y = self#as_logic_type Linteger b in
+	  let env, x = self#as_logic_type Linteger a in
+	  let env', y = self#as_logic_type Linteger b in
+	  let env = Env.merge env env' in
 	  let ret = self#fresh_Z_varinfo (Utils.binop_to_fname op) in
-	  let i_2 = Insertion.mk_decl ret in
-	  let i_3 = self#cinit (Cil.evar ret) in
-	  let i_4 = self#cbinop op (Cil.evar ret) x y in
-	  let i_5 = self#cclear x in
-	  let i_6 = self#cclear y in
-	  i_0 @ i_1 @ [i_2 ; i_3 ; i_4 ; i_5; i_6 ], (Cil.evar ret).enode
+	  let i_1 = self#cinit (Cil.evar ret) in
+	  let i_2 = self#cbinop op (Cil.evar ret) x y in
+	  let i_3 = self#cclear x in
+	  let i_4 = self#cclear y in
+	  Env.merge env ([ret], [i_1; i_2; i_3; i_4]), (Cil.evar ret).enode
        | Lreal -> raise Unsupported
        | Ltype _ as lt when Logic_const.is_boolean_type lt ->
-	  let i_0, x = self#translate_term a in
-	  let i_1, y = self#translate_term b in
-	  let inserts, e =
+	  let env, x = self#translate_term a in
+	  let env', y = self#translate_term b in
+	  let env = Env.merge env env' in
+	  let env', e =
 	    match a.term_type, b.term_type with
 	    | Linteger, Linteger ->
 	       let var = self#fresh_ctype_varinfo Cil.intType "binop" in
-	       let i_2 = Insertion.mk_decl var in
 	       let tmp = self#fresh_ctype_varinfo Cil.intType "binop_cmp" in
-	       let i_3 = Insertion.mk_decl tmp in
-	       let i_4 = self#ccmp (Cil.var tmp) x y in
+	       let i_1 = self#ccmp (Cil.var tmp) x y in
 	       let op = Utils.binop_to_relation op in
-	       let i_5=instru_affect(Cil.var var)(cmp op (Cil.evar tmp) zero) in
-	       let i_6 = self#cclear x in
-	       let i_7 = self#cclear y in
-	       [i_2; i_3; i_4; i_5; i_6; i_7], Cil.evar var
-	    | _ -> [], Cil.mkBinOp ~loc op x y
+	       let i_2 = mk_affect (Cil.var var) (cmp op (Cil.evar tmp) zero) in
+	       let i_3 = self#cclear x in
+	       let i_4 = self#cclear y in
+	       ([var; tmp], [i_1; i_2; i_3; i_4]), Cil.evar var
+	    | _ -> Env.empty, Cil.mkBinOp ~loc op x y
 	  in
-	  i_0 @ i_1 @ inserts, e.enode
+	  Env.merge env env', e.enode
        | _ -> raise Unreachable
 
   method private translate_tif cond then_b else_b = match then_b.term_type with
     | Linteger ->
        let ret = self#fresh_Z_varinfo "tif" in
-       let i_0 = Insertion.mk_decl ret in
        let i_1 = self#cinit (Cil.evar ret) in
-       let i_2, cond' = self#translate_term cond in
+       let env, cond' = self#translate_term cond in
        let tmp = self#fresh_ctype_varinfo Cil.intType "tif_cmp" in
-       let i_3 = Insertion.mk_decl tmp in
-       let i_4 = self#ccmp_si (Cil.var tmp) cond' zero in
-       let inserts_then_0, then_b' = self#translate_term then_b in
+       let i_2 = self#ccmp_si (Cil.var tmp) cond' zero in
+       let env1, then_b' = self#translate_term then_b in
        let set_1 = self#cset (Cil.evar ret) then_b' in
        let clear_1 = self#cclear then_b' in
-       let i_then = inserts_then_0 @ [set_1 ; clear_1] in
-       let inserts_else_0, else_b' = self#translate_term else_b in
+       let i_then = Env.merge env1 ([], [set_1; clear_1]) in
+       let env2, else_b' = self#translate_term else_b in
        let set_2 = self#cset (Cil.evar ret) else_b' in
        let clear_2 = self#cclear else_b' in
-       let i_else = inserts_else_0 @ [ set_2 ; clear_2] in
-       let i_5 = Insertion.mk_if (cmp Rneq (Cil.evar tmp) zero) i_then i_else in
-       let i_6 = self#cclear cond' in
-       i_0 :: i_1 :: i_2 @ [i_3; i_4; i_5; i_6], (Cil.evar ret).enode
+       let i_else = Env.merge env2 ([], [set_2; clear_2]) in
+       let i_3 = mk_if (cmp Rneq (Cil.evar tmp) zero) i_then i_else in
+       let i_4 = self#cclear cond' in
+       Env.merge env ([ret; tmp], [i_1; i_2; i_3; i_4]), (Cil.evar ret).enode
     | Lreal -> raise Unsupported
     | _ -> raise Unreachable
 
@@ -343,33 +360,31 @@ class gather_insertions props swd = object(self)
 	 | Ctype x -> Ctype (Cil.unrollType x)
 	 | x -> x
        in
-       let i_0, v = self#translate_term t in
+       let env, v = self#translate_term t in
        let ret = self#fresh_Z_varinfo "to_Z" in
-       let i_1 = Insertion.mk_decl ret in
        let init_set = match ty with
 	 | Ctype x when Cil.isUnsignedInteger x -> self#cinit_set_ui
 	 | Ctype x when Cil.isSignedInteger x -> self#cinit_set_si
 	 | _ -> raise Unsupported
        in
-       let i_2 = init_set (Cil.evar ret) v in
-       i_0 @ [i_1; i_2], (Cil.evar ret).enode
+       let i_1 = init_set (Cil.evar ret) v in
+       Env.merge env ([ret], [i_1]), (Cil.evar ret).enode
     | Lreal -> raise Unsupported
     | _ -> raise Unreachable
 
   (* logic type -> C type *)
   method private translate_coerce t ty = match t.term_type with
     | Linteger ->
-       let i_0, v = self#translate_term t in
+       let env, v = self#translate_term t in
        let ret = self#fresh_ctype_varinfo ty "to_ctype" in
-       let i_1 = Insertion.mk_decl ret in
        let get = match ty with
 	 | x when Cil.isUnsignedInteger x -> self#cget_ui
 	 | x when Cil.isSignedInteger x -> self#cget_si
 	 | _ -> raise Unsupported
        in
-       let i_2 = get (Cil.var ret) v in
-       let i_3 = self#cclear v in
-       i_0 @ [i_1; i_2; i_3], (Cil.evar ret).enode
+       let i_1 = get (Cil.var ret) v in
+       let i_2 = self#cclear v in
+       Env.merge env ([ret], [i_1; i_2]), (Cil.evar ret).enode
     | Lreal -> raise Unsupported
     | _ -> raise Unreachable
 
@@ -384,44 +399,45 @@ class gather_insertions props swd = object(self)
   method private translate_lambda li lower upper q t init vname compute clear =
     assert(lower.term_type = Linteger && upper.term_type = Linteger);
     let ret = self#fresh_Z_varinfo vname in
-    let i_0 = Insertion.mk_decl ret in
     let i_1 = self#cinit_set_si (Cil.evar ret) init in
-    let i_3, low = self#translate_term lower in
-    let i_4, up = self#translate_term upper in
-    let iter = my_Z_varinfo q.lv_name in
-    let i_5 = Insertion.mk_decl iter in
-    let i_6 = self#cinit_set (Cil.evar iter) low in
-    let ins_b_0, lambda_t = self#translate_term t in
-    let ins_b_2 = self#cbinop_ui PlusA (Cil.evar iter) (Cil.evar iter) one in
-    let tmp = self#fresh_ctype_varinfo Cil.intType (vname ^ "_cmp") in
-    let ii_1 = Insertion.mk_decl tmp in
-    let ii_2 = self#ccmp (Cil.var tmp) (Cil.evar iter) up in
-    let ii_3 = self#ccmp (Cil.var tmp) (Cil.evar iter) up in
-    let ins_b_1 = compute (Cil.evar ret) lambda_t in
-    let clear_lambda = clear lambda_t in
-    let ins_b = ins_b_0 @ ins_b_1 :: ins_b_2 :: ii_3 :: clear_lambda in
-    let i_7 = Insertion.mk_loop (cmp Rle (Cil.evar tmp) zero) ins_b in
-    let i_8 = self#cclear (Cil.evar iter) in
-    let i_9 = self#cclear low in
-    let i_10 = self#cclear up in
-    let ins_block = i_3 @ i_4 @ [i_5; i_6; ii_1; ii_2; i_7; i_8; i_9; i_10] in
-    [i_0; i_1; Insertion.mk_block ins_block], (Cil.evar ret).enode
+    let env = [ret], [i_1] in
+    let block_env =
+      let env1, low = self#translate_term lower in
+      let env2, up = self#translate_term upper in
+      let env = Env.merge env1 env2 in
+      let iter = my_Z_varinfo q.lv_name in
+      let tmp = self#fresh_ctype_varinfo Cil.intType (vname ^ "_cmp") in
+      let i_1 = self#cinit_set (Cil.evar iter) low in
+      let i_2 = self#ccmp (Cil.var tmp) (Cil.evar iter) up in
+      let loop_env =
+        let env3, lambda_t = self#translate_term t in
+        let i_1 = self#cbinop_ui PlusA (Cil.evar iter) (Cil.evar iter) one in
+        let i_2 = self#ccmp (Cil.var tmp) (Cil.evar iter) up in
+        let i_3 = compute (Cil.evar ret) lambda_t in
+        let i_4 = clear lambda_t in
+        Env.merge env3 ([], i_1 :: i_2 :: i_3 :: i_4)
+      in
+      let i_3 = mk_loop (cmp Rle (Cil.evar tmp) zero) loop_env in
+      let i_4 = self#cclear (Cil.evar iter) in
+      let i_5 = self#cclear low in
+      let i_6 = self#cclear up in
+      Env.merge env ([iter; tmp], [i_1; i_2; i_3; i_4; i_5; i_6])
+    in
+    let env = Env.merge env ([], [mk_block block_env]) in
+    env, (Cil.evar ret).enode
 
   method private translate_app li _ params =
-    let s = li.l_var_info.lv_name in
-    let ty = Extlib.the li.l_type in
     let do_op op r l = self#cbinop op r r l in
     let inc_if r l =
-      Insertion.mk_if (cmp Rneq l zero) [self#cbinop_ui PlusA r r one] [] in
-    match ty, params, s with
+      mk_if (cmp Rneq l zero) ([], [self#cbinop_ui PlusA r r one]) Env.empty in
+    match Extlib.the li.l_type, params, li.l_var_info.lv_name with
     | Linteger, [param], "\\abs" ->
-       let i_0, x = self#translate_term param in
+       let env, x = self#translate_term param in
        let ret = self#fresh_Z_varinfo "abs" in
-       let i_1 = Insertion.mk_decl ret in
-       let i_2 = self#cinit (Cil.evar ret) in
-       let i_3 = self#cabs (Cil.evar ret) x in
-       let i_4 = self#cclear x in
-       i_0 @ [i_1; i_2; i_3; i_4], (Cil.evar ret).enode
+       let i_1 = self#cinit (Cil.evar ret) in
+       let i_2 = self#cabs (Cil.evar ret) x in
+       let i_3 = self#cclear x in
+       Env.merge env ([ret], [i_1; i_2; i_3]), (Cil.evar ret).enode
     | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\sum" ->
        self#translate_lambda
 	 li l u q t zero "sum" (do_op PlusA) (fun l -> [self#cclear l])
@@ -436,29 +452,28 @@ class gather_insertions props swd = object(self)
 
   method private translate_cast ty t = match t.term_type with (* source type *)
     | Linteger ->
-       let i_0, e = self#translate_term t in
+       let env, e = self#translate_term t in
        let ret = self#fresh_ctype_varinfo ty "cast" in
-       let i_1 = Insertion.mk_decl ret in
        let get = match ty with (* dest type *)
 	 | x when Cil.isUnsignedInteger x -> self#cget_ui
 	 | x when Cil.isSignedInteger x -> self#cget_si
 	 | _ -> raise Unsupported
        in
-       let i_2 = get (Cil.var ret) e in
-       let i_3 = self#cclear e in
-       i_0 @ [i_1; i_2; i_3], (Cil.evar ret).enode
+       let i_1 = get (Cil.var ret) e in
+       let i_2 = self#cclear e in
+       Env.merge env ([ret], [i_1; i_2]), (Cil.evar ret).enode
     | Lreal -> raise Unsupported
-    | Ctype _ -> let ins, e = self#translate_term t in ins, CastE (ty, e)
+    | Ctype _ -> let env, e = self#translate_term t in env, CastE (ty, e)
     | _ -> raise Unreachable
 
   method private translate_term_node t = match t.term_node with
     | TConst c -> let i, e = self#translate_constant t.term_type c in i, e.enode
-    | TLval tl -> let ins, lv = self#translate_lval tl in ins, Lval lv
-    | TSizeOf ty -> [], SizeOf ty
-    | TSizeOfE t -> let ins, e = self#translate_term t in ins, SizeOfE e
-    | TSizeOfStr str -> [], SizeOfStr str
-    | TAlignOf ty -> [], AlignOf ty
-    | TAlignOfE t -> let ins, e = self#translate_term t in ins, AlignOfE e
+    | TLval tl -> let env, lv = self#translate_lval tl in env, Lval lv
+    | TSizeOf ty -> Env.empty, SizeOf ty
+    | TSizeOfE t -> let env, e = self#translate_term t in env, SizeOfE e
+    | TSizeOfStr str -> Env.empty, SizeOfStr str
+    | TAlignOf ty -> Env.empty, AlignOf ty
+    | TAlignOfE t -> let env, e = self#translate_term t in env, AlignOfE e
     | TUnOp (op,t) -> self#translate_unop op t
     | TBinOp (op,a,b) -> self#translate_binop t.term_type op a b
     | TCastE (ty,t) -> self#translate_cast ty t
@@ -467,12 +482,12 @@ class gather_insertions props swd = object(self)
        let ty = type_of_pointed (Cil.typeOfTermLval x') in
        let x' = Logic_const.term (TLval x') ty in
        self#translate_term_node {t with term_node=(TBinOp(PlusPI,x',y))}
-    | TAddrOf tl -> let ins, lv = self#translate_lval tl in ins, AddrOf lv
-    | TStartOf tl -> let ins, lv = self#translate_lval tl in ins, StartOf lv
+    | TAddrOf tl -> let env, lv = self#translate_lval tl in env, AddrOf lv
+    | TStartOf tl -> let env, lv = self#translate_lval tl in env, StartOf lv
     | Tapp (li,ll,params) -> self#translate_app li ll params
     | Tif (x,y,z) -> self#translate_tif x y z
     | Tat (t,l) -> self#translate_at t l
-    | Tnull -> [], zero.enode
+    | Tnull -> Env.empty, zero.enode
     | TLogic_coerce (lt,t) -> self#translate_logic_coerce lt t
     | TCoerce (t,ty) -> self#translate_coerce t ty
     | TCoerceE (t, {term_type=Ctype ty}) -> self#translate_coerce t ty
@@ -493,38 +508,36 @@ class gather_insertions props swd = object(self)
     | Tlet _ -> raise Unsupported
 
   method private translate_term t =
-    let ins, enode = self#translate_term_node t in
-    ins, Cil.new_exp ~loc enode
+    let env, enode = self#translate_term_node t in
+    env, Cil.new_exp ~loc enode
 
   method private translate_lhost = function
-    | TVar lv -> [], Var(self#translate_var lv)
-    | TResult _ -> [], Var (Extlib.the result_varinfo)
-    | TMem t -> let ins, t = self#translate_term t in ins, Mem t
+    | TVar lv -> Env.empty, Var(self#translate_var lv)
+    | TResult _ -> Env.empty, Var (Extlib.the result_varinfo)
+    | TMem t -> let env, t = self#translate_term t in env, Mem t
 
   method private translate_offset = function
-    | TNoOffset -> [], NoOffset
-    | TField(fi,o) -> let ins, o' = self#translate_offset o in ins, Field(fi,o')
+    | TNoOffset -> Env.empty, NoOffset
+    | TField(fi,o) -> let env, o' = self#translate_offset o in env, Field(fi,o')
     | TModel _ -> raise Unsupported
     | TIndex(t,o) ->
-       let ins, e = self#as_c_type Cil.intType t in
-       let ins', o' = self#translate_offset o in
-       ins @ ins', Index(e,o')
+       let env1, e = self#as_c_type Cil.intType t in
+       let env2, o' = self#translate_offset o in
+       Env.merge env1 env2, Index(e,o')
 
   method private translate_lval (a,b) =
     let aux() =
-      let ins, a' = self#translate_lhost a in
-      let ins', b' = self#translate_offset b in
-      ins @ ins', (a',b')
+      let env1, a' = self#translate_lhost a in
+      let env2, b' = self#translate_offset b in
+      Env.merge env1 env2, (a', b')
     in
     match Cil.typeOfTermLval (a,b) with
     | Linteger ->
        let fresh_var = self#fresh_Z_varinfo "lval" in
-       let ins_0, t' = aux() in
-       let ins_1 = Insertion.mk_decl fresh_var in
-       let e_t' = Cil.new_exp ~loc (Lval t') in
-       let e_fresh_var = Cil.evar fresh_var in
-       let ins_2 = self#cinit_set e_fresh_var e_t' in
-       ins_0 @ [ins_1; ins_2], Cil.var fresh_var
+       let env, t' = aux() in
+       let e_t = Cil.new_exp ~loc (Lval t') in
+       let ins_1 = self#cinit_set (Cil.evar fresh_var) e_t in
+       Env.merge env ([fresh_var], [ins_1]), Cil.var fresh_var
     | Lreal -> raise Unsupported
     | _ -> aux()
 
@@ -533,106 +546,107 @@ class gather_insertions props swd = object(self)
 
   method private translate_rel rel t1 t2 = match t1.term_type, t2.term_type with
     | Linteger, Ctype x ->
-       let inserts_0, t1' = self#translate_term t1 in
-       let inserts_1, t2' = self#translate_term t2 in
+       let env1, t1' = self#translate_term t1 in
+       let env2, t2' = self#translate_term t2 in
+       let env = Env.merge env1 env2 in
        let varname = Utils.relation_to_string rel in
        let var = self#fresh_ctype_varinfo Cil.intType varname in
-       let i_2 = Insertion.mk_decl var in
        let zcmp =
 	 if Cil.isUnsignedInteger x then self#ccmp_ui
 	 else if Cil.isSignedInteger x then self#ccmp_si
 	 else raise Unsupported
        in
-       let i_3 = zcmp (Cil.var var) t1' t2' in
-       inserts_0 @ inserts_1 @ [i_2; i_3; self#cclear t1'],
-       cmp rel (Cil.evar var) zero
+       let i_1 = zcmp (Cil.var var) t1' t2' in
+       let i_2 = self#cclear t1' in
+       Env.merge env ([var], [i_1; i_2]), cmp rel (Cil.evar var) zero
     | Lreal, Lreal -> raise Unsupported
     | Linteger, Linteger
     | Ctype _, Linteger ->
-       let inserts_0, t1' = self#as_logic_type Linteger t1 in
-       let inserts_1, t2' = self#translate_term t2 in
+       let env1, t1' = self#as_logic_type Linteger t1 in
+       let env2, t2' = self#translate_term t2 in
+       let env = Env.merge env1 env2 in
        let varname = Utils.relation_to_string rel in
        let var = self#fresh_ctype_varinfo Cil.intType varname in
-       let i_4 = Insertion.mk_decl var in
-       let i_5 = self#ccmp (Cil.var var) t1' t2' in
-       let i_6 = self#cclear t1' in
-       let i_7 = self#cclear t2' in
-       inserts_0 @ inserts_1 @ [i_4; i_5; i_6; i_7], cmp rel (Cil.evar var) zero
+       let i_1 = self#ccmp (Cil.var var) t1' t2' in
+       let i_2 = self#cclear t1' in
+       let i_3 = self#cclear t2' in
+       Env.merge env ([var], [i_1; i_2; i_3]), cmp rel (Cil.evar var) zero
     | _ ->
-       let inserts_0, t1' = self#translate_term t1 in
-       let inserts_1, t2' = self#translate_term t2 in
-       inserts_0 @ inserts_1, cmp rel t1' t2'
+       let env1, t1' = self#translate_term t1 in
+       let env2, t2' = self#translate_term t2 in
+       Env.merge env1 env2, cmp rel t1' t2'
 
   method private translate_and p q =
     let var = self#fresh_pred_varinfo "and" in
-    let i_0, pred1_var = self#translate_predicate p in
-    let i_1 = Insertion.mk_decl var in
-    let i_2 = instru_affect (Cil.var var) pred1_var in
-    let b_0, pred2_var = self#translate_predicate q in
-    let b_1 = instru_affect (Cil.var var) pred2_var in
-    let i_3 = Insertion.mk_if (Cil.evar var) (b_0 @ [b_1]) [] in
-    i_0 @ [i_1; i_2; i_3], (Cil.evar var)
+    let env, pred1_var = self#translate_predicate p in
+    let env = Env.merge env ([var], [mk_affect (Cil.var var) pred1_var]) in
+    let if_env =
+      let env, pred2_var = self#translate_predicate q in
+      Env.merge env ([], [mk_affect (Cil.var var) pred2_var])
+    in
+    let i_2 = mk_if (Cil.evar var) if_env Env.empty in
+    Env.merge env ([], [i_2]), (Cil.evar var)
 
   method private translate_or p q =
     let var = self#fresh_pred_varinfo "or"  in
-    let i_0, pred1_var = self#translate_predicate p in
-    let i_1 = Insertion.mk_decl var in
-    let i_2 = instru_affect (Cil.var var) pred1_var in
-    let b_0, pred2_var = self#translate_predicate q in
-    let b_1 = instru_affect (Cil.var var) pred2_var in
-    let i_3 = Insertion.mk_if (Cil.evar var) [] (b_0 @ [b_1]) in
-    i_0 @ [i_1; i_2; i_3], (Cil.evar var)
+    let env, pred1_var = self#translate_predicate p in
+    let env = Env.merge env ([var], [mk_affect (Cil.var var) pred1_var]) in
+    let if_env =
+      let env, pred2_var = self#translate_predicate q in
+      Env.merge env ([], [mk_affect (Cil.var var) pred2_var])
+    in
+    let i_2 = mk_if (Cil.evar var) Env.empty if_env in
+    Env.merge env ([], [i_2]), (Cil.evar var)
 
   method private translate_implies p q =
     let var = self#fresh_pred_varinfo "implies" in
-    let insert_0 = Insertion.mk_decl var in
-    let insert_1 = instru_affect (Cil.var var) one in
-    let inserts_2, pred1_var = self#translate_predicate p in
-    let inserts_b_0, pred2_var = self#translate_predicate q in
-    let insert_b_1 = instru_affect (Cil.var var) pred2_var in
-    let insert_3 = Insertion.mk_if pred1_var (inserts_b_0 @ [insert_b_1]) [] in
-    insert_0 :: insert_1 :: inserts_2 @ [insert_3], Cil.evar var
+    let i_1 = mk_affect (Cil.var var) one in
+    let env, pred1_var = self#translate_predicate p in
+    let if_env =
+      let env, pred2_var = self#translate_predicate q in
+      Env.merge env ([], [mk_affect (Cil.var var) pred2_var])
+    in
+    let i_2 = mk_if pred1_var if_env Env.empty in
+    Env.merge env ([var], [i_1; i_2]), Cil.evar var
 
   method private translate_equiv p q =
-    let inserts_0, pred1_var = self#translate_predicate p in
-    let inserts_1, pred2_var = self#translate_predicate q in
+    let env1, pred1_var = self#translate_predicate p in
+    let env2, pred2_var = self#translate_predicate q in
     let not_pred1_var = Cil.new_exp ~loc (UnOp(LNot, pred1_var, Cil.intType)) in
     let not_pred2_var = Cil.new_exp ~loc (UnOp(LNot, pred2_var, Cil.intType)) in
     let exp1 = Cil.mkBinOp ~loc LOr not_pred1_var pred2_var in
     let exp2 = Cil.mkBinOp ~loc LOr not_pred2_var pred1_var in
-    inserts_0 @ inserts_1, Cil.mkBinOp ~loc LAnd exp1 exp2
+    Env.merge env1 env2, Cil.mkBinOp ~loc LAnd exp1 exp2
 
   method private translate_not p =
-    let ins, p' = self#translate_predicate p in
-    ins, Cil.new_exp ~loc (UnOp(LNot, p', Cil.intType))
+    let env, p' = self#translate_predicate p in
+    env, Cil.new_exp ~loc (UnOp(LNot, p', Cil.intType))
 
   method private translate_pif t p q =
-    let inserts_0, t_var = self#translate_term t in
+    let env, t_var = self#translate_term t in
     let res_var = self#fresh_pred_varinfo "pif" in
-    let insert_1 = Insertion.mk_decl res_var in
-    let cond, ii, insert_3 = match t.term_type with
+    let cond, env1, i_2 = match t.term_type with
       | Linteger ->
 	 let tmp = self#fresh_ctype_varinfo Cil.intType "pif_cmp" in
-	 let i_1 = Insertion.mk_decl tmp in
-	 let i_2 = self#ccmp_si (Cil.var tmp) t_var zero in
-	 cmp Rneq (Cil.evar tmp) zero, [i_1; i_2], [self#cclear t_var]
+	 let i_1 = self#ccmp_si (Cil.var tmp) t_var zero in
+	 cmp Rneq (Cil.evar tmp) zero, ([tmp], [i_1]), [self#cclear t_var]
       | Lreal -> raise Unsupported
-      | Ctype (TInt _) -> cmp Rneq t_var zero, [], []
+      | Ctype (TInt _) -> cmp Rneq t_var zero, Env.empty, []
       | Ltype _ as lt when Logic_const.is_boolean_type lt ->
-	 cmp Rneq t_var zero, [], []
+	 cmp Rneq t_var zero, Env.empty, []
       | _ -> raise Unreachable
     in
-    let inserts_then_0, pred1_var = self#translate_predicate p in
-    let insert_then_1 = instru_affect (Cil.var res_var) pred1_var in
-    let inserts_then = inserts_then_0 @ [insert_then_1] in
-    let inserts_else_0, pred2_var = self#translate_predicate q in
-    let insert_else_1 = instru_affect (Cil.var res_var) pred2_var in
-    let inserts_else = inserts_else_0 @ [insert_else_1] in
-    let insert_2 = Insertion.mk_if cond inserts_then inserts_else in
-    inserts_0 @ ii @ insert_1 :: insert_2 :: insert_3, Cil.evar res_var
+    let e, pred1_var = self#translate_predicate p in
+    let then_env = Env.merge e ([],[mk_affect (Cil.var res_var) pred1_var]) in
+    let e, pred2_var = self#translate_predicate q in
+    let else_env = Env.merge e ([],[mk_affect (Cil.var res_var) pred2_var]) in
+    let i_1 = mk_if cond then_env else_env in
+    let env = Env.merge env env1 in
+    let env = Env.merge env ([], [i_1]) in
+    Env.merge env ([], i_2), Cil.evar res_var
 
   method private translate_valid term = match term.term_node with
-    | Tempty_set -> [], one
+    | Tempty_set -> Env.empty, one
     | TBinOp ((PlusPI|IndexPI),p,{term_node = Trange(Some x,Some y)}) ->
        self#translate_valid_ptr_range p x y
     | TBinOp ((PlusPI|IndexPI),p,x) -> self#translate_valid_ptr_offset p x
@@ -654,129 +668,119 @@ class gather_insertions props swd = object(self)
     | _ -> Utils.error_term term
 
   method private translate_valid_ptr_range pointer min_off max_off =
-    let i_0, x' = self#translate_term pointer in
-    let i_1, low_o = self#translate_term min_off in
-    let i_2, up_o = self#translate_term max_off in
+    let env1, x' = self#translate_term pointer in
+    let env2, low_o = self#translate_term min_off in
+    let env3, up_o = self#translate_term max_off in
+    let env = Env.merge (Env.merge env1 env2) env3 in
     let ret = self#fresh_pred_varinfo "valid" in
-    let i_3 = Insertion.mk_decl ret in
     let dim = self#fresh_ctype_varinfo Cil.intType "valid_dim" in
-    let i_before, i_then, cond, i_after =
+    let env_before, env_then, cond, i_after =
       match min_off.term_type, max_off.term_type with
       | Linteger, Linteger ->
   	 let nonempty_set = self#fresh_pred_varinfo "valid_cmp" in
-  	 let i_8 = Insertion.mk_decl nonempty_set in
   	 let i_9 = self#ccmp (Cil.var nonempty_set) low_o up_o in
   	 let cond = cmp Rle (Cil.evar nonempty_set) zero in
-  	 let i_1 = Insertion.mk_decl dim in
   	 let i_2 = self#cpc_dim (Cil.var dim) x' in
   	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
-  	 let i_3 = Insertion.mk_decl cmp_dim_off in
   	 let i_4 = self#ccmp_ui (Cil.var cmp_dim_off) up_o (Cil.evar dim) in
   	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
-  	 let i_5 = Insertion.mk_decl cmp_off_zero in
   	 let i_6 = self#ccmp_ui (Cil.var cmp_off_zero) up_o zero in
   	 let e1 = cmp Rge (Cil.evar cmp_off_zero) zero in
   	 let e2 = cmp Rlt (Cil.evar cmp_dim_off) zero in
 	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_7 = instru_affect (Cil.var ret) e_binop in
+  	 let i_7 = mk_affect (Cil.var ret) e_binop in
   	 let i_cl = self#cclear low_o in
 	 let i_cl2 = self#cclear up_o in
-  	 [i_8; i_9], [i_1; i_2; i_3; i_4; i_5; i_6; i_7], cond, [i_cl; i_cl2]
+  	 ([nonempty_set], [i_9]),
+	 ([dim; cmp_dim_off; cmp_off_zero], [i_2; i_4; i_6; i_7]),
+	 cond, [i_cl; i_cl2]
       | Linteger, Ctype (TInt _) ->
   	 let nonempty = self#fresh_pred_varinfo "valid_cmp" in
-  	 let i_0' = Insertion.mk_decl nonempty in
   	 let i_cond = self#ccmp_si (Cil.var nonempty) low_o up_o in
   	 let cond = cmp Rle (Cil.evar nonempty) zero in
-  	 let i_1 = Insertion.mk_decl dim in
   	 let i_2 = self#cpc_dim (Cil.var dim) x' in
   	 let e1 = cmp Rge up_o zero in
   	 let e2 = cmp Rgt (Cil.evar dim) up_o in
 	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_7 = instru_affect (Cil.var ret) e_binop in
+  	 let i_7 = mk_affect (Cil.var ret) e_binop in
   	 let i_clear = self#cclear low_o in
-  	 [i_0'; i_cond], [i_1; i_2; i_7], cond, [i_clear]
+  	 ([nonempty], [i_cond]), ([dim], [i_2; i_7]), cond, [i_clear]
       | Ctype (TInt _), Linteger ->
 	 let nonempty = self#fresh_pred_varinfo "valid_cmp" in
-  	 let i_0' = Insertion.mk_decl nonempty in
   	 let i_cond = self#ccmp_ui (Cil.var nonempty) up_o low_o in
   	 let cond = cmp Rge (Cil.evar nonempty) zero in
-  	 let i_1 = Insertion.mk_decl dim in
   	 let i_2 = self#cpc_dim (Cil.var dim) x' in
   	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
-  	 let i_3 = Insertion.mk_decl cmp_dim_off in
   	 let i_4 = self#ccmp_ui (Cil.var cmp_dim_off) up_o (Cil.evar dim) in
   	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
-  	 let i_5 = Insertion.mk_decl cmp_off_zero in
   	 let i_6 = self#ccmp_ui (Cil.var cmp_off_zero) up_o zero in
   	 let e1 = cmp Rge (Cil.evar cmp_off_zero) zero in
   	 let e2 = cmp Rlt (Cil.evar cmp_dim_off) zero in
 	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_7 = instru_affect (Cil.var ret) e_binop in
+  	 let i_7 = mk_affect (Cil.var ret) e_binop in
 	 let i_clear = self#cclear up_o in
-  	 [i_0'; i_cond], [i_1; i_2; i_3; i_4; i_5; i_6; i_7], cond, [i_clear]
+  	 ([nonempty], [i_cond]),
+	 ([dim; cmp_dim_off; cmp_off_zero], [i_2; i_4; i_6; i_7]),
+	 cond, [i_clear]
       | Ctype (TInt _), Ctype (TInt _) ->
-  	 let i_1 = Insertion.mk_decl dim in
   	 let i_2 = self#cpc_dim (Cil.var dim) x' in
   	 let e1 = cmp Rge up_o zero in
   	 let e2 = cmp Rgt (Cil.evar dim) up_o in
 	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_3 = instru_affect (Cil.var ret) e_binop in
-	 [], [i_1; i_2; i_3], cmp Rle low_o up_o, []
+  	 let i_3 = mk_affect (Cil.var ret) e_binop in
+	 Env.empty, ([dim], [i_2; i_3]), cmp Rle low_o up_o, []
       | _ -> raise Unreachable
     in
-    let i_if = Insertion.mk_if cond i_then [instru_affect (Cil.var ret) one] in
-    i_0 @ i_1 @ i_2 @ [i_3] @ i_before @ i_if::i_after, (Cil.evar ret)
+    let env_else = [], [mk_affect (Cil.var ret) one] in
+    let i_if = mk_if cond env_then env_else in
+    let env = Env.merge env env_before in
+    Env.merge env ([ret], i_if :: i_after), (Cil.evar ret)
 
   method private translate_valid_ptr_offset pointer offset =
     let loc = pointer.term_loc in
-    let inserts_0, x' = self#translate_term pointer in
-    let inserts_1, y' = self#translate_term offset in
+    let env1, x' = self#translate_term pointer in
+    let env2, y' = self#translate_term offset in
+    let env = Env.merge env1 env2 in
     let ret = self#fresh_pred_varinfo "valid" in
-    let i_0 = Insertion.mk_decl ret in
     let dim = self#fresh_ctype_varinfo Cil.intType "valid_dim" in
-    let i_1 = Insertion.mk_decl dim in
-    let i_2 = self#cpc_dim (Cil.var dim) x' in
-    let inserts = match offset.term_type with
+    let i_1 = self#cpc_dim (Cil.var dim) x' in
+    let env' = match offset.term_type with
       | Linteger ->
   	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
-  	 let i_3 = Insertion.mk_decl cmp_dim_off in
-  	 let i_4 = self#ccmp_ui (Cil.var cmp_dim_off) y' (Cil.evar dim) in
+  	 let i_1 = self#ccmp_ui (Cil.var cmp_dim_off) y' (Cil.evar dim) in
   	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
-  	 let i_5 = Insertion.mk_decl cmp_off_zero in
-  	 let i_6 = self#ccmp_ui (Cil.var cmp_off_zero) y' zero in
+  	 let i_2 = self#ccmp_ui (Cil.var cmp_off_zero) y' zero in
   	 let e1 = cmp Rge (Cil.evar cmp_off_zero) zero in
   	 let e2 = cmp Rlt (Cil.evar cmp_dim_off) zero in
 	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_7 = instru_affect (Cil.var ret) e_binop in
-  	 let i_clear = self#cclear y' in
-  	 [i_3; i_4; i_5; i_6; i_7; i_clear]
+  	 let i_3 = mk_affect (Cil.var ret) e_binop in
+  	 let i_4 = self#cclear y' in
+  	 [cmp_dim_off; cmp_off_zero], [i_1; i_2; i_3; i_4]
       | Ctype (TInt _) ->
   	 let e1 = cmp Rge y' zero in
   	 let e2 = cmp Rgt (Cil.evar dim) y' in
-  	 [ instru_affect (Cil.var ret) (Cil.mkBinOp ~loc LAnd e1 e2) ]
+  	 [], [mk_affect (Cil.var ret) (Cil.mkBinOp ~loc LAnd e1 e2)]
       | _ -> raise Unreachable
     in
-    inserts_0 @ inserts_1 @ [i_0; i_1; i_2] @ inserts, (Cil.evar ret)
+    let env = Env.merge env ([ret; dim], [i_1]) in
+    Env.merge env env', (Cil.evar ret)
 
   method private translate_valid_ptr pointer =
-    let inserts_0, x' = self#translate_term pointer in
+    let env, x' = self#translate_term pointer in
     let ret = self#fresh_pred_varinfo "valid" in
-    let i_0 = Insertion.mk_decl ret in
     let dim = self#fresh_ctype_varinfo Cil.intType "valid_dim" in
-    let i_1 = Insertion.mk_decl dim in
-    let i_2 = self#cpc_dim (Cil.var dim) x' in
+    let i_1 = self#cpc_dim (Cil.var dim) x' in
     let e2 = cmp Rgt (Cil.evar dim) zero in
-    let i_3 = instru_affect (Cil.var ret) e2 in
-    inserts_0 @ [i_0; i_1; i_2; i_3], (Cil.evar ret)
+    let i_2 = mk_affect (Cil.var ret) e2 in
+    Env.merge env ([ret], [i_1; i_2]), (Cil.evar ret)
 
   method private translate_forall = self#translate_quantif ~forall:true
   method private translate_exists = self#translate_quantif ~forall:false
   method private translate_quantif ~forall logic_vars hyps goal =
     let varname = if forall then "forall" else "exists" in
     let var = self#fresh_pred_varinfo varname in
-    let i_0 = Insertion.mk_decl var in
     let init_val = if forall then one else zero in
-    let i_1 = instru_affect (Cil.var var) init_val in
+    let i_1 = mk_affect (Cil.var var) init_val in
     let negate exp = Cil.new_exp ~loc (UnOp(LNot,exp,Cil.intType)) in
     let cond = if forall then (Cil.evar var) else negate (Cil.evar var) in
     let on_lvar (i_b,e_c,i_i,i_a) lvar =
@@ -785,14 +789,13 @@ class gather_insertions props swd = object(self)
       let i_before, e_cond, i_inside, i_after = match t1.term_type with
 	| Linteger ->
 	   let it = my_Z_varinfo iter_name in
-	   let i_0 = Insertion.mk_decl it in
-	   let i_1, t1' = self#translate_term t1 in
-	   let i_2, t2' = self#translate_term t2 in
+	   let env1, t1' = self#translate_term t1 in
+	   let env2, t2' = self#translate_term t2 in
+	   let env = Env.merge env1 env2 in
 	   let i_3 = self#cinit_set (Cil.evar it) t1' in
 	   let inc exp = self#cbinop_ui PlusA exp exp one in
 	   let i_4 = if r1 = Rlt then [inc (Cil.evar it)] else [] in
 	   let tmp = self#fresh_ctype_varinfo Cil.intType (varname ^ "_cmp") in
-	   let i_5 = Insertion.mk_decl tmp in
 	   let ins_b_2 = self#cbinop_ui PlusA (Cil.evar it) (Cil.evar it) one in
 	   let e1 = cmp r2 (Cil.evar tmp) zero in
 	   let i_8 = self#cclear (Cil.evar it) in
@@ -804,16 +807,16 @@ class gather_insertions props swd = object(self)
 	   in
 	   let i_6 = cmp (Cil.var tmp) (Cil.evar it) t2' in
 	   let ins_b_3 = cmp (Cil.var tmp) (Cil.evar it) t2' in
-	   let i_before = i_0 :: i_1 @ i_2 @ i_3 :: i_4 @ [i_5; i_6] in
+	   let i_before = Env.merge env ([it; tmp], i_3 :: i_4 @ [i_6]) in
 	   let i_inside = [ins_b_2; ins_b_3] in
 	   let i_after = i_8 :: i_9 :: i_10 in
 	   i_before, e1, i_inside, i_after
 	| Lreal -> raise Unsupported
 	| _ ->
 	   let iter = my_varinfo Cil.intType iter_name in
-	   let insert_0 = Insertion.mk_decl iter in
-	   let inserts_1, t1' = self#translate_term t1 in
-	   let inserts_2, t2' = self#translate_term t2 in
+	   let env1, t1' = self#translate_term t1 in
+	   let env2, t2' = self#translate_term t2 in
+	   let env = Env.merge env1 env2 in
 	   let op = match r1 with
 	     | Rlt -> Cil.mkBinOp ~loc PlusA t1' one
 	     | Rle -> t1'
@@ -821,25 +824,26 @@ class gather_insertions props swd = object(self)
 	   in
 	   let e1 = cmp r2 (Cil.evar iter) t2' in
 	   let e_binop = Cil.mkBinOp ~loc PlusA (Cil.evar iter) one in
-	   let i_init = instru_affect (Cil.var iter) op in
-	   let i_before = insert_0 :: inserts_1 @ inserts_2 @ [i_init] in
-	   let i_inside = [instru_affect (Cil.var iter) e_binop] in
+	   let i_init = mk_affect (Cil.var iter) op in
+	   let i_before = Env.merge env ([iter], [i_init]) in
+	   let i_inside = [mk_affect (Cil.var iter) e_binop] in
 	   i_before, e1, i_inside, []
       in
-      i_b @ i_before, Cil.mkBinOp ~loc LAnd e_cond e_c,
+      Env.merge i_b i_before, Cil.mkBinOp ~loc LAnd e_cond e_c,
       i_i @ i_inside, i_a @ i_after
     in
-    let i_before, e_cond, i_inside, i_after =
-      List.fold_left on_lvar ([],cond,[],[]) logic_vars in
-    let ins_b_0, goal_var = self#translate_predicate goal in
-    let ins_b_1 = instru_affect (Cil.var var) goal_var in
-    let i_inside = ins_b_0 @ ins_b_1 :: i_inside in
-    let i_loop = Insertion.mk_loop e_cond i_inside in
-    [i_0; i_1; Insertion.mk_block (i_before @ i_loop :: i_after)], Cil.evar var
+    let env_before, e_cond, i_inside, i_after =
+      List.fold_left on_lvar (Env.empty,cond,[],[]) logic_vars in
+    let env1, goal_var = self#translate_predicate goal in
+    let i_inside = mk_affect (Cil.var var) goal_var :: i_inside in
+    let env_loop = Env.merge env1 ([], i_inside) in
+    let i_loop = mk_loop e_cond env_loop in
+    let env_block = Env.merge env_before ([], i_loop :: i_after) in
+    ([var], [i_1; mk_block env_block]), Cil.evar var
 
   method private translate_predicate_node = function
-    | Pfalse -> [], zero
-    | Ptrue -> [], one
+    | Pfalse -> Env.empty, zero
+    | Ptrue -> Env.empty, one
     | Prel (r,t1,t2) -> self#translate_rel r t1 t2
     | Pand (p,q) -> self#translate_and p q
     | Por (p,q) -> self#translate_or p q
@@ -854,19 +858,19 @@ class gather_insertions props swd = object(self)
     | Pvalid (_,t) -> self#translate_valid t
     | Pvalid_read (_,t) ->
        Options.warning ~current:true
-		       "\\valid_read(%a) is interpreted as \\valid(%a)"
-		       Printer.pp_term t Printer.pp_term t;
-       self#translate_valid t
+	 "\\valid_read(%a) is interpreted as \\valid(%a)"
+	 Printer.pp_term t Printer.pp_term t;
+      self#translate_valid t
     | Pforall _ as p ->
        Options.warning ~current:true
-		       "%a not of the form \\forall ...; a ==> b"
-		       Printer.pp_predicate_node p;
-       raise Unsupported
+	 "%a not of the form \\forall ...; a ==> b"
+	 Printer.pp_predicate_node p;
+      raise Unsupported
     | Pexists _ as p ->
        Options.warning ~current:true
-		       "%a not of the form \\exists ...; a && b"
-		       Printer.pp_predicate_node p;
-       raise Unsupported
+	 "%a not of the form \\exists ...; a && b"
+	 Printer.pp_predicate_node p;
+      raise Unsupported
     | Papp _
     | Pseparated _
     | Pxor _
@@ -904,15 +908,15 @@ class gather_insertions props swd = object(self)
     in
     let translate_as_return pred =
       try
-	let ins,v = self#translate_predicate (Inline.pred pred.ip_content) in
+	let env, v = self#translate_predicate (Inline.pred pred.ip_content) in
 	let e = Cil.new_exp ~loc (UnOp (LNot, v, Cil.intType)) in
-	ins @ [Insertion.mk_if e [Insertion.mk_ret zero] []]
+	Env.merge env ([], [mk_if e ([], [mk_ret zero]) Env.empty])
       with Unsupported ->
 	Options.warning
 	  ~current:true "%a unsupported" Printer.pp_predicate pred.ip_content;
-	[]
+	Env.empty
     in
-    let do_behavior ins b =
+    let do_behavior env b =
       let requires = List.filter not_translated b.b_requires in
       let typically = List.filter not_translated (Utils.typically_preds b) in
       let to_prop = Property.ip_of_requires kf kloc b in
@@ -921,48 +925,48 @@ class gather_insertions props swd = object(self)
 	if pre_entry_point then requires, typically
 	else List.filter in_props requires, List.filter in_props typically
       in
-      let do_requires ins pred =
-	if pre_entry_point then ins @ (translate_as_return pred)
+      let do_requires env pred =
+	if pre_entry_point then Env.merge env (translate_as_return pred)
 	else
 	  let prop = to_prop pred in
-	  ins @ (self#pc_assert_exception pred.ip_content "" prop)
+	  Env.merge env (self#pc_assert_exception pred.ip_content "" prop)
       in
-      let do_typically ins pred =
-	if pre_entry_point then ins @ (translate_as_return pred) else ins
+      let do_typically env pred =
+	if pre_entry_point then Env.merge env (translate_as_return pred)
+	else env
       in
       if requires <> [] || typically <> [] then
-	let inserts' = List.fold_left do_typically [] typically in
+	let inserts' = List.fold_left do_typically Env.empty typically in
 	let inserts = List.fold_left do_requires inserts' requires in
 	if b.b_assumes <> [] then
-	  let inserts_0, exp = self#cond_of_assumes b.b_assumes in
-	  let insert_1 = Insertion.mk_if exp inserts [] in
-	  ins @ inserts_0 @ [insert_1]
-	else ins @ inserts
-      else ins
+	  let env', exp = self#cond_of_assumes b.b_assumes in
+	  let i_1 = mk_if exp inserts Env.empty in
+	  Env.merge (Env.merge env env') ([], [i_1])
+	else Env.merge env inserts
+      else env
     in
-    List.fold_left do_behavior [] behaviors
+    List.fold_left do_behavior Env.empty behaviors
 
   method private post kf behaviors kloc =
-    let do_behavior ins b =
+    let do_behavior env b =
       let post = b.b_post_cond in
       let to_prop = Property.ip_of_ensures kf kloc b in
       let post = List.filter (fun x -> List.mem (to_prop x) props) post in
-      let do_postcond ins (tk,pred) =
-	let prop = to_prop (tk,pred) in
-	ins @ (self#pc_assert_exception pred.ip_content "" prop)
+      let do_postcond env (tk, pred) =
+	let prop = to_prop (tk, pred) in
+	Env.merge env (self#pc_assert_exception pred.ip_content "" prop)
       in
       if post <> [] then
 	if b.b_assumes <> [] then
-	  let i_0, exp = self#cond_of_assumes b.b_assumes in
-	  let ii_1 = List.fold_left do_postcond [] post in
-	  let i_1 = Insertion.mk_if exp ii_1 [] in
-	  ins @ i_0 @ [i_1]
+	  let env1, exp = self#cond_of_assumes b.b_assumes in
+	  let env2 = List.fold_left do_postcond Env.empty post in
+	  let i_1 = mk_if exp env2 Env.empty in
+	  Env.merge (Env.merge env env1) ([], [i_1])
 	else
-	  let i_1 = List.fold_left do_postcond [] post in
-	  ins @ i_1
-      else ins
+	  Env.merge env (List.fold_left do_postcond Env.empty post)
+      else env
     in
-    List.fold_left do_behavior [] behaviors
+    List.fold_left do_behavior Env.empty behaviors
 
   (* alloc and dealloc variables for \at terms *)
   method private save_varinfo kf vi =
@@ -993,67 +997,61 @@ class gather_insertions props swd = object(self)
     let do_varinfo v =
       let vtype = Utils.unname v.vtype in
       let my_old_v = my_varinfo (strip_const vtype) ("old_" ^ v.vname) in
-      let insert_decl = Insertion.mk_decl my_old_v in
-      let insert_before = instru_affect (Cil.var my_old_v) (Cil.evar v) in
+      let insert_before = mk_affect (Cil.var my_old_v) (Cil.evar v) in
       let rec alloc_aux my_old_ptr my_ptr ty = function
 	| h :: t ->
 	   let ty = dig_type ty in
-	   let inserts_0, h' = self#as_c_type Cil.ulongType h in
+	   let env, h' = self#as_c_type Cil.ulongType h in
 	   let my_iterator = self#fresh_ctype_varinfo Cil.ulongType "iter" in
-	   let insert_1 = Insertion.mk_decl my_iterator in
 	   let e1 = Cil.new_exp ~loc (SizeOf ty) in
 	   let e2 = Cil.mkBinOp ~loc Mult h' e1 in
-	   let insert_2 = self#cmalloc my_old_ptr e2 in
+	   let i_1 = self#cmalloc my_old_ptr e2 in
 	   let my_new_old_ptr = addoffset my_old_ptr (Cil.evar my_iterator) in
 	   let my_new_ptr = addoffset my_ptr (Cil.evar my_iterator) in
-	   let inserts_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
-	   let i_init = instru_affect (Cil.var my_iterator) zero in
+	   let env_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
+	   let i_2 = mk_affect (Cil.var my_iterator) zero in
 	   let cond = cmp Rlt (Cil.evar my_iterator) h' in
 	   let e3 = Cil.mkBinOp ~loc PlusA (Cil.evar my_iterator) one in
-	   let i_body =
-	     inserts_block @ [instru_affect (Cil.var my_iterator) e3] in
-	   let insert_3 = Insertion.mk_loop cond i_body in
-	   inserts_0 @ [insert_1 ; insert_2; i_init; insert_3]
-	| [] -> [instru_affect my_old_ptr (Cil.new_exp ~loc (Lval my_ptr))]
+	   let env_body =
+	     Env.merge env_block ([], [mk_affect (Cil.var my_iterator) e3]) in
+	   let i_3 = mk_loop cond env_body in
+	   Env.merge env ([my_iterator], [i_1; i_2; i_3])
+	| [] -> [], [mk_affect my_old_ptr (Cil.new_exp ~loc (Lval my_ptr))]
       in
       if Cil.isPointerType vtype || Cil.isArrayType vtype then
 	let my_old_ptr = my_varinfo (strip_const vtype) ("old_ptr_"^v.vname)in
-	let insert_0 = Insertion.mk_decl my_old_ptr in
-	let inserts_decl = [insert_decl; insert_0] in
 	let ins = alloc_aux (Cil.var my_old_ptr) (Cil.var v) vtype terms in
-	let inserts_before = insert_before :: ins in
-	inserts_decl, inserts_before
-      else [insert_decl], [insert_before]
+	Env.merge ([my_old_v; my_old_ptr], [insert_before]) ins
+      else [my_old_v], [insert_before]
     in
-    let inserts_decl, inserts_before = do_varinfo vi in
+    let env_before = do_varinfo vi in
     let do_varinfo v =
       let vtype = Utils.unname v.vtype in
       let rec dealloc_aux my_old_ptr = function
-	| [] -> []
-	| _ :: [] -> [ self#cfree(Cil.new_exp ~loc (Lval my_old_ptr)) ]
+	| [] -> Env.empty
+	| _ :: [] -> [], [self#cfree(Cil.new_exp ~loc (Lval my_old_ptr))]
 	| h :: t ->
 	   let my_iterator = self#fresh_ctype_varinfo Cil.ulongType "iter" in
-	   let insert_0 = Insertion.mk_decl my_iterator in
-	   let inserts_1, h' = self#as_c_type Cil.ulongType h in
+	   let env, h' = self#as_c_type Cil.ulongType h in
 	   let aux = addoffset my_old_ptr (Cil.evar my_iterator) in
-	   let inserts_block = dealloc_aux aux t in
+	   let env_block = dealloc_aux aux t in
 	   let cond = cmp Rlt (Cil.evar my_iterator) h' in
 	   let e1 = Cil.mkBinOp ~loc PlusA (Cil.evar my_iterator) one in
 	   let e = Cil.new_exp ~loc (Lval my_old_ptr) in
-	   let i_body =
-	     inserts_block @ [instru_affect (Cil.var my_iterator) e1] in
-	   let i_loop = Insertion.mk_loop cond i_body in
-	   let i_init = instru_affect (Cil.var my_iterator) zero in
-	   let i_free = self#cfree e in
-	   insert_0 :: inserts_1 @ [i_init; i_loop ; i_free]
+	   let env_body =
+	     Env.merge env_block ([], [mk_affect (Cil.var my_iterator) e1]) in
+	   let i_2 = mk_loop cond env_body in
+	   let i_1 = mk_affect (Cil.var my_iterator) zero in
+	   let i_3 = self#cfree e in
+	   Env.merge env ([my_iterator], [i_1; i_2; i_3])
       in
       if Cil.isPointerType vtype || Cil.isArrayType vtype then
 	let my_old_ptr = my_varinfo vtype ("old_ptr_" ^ v.vname) in
 	dealloc_aux (Cil.var my_old_ptr) terms
-      else []
+      else Env.empty
     in
-    let inserts_after = do_varinfo vi in
-    inserts_decl, inserts_before, inserts_after
+    let env_after = do_varinfo vi in
+    env_before, env_after
 
   method! vfunc f =
     let entry_point = Kernel_function.get_name (fst(Globals.entry_point())) in
@@ -1069,54 +1067,52 @@ class gather_insertions props swd = object(self)
 	       vtype = TFun(Cil.intType,x,y,z)}
 	  | _ -> assert false
 	in
-	let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
-	let stmts = inserts_pre @ [Insertion.mk_ret one] in
-	let locals, stmts = Insertion.list_to_cil stmts in
+	let env_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
+	let locals, stmts = Env.merge env_pre ([], [mk_ret one]) in
 	let formals = f.sformals in
 	let pre_fun = Utils.mk_fundec pre_varinfo ~formals ~locals stmts in
 	functions <- pre_fun :: functions;
       else
 	let label_pre = Symbolic_label.beg_func f.svar.vname in
-	let inserts_pre = self#pre ~pre_entry_point kf behaviors Kglobal in
-	self#insert label_pre inserts_pre
+	let env = self#pre ~pre_entry_point kf behaviors Kglobal in
+	self#insert label_pre env
     end;
     if self#at_least_one_prop kf behaviors Kglobal then
       begin
-	let inserts = self#post kf behaviors Kglobal in
+	let env = self#post kf behaviors Kglobal in
 	let label = Symbolic_label.end_func f.svar.vname in
-	self#insert label [Insertion.mk_block inserts]
+	self#insert label ([], [mk_block env])
       end;
     let do_varinfo v =
-      let inserts_decl,inserts_before,inserts_after = self#save_varinfo kf v in
+      let env_before, env_after = self#save_varinfo kf v in
       let beg_label = Symbolic_label.beg_func f.svar.vname
       and end_label = Symbolic_label.end_func f.svar.vname in
-      self#insert beg_label inserts_decl;
-      self#insert beg_label inserts_before;
-      self#insert end_label inserts_after
+      self#insert beg_label env_before;
+      self#insert end_label env_after
     in
     List.iter do_varinfo visited_globals;
     List.iter do_varinfo (Kernel_function.get_formals kf);
     Cil.DoChildren
 
   method private cond_of_assumes pred_list =
-    let rec aux insertions ret = function
-      | [] -> insertions, ret
+    let rec aux acc ret = function
+      | [] -> acc, ret
       | h :: t ->
-	 let ins,v = self#translate_predicate (Inline.pred h.ip_content) in
+	 let env, v = self#translate_predicate (Inline.pred h.ip_content) in
 	 let e = Cil.mkBinOp ~loc LAnd ret v in
-	 aux (insertions @ ins) e t
+	 aux (Env.merge acc env) e t
     in
-    aux [] one pred_list
+    aux Env.empty one pred_list
 
   method private cond_of_behaviors pred_lists =
-    let rec aux insertions ret = function
-      | [] -> insertions, ret
+    let rec aux acc ret = function
+      | [] -> acc, ret
       | h :: t ->
-	 let ins, v = self#cond_of_assumes h in
+	 let env, v = self#cond_of_assumes h in
 	 let e = Cil.mkBinOp ~loc LOr ret v in
-	 aux (insertions @ ins) e t
+	 aux (Env.merge acc env) e t
     in
-    aux [] zero pred_lists
+    aux Env.empty zero pred_lists
 
   method private pc_exc str i =
     let rec aux ret = function
@@ -1138,32 +1134,32 @@ class gather_insertions props swd = object(self)
 
   method private pc_assert_exception pred msg prop =
     try
-      let inserts_0, var = self#translate_predicate (Inline.pred pred) in
+      let env, var = self#translate_predicate (Inline.pred pred) in
       let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
       let id = Utils.to_id prop in
-      let insert_1 = Insertion.mk_if e [ self#pc_exc msg id ] [] in
+      let i_1 = mk_if e ([], [self#pc_exc msg id]) Env.empty in
       translated_properties <- prop :: translated_properties;
-      inserts_0 @ [insert_1]
+      Env.merge env ([], [i_1])
     with Unsupported ->
       Options.warning
 	~current:true "%a unsupported" Printer.pp_predicate pred;
-      []
+      Env.empty
 
   method private pc_assume pred =
     try
-      let inserts_0, var = self#translate_predicate (Inline.pred pred) in
+      let env, var = self#translate_predicate (Inline.pred pred) in
       let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
-      inserts_0 @ [ Insertion.mk_if e [ self#pc_ass "" 0 ] [] ]
+      Env.merge env ([], [mk_if e ([], [self#pc_ass "" 0]) Env.empty])
     with Unsupported ->
       Options.warning
 	~current:true "%a unsupported" Printer.pp_predicate pred;
-      []
+      Env.empty
 
-  method private for_behaviors bhvs ins =
-    if bhvs = [] then ins
+  method private for_behaviors bhvs env =
+    if bhvs = [] then env
     else
-      let inserts_0, cond = self#cond_of_behaviors bhvs in
-      inserts_0 @ [ Insertion.mk_if cond ins [] ]
+      let env', cond = self#cond_of_behaviors bhvs in
+      Env.merge env' ([], [mk_if cond env Env.empty])
 
   method private translate_stmt_spec kf stmt bhvs spec =
     if self#at_least_one_prop kf spec.spec_behavior (Kstmt stmt) then
@@ -1202,37 +1198,38 @@ class gather_insertions props swd = object(self)
       match term.term_type with
       | Linteger ->
 	 (* at BegIter *)
-	 let ins_1, beg_variant = self#translate_term term in
+	 let env_1, beg_variant = self#translate_term term in
 	 let var_1 = self#fresh_ctype_varinfo Cil.intType "variant_pos" in
 	 let pce_1 = self#pc_exc "non positive" id in
-	 let cmp_1 = self#ccmp_ui (Cil.var var_1) beg_variant zero in
+	 let i_1_1 = self#ccmp_ui (Cil.var var_1) beg_variant zero in
 	 let cond_1 = cmp Rlt (Cil.evar var_1) zero in
+	 let i_1_2 = mk_if cond_1 ([], [pce_1]) Env.empty in
 	 (* at EndIter *)
-	 let ins_2, end_variant = self#translate_term term in
+	 let env_2, end_variant = self#translate_term term in
 	 let var_2 = self#fresh_ctype_varinfo Cil.intType "variant_decr" in
 	 let pce_2 = self#pc_exc "non decreasing" id in
-	 let cmp_2 = self#ccmp (Cil.var var_2) end_variant beg_variant in
+	 let i_2_1 = self#ccmp (Cil.var var_2) end_variant beg_variant in
 	 let cond_2 = cmp Rge (Cil.evar var_2) zero in
-	 [(beg_label, ins_1 @ [(Insertion.mk_decl var_1); cmp_1;
-			       (Insertion.mk_if cond_1 [pce_1] [])]);
-	  (end_label, ins_2 @ [(Insertion.mk_decl var_2); cmp_2;
-			       (Insertion.mk_if cond_2 [pce_2] []);
-			       (self#cclear beg_variant)])]
+	 let i_2_2 = mk_if cond_2 ([], [pce_2]) Env.empty in
+	 let i_2_3 = self#cclear beg_variant in
+	 [(beg_label, Env.merge env_1 ([var_1], [i_1_1; i_1_2]));
+	  (end_label, Env.merge env_2 ([var_2], [i_2_1; i_2_2; i_2_3]))]
       | Lreal -> raise Unsupported
       | _ ->
 	 (* at BegIter *)
-	 let ins_1, beg_variant = self#translate_term term in
+	 let env_1, beg_variant = self#translate_term term in
 	 let cond_1 = cmp Rlt beg_variant zero in
 	 let pce_1 = self#pc_exc "non positive" id in
 	 let var_1 = self#fresh_ctype_varinfo Cil.intType "variant_save" in
-	 let aff_1 = instru_affect (Cil.var var_1) beg_variant in
+	 let if_1 = mk_if cond_1 ([], [pce_1]) Env.empty in
+	 let aff_1 = mk_affect (Cil.var var_1) beg_variant in
 	 (* at EndIter *)
-	 let ins_2, end_variant = self#translate_term term in
+	 let env_2, end_variant = self#translate_term term in
 	 let cond_2 = cmp Rge end_variant (Cil.evar var_1) in
 	 let pce_2 = self#pc_exc "non decreasing" id in
-	 [(beg_label, ins_1 @ [(Insertion.mk_if cond_1 [pce_1] []);
-			       (Insertion.mk_decl var_1); aff_1]);
-	  (end_label, ins_2 @ [Insertion.mk_if cond_2 [pce_2] []])]
+	 let if_2 = mk_if cond_2 ([], [pce_2]) Env.empty in
+	 [(beg_label, Env.merge env_1 ([var_1], [if_1; aff_1]));
+	  (end_label, Env.merge env_2 ([], [if_2]))]
     else []
 
   method! vcode_annot ca =
@@ -1273,36 +1270,35 @@ class gather_insertions props swd = object(self)
 	 let ty =
 	   match op1.term_type with Ctype t -> t | _ -> raise Unreachable in
 	 let it = self#fresh_ctype_varinfo Cil.intType "iter" in
-	 let i_0 = Insertion.mk_decl it in
-	 let i_1, e_t1 = self#as_c_type Cil.intType t1 in
-	 let i_2 = instru_affect (Cil.var it) e_t1 in
-	 let i_3, e_t2 = self#as_c_type Cil.intType t2 in
+	 let env1, e_t1 = self#as_c_type Cil.intType t1 in
+	 let i_1 = mk_affect (Cil.var it) e_t1 in
+	 let env2, e_t2 = self#as_c_type Cil.intType t2 in
 	 let cond = cmp Rle (Cil.evar it) e_t2 in
-	 let ll, e_op1 = self#translate_term op1 in
-	 assert (ll = []);
+	 let env3, e_op1 = self#translate_term op1 in
+	 assert (env3 = Env.empty);
 	 let e = Cil.new_exp ~loc (BinOp(op, e_op1, (Cil.evar it), ty)) in
 	 let y = Mem e, NoOffset in
 	 Cil_printer.pp_lval Format.str_formatter y;
 	 let str = mk_string (Format.flush_str_formatter()) in
 	 let i_f_1 = self#cnondet (Cil.typeOfLval y) y str in
 	 let plus_one = Cil.mkBinOp ~loc PlusA (Cil.evar it) one in
-	 let i_f_2 = instru_affect (Cil.var it) plus_one in
-	 let i_7 = Insertion.mk_loop cond [i_f_1; i_f_2] in
-	 i_0::i_1 @ i_2::i_3 @ i_7::ret
+	 let i_f_2 = mk_affect (Cil.var it) plus_one in
+	 let i_2 = mk_loop cond ([], [i_f_1; i_f_2]) in
+	 Env.merge (Env.merge (Env.merge env1 env2) ([it], [i_1; i_2])) ret
       | TLval lv ->
 	 let ty = match t.term_type with Ctype x -> x | _-> raise Unreachable in
-	 let ins, e = self#translate_lval lv in
+	 let env, e = self#translate_lval lv in
 	 Cil_printer.pp_term_lval Format.str_formatter lv;
 	 let str = mk_string (Format.flush_str_formatter()) in
 	 let aff = self#cnondet ty e str in
-	 ins @ aff :: ret
+	 Env.merge (Env.merge env ([], [aff])) ret
       | _ ->
 	 Options.warning
 	   ~current:true "term %a in assigns clause unsupported"
 	   Printer.pp_term t;
 	 ret
     in
-    List.fold_left on_term [] assigns_terms
+    List.fold_left on_term Env.empty assigns_terms
 
   method! vstmt_aux stmt =
     let sim_funcs = Options.Simulate_Functions.get() in
@@ -1314,7 +1310,7 @@ class gather_insertions props swd = object(self)
        let kf = Kernel_function.find_englobing_kf stmt in
        let ca_l = Annotations.code_annot stmt in
        let ca_l = List.map (fun x -> x.annot_content) ca_l in
-       let on_bhv cond _ bhv ins =
+       let on_bhv cond _ bhv env =
 	 let bhv_in l =
 	   List.mem bhv.b_name l || (Cil.is_default_behavior bhv && l = []) in
 	 let f_assigns ret = function
@@ -1327,20 +1323,23 @@ class gather_insertions props swd = object(self)
 	 in
 	 let assigns = List.fold_left f_assigns [] ca_l in
 	 let linvs = List.fold_left f_linvs [] ca_l in
-	 let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
-	 let affects = self#assigns_swd assigns in
-	 let on_inv ret p = ret @ (self#pc_assume p) in
-	 let ins_block = List.fold_left on_inv affects linvs in
-	 let ins_bhv = Insertion.mk_if e_assumes ins_block [] in
-	 let ins_assume_cond = Insertion.mk_if cond [] [ self#pc_ass "" 0 ] in
-	 ins @ ins_assumes @ [ins_bhv; ins_assume_cond]
+	 let env_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
+	 let env_affects = self#assigns_swd assigns in
+	 let on_inv ret p = Env.merge ret (self#pc_assume p) in
+	 let env_block = List.fold_left on_inv env_affects linvs in
+	 let i_bhv = mk_if e_assumes env_block Env.empty in
+	 let i_assume_cond = mk_if cond Env.empty ([], [self#pc_ass "" 0]) in
+	 Env.merge
+	   (Env.merge env env_assumes)
+	   ([], [i_bhv; i_assume_cond])
        in
-       let ins_h_before = Annotations.fold_behaviors (on_bhv loop_cond) kf [] in
-       let ins_h_after =
-	 Annotations.fold_behaviors (on_bhv not_loop_cond) kf [] in
+       let env_before =
+	 Annotations.fold_behaviors (on_bhv loop_cond) kf Env.empty in
+       let env_after =
+	 Annotations.fold_behaviors (on_bhv not_loop_cond) kf Env.empty in
        Cil.DoChildrenPost (fun s ->
-	 self#insert (Symbolic_label.beg_iter stmt.sid) ins_h_before;
-	 self#insert (Symbolic_label.end_stmt stmt.sid) ins_h_after;
+	 self#insert (Symbolic_label.beg_iter stmt.sid) env_before;
+	 self#insert (Symbolic_label.end_stmt stmt.sid) env_after;
 	 s
        )
 	 
@@ -1350,18 +1349,22 @@ class gather_insertions props swd = object(self)
        let formals = Kernel_function.get_formals kf in
        let varname = fct_varinfo.vname ^ "_mod" in
        let new_f_vi = self#fresh_fct_varinfo fct_varinfo.vtype varname in
-       let on_bhv _ bhv ins =
-	 let ins_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
+       let on_bhv _ bhv env =
+	 let env_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
 	 (* we create variables old_* to save the values of globals and
 	  * formal parameters before function call *)
-	 let save v (a,b,c) = let d,e,f=self#save_varinfo kf v in d@a,e@b,f@c in
+	 let save v (a, b) =
+	   let d, e = self#save_varinfo kf v in
+	   Env.merge d a, Env.merge e b
+	 in
 	 let save_global v _ l = save v l in
 	 let save_formal l v = save v l in
-	 let i1,i2,i3 = Globals.Vars.fold_in_file_order save_global ([],[],[])in
-	 let i1,i2,i3 = List.fold_left save_formal (i1,i2,i3) formals in
-	 let begin_save = i1 @ i2 and end_save = i3 in
+	 let i1,i2 =
+	   Globals.Vars.fold_in_file_order save_global (Env.empty, Env.empty) in
+	 let i1,i2 = List.fold_left save_formal (i1,i2) formals in
+	 let env_begin_save = i1 and env_end_save = i2 in
 	 let ensures = bhv.b_post_cond in
-	 let on_post ins (_,{ip_content=p}) =
+	 let on_post env (_,{ip_content=p}) =
 	   let p = match ret with
 	     | Some r ->
 		let ty = Cil.typeOfLval r in
@@ -1369,31 +1372,36 @@ class gather_insertions props swd = object(self)
 		Inline.pred p
 	     | None -> p
 	   in
-	   ins @ (self#pc_assume p)
+	   Env.merge env (self#pc_assume p)
 	 in
-	 let posts = List.fold_left on_post [] ensures in
-	 let affects = self#assigns_swd [bhv.b_assigns] in
-	 let i_then = begin_save @ affects @ posts @ end_save in
-	 let ins_bhv = Insertion.mk_if e_assumes i_then [] in
-	 ins @ ins_assumes @ [ins_bhv]
+	 let env_posts = List.fold_left on_post Env.empty ensures in
+	 let env_affects = self#assigns_swd [bhv.b_assigns] in
+	 let env_then =
+	   Env.merge
+	     (Env.merge
+		(Env.merge env_begin_save env_affects)
+		env_posts)
+	     env_end_save
+	 in
+	 let i_bhv = mk_if e_assumes env_then Env.empty in
+	 Env.merge (Env.merge env env_assumes) ([], [i_bhv])
        in
-       let ins_body = Annotations.fold_behaviors on_bhv kf [] in
-       let decl_retres, aff_retres, ret_retres = match ret with
+       let env_body = Annotations.fold_behaviors on_bhv kf Env.empty in
+       let env_before, env_after = match ret with
 	 | Some r ->
 	    let ty = Cil.typeOfLval r in
 	    let retres = my_varinfo ty "__retres" in
 	    let aff = self#cnondet ty (Cil.var retres)
 	      (mk_string ("\\return of function '" ^ fct_varinfo.vname ^ "'"))
 	    in
-	    [Insertion.mk_decl retres],[aff],[Insertion.mk_ret(Cil.evar retres)]
-	 | None -> [], [], []
+	    ([retres], [aff]), ([], [mk_ret (Cil.evar retres)])
+	 | None -> Env.empty, Env.empty
        in
-       let ins_full_body = decl_retres @ aff_retres @ ins_body @ ret_retres in
-       let locals, stmts = Insertion.list_to_cil ins_full_body in
+       let locals,stmts = Env.merge (Env.merge env_before env_body) env_after in
        let new_f = Utils.mk_fundec new_f_vi ~formals ~locals stmts in
        functions <- new_f :: functions;
-       let i_call = Insertion.mk_instru(Call(ret,Cil.evar new_f_vi,args,loc)) in
-       self#insert (Symbolic_label.end_stmt stmt.sid) [i_call];
+       let i_call = Cil.mkStmt(Instr(Call(ret,Cil.evar new_f_vi,args,loc))) in
+       self#insert (Symbolic_label.end_stmt stmt.sid) ([], [i_call]);
        Cil.SkipChildren
     | _ -> Cil.DoChildren
 
