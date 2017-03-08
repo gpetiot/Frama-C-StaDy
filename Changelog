@@ -1,0 +1,15 @@
+
+v0.2.2
+	08/03/2017 G. PETIOT add missing mpz_clear calls in translation
+
+v0.2.1
+	18/02/2017 G. PETIOT new option -stady-version
+
+v0.2.0
+	18/02/2017 G. PETIOT -stady-swd now takes labels instead of stmt ids
+	16/02/2017 G. PETIOT fix SWD translation (loop invariant when there is
+				no loop iteration)
+	15/02/2017 G. PETIOT new option -stady-precondition to add a 'typically'
+				precondition
+
+v0.1.0 	undocumented
