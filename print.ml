@@ -7,9 +7,10 @@ class print_insertions insertions functions swd = object(self)
 
   method private insertions_at fmt label =
     try
-      let vars, stmts = Hashtbl.find insertions label in
+      let vars, stmts, cleans = Hashtbl.find insertions label in
       Queue.iter (Utils.pretty_var fmt) vars;
-      Queue.iter (Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt) stmts
+      Queue.iter (Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt) stmts;
+      Queue.iter (Format.fprintf fmt "@[%a@]@\n" Printer.pp_stmt) cleans
     with _ -> ()
       
   method private generated_fundecl fmt f =
@@ -37,8 +38,8 @@ class print_insertions insertions functions swd = object(self)
     Format.pp_open_hvbox fmt 0;
     let kf = Kernel_function.find_englobing_kf stmt in
     let insert_something l =
-      let v, s = Hashtbl.find insertions l in
-      not (Queue.is_empty v && Queue.is_empty s) in
+      let v, s, c = Hashtbl.find insertions l in
+      not (Queue.is_empty v && Queue.is_empty s && Queue.is_empty c) in
     let insert_something =
       (try insert_something (Symbolic_label.beg_stmt stmt.sid) with _ -> false)
       || (try insert_something(Symbolic_label.end_stmt stmt.sid) with _-> false)
@@ -93,7 +94,7 @@ class print_insertions insertions functions swd = object(self)
 
   method private headers fmt =
     let is_nondet b i = b || Utils.is_stmt_nondet i in
-    let on_hash _ (_,q) b = b || Queue.fold is_nondet b q in
+    let on_hash _ (_,q,_) b = b || Queue.fold is_nondet b q in
     let on_func b f = b || Utils.is_fundec_nondet f in
     let nondet = Hashtbl.fold on_hash insertions false in
     let nondet = List.fold_left on_func nondet functions in
