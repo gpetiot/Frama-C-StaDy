@@ -430,10 +430,7 @@ int alt_sep_test(void)
   __gmpz_init_set_str(__sd_Z_cst_11,"1",10);
   __gmpz_init(__sd_Z_add_0);
   __gmpz_add(__sd_Z_add_0,__sd_Z_cst_10,__sd_Z_cst_11);
-  __gmpz_clear(__sd_Z_cst_10);
-  __gmpz_clear(__sd_Z_cst_11);
   __sd_to_ctype_12 = __gmpz_get_ui(__sd_Z_add_0);
-  __gmpz_clear(__sd_Z_add_0);
   old_ptr_Positive_RA_Alt_Thresh = (int *)malloc(__sd_to_ctype_12 * (unsigned long)sizeof(int));
   __sd_iter_0 = 0;
   while (__sd_iter_0 < __sd_to_ctype_12) {
@@ -447,6 +444,9 @@ int alt_sep_test(void)
   old_Two_of_Three_Reports_Valid = Two_of_Three_Reports_Valid;
   old_High_Confidence = High_Confidence;
   old_Cur_Vertical_Sep = Cur_Vertical_Sep;
+  __gmpz_clear(__sd_Z_cst_10);
+  __gmpz_clear(__sd_Z_cst_11);
+  __gmpz_clear(__sd_Z_add_0);
   {
     int enabled;
     int tcas_equipped;
@@ -545,10 +545,8 @@ int alt_sep_test(void)
       int __sd_to_ctype_11;
       __gmpz_init_set_si(__sd_Z_to_Z_0,Alt_Layer_Value);
       __sd_to_ctype_0 = (int)__gmpz_get_si(__sd_Z_to_Z_0);
-      __gmpz_clear(__sd_Z_to_Z_0);
       __gmpz_init_set_si(__sd_Z_to_Z_1,Alt_Layer_Value);
       __sd_to_ctype_1 = (int)__gmpz_get_si(__sd_Z_to_Z_1);
-      __gmpz_clear(__sd_Z_to_Z_1);
       if (Up_Separation >= *(Positive_RA_Alt_Thresh + __sd_to_ctype_0) && 
           Down_Separation < *(Positive_RA_Alt_Thresh + __sd_to_ctype_1)) {
         mpz_t __sd_Z_to_Z_2;
@@ -557,16 +555,14 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_2,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_0,"2",10);
         __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_2,__sd_Z_cst_0);
+        if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",44);
         __gmpz_clear(__sd_Z_to_Z_2);
         __gmpz_clear(__sd_Z_cst_0);
-        if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",44);
       }
       __gmpz_init_set_si(__sd_Z_to_Z_3,Alt_Layer_Value);
       __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_to_Z_3);
-      __gmpz_clear(__sd_Z_to_Z_3);
       __gmpz_init_set_si(__sd_Z_to_Z_4,Alt_Layer_Value);
       __sd_to_ctype_3 = (int)__gmpz_get_si(__sd_Z_to_Z_4);
-      __gmpz_clear(__sd_Z_to_Z_4);
       if (Up_Separation < *(Positive_RA_Alt_Thresh + __sd_to_ctype_2) && 
           Down_Separation >= *(Positive_RA_Alt_Thresh + __sd_to_ctype_3)) {
         mpz_t __sd_Z_to_Z_5;
@@ -575,16 +571,14 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_5,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_1,"1",10);
         __sd_ne_1 = __gmpz_cmp(__sd_Z_to_Z_5,__sd_Z_cst_1);
+        if (! (__sd_ne_1 != 0)) pathcrawler_assert_exception("",40);
         __gmpz_clear(__sd_Z_to_Z_5);
         __gmpz_clear(__sd_Z_cst_1);
-        if (! (__sd_ne_1 != 0)) pathcrawler_assert_exception("",40);
       }
       __gmpz_init_set_si(__sd_Z_to_Z_6,Alt_Layer_Value);
       __sd_to_ctype_4 = (int)__gmpz_get_si(__sd_Z_to_Z_6);
-      __gmpz_clear(__sd_Z_to_Z_6);
       __gmpz_init_set_si(__sd_Z_to_Z_7,Alt_Layer_Value);
       __sd_to_ctype_5 = (int)__gmpz_get_si(__sd_Z_to_Z_7);
-      __gmpz_clear(__sd_Z_to_Z_7);
       if ((Up_Separation < *(Positive_RA_Alt_Thresh + __sd_to_ctype_4) && 
            Down_Separation < *(Positive_RA_Alt_Thresh + __sd_to_ctype_5)) && 
           Up_Separation > Down_Separation) {
@@ -594,16 +588,14 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_8,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_2,"2",10);
         __sd_ne_2 = __gmpz_cmp(__sd_Z_to_Z_8,__sd_Z_cst_2);
+        if (! (__sd_ne_2 != 0)) pathcrawler_assert_exception("",11);
         __gmpz_clear(__sd_Z_to_Z_8);
         __gmpz_clear(__sd_Z_cst_2);
-        if (! (__sd_ne_2 != 0)) pathcrawler_assert_exception("",11);
       }
       __gmpz_init_set_si(__sd_Z_to_Z_9,Alt_Layer_Value);
       __sd_to_ctype_6 = (int)__gmpz_get_si(__sd_Z_to_Z_9);
-      __gmpz_clear(__sd_Z_to_Z_9);
       __gmpz_init_set_si(__sd_Z_to_Z_10,Alt_Layer_Value);
       __sd_to_ctype_7 = (int)__gmpz_get_si(__sd_Z_to_Z_10);
-      __gmpz_clear(__sd_Z_to_Z_10);
       if ((Up_Separation < *(Positive_RA_Alt_Thresh + __sd_to_ctype_6) && 
            Down_Separation < *(Positive_RA_Alt_Thresh + __sd_to_ctype_7)) && 
           Up_Separation < Down_Separation) {
@@ -613,16 +605,14 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_11,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_3,"1",10);
         __sd_ne_3 = __gmpz_cmp(__sd_Z_to_Z_11,__sd_Z_cst_3);
+        if (! (__sd_ne_3 != 0)) pathcrawler_assert_exception("",28);
         __gmpz_clear(__sd_Z_to_Z_11);
         __gmpz_clear(__sd_Z_cst_3);
-        if (! (__sd_ne_3 != 0)) pathcrawler_assert_exception("",28);
       }
       __gmpz_init_set_si(__sd_Z_to_Z_12,Alt_Layer_Value);
       __sd_to_ctype_8 = (int)__gmpz_get_si(__sd_Z_to_Z_12);
-      __gmpz_clear(__sd_Z_to_Z_12);
       __gmpz_init_set_si(__sd_Z_to_Z_13,Alt_Layer_Value);
       __sd_to_ctype_9 = (int)__gmpz_get_si(__sd_Z_to_Z_13);
-      __gmpz_clear(__sd_Z_to_Z_13);
       if ((Up_Separation >= *(Positive_RA_Alt_Thresh + __sd_to_ctype_8) && 
            Down_Separation >= *(Positive_RA_Alt_Thresh + __sd_to_ctype_9)) && 
           Own_Tracked_Alt > Other_Tracked_Alt) {
@@ -632,16 +622,14 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_14,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_4,"2",10);
         __sd_ne_4 = __gmpz_cmp(__sd_Z_to_Z_14,__sd_Z_cst_4);
+        if (! (__sd_ne_4 != 0)) pathcrawler_assert_exception("",46);
         __gmpz_clear(__sd_Z_to_Z_14);
         __gmpz_clear(__sd_Z_cst_4);
-        if (! (__sd_ne_4 != 0)) pathcrawler_assert_exception("",46);
       }
       __gmpz_init_set_si(__sd_Z_to_Z_15,Alt_Layer_Value);
       __sd_to_ctype_10 = (int)__gmpz_get_si(__sd_Z_to_Z_15);
-      __gmpz_clear(__sd_Z_to_Z_15);
       __gmpz_init_set_si(__sd_Z_to_Z_16,Alt_Layer_Value);
       __sd_to_ctype_11 = (int)__gmpz_get_si(__sd_Z_to_Z_16);
-      __gmpz_clear(__sd_Z_to_Z_16);
       if ((Up_Separation >= *(Positive_RA_Alt_Thresh + __sd_to_ctype_10) && 
            Down_Separation >= *(Positive_RA_Alt_Thresh + __sd_to_ctype_11)) && 
           Own_Tracked_Alt < Other_Tracked_Alt) {
@@ -651,9 +639,9 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_17,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_5,"1",10);
         __sd_ne_5 = __gmpz_cmp(__sd_Z_to_Z_17,__sd_Z_cst_5);
+        if (! (__sd_ne_5 != 0)) pathcrawler_assert_exception("",55);
         __gmpz_clear(__sd_Z_to_Z_17);
         __gmpz_clear(__sd_Z_cst_5);
-        if (! (__sd_ne_5 != 0)) pathcrawler_assert_exception("",55);
       }
       if (Own_Tracked_Alt > Other_Tracked_Alt) {
         mpz_t __sd_Z_to_Z_18;
@@ -662,9 +650,9 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_18,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_6,"2",10);
         __sd_ne_6 = __gmpz_cmp(__sd_Z_to_Z_18,__sd_Z_cst_6);
+        if (! (__sd_ne_6 != 0)) pathcrawler_assert_exception("",2);
         __gmpz_clear(__sd_Z_to_Z_18);
         __gmpz_clear(__sd_Z_cst_6);
-        if (! (__sd_ne_6 != 0)) pathcrawler_assert_exception("",2);
       }
       if (Own_Tracked_Alt < Other_Tracked_Alt) {
         mpz_t __sd_Z_to_Z_19;
@@ -673,9 +661,9 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_19,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_7,"1",10);
         __sd_ne_7 = __gmpz_cmp(__sd_Z_to_Z_19,__sd_Z_cst_7);
+        if (! (__sd_ne_7 != 0)) pathcrawler_assert_exception("",4);
         __gmpz_clear(__sd_Z_to_Z_19);
         __gmpz_clear(__sd_Z_cst_7);
-        if (! (__sd_ne_7 != 0)) pathcrawler_assert_exception("",4);
       }
       if (Up_Separation > Down_Separation) {
         mpz_t __sd_Z_to_Z_20;
@@ -684,9 +672,9 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_20,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_8,"2",10);
         __sd_ne_8 = __gmpz_cmp(__sd_Z_to_Z_20,__sd_Z_cst_8);
+        if (! (__sd_ne_8 != 0)) pathcrawler_assert_exception("",35);
         __gmpz_clear(__sd_Z_to_Z_20);
         __gmpz_clear(__sd_Z_cst_8);
-        if (! (__sd_ne_8 != 0)) pathcrawler_assert_exception("",35);
       }
       if (Up_Separation < Down_Separation) {
         mpz_t __sd_Z_to_Z_21;
@@ -695,10 +683,22 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_21,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_9,"1",10);
         __sd_ne_9 = __gmpz_cmp(__sd_Z_to_Z_21,__sd_Z_cst_9);
+        if (! (__sd_ne_9 != 0)) pathcrawler_assert_exception("",8);
         __gmpz_clear(__sd_Z_to_Z_21);
         __gmpz_clear(__sd_Z_cst_9);
-        if (! (__sd_ne_9 != 0)) pathcrawler_assert_exception("",8);
       }
+      __gmpz_clear(__sd_Z_to_Z_0);
+      __gmpz_clear(__sd_Z_to_Z_1);
+      __gmpz_clear(__sd_Z_to_Z_3);
+      __gmpz_clear(__sd_Z_to_Z_4);
+      __gmpz_clear(__sd_Z_to_Z_6);
+      __gmpz_clear(__sd_Z_to_Z_7);
+      __gmpz_clear(__sd_Z_to_Z_9);
+      __gmpz_clear(__sd_Z_to_Z_10);
+      __gmpz_clear(__sd_Z_to_Z_12);
+      __gmpz_clear(__sd_Z_to_Z_13);
+      __gmpz_clear(__sd_Z_to_Z_15);
+      __gmpz_clear(__sd_Z_to_Z_16);
     }
     free(old_ptr_Positive_RA_Alt_Thresh);
     return alt_sep;

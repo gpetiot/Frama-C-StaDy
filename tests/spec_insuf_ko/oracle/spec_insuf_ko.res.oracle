@@ -65,7 +65,6 @@ void __sd_sort_mod_0(int *A, int n) {
     old_A = A;
     __gmpz_init_set_si(__sd_Z_to_Z_4,n);
     __sd_to_ctype_4 = __gmpz_get_ui(__sd_Z_to_Z_4);
-    __gmpz_clear(__sd_Z_to_Z_4);
     old_ptr_A = (int *)malloc(__sd_to_ctype_4 * (unsigned long)sizeof(int));
     __sd_iter_2 = 0;
     while (__sd_iter_2 < __sd_to_ctype_4) {
@@ -74,21 +73,22 @@ void __sd_sort_mod_0(int *A, int n) {
     }
     __gmpz_init_set_str(__sd_Z_cst_5,"0",10);
     __sd_to_ctype_5 = (int)__gmpz_get_si(__sd_Z_cst_5);
-    __gmpz_clear(__sd_Z_cst_5);
     __gmpz_init_set_si(__sd_Z_to_Z_5,n);
     __gmpz_init_set_str(__sd_Z_cst_6,"1",10);
     __gmpz_init(__sd_Z_sub_1);
     __gmpz_sub(__sd_Z_sub_1,__sd_Z_to_Z_5,__sd_Z_cst_6);
-    __gmpz_clear(__sd_Z_to_Z_5);
-    __gmpz_clear(__sd_Z_cst_6);
     __sd_to_ctype_6 = (int)__gmpz_get_si(__sd_Z_sub_1);
-    __gmpz_clear(__sd_Z_sub_1);
     __sd_iter_3 = __sd_to_ctype_5;
     while (__sd_iter_3 <= __sd_to_ctype_6) {
       *(A + __sd_iter_3) = nondet_sint("*(A + __sd_iter_3)");
       __sd_iter_3 ++;
     }
     free(old_ptr_A);
+    __gmpz_clear(__sd_Z_to_Z_4);
+    __gmpz_clear(__sd_Z_cst_5);
+    __gmpz_clear(__sd_Z_to_Z_5);
+    __gmpz_clear(__sd_Z_cst_6);
+    __gmpz_clear(__sd_Z_sub_1);
   }
   
 }
@@ -120,16 +120,12 @@ void sort(int *A, int n)
   __gmpz_init_set_si(__sd_Z_to_Z_0,n);
   __gmpz_init_set_str(__sd_Z_cst_0,"4",10);
   __sd_eq_0 = __gmpz_cmp(__sd_Z_to_Z_0,__sd_Z_cst_0);
-  __gmpz_clear(__sd_Z_to_Z_0);
-  __gmpz_clear(__sd_Z_cst_0);
   if (! (__sd_eq_0 == 0)) pathcrawler_assert_exception("28$",7);
   __gmpz_init_set_str(__sd_Z_cst_1,"0",10);
   __gmpz_init_set_si(__sd_Z_to_Z_1,n);
   __gmpz_init_set_str(__sd_Z_cst_2,"1",10);
   __gmpz_init(__sd_Z_sub_0);
   __gmpz_sub(__sd_Z_sub_0,__sd_Z_to_Z_1,__sd_Z_cst_2);
-  __gmpz_clear(__sd_Z_to_Z_1);
-  __gmpz_clear(__sd_Z_cst_2);
   __sd_valid_cmp_0 = __gmpz_cmp(__sd_Z_cst_1,__sd_Z_sub_0);
   if (__sd_valid_cmp_0 <= 0) {
     int __sd_valid_dim_0;
@@ -141,13 +137,10 @@ void sort(int *A, int n)
     __sd_valid_0 = __sd_valid_cmp_2 >= 0 && __sd_valid_cmp_1 < 0;
   }
   else __sd_valid_0 = 1;
-  __gmpz_clear(__sd_Z_cst_1);
-  __gmpz_clear(__sd_Z_sub_0);
   if (! __sd_valid_0) pathcrawler_assert_exception("28$",8);
   old_A = A;
   __gmpz_init_set_si(__sd_Z_to_Z_2,n);
   __sd_to_ctype_0 = __gmpz_get_ui(__sd_Z_to_Z_2);
-  __gmpz_clear(__sd_Z_to_Z_2);
   old_ptr_A = (int *)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(int));
   __sd_iter_0 = 0;
   while (__sd_iter_0 < __sd_to_ctype_0) {
@@ -155,6 +148,13 @@ void sort(int *A, int n)
     __sd_iter_0 ++;
   }
   old_n = n;
+  __gmpz_clear(__sd_Z_to_Z_0);
+  __gmpz_clear(__sd_Z_cst_0);
+  __gmpz_clear(__sd_Z_cst_1);
+  __gmpz_clear(__sd_Z_to_Z_1);
+  __gmpz_clear(__sd_Z_cst_2);
+  __gmpz_clear(__sd_Z_sub_0);
+  __gmpz_clear(__sd_Z_to_Z_2);
   {
     int c;
     int position;
@@ -194,7 +194,6 @@ void f(int *t, int k)
   old_t = t;
   __gmpz_init_set_si(__sd_Z_to_Z_3,k);
   __sd_to_ctype_3 = __gmpz_get_ui(__sd_Z_to_Z_3);
-  __gmpz_clear(__sd_Z_to_Z_3);
   old_ptr_t = (int *)malloc(__sd_to_ctype_3 * (unsigned long)sizeof(int));
   __sd_iter_1 = 0;
   while (__sd_iter_1 < __sd_to_ctype_3) {
@@ -202,6 +201,7 @@ void f(int *t, int k)
     __sd_iter_1 ++;
   }
   old_k = k;
+  __gmpz_clear(__sd_Z_to_Z_3);
   {
     call_sort: {
                  __sd_sort_mod_0(t,k);
@@ -214,12 +214,12 @@ void f(int *t, int k)
       int __sd_to_ctype_2;
       __gmpz_init_set_str(__sd_Z_cst_3,"0",10);
       __sd_to_ctype_1 = (int)__gmpz_get_si(__sd_Z_cst_3);
-      __gmpz_clear(__sd_Z_cst_3);
       __gmpz_init_set_str(__sd_Z_cst_4,"1",10);
       __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_cst_4);
-      __gmpz_clear(__sd_Z_cst_4);
       if (! (*(old_t + __sd_to_ctype_1) <= *(old_t + __sd_to_ctype_2))) 
         pathcrawler_assert_exception("28$",3);
+      __gmpz_clear(__sd_Z_cst_3);
+      __gmpz_clear(__sd_Z_cst_4);
     }
     free(old_ptr_t);
     return;

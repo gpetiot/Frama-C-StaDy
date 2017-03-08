@@ -407,7 +407,6 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
   old_f19 = f19;
   __gmpz_init_set_str(__sd_Z_cst_0,"1",10);
   __sd_to_ctype_0 = __gmpz_get_ui(__sd_Z_cst_0);
-  __gmpz_clear(__sd_Z_cst_0);
   old_ptr_f19 = (double **)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(double *));
   __sd_iter_0 = 0;
   while (__sd_iter_0 < __sd_to_ctype_0) {
@@ -420,10 +419,7 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
     __gmpz_init_set_str(__sd_Z_cst_2,"1",10);
     __gmpz_init(__sd_Z_add_0);
     __gmpz_add(__sd_Z_add_0,__sd_Z_cst_1,__sd_Z_cst_2);
-    __gmpz_clear(__sd_Z_cst_1);
-    __gmpz_clear(__sd_Z_cst_2);
     __sd_to_ctype_1 = __gmpz_get_ui(__sd_Z_add_0);
-    __gmpz_clear(__sd_Z_add_0);
     *(old_ptr_f19 + __sd_iter_0) = (double *)malloc(__sd_to_ctype_1 * (unsigned long)sizeof(double));
     __sd_iter_1 = 0;
     while (__sd_iter_1 < __sd_to_ctype_1) {
@@ -431,11 +427,13 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
       __sd_iter_1 ++;
     }
     __sd_iter_0 ++;
+    __gmpz_clear(__sd_Z_cst_1);
+    __gmpz_clear(__sd_Z_cst_2);
+    __gmpz_clear(__sd_Z_add_0);
   }
   old_f20 = f20;
   __gmpz_init_set_str(__sd_Z_cst_4,"1",10);
   __sd_to_ctype_3 = __gmpz_get_ui(__sd_Z_cst_4);
-  __gmpz_clear(__sd_Z_cst_4);
   old_ptr_f20 = (double **)malloc(__sd_to_ctype_3 * (unsigned long)sizeof(double *));
   __sd_iter_3 = 0;
   while (__sd_iter_3 < __sd_to_ctype_3) {
@@ -448,10 +446,7 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
     __gmpz_init_set_str(__sd_Z_cst_6,"1",10);
     __gmpz_init(__sd_Z_add_1);
     __gmpz_add(__sd_Z_add_1,__sd_Z_cst_5,__sd_Z_cst_6);
-    __gmpz_clear(__sd_Z_cst_5);
-    __gmpz_clear(__sd_Z_cst_6);
     __sd_to_ctype_4 = __gmpz_get_ui(__sd_Z_add_1);
-    __gmpz_clear(__sd_Z_add_1);
     *(old_ptr_f20 + __sd_iter_3) = (double *)malloc(__sd_to_ctype_4 * (unsigned long)sizeof(double));
     __sd_iter_4 = 0;
     while (__sd_iter_4 < __sd_to_ctype_4) {
@@ -459,7 +454,12 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
       __sd_iter_4 ++;
     }
     __sd_iter_3 ++;
+    __gmpz_clear(__sd_Z_cst_5);
+    __gmpz_clear(__sd_Z_cst_6);
+    __gmpz_clear(__sd_Z_add_1);
   }
+  __gmpz_clear(__sd_Z_cst_0);
+  __gmpz_clear(__sd_Z_cst_4);
   {
     T3 V16;
     T4 V17;
@@ -485,9 +485,9 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
           __gmpz_init_set_si(__sd_Z_to_Z_0,V22);
           __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
           __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_0,__sd_Z_cst_8);
+          if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",25);
           __gmpz_clear(__sd_Z_to_Z_0);
           __gmpz_clear(__sd_Z_cst_8);
-          if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",25);
           ;
         }
       }
@@ -500,7 +500,6 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
     unsigned long __sd_iter_5;
     __gmpz_init_set_str(__sd_Z_cst_3,"1",10);
     __sd_to_ctype_2 = __gmpz_get_ui(__sd_Z_cst_3);
-    __gmpz_clear(__sd_Z_cst_3);
     __sd_iter_2 = 0;
     while (__sd_iter_2 < __sd_to_ctype_2) {
       free(*(old_ptr_f19 + __sd_iter_2));
@@ -509,13 +508,14 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
     free(old_ptr_f19);
     __gmpz_init_set_str(__sd_Z_cst_7,"1",10);
     __sd_to_ctype_5 = __gmpz_get_ui(__sd_Z_cst_7);
-    __gmpz_clear(__sd_Z_cst_7);
     __sd_iter_5 = 0;
     while (__sd_iter_5 < __sd_to_ctype_5) {
       free(*(old_ptr_f20 + __sd_iter_5));
       __sd_iter_5 ++;
     }
     free(old_ptr_f20);
+    __gmpz_clear(__sd_Z_cst_3);
+    __gmpz_clear(__sd_Z_cst_7);
     return;
   }
 }

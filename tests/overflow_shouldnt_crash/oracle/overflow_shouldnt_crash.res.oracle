@@ -59,13 +59,13 @@ void f(int x)
         __gmpz_init_set_str(__sd_Z_cst_0,"1",10);
         __gmpz_init(__sd_Z_add_0);
         __gmpz_add(__sd_Z_add_0,__sd_Z_to_Z_0,__sd_Z_cst_0);
-        __gmpz_clear(__sd_Z_to_Z_0);
-        __gmpz_clear(__sd_Z_cst_0);
         __gmpz_init_set_str(__sd_Z_cst_1,"0",10);
         __sd_gt_0 = __gmpz_cmp(__sd_Z_add_0,__sd_Z_cst_1);
+        if (! (__sd_gt_0 > 0)) pathcrawler_assert_exception("",0);
+        __gmpz_clear(__sd_Z_to_Z_0);
+        __gmpz_clear(__sd_Z_cst_0);
         __gmpz_clear(__sd_Z_add_0);
         __gmpz_clear(__sd_Z_cst_1);
-        if (! (__sd_gt_0 > 0)) pathcrawler_assert_exception("",0);
         ;
       }
     return;
