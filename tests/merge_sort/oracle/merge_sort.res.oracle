@@ -61,17 +61,17 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   mpz_t __sd_Z_to_Z_0;
   mpz_t __sd_Z_cst_0;
   mpz_t __sd_Z_sub_0;
-  int __sd_valid_cmp_0;
+  int __sd_to_ctype_0;
   int __sd_valid_0;
   mpz_t __sd_Z_to_Z_1;
   mpz_t __sd_Z_cst_1;
   mpz_t __sd_Z_sub_1;
-  int __sd_valid_cmp_3;
+  int __sd_to_ctype_1;
   int __sd_valid_1;
   int *old_A;
   int *old_ptr_A;
   mpz_t __sd_Z_to_Z_2;
-  unsigned long __sd_to_ctype_0;
+  unsigned long __sd_to_ctype_2;
   unsigned long __sd_iter_0;
   int old_iLeft;
   int old_iRight;
@@ -79,21 +79,17 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   int *old_B;
   int *old_ptr_B;
   mpz_t __sd_Z_to_Z_3;
-  unsigned long __sd_to_ctype_1;
+  unsigned long __sd_to_ctype_3;
   unsigned long __sd_iter_1;
   __gmpz_init_set_si(__sd_Z_to_Z_0,iRight);
   __gmpz_init_set_str(__sd_Z_cst_0,"1",10);
   __gmpz_init(__sd_Z_sub_0);
   __gmpz_sub(__sd_Z_sub_0,__sd_Z_to_Z_0,__sd_Z_cst_0);
-  __sd_valid_cmp_0 = __gmpz_cmp_ui(__sd_Z_sub_0,iLeft);
-  if (__sd_valid_cmp_0 >= 0) {
+  __sd_to_ctype_0 = (int)__gmpz_get_si(__sd_Z_sub_0);
+  if (iLeft <= __sd_to_ctype_0) {
     int __sd_valid_dim_0;
-    int __sd_valid_cmp_1;
-    int __sd_valid_cmp_2;
     __sd_valid_dim_0 = pathcrawler_dimension(A);
-    __sd_valid_cmp_1 = __gmpz_cmp_ui(__sd_Z_sub_0,__sd_valid_dim_0);
-    __sd_valid_cmp_2 = __gmpz_cmp_ui(__sd_Z_sub_0,0);
-    __sd_valid_0 = __sd_valid_cmp_2 >= 0 && __sd_valid_cmp_1 < 0;
+    __sd_valid_0 = __sd_to_ctype_0 >= 0 && __sd_valid_dim_0 > __sd_to_ctype_0;
   }
   else __sd_valid_0 = 1;
   if (! __sd_valid_0) pathcrawler_assert_exception("",23);
@@ -101,24 +97,20 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   __gmpz_init_set_str(__sd_Z_cst_1,"1",10);
   __gmpz_init(__sd_Z_sub_1);
   __gmpz_sub(__sd_Z_sub_1,__sd_Z_to_Z_1,__sd_Z_cst_1);
-  __sd_valid_cmp_3 = __gmpz_cmp_ui(__sd_Z_sub_1,iLeft);
-  if (__sd_valid_cmp_3 >= 0) {
+  __sd_to_ctype_1 = (int)__gmpz_get_si(__sd_Z_sub_1);
+  if (iLeft <= __sd_to_ctype_1) {
     int __sd_valid_dim_1;
-    int __sd_valid_cmp_4;
-    int __sd_valid_cmp_5;
     __sd_valid_dim_1 = pathcrawler_dimension(B);
-    __sd_valid_cmp_4 = __gmpz_cmp_ui(__sd_Z_sub_1,__sd_valid_dim_1);
-    __sd_valid_cmp_5 = __gmpz_cmp_ui(__sd_Z_sub_1,0);
-    __sd_valid_1 = __sd_valid_cmp_5 >= 0 && __sd_valid_cmp_4 < 0;
+    __sd_valid_1 = __sd_to_ctype_1 >= 0 && __sd_valid_dim_1 > __sd_to_ctype_1;
   }
   else __sd_valid_1 = 1;
   if (! __sd_valid_1) pathcrawler_assert_exception("",24);
   old_A = A;
   __gmpz_init_set_si(__sd_Z_to_Z_2,iRight);
-  __sd_to_ctype_0 = __gmpz_get_ui(__sd_Z_to_Z_2);
-  old_ptr_A = (int *)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(int));
+  __sd_to_ctype_2 = __gmpz_get_ui(__sd_Z_to_Z_2);
+  old_ptr_A = (int *)malloc(__sd_to_ctype_2 * (unsigned long)sizeof(int));
   __sd_iter_0 = 0;
-  while (__sd_iter_0 < __sd_to_ctype_0) {
+  while (__sd_iter_0 < __sd_to_ctype_2) {
     *(old_ptr_A + __sd_iter_0) = *(A + __sd_iter_0);
     __sd_iter_0 ++;
   }
@@ -127,10 +119,10 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
   old_iEnd = iEnd;
   old_B = B;
   __gmpz_init_set_si(__sd_Z_to_Z_3,iEnd);
-  __sd_to_ctype_1 = __gmpz_get_ui(__sd_Z_to_Z_3);
-  old_ptr_B = (int *)malloc(__sd_to_ctype_1 * (unsigned long)sizeof(int));
+  __sd_to_ctype_3 = __gmpz_get_ui(__sd_Z_to_Z_3);
+  old_ptr_B = (int *)malloc(__sd_to_ctype_3 * (unsigned long)sizeof(int));
   __sd_iter_1 = 0;
-  while (__sd_iter_1 < __sd_to_ctype_1) {
+  while (__sd_iter_1 < __sd_to_ctype_3) {
     *(old_ptr_B + __sd_iter_1) = *(B + __sd_iter_1);
     __sd_iter_1 ++;
   }
@@ -304,77 +296,73 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
 void CopyArray(int *A, int *B, int n)
 {
   mpz_t __sd_Z_cst_2;
+  int __sd_to_ctype_4;
   mpz_t __sd_Z_to_Z_20;
   mpz_t __sd_Z_cst_3;
   mpz_t __sd_Z_sub_10;
-  int __sd_valid_cmp_6;
+  int __sd_to_ctype_5;
   int __sd_valid_2;
   mpz_t __sd_Z_cst_4;
+  int __sd_to_ctype_6;
   mpz_t __sd_Z_to_Z_21;
   mpz_t __sd_Z_cst_5;
   mpz_t __sd_Z_sub_11;
-  int __sd_valid_cmp_9;
+  int __sd_to_ctype_7;
   int __sd_valid_3;
   int *old_A;
   int *old_ptr_A;
   mpz_t __sd_Z_to_Z_22;
-  unsigned long __sd_to_ctype_2;
+  unsigned long __sd_to_ctype_8;
   unsigned long __sd_iter_2;
   int *old_B;
   int *old_ptr_B;
   mpz_t __sd_Z_to_Z_23;
-  unsigned long __sd_to_ctype_3;
+  unsigned long __sd_to_ctype_9;
   unsigned long __sd_iter_3;
   int old_n;
   __gmpz_init_set_str(__sd_Z_cst_2,"0",10);
+  __sd_to_ctype_4 = (int)__gmpz_get_si(__sd_Z_cst_2);
   __gmpz_init_set_si(__sd_Z_to_Z_20,n);
   __gmpz_init_set_str(__sd_Z_cst_3,"1",10);
   __gmpz_init(__sd_Z_sub_10);
   __gmpz_sub(__sd_Z_sub_10,__sd_Z_to_Z_20,__sd_Z_cst_3);
-  __sd_valid_cmp_6 = __gmpz_cmp(__sd_Z_cst_2,__sd_Z_sub_10);
-  if (__sd_valid_cmp_6 <= 0) {
+  __sd_to_ctype_5 = (int)__gmpz_get_si(__sd_Z_sub_10);
+  if (__sd_to_ctype_4 <= __sd_to_ctype_5) {
     int __sd_valid_dim_2;
-    int __sd_valid_cmp_7;
-    int __sd_valid_cmp_8;
     __sd_valid_dim_2 = pathcrawler_dimension(A);
-    __sd_valid_cmp_7 = __gmpz_cmp_ui(__sd_Z_sub_10,__sd_valid_dim_2);
-    __sd_valid_cmp_8 = __gmpz_cmp_ui(__sd_Z_sub_10,0);
-    __sd_valid_2 = __sd_valid_cmp_8 >= 0 && __sd_valid_cmp_7 < 0;
+    __sd_valid_2 = __sd_to_ctype_5 >= 0 && __sd_valid_dim_2 > __sd_to_ctype_5;
   }
   else __sd_valid_2 = 1;
   if (! __sd_valid_2) pathcrawler_assert_exception("",14);
   __gmpz_init_set_str(__sd_Z_cst_4,"0",10);
+  __sd_to_ctype_6 = (int)__gmpz_get_si(__sd_Z_cst_4);
   __gmpz_init_set_si(__sd_Z_to_Z_21,n);
   __gmpz_init_set_str(__sd_Z_cst_5,"1",10);
   __gmpz_init(__sd_Z_sub_11);
   __gmpz_sub(__sd_Z_sub_11,__sd_Z_to_Z_21,__sd_Z_cst_5);
-  __sd_valid_cmp_9 = __gmpz_cmp(__sd_Z_cst_4,__sd_Z_sub_11);
-  if (__sd_valid_cmp_9 <= 0) {
+  __sd_to_ctype_7 = (int)__gmpz_get_si(__sd_Z_sub_11);
+  if (__sd_to_ctype_6 <= __sd_to_ctype_7) {
     int __sd_valid_dim_3;
-    int __sd_valid_cmp_10;
-    int __sd_valid_cmp_11;
     __sd_valid_dim_3 = pathcrawler_dimension(B);
-    __sd_valid_cmp_10 = __gmpz_cmp_ui(__sd_Z_sub_11,__sd_valid_dim_3);
-    __sd_valid_cmp_11 = __gmpz_cmp_ui(__sd_Z_sub_11,0);
-    __sd_valid_3 = __sd_valid_cmp_11 >= 0 && __sd_valid_cmp_10 < 0;
+    __sd_valid_3 = __sd_to_ctype_7 >= 0 && __sd_valid_dim_3 > __sd_to_ctype_7;
   }
   else __sd_valid_3 = 1;
   if (! __sd_valid_3) pathcrawler_assert_exception("",12);
   old_A = A;
   __gmpz_init_set_si(__sd_Z_to_Z_22,n);
-  __sd_to_ctype_2 = __gmpz_get_ui(__sd_Z_to_Z_22);
-  old_ptr_A = (int *)malloc(__sd_to_ctype_2 * (unsigned long)sizeof(int));
+  __sd_to_ctype_8 = __gmpz_get_ui(__sd_Z_to_Z_22);
+  old_ptr_A = (int *)malloc(__sd_to_ctype_8 * (unsigned long)sizeof(int));
   __sd_iter_2 = 0;
-  while (__sd_iter_2 < __sd_to_ctype_2) {
+  while (__sd_iter_2 < __sd_to_ctype_8) {
     *(old_ptr_A + __sd_iter_2) = *(A + __sd_iter_2);
     __sd_iter_2 ++;
   }
   old_B = B;
   __gmpz_init_set_si(__sd_Z_to_Z_23,n);
-  __sd_to_ctype_3 = __gmpz_get_ui(__sd_Z_to_Z_23);
-  old_ptr_B = (int *)malloc(__sd_to_ctype_3 * (unsigned long)sizeof(int));
+  __sd_to_ctype_9 = __gmpz_get_ui(__sd_Z_to_Z_23);
+  old_ptr_B = (int *)malloc(__sd_to_ctype_9 * (unsigned long)sizeof(int));
   __sd_iter_3 = 0;
-  while (__sd_iter_3 < __sd_to_ctype_3) {
+  while (__sd_iter_3 < __sd_to_ctype_9) {
     *(old_ptr_B + __sd_iter_3) = *(B + __sd_iter_3);
     __sd_iter_3 ++;
   }
@@ -472,78 +460,74 @@ int min(int x, int y)
 void BottomUpSort(int n, int *A, int *B)
 {
   mpz_t __sd_Z_cst_8;
+  int __sd_to_ctype_10;
   mpz_t __sd_Z_to_Z_30;
   mpz_t __sd_Z_cst_9;
   mpz_t __sd_Z_sub_14;
-  int __sd_valid_cmp_12;
+  int __sd_to_ctype_11;
   int __sd_valid_4;
   mpz_t __sd_Z_cst_10;
+  int __sd_to_ctype_12;
   mpz_t __sd_Z_to_Z_31;
   mpz_t __sd_Z_cst_11;
   mpz_t __sd_Z_sub_15;
-  int __sd_valid_cmp_15;
+  int __sd_to_ctype_13;
   int __sd_valid_5;
   int old_n;
   int *old_A;
   int *old_ptr_A;
   mpz_t __sd_Z_to_Z_32;
-  unsigned long __sd_to_ctype_4;
+  unsigned long __sd_to_ctype_14;
   unsigned long __sd_iter_4;
   int *old_B;
   int *old_ptr_B;
   mpz_t __sd_Z_to_Z_33;
-  unsigned long __sd_to_ctype_5;
+  unsigned long __sd_to_ctype_15;
   unsigned long __sd_iter_5;
   __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
+  __sd_to_ctype_10 = (int)__gmpz_get_si(__sd_Z_cst_8);
   __gmpz_init_set_si(__sd_Z_to_Z_30,n);
   __gmpz_init_set_str(__sd_Z_cst_9,"1",10);
   __gmpz_init(__sd_Z_sub_14);
   __gmpz_sub(__sd_Z_sub_14,__sd_Z_to_Z_30,__sd_Z_cst_9);
-  __sd_valid_cmp_12 = __gmpz_cmp(__sd_Z_cst_8,__sd_Z_sub_14);
-  if (__sd_valid_cmp_12 <= 0) {
+  __sd_to_ctype_11 = (int)__gmpz_get_si(__sd_Z_sub_14);
+  if (__sd_to_ctype_10 <= __sd_to_ctype_11) {
     int __sd_valid_dim_4;
-    int __sd_valid_cmp_13;
-    int __sd_valid_cmp_14;
     __sd_valid_dim_4 = pathcrawler_dimension(A);
-    __sd_valid_cmp_13 = __gmpz_cmp_ui(__sd_Z_sub_14,__sd_valid_dim_4);
-    __sd_valid_cmp_14 = __gmpz_cmp_ui(__sd_Z_sub_14,0);
-    __sd_valid_4 = __sd_valid_cmp_14 >= 0 && __sd_valid_cmp_13 < 0;
+    __sd_valid_4 = __sd_to_ctype_11 >= 0 && __sd_valid_dim_4 > __sd_to_ctype_11;
   }
   else __sd_valid_4 = 1;
   if (! __sd_valid_4) pathcrawler_assert_exception("",9);
   __gmpz_init_set_str(__sd_Z_cst_10,"0",10);
+  __sd_to_ctype_12 = (int)__gmpz_get_si(__sd_Z_cst_10);
   __gmpz_init_set_si(__sd_Z_to_Z_31,n);
   __gmpz_init_set_str(__sd_Z_cst_11,"1",10);
   __gmpz_init(__sd_Z_sub_15);
   __gmpz_sub(__sd_Z_sub_15,__sd_Z_to_Z_31,__sd_Z_cst_11);
-  __sd_valid_cmp_15 = __gmpz_cmp(__sd_Z_cst_10,__sd_Z_sub_15);
-  if (__sd_valid_cmp_15 <= 0) {
+  __sd_to_ctype_13 = (int)__gmpz_get_si(__sd_Z_sub_15);
+  if (__sd_to_ctype_12 <= __sd_to_ctype_13) {
     int __sd_valid_dim_5;
-    int __sd_valid_cmp_16;
-    int __sd_valid_cmp_17;
     __sd_valid_dim_5 = pathcrawler_dimension(B);
-    __sd_valid_cmp_16 = __gmpz_cmp_ui(__sd_Z_sub_15,__sd_valid_dim_5);
-    __sd_valid_cmp_17 = __gmpz_cmp_ui(__sd_Z_sub_15,0);
-    __sd_valid_5 = __sd_valid_cmp_17 >= 0 && __sd_valid_cmp_16 < 0;
+    __sd_valid_5 = __sd_to_ctype_13 >= 0 && __sd_valid_dim_5 > __sd_to_ctype_13;
   }
   else __sd_valid_5 = 1;
   if (! __sd_valid_5) pathcrawler_assert_exception("",19);
   old_n = n;
   old_A = A;
   __gmpz_init_set_si(__sd_Z_to_Z_32,n);
-  __sd_to_ctype_4 = __gmpz_get_ui(__sd_Z_to_Z_32);
-  old_ptr_A = (int *)malloc(__sd_to_ctype_4 * (unsigned long)sizeof(int));
+  __sd_to_ctype_14 = __gmpz_get_ui(__sd_Z_to_Z_32);
+  old_ptr_A = (int *)malloc(__sd_to_ctype_14 * (unsigned long)sizeof(int));
   __sd_iter_4 = 0;
-  while (__sd_iter_4 < __sd_to_ctype_4) {
+  while (__sd_iter_4 < __sd_to_ctype_14) {
     *(old_ptr_A + __sd_iter_4) = *(A + __sd_iter_4);
     __sd_iter_4 ++;
   }
   old_B = B;
   __gmpz_init_set_si(__sd_Z_to_Z_33,n);
-  __sd_to_ctype_5 = __gmpz_get_ui(__sd_Z_to_Z_33);
-  old_ptr_B = (int *)malloc(__sd_to_ctype_5 * (unsigned long)sizeof(int));
+  __sd_to_ctype_15 = __gmpz_get_ui(__sd_Z_to_Z_33);
+  old_ptr_B = (int *)malloc(__sd_to_ctype_15 * (unsigned long)sizeof(int));
   __sd_iter_5 = 0;
-  while (__sd_iter_5 < __sd_to_ctype_5) {
+  while (__sd_iter_5 < __sd_to_ctype_15) {
     *(old_ptr_B + __sd_iter_5) = *(B + __sd_iter_5);
     __sd_iter_5 ++;
   }
@@ -814,30 +798,30 @@ void merge_sort(int *table, int l, int *ret)
   int *old_table;
   int *old_ptr_table;
   mpz_t __sd_Z_to_Z_57;
-  unsigned long __sd_to_ctype_8;
+  unsigned long __sd_to_ctype_18;
   unsigned long __sd_iter_6;
   int old_l;
   int *old_ret;
   int *old_ptr_ret;
   mpz_t __sd_Z_to_Z_58;
-  unsigned long __sd_to_ctype_9;
+  unsigned long __sd_to_ctype_19;
   unsigned long __sd_iter_7;
   old_table = table;
   __gmpz_init_set_si(__sd_Z_to_Z_57,l);
-  __sd_to_ctype_8 = __gmpz_get_ui(__sd_Z_to_Z_57);
-  old_ptr_table = (int *)malloc(__sd_to_ctype_8 * (unsigned long)sizeof(int));
+  __sd_to_ctype_18 = __gmpz_get_ui(__sd_Z_to_Z_57);
+  old_ptr_table = (int *)malloc(__sd_to_ctype_18 * (unsigned long)sizeof(int));
   __sd_iter_6 = 0;
-  while (__sd_iter_6 < __sd_to_ctype_8) {
+  while (__sd_iter_6 < __sd_to_ctype_18) {
     *(old_ptr_table + __sd_iter_6) = *(table + __sd_iter_6);
     __sd_iter_6 ++;
   }
   old_l = l;
   old_ret = ret;
   __gmpz_init_set_si(__sd_Z_to_Z_58,l);
-  __sd_to_ctype_9 = __gmpz_get_ui(__sd_Z_to_Z_58);
-  old_ptr_ret = (int *)malloc(__sd_to_ctype_9 * (unsigned long)sizeof(int));
+  __sd_to_ctype_19 = __gmpz_get_ui(__sd_Z_to_Z_58);
+  old_ptr_ret = (int *)malloc(__sd_to_ctype_19 * (unsigned long)sizeof(int));
   __sd_iter_7 = 0;
-  while (__sd_iter_7 < __sd_to_ctype_9) {
+  while (__sd_iter_7 < __sd_to_ctype_19) {
     *(old_ptr_ret + __sd_iter_7) = *(ret + __sd_iter_7);
     __sd_iter_7 ++;
   }
@@ -864,19 +848,19 @@ void merge_sort(int *table, int l, int *ret)
         __sd_forall_cmp_0 = __gmpz_cmp(__q_i,__sd_Z_sub_24);
         while (__sd_forall_cmp_0 < 0 && __sd_forall_0) {
           mpz_t __sd_Z_lval_0;
-          int __sd_to_ctype_6;
+          int __sd_to_ctype_16;
           mpz_t __sd_Z_lval_1;
           mpz_t __sd_Z_cst_26;
           mpz_t __sd_Z_add_4;
-          int __sd_to_ctype_7;
+          int __sd_to_ctype_17;
           __gmpz_init_set(__sd_Z_lval_0,__q_i);
-          __sd_to_ctype_6 = (int)__gmpz_get_si(__sd_Z_lval_0);
+          __sd_to_ctype_16 = (int)__gmpz_get_si(__sd_Z_lval_0);
           __gmpz_init_set(__sd_Z_lval_1,__q_i);
           __gmpz_init_set_str(__sd_Z_cst_26,"1",10);
           __gmpz_init(__sd_Z_add_4);
           __gmpz_add(__sd_Z_add_4,__sd_Z_lval_1,__sd_Z_cst_26);
-          __sd_to_ctype_7 = (int)__gmpz_get_si(__sd_Z_add_4);
-          __sd_forall_0 = *(old_ret + __sd_to_ctype_6) <= *(old_ret + __sd_to_ctype_7);
+          __sd_to_ctype_17 = (int)__gmpz_get_si(__sd_Z_add_4);
+          __sd_forall_0 = *(old_ret + __sd_to_ctype_16) <= *(old_ret + __sd_to_ctype_17);
           __gmpz_add_ui(__q_i,__q_i,1);
           __sd_forall_cmp_0 = __gmpz_cmp(__q_i,__sd_Z_sub_24);
           __gmpz_clear(__sd_Z_lval_0);
