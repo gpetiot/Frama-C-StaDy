@@ -464,8 +464,6 @@ let compute_constraints() =
   in
   let constraints = List.fold_left f [] typically_preds in
   let constraints = List.fold_left f constraints requires_preds in
-  let dkey = Options.dkey_input_domain in
-  Options.feedback ~dkey "non-default behaviors ignored!";
   let formals = Kernel_function.get_formals kf in
   let create_input d v = input_from_type d v.vtype (PLCVar v) false in
   let constraints = List.fold_left create_input constraints formals in

@@ -81,10 +81,12 @@ let compute_props ?(props=selected_props()) ?swd () =
 	   match stmt.skind with
 	   | Instr(Call _) | Loop _ -> stmt.sid :: acc
 	   | _ ->
-	      Options.feedback
-		~once:true "label %s does not refer to a Call nor a Loop" l;
+	      Options.failure ~current:true ~once:true
+		"label %s does not refer to a Call nor a Loop" l;
 	     acc
-	 with _ -> Options.feedback ~once:true "label %s does not exist" l; acc
+	 with _ ->
+	   Options.failure ~current:true ~once:true "label %s not found" l;
+	   acc
        in
        List.fold_left on_label [] labels
   in

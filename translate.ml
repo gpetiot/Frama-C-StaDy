@@ -65,8 +65,8 @@ let rec type_of_pointed = function
   | Ctype (TArray (ty,_,_,_)) -> Ctype ty
   | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
   | ty ->
-     Options.feedback
-       ~current:true "unsupported type %a" Printer.pp_logic_type ty;
+     Options.feedback ~current:true ~once:true
+       "unsupported type %a" Printer.pp_logic_type ty;
     raise Unsupported
 
 module Env = struct
@@ -942,9 +942,7 @@ class gather_insertions props swd = object(self)
       | TPtr (ty, _) -> Cil.stripConstLocalType ty
       | TArray (ty, _, _, _) -> Cil.stripConstLocalType ty
       | TNamed (ty, _) -> dig_type ty.ttype
-      | ty ->
-	 Options.feedback ~current:true "dig_type %a" Printer.pp_typ ty;
-	 raise Unsupported
+      | _ -> raise Unreachable
     in
     let rec strip_const = function
       | TPtr (t, att) -> Cil.stripConstLocalType (TPtr(strip_const t, att))
