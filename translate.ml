@@ -1346,11 +1346,10 @@ let translate props swd precond_fname instru_fname =
   and translated_props = gatherer#translated_properties()
   and new_globals = gatherer#get_new_globals()
   and new_init_globals = gatherer#get_new_init_globals() in
-  let add_global = Input_domain.add_global in
-  let add_init_global = Input_domain.add_init_global in 
-  let constraints = List.fold_left add_global constraints new_globals in
   let constraints =
-    List.fold_left add_init_global constraints new_init_globals in
+    List.fold_left Input_domain.add_global constraints new_globals in
+  let constraints =
+    List.fold_left Input_domain.add_init_global constraints new_init_globals in
   Input_domain.translate precond_fname constraints;
   let old_unicode = Kernel.Unicode.get() in
   Kernel.Unicode.set false;
