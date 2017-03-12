@@ -33,8 +33,6 @@ let mk_loop e (v, s, c) =
   let b = {b with blocals = v} in
   Cil.mkStmt (Loop ([], {b with bstmts = i :: b.bstmts}, loc, None, None))
 
-let mk_string s = Cil.mkString ~loc s
-
 let rec typename = function
   | TInt (ikind, _) ->
      begin
@@ -1250,7 +1248,7 @@ class gather_insertions props swd = object(self)
 	 let e = Cil.new_exp ~loc (BinOp(op, e_op1, (Cil.evar it), ty)) in
 	 let y = Mem e, NoOffset in
 	 Cil_printer.pp_lval Format.str_formatter y;
-	 let str = mk_string (Format.flush_str_formatter()) in
+	 let str = Cil.mkString t.term_loc (Format.flush_str_formatter()) in
 	 let i_f_1 = self#cnondet (Cil.typeOfLval y) y str in
 	 let plus_one = Cil.mkBinOp ~loc PlusA (Cil.evar it) one in
 	 let i_f_2 = mk_affect (Cil.var it) plus_one in
@@ -1260,7 +1258,7 @@ class gather_insertions props swd = object(self)
 	 let ty = match t.term_type with Ctype x -> x | _-> raise Unreachable in
 	 let env, e = self#translate_lval lv in
 	 Cil_printer.pp_term_lval Format.str_formatter lv;
-	 let str = mk_string (Format.flush_str_formatter()) in
+	 let str = Cil.mkString t.term_loc (Format.flush_str_formatter()) in
 	 let aff = self#cnondet ty e str in
 	 Env.merge env (Env.merge ([], [aff], []) ret)
       | _ ->
@@ -1312,7 +1310,7 @@ class gather_insertions props swd = object(self)
 	 s
        )
 	 
-    | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,_))
+    | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,loc))
 	 when List.mem stmt.sid swd || List.mem fct_varinfo.vname sim_funcs ->
        let kf = Globals.Functions.get fct_varinfo in
        let formals = Kernel_function.get_formals kf in
@@ -1357,9 +1355,8 @@ class gather_insertions props swd = object(self)
 	 | Some r ->
 	    let ty = Cil.typeOfLval r in
 	    let retres = my_varinfo ty "__retres" in
-	    let aff = self#cnondet ty (Cil.var retres)
-	      (mk_string ("\\return of function '" ^ fct_varinfo.vname ^ "'"))
-	    in
+	    let str = "\\return of function '" ^ fct_varinfo.vname ^ "'" in
+	    let aff = self#cnondet ty (Cil.var retres)(Cil.mkString ~loc str) in
 	    ([retres], [aff], []), ([], [mk_ret (Cil.evar retres)], [])
 	 | None -> Env.empty, Env.empty
        in
