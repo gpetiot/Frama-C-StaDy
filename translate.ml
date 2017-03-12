@@ -604,96 +604,35 @@ class gather_insertions props swd = object(self)
 
   method private translate_valid_ptr_range pointer min_off max_off =
     let env1, x' = self#translate_term pointer in
-    let env2, low_o = self#translate_term min_off in
-    let env3, up_o = self#translate_term max_off in
+    let env2, low_o = self#as_c_type Cil.intType min_off in
+    let env3, up_o = self#as_c_type Cil.intType max_off in
     let ret = self#fresh_bool_varinfo "valid" in
     let dim = self#fresh_varinfo Cil.intType "valid_dim" in
-    let env_before, env_then, cond =
-      match min_off.term_type, max_off.term_type with
-      | Linteger, Linteger ->
-  	 let nonempty_set = self#fresh_bool_varinfo "valid_cmp" in
-  	 let i_9 = self#ccmp (Cil.var nonempty_set) low_o up_o in
-  	 let cond = cmp Rle (Cil.evar nonempty_set) zero in
-  	 let i_2 = self#cpc_dim (Cil.var dim) x' in
-  	 let cmp_dim_off = self#fresh_bool_varinfo "valid_cmp" in
-  	 let i_4 = self#ccmp_ui (Cil.var cmp_dim_off) up_o (Cil.evar dim) in
-  	 let cmp_off_zero = self#fresh_bool_varinfo "valid_cmp" in
-  	 let i_6 = self#ccmp_ui (Cil.var cmp_off_zero) up_o zero in
-  	 let e1 = cmp Rge (Cil.evar cmp_off_zero) zero in
-  	 let e2 = cmp Rlt (Cil.evar cmp_dim_off) zero in
-	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_7 = mk_affect (Cil.var ret) e_binop in
-  	 ([nonempty_set], [i_9], []),
-	 ([dim; cmp_dim_off; cmp_off_zero], [i_2; i_4; i_6; i_7], []),
-	 cond
-      | Linteger, Ctype (TInt _) ->
-  	 let nonempty = self#fresh_bool_varinfo "valid_cmp" in
-  	 let i_cond = self#ccmp_si (Cil.var nonempty) low_o up_o in
-  	 let cond = cmp Rle (Cil.evar nonempty) zero in
-  	 let i_2 = self#cpc_dim (Cil.var dim) x' in
-  	 let e1 = cmp Rge up_o zero in
-  	 let e2 = cmp Rgt (Cil.evar dim) up_o in
-	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_7 = mk_affect (Cil.var ret) e_binop in
-  	 ([nonempty], [i_cond], []), ([dim], [i_2; i_7], []), cond
-      | Ctype (TInt _), Linteger ->
-	 let nonempty = self#fresh_bool_varinfo "valid_cmp" in
-  	 let i_cond = self#ccmp_ui (Cil.var nonempty) up_o low_o in
-  	 let cond = cmp Rge (Cil.evar nonempty) zero in
-  	 let i_2 = self#cpc_dim (Cil.var dim) x' in
-  	 let cmp_dim_off = self#fresh_bool_varinfo "valid_cmp" in
-  	 let i_4 = self#ccmp_ui (Cil.var cmp_dim_off) up_o (Cil.evar dim) in
-  	 let cmp_off_zero = self#fresh_bool_varinfo "valid_cmp" in
-  	 let i_6 = self#ccmp_ui (Cil.var cmp_off_zero) up_o zero in
-  	 let e1 = cmp Rge (Cil.evar cmp_off_zero) zero in
-  	 let e2 = cmp Rlt (Cil.evar cmp_dim_off) zero in
-	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_7 = mk_affect (Cil.var ret) e_binop in
-  	 ([nonempty], [i_cond], []),
-	 ([dim; cmp_dim_off; cmp_off_zero], [i_2; i_4; i_6; i_7], []),
-	 cond
-      | Ctype (TInt _), Ctype (TInt _) ->
-  	 let i_2 = self#cpc_dim (Cil.var dim) x' in
-  	 let e1 = cmp Rge up_o zero in
-  	 let e2 = cmp Rgt (Cil.evar dim) up_o in
-	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_3 = mk_affect (Cil.var ret) e_binop in
-	 Env.empty, ([dim], [i_2; i_3], []), cmp Rle low_o up_o
-      | _ -> raise Unreachable
-    in
+    let cond = cmp Rle low_o up_o in
+    let i_2 = self#cpc_dim (Cil.var dim) x' in
+    let e1 = cmp Rge up_o zero in
+    let e2 = cmp Rgt (Cil.evar dim) up_o in
+    let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
+    let i_3 = mk_affect (Cil.var ret) e_binop in
+    let env_then = ([dim], [i_2; i_3], []) in
     let env_else = [], [mk_affect (Cil.var ret) one], [] in
     let i_if = mk_if cond env_then env_else in
     Env.merge env1
       (Env.merge env2
-	 (Env.merge env3
-	    (Env.merge env_before ([ret], [i_if], [])))), (Cil.evar ret)
+	 (Env.merge env3 ([ret], [i_if], []))), (Cil.evar ret)
 
   method private translate_valid_ptr_offset pointer offset =
     let loc = pointer.term_loc in
     let env1, x' = self#translate_term pointer in
-    let env2, y' = self#translate_term offset in
+    let env2, y' = self#as_c_type Cil.intType offset in
     let ret = self#fresh_bool_varinfo "valid" in
     let dim = self#fresh_varinfo Cil.intType "valid_dim" in
     let i_1 = self#cpc_dim (Cil.var dim) x' in
-    let env3 = match offset.term_type with
-      | Linteger ->
-  	 let cmp_dim_off = self#fresh_bool_varinfo "valid_cmp" in
-  	 let i_1 = self#ccmp_ui (Cil.var cmp_dim_off) y' (Cil.evar dim) in
-  	 let cmp_off_zero = self#fresh_bool_varinfo "valid_cmp" in
-  	 let i_2 = self#ccmp_ui (Cil.var cmp_off_zero) y' zero in
-  	 let e1 = cmp Rge (Cil.evar cmp_off_zero) zero in
-  	 let e2 = cmp Rlt (Cil.evar cmp_dim_off) zero in
-	 let e_binop = Cil.mkBinOp ~loc LAnd e1 e2 in
-  	 let i_3 = mk_affect (Cil.var ret) e_binop in
-  	 [cmp_dim_off; cmp_off_zero], [i_1; i_2; i_3], []
-      | Ctype (TInt _) ->
-  	 let e1 = cmp Rge y' zero in
-  	 let e2 = cmp Rgt (Cil.evar dim) y' in
-  	 [], [mk_affect (Cil.var ret) (Cil.mkBinOp ~loc LAnd e1 e2)], []
-      | _ -> raise Unreachable
-    in
-    Env.merge env1 (Env.merge env2 (Env.merge ([ret; dim], [i_1], []) env3)),
-    (Cil.evar ret)
+    let e1 = cmp Rge y' zero in
+    let e2 = cmp Rgt (Cil.evar dim) y' in
+    let i_2 = mk_affect (Cil.var ret) (Cil.mkBinOp ~loc LAnd e1 e2) in
+    let env3 = [ret; dim], [i_1; i_2], [] in
+    Env.merge env1 (Env.merge env2 env3), (Cil.evar ret)
 
   method private translate_valid_ptr pointer =
     let env, x' = self#translate_term pointer in
