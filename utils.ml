@@ -67,13 +67,11 @@ let typically_preds bhv =
   if !typically_preds_computed then
     !typically_preds_memo
   else
-    let is_typically (str, kind) = match kind with
-      | Ext_preds _ -> str = "typically"
-      | _ -> false
+    let get_ext_preds acc (str, kind) = match kind with
+      | Ext_preds p when str = "typically" -> List.rev_append p acc
+      | _ -> acc
     in
-    let typically = List.filter is_typically bhv.Cil_types.b_extended in
-    let typically = List.map (fun (_,Ext_preds pred) -> pred) typically in
-    let typically = List.fold_left List.rev_append [] typically in
+    let typically = List.fold_left get_ext_preds [] bhv.Cil_types.b_extended in
     let typically =
       if not (Options.Precondition.is_default()) then
 	try
