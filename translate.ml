@@ -155,16 +155,12 @@ class gather_insertions props swd = object(self)
       try (Datatype.String.Hashtbl.find last_varname varname)+1
       with Not_found -> 0
     in
-    let v = my_varinfo ty (varname ^ "_" ^ (string_of_int i)) in
     Datatype.String.Hashtbl.replace last_varname varname i;
-    v
+    my_varinfo ty (varname ^ "_" ^ (string_of_int i))
 
   method private fresh_Z_varinfo varname =
     self#fresh_varinfo (Utils.mpz_t()) ("Z_" ^ varname)
-
-  method private fresh_ctype_varinfo ty varname = self#fresh_varinfo ty varname
-  method private fresh_pred_varinfo vname = self#fresh_varinfo Cil.intType vname
-  method private fresh_fct_varinfo ty varname = self#fresh_varinfo ty varname
+  method private fresh_bool_varinfo vname = self#fresh_varinfo Cil.intType vname
   method translated_properties() = translated_properties
 
   method private translate_constant ty = function
@@ -261,8 +257,8 @@ class gather_insertions props swd = object(self)
 	  let env3, e =
 	    match a.term_type, b.term_type with
 	    | Linteger, Linteger ->
-	       let var = self#fresh_ctype_varinfo Cil.intType "binop" in
-	       let tmp = self#fresh_ctype_varinfo Cil.intType "binop_cmp" in
+	       let var = self#fresh_varinfo Cil.intType "binop" in
+	       let tmp = self#fresh_bool_varinfo "binop_cmp" in
 	       let i_1 = self#ccmp (Cil.var tmp) x y in
 	       let op = Utils.binop_to_relation op in
 	       let i_2 = mk_affect (Cil.var var) (cmp op (Cil.evar tmp) zero) in
@@ -277,7 +273,7 @@ class gather_insertions props swd = object(self)
        let ret = self#fresh_Z_varinfo "tif" in
        let i_1 = self#cinit (Cil.evar ret) in
        let env, cond' = self#translate_term cond in
-       let tmp = self#fresh_ctype_varinfo Cil.intType "tif_cmp" in
+       let tmp = self#fresh_bool_varinfo "tif_cmp" in
        let i_2 = self#ccmp_si (Cil.var tmp) cond' zero in
        let env1, then_b' = self#translate_term then_b in
        let set_1 = self#cset (Cil.evar ret) then_b' in
@@ -339,7 +335,7 @@ class gather_insertions props swd = object(self)
   method private translate_coerce t ty = match t.term_type with
     | Linteger ->
        let env, v = self#translate_term t in
-       let ret = self#fresh_ctype_varinfo ty "to_ctype" in
+       let ret = self#fresh_varinfo ty "to_ctype" in
        let get =
 	 if Cil.isUnsignedInteger ty then self#cget_ui else self#cget_si in
        let i_1 = get (Cil.var ret) v in
@@ -364,7 +360,7 @@ class gather_insertions props swd = object(self)
       let env1, low = self#translate_term lower in
       let env2, up = self#translate_term upper in
       let iter = my_Z_varinfo q.lv_name in
-      let tmp = self#fresh_ctype_varinfo Cil.intType (vname ^ "_cmp") in
+      let tmp = self#fresh_bool_varinfo (vname ^ "_cmp") in
       let i1 = self#cinit_set (Cil.evar iter) low in
       let i2 = self#ccmp (Cil.var tmp) (Cil.evar iter) up in
       let loop_env =
@@ -382,8 +378,6 @@ class gather_insertions props swd = object(self)
 
   method private translate_app li _ params =
     let do_op op r l = self#cbinop op r r l in
-    let inc_if r l = mk_if
-      (cmp Rneq l zero) ([], [self#cbinop_ui PlusA r r one], []) Env.empty in
     match Extlib.the li.l_type, params, li.l_var_info.lv_name with
     | Linteger, [param], "\\abs" ->
        let env, x = self#translate_term param in
@@ -397,6 +391,8 @@ class gather_insertions props swd = object(self)
     | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\product" ->
        self#translate_lambda l u q t one "product" (do_op Mult)
     | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\numof" ->
+       let inc_if r l = mk_if
+	 (cmp Rneq l zero) ([], [self#cbinop_ui PlusA r r one], []) Env.empty in
        self#translate_lambda l u q t zero "numof" inc_if
     | Linteger, _, _ -> raise Unsupported
     | Lreal, _, _ -> raise Unsupported
@@ -405,7 +401,7 @@ class gather_insertions props swd = object(self)
   method private translate_cast ty t = match t.term_type with (* source type *)
     | Linteger ->
        let env, e = self#translate_term t in
-       let ret = self#fresh_ctype_varinfo ty "cast" in
+       let ret = self#fresh_varinfo ty "cast" in
        let get =
 	 if Cil.isUnsignedInteger ty then self#cget_ui else self#cget_si in
        let i_1 = get (Cil.var ret) e in
@@ -498,7 +494,7 @@ class gather_insertions props swd = object(self)
        let env1, t1' = self#translate_term t1 in
        let env2, t2' = self#translate_term t2 in
        let varname = Utils.relation_to_string rel in
-       let v = self#fresh_ctype_varinfo Cil.intType varname in
+       let v = self#fresh_bool_varinfo varname in
        let zcmp =
 	 if Cil.isUnsignedInteger x then self#ccmp_ui else self#ccmp_si in
        let i = zcmp (Cil.var v) t1' t2' in
@@ -509,7 +505,7 @@ class gather_insertions props swd = object(self)
        let env1, t1' = self#as_logic_type Linteger t1 in
        let env2, t2' = self#translate_term t2 in
        let varname = Utils.relation_to_string rel in
-       let v = self#fresh_ctype_varinfo Cil.intType varname in
+       let v = self#fresh_bool_varinfo varname in
        let i = self#ccmp (Cil.var v) t1' t2' in
        Env.merge env1 (Env.merge env2 ([v], [i], [])), cmp rel (Cil.evar v) zero
     | _ ->
@@ -518,7 +514,7 @@ class gather_insertions props swd = object(self)
        Env.merge env1 env2, cmp rel t1' t2'
 
   method private translate_and p q =
-    let var = self#fresh_pred_varinfo "and" in
+    let var = self#fresh_bool_varinfo "and" in
     let env, pred1_var = self#translate_predicate p in
     let i_1 = mk_affect (Cil.var var) pred1_var in
     let if_env =
@@ -529,7 +525,7 @@ class gather_insertions props swd = object(self)
     Env.merge env ([var], [i_1; i_2], []), (Cil.evar var)
 
   method private translate_or p q =
-    let var = self#fresh_pred_varinfo "or"  in
+    let var = self#fresh_bool_varinfo "or"  in
     let env, pred1_var = self#translate_predicate p in
     let i_1 = mk_affect (Cil.var var) pred1_var in
     let if_env =
@@ -540,7 +536,7 @@ class gather_insertions props swd = object(self)
     Env.merge env ([var], [i_1; i_2], []), (Cil.evar var)
 
   method private translate_implies p q =
-    let var = self#fresh_pred_varinfo "implies" in
+    let var = self#fresh_bool_varinfo "implies" in
     let i_1 = mk_affect (Cil.var var) one in
     let env, pred1_var = self#translate_predicate p in
     let if_env =
@@ -565,10 +561,10 @@ class gather_insertions props swd = object(self)
 
   method private translate_pif t p q =
     let env1, t_var = self#translate_term t in
-    let res_var = self#fresh_pred_varinfo "pif" in
+    let res_var = self#fresh_bool_varinfo "pif" in
     let cond, env2 = match t.term_type with
       | Linteger ->
-	 let tmp = self#fresh_ctype_varinfo Cil.intType "pif_cmp" in
+	 let tmp = self#fresh_bool_varinfo "pif_cmp" in
 	 let i_1 = self#ccmp_si (Cil.var tmp) t_var zero in
 	 cmp Rneq (Cil.evar tmp) zero, ([tmp], [i_1], [])
       | Lreal -> raise Unsupported
@@ -610,18 +606,18 @@ class gather_insertions props swd = object(self)
     let env1, x' = self#translate_term pointer in
     let env2, low_o = self#translate_term min_off in
     let env3, up_o = self#translate_term max_off in
-    let ret = self#fresh_pred_varinfo "valid" in
-    let dim = self#fresh_ctype_varinfo Cil.intType "valid_dim" in
+    let ret = self#fresh_bool_varinfo "valid" in
+    let dim = self#fresh_varinfo Cil.intType "valid_dim" in
     let env_before, env_then, cond =
       match min_off.term_type, max_off.term_type with
       | Linteger, Linteger ->
-  	 let nonempty_set = self#fresh_pred_varinfo "valid_cmp" in
+  	 let nonempty_set = self#fresh_bool_varinfo "valid_cmp" in
   	 let i_9 = self#ccmp (Cil.var nonempty_set) low_o up_o in
   	 let cond = cmp Rle (Cil.evar nonempty_set) zero in
   	 let i_2 = self#cpc_dim (Cil.var dim) x' in
-  	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
+  	 let cmp_dim_off = self#fresh_bool_varinfo "valid_cmp" in
   	 let i_4 = self#ccmp_ui (Cil.var cmp_dim_off) up_o (Cil.evar dim) in
-  	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
+  	 let cmp_off_zero = self#fresh_bool_varinfo "valid_cmp" in
   	 let i_6 = self#ccmp_ui (Cil.var cmp_off_zero) up_o zero in
   	 let e1 = cmp Rge (Cil.evar cmp_off_zero) zero in
   	 let e2 = cmp Rlt (Cil.evar cmp_dim_off) zero in
@@ -631,7 +627,7 @@ class gather_insertions props swd = object(self)
 	 ([dim; cmp_dim_off; cmp_off_zero], [i_2; i_4; i_6; i_7], []),
 	 cond
       | Linteger, Ctype (TInt _) ->
-  	 let nonempty = self#fresh_pred_varinfo "valid_cmp" in
+  	 let nonempty = self#fresh_bool_varinfo "valid_cmp" in
   	 let i_cond = self#ccmp_si (Cil.var nonempty) low_o up_o in
   	 let cond = cmp Rle (Cil.evar nonempty) zero in
   	 let i_2 = self#cpc_dim (Cil.var dim) x' in
@@ -641,13 +637,13 @@ class gather_insertions props swd = object(self)
   	 let i_7 = mk_affect (Cil.var ret) e_binop in
   	 ([nonempty], [i_cond], []), ([dim], [i_2; i_7], []), cond
       | Ctype (TInt _), Linteger ->
-	 let nonempty = self#fresh_pred_varinfo "valid_cmp" in
+	 let nonempty = self#fresh_bool_varinfo "valid_cmp" in
   	 let i_cond = self#ccmp_ui (Cil.var nonempty) up_o low_o in
   	 let cond = cmp Rge (Cil.evar nonempty) zero in
   	 let i_2 = self#cpc_dim (Cil.var dim) x' in
-  	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
+  	 let cmp_dim_off = self#fresh_bool_varinfo "valid_cmp" in
   	 let i_4 = self#ccmp_ui (Cil.var cmp_dim_off) up_o (Cil.evar dim) in
-  	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
+  	 let cmp_off_zero = self#fresh_bool_varinfo "valid_cmp" in
   	 let i_6 = self#ccmp_ui (Cil.var cmp_off_zero) up_o zero in
   	 let e1 = cmp Rge (Cil.evar cmp_off_zero) zero in
   	 let e2 = cmp Rlt (Cil.evar cmp_dim_off) zero in
@@ -676,14 +672,14 @@ class gather_insertions props swd = object(self)
     let loc = pointer.term_loc in
     let env1, x' = self#translate_term pointer in
     let env2, y' = self#translate_term offset in
-    let ret = self#fresh_pred_varinfo "valid" in
-    let dim = self#fresh_ctype_varinfo Cil.intType "valid_dim" in
+    let ret = self#fresh_bool_varinfo "valid" in
+    let dim = self#fresh_varinfo Cil.intType "valid_dim" in
     let i_1 = self#cpc_dim (Cil.var dim) x' in
     let env3 = match offset.term_type with
       | Linteger ->
-  	 let cmp_dim_off = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
+  	 let cmp_dim_off = self#fresh_bool_varinfo "valid_cmp" in
   	 let i_1 = self#ccmp_ui (Cil.var cmp_dim_off) y' (Cil.evar dim) in
-  	 let cmp_off_zero = self#fresh_ctype_varinfo Cil.intType "valid_cmp" in
+  	 let cmp_off_zero = self#fresh_bool_varinfo "valid_cmp" in
   	 let i_2 = self#ccmp_ui (Cil.var cmp_off_zero) y' zero in
   	 let e1 = cmp Rge (Cil.evar cmp_off_zero) zero in
   	 let e2 = cmp Rlt (Cil.evar cmp_dim_off) zero in
@@ -701,8 +697,8 @@ class gather_insertions props swd = object(self)
 
   method private translate_valid_ptr pointer =
     let env, x' = self#translate_term pointer in
-    let ret = self#fresh_pred_varinfo "valid" in
-    let dim = self#fresh_ctype_varinfo Cil.intType "valid_dim" in
+    let ret = self#fresh_bool_varinfo "valid" in
+    let dim = self#fresh_varinfo Cil.intType "valid_dim" in
     let i_1 = self#cpc_dim (Cil.var dim) x' in
     let e2 = cmp Rgt (Cil.evar dim) zero in
     let i_2 = mk_affect (Cil.var ret) e2 in
@@ -712,7 +708,7 @@ class gather_insertions props swd = object(self)
   method private translate_exists = self#translate_quantif ~forall:false
   method private translate_quantif ~forall logic_vars hyps goal =
     let varname = if forall then "forall" else "exists" in
-    let var = self#fresh_pred_varinfo varname in
+    let var = self#fresh_bool_varinfo varname in
     let init_val = if forall then one else zero in
     let i_1 = mk_affect (Cil.var var) init_val in
     let negate exp = Cil.new_exp ~loc (UnOp(LNot,exp,Cil.intType)) in
@@ -728,7 +724,7 @@ class gather_insertions props swd = object(self)
 	   let i_3 = self#cinit_set (Cil.evar it) t1' in
 	   let inc exp = self#cbinop_ui PlusA exp exp one in
 	   let i_4 = if r1 = Rlt then [inc (Cil.evar it)] else [] in
-	   let tmp = self#fresh_ctype_varinfo Cil.intType (varname ^ "_cmp") in
+	   let tmp = self#fresh_bool_varinfo (varname ^ "_cmp") in
 	   let ins_b_2 = self#cbinop_ui PlusA (Cil.evar it) (Cil.evar it) one in
 	   let e1 = cmp r2 (Cil.evar tmp) zero in
 	   let i_8 = self#cclear (Cil.evar it) in
@@ -932,7 +928,7 @@ class gather_insertions props swd = object(self)
 	| h :: t ->
 	   let ty = dig_type ty in
 	   let env, h' = self#as_c_type Cil.ulongType h in
-	   let my_iterator = self#fresh_ctype_varinfo Cil.ulongType "iter" in
+	   let my_iterator = self#fresh_varinfo Cil.ulongType "iter" in
 	   let e1 = Cil.new_exp ~loc (SizeOf ty) in
 	   let e2 = Cil.mkBinOp ~loc Mult h' e1 in
 	   let i_1 = self#cmalloc my_old_ptr e2 in
@@ -961,7 +957,7 @@ class gather_insertions props swd = object(self)
 	| [] -> Env.empty
 	| _ :: [] -> [], [self#cfree(Cil.new_exp ~loc (Lval my_old_ptr))], []
 	| h :: t ->
-	   let my_iterator = self#fresh_ctype_varinfo Cil.ulongType "iter" in
+	   let my_iterator = self#fresh_varinfo Cil.ulongType "iter" in
 	   let env, h' = self#as_c_type Cil.ulongType h in
 	   let aux = addoffset my_old_ptr (Cil.evar my_iterator) in
 	   let env_block = dealloc_aux aux t in
@@ -1131,14 +1127,14 @@ class gather_insertions props swd = object(self)
 	 (* at BegIter *)
 	 let env_1, beg_variant = self#translate_term term in
 	 let v1, s1, c1 = env_1 in let env_1 = v1, s1, [] in (* delay c1 *)
-	 let var_1 = self#fresh_ctype_varinfo Cil.intType "variant_pos" in
+	 let var_1 = self#fresh_bool_varinfo "variant_pos" in
 	 let pce_1 = self#pc_exc "non positive" id in
 	 let i_1_1 = self#ccmp_ui (Cil.var var_1) beg_variant zero in
 	 let cond_1 = cmp Rlt (Cil.evar var_1) zero in
 	 let i_1_2 = mk_if cond_1 ([], [pce_1], []) Env.empty in
 	 (* at EndIter *)
 	 let env_2, end_variant = self#translate_term term in
-	 let var_2 = self#fresh_ctype_varinfo Cil.intType "variant_decr" in
+	 let var_2 = self#fresh_bool_varinfo "variant_decr" in
 	 let pce_2 = self#pc_exc "non decreasing" id in
 	 let i_2_1 = self#ccmp (Cil.var var_2) end_variant beg_variant in
 	 let cond_2 = cmp Rge (Cil.evar var_2) zero in
@@ -1151,7 +1147,7 @@ class gather_insertions props swd = object(self)
 	 let env_1, beg_variant = self#translate_term term in
 	 let cond_1 = cmp Rlt beg_variant zero in
 	 let pce_1 = self#pc_exc "non positive" id in
-	 let var_1 = self#fresh_ctype_varinfo Cil.intType "variant_save" in
+	 let var_1 = self#fresh_varinfo Cil.intType "variant_save" in
 	 let if_1 = mk_if cond_1 ([], [pce_1], []) Env.empty in
 	 let aff_1 = mk_affect (Cil.var var_1) beg_variant in
 	 (* at EndIter *)
@@ -1200,7 +1196,7 @@ class gather_insertions props swd = object(self)
 	      TNoOffset) ->
 	 let ty =
 	   match op1.term_type with Ctype t -> t | _ -> raise Unreachable in
-	 let it = self#fresh_ctype_varinfo Cil.intType "iter" in
+	 let it = self#fresh_varinfo Cil.intType "iter" in
 	 let env1, e_t1 = self#as_c_type Cil.intType t1 in
 	 let i_1 = mk_affect (Cil.var it) e_t1 in
 	 let env2, e_t2 = self#as_c_type Cil.intType t2 in
@@ -1277,7 +1273,7 @@ class gather_insertions props swd = object(self)
        let kf = Globals.Functions.get fct_varinfo in
        let formals = Kernel_function.get_formals kf in
        let varname = fct_varinfo.vname ^ "_mod" in
-       let new_f_vi = self#fresh_fct_varinfo fct_varinfo.vtype varname in
+       let new_f_vi = self#fresh_varinfo fct_varinfo.vtype varname in
        let on_bhv _ bhv env =
 	 let env_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
 	 (* we create variables old_* to save the values of globals and
