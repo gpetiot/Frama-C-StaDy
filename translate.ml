@@ -33,33 +33,6 @@ let mk_loop e (v, s, c) =
   let b = {b with blocals = v} in
   Cil.mkStmt (Loop ([], {b with bstmts = i :: b.bstmts}, loc, None, None))
 
-let rec typename = function
-  | TInt (ikind, _) ->
-     begin
-       match ikind with
-       | IBool -> "bool"
-       | IChar -> "char"
-       | ISChar -> "schar"
-       | IUChar -> "uchar"
-       | IInt -> "sint"
-       | IUInt -> "uint"
-       | IShort -> "sshort"
-       | IUShort -> "ushort"
-       | ILong -> "slong"
-       | IULong -> "ulong"
-       | ILongLong -> "slonglong"
-       | IULongLong -> "ulonglong"
-     end
-  | TFloat (fkind, _) ->
-     begin
-       match fkind with
-       | FFloat -> "float"
-       | FDouble -> "double"
-       | FLongDouble -> raise Unsupported
-     end
-  | TNamed (ty, _) -> typename ty.ttype
-  | _ -> raise Unreachable
-
 let rec type_of_pointed = function
   | Ctype (TPtr (ty,_)) -> Ctype ty
   | Ctype (TArray (ty,_,_,_)) -> Ctype ty
@@ -136,7 +109,7 @@ class gather_insertions props swd = object(self)
   method ccmp_si x y z = self#call "__gmpz_cmp_si" (Some x) [y;z]
   method cmul_2exp x y z = self#call "__gmpz_mul_2exp" None [x;y;z]
   method cfdiv_q_2exp x y z = self#call "__gmpz_fdiv_q_2exp" None [x;y;z]
-  method cnondet ty x y = self#call ("nondet_"^(typename ty)) (Some x) [y]
+  method cnondet ty x y = self#call ("nondet_"^(Utils.typename ty)) (Some x) [y]
 
   method private add_function_call vi =
     if List.mem vi fcts_called then () else fcts_called <- vi :: fcts_called

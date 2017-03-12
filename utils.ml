@@ -280,3 +280,30 @@ let finalize() =
   Options.SWD.clear();
   Options.Precondition.clear();
   Options.Simulate_Functions.clear()
+
+let rec typename = function
+  | TInt (ikind, _) ->
+     begin
+       match ikind with
+       | IBool -> "bool"
+       | IChar -> "char"
+       | ISChar -> "schar"
+       | IUChar -> "uchar"
+       | IInt -> "sint"
+       | IUInt -> "uint"
+       | IShort -> "sshort"
+       | IUShort -> "ushort"
+       | ILong -> "slong"
+       | IULong -> "ulong"
+       | ILongLong -> "slonglong"
+       | IULongLong -> "ulonglong"
+     end
+  | TFloat (fkind, _) ->
+     begin
+       match fkind with
+       | FFloat -> "float"
+       | FDouble -> "double"
+       | FLongDouble -> assert false
+     end
+  | TNamed (ty, _) -> typename ty.ttype
+  | _ -> assert false

@@ -42,3 +42,5 @@ val pretty_var : Format.formatter -> Cil_types.varinfo -> unit
 
 val initialize: unit -> unit
 val finalize: unit -> unit
+
+val typename : Cil_types.typ -> string
