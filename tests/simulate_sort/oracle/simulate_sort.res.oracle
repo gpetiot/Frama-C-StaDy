@@ -58,7 +58,7 @@ extern int printf(char const * , ...);
               \lambda integer k; \old(*(a + k)) == *(\old(a) + i));
     assigns *(a + (0 .. n - 1));
  */
-extern void sort(int *a, int n);
+void sort(int *a, int n);
 
 void __sd_sort_mod_0(int *a, int n) {
   if (1) {

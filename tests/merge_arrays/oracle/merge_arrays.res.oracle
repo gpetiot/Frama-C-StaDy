@@ -43,8 +43,8 @@ unquantif_preconds('merge_arrays',
     cond(egal,dim('t1'),+(int(math), -(int(math), 'l1', 1), 1),pre),
     cond(egal,dim('t2'),+(int(math), -(int(math), 'l2', 1), 1),pre),
     cond(egal,dim('t3'),+(int(math), -(int(math), +(int(math), 'l1', 'l2'), 1), 1),pre),
-    cond(infegal,'l1',3,pre),
-    cond(infegal,'l2',3,pre)
+    cond(infegal,'l2',3,pre),
+    cond(infegal,'l1',3,pre)
   ]
 ).
 unquantif_preconds('pathcrawler__merge_arrays_precond',A) :-
@@ -807,64 +807,64 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
 
 [ Partial ] Post-condition (file tests/merge_arrays/merge_arrays.c, line 15)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 26)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 42)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Loop variant at loop (file tests/merge_arrays/merge_arrays.c, line 52)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 20)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 21)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 22)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 23)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 37)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 38)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 39)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 47)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 48)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Invariant (file tests/merge_arrays/merge_arrays.c, line 49)
             By StaDy, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 [ Partial ] Default behavior
             By Frama-C kernel, with pending:
-             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
              - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 14)
+             - Pre-condition (file tests/merge_arrays/merge_arrays.c, line 13)
 
 --------------------------------------------------------------------------------
 --- Status Report Summary
