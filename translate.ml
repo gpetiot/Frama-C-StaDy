@@ -393,7 +393,7 @@ class gather_insertions props swd = object(self)
     if Ctype ty = t.term_type then self#translate_term t
     else let i, e = self#translate_coerce t ty in i, Cil.new_exp ~loc e
 
-  method private translate_lambda li lower upper q t init vname compute =
+  method private translate_lambda lower upper q t init vname compute =
     assert(lower.term_type = Linteger && upper.term_type = Linteger);
     let ret = self#fresh_Z_varinfo vname in
     let i_1 = self#cinit_set_si (Cil.evar ret) init in
@@ -431,11 +431,11 @@ class gather_insertions props swd = object(self)
        let i_3 = self#cclear (Cil.evar ret) in
        Env.merge env ([ret], [i_1; i_2], [i_3]), (Cil.evar ret).enode
     | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\sum" ->
-       self#translate_lambda li l u q t zero "sum" (do_op PlusA)
+       self#translate_lambda l u q t zero "sum" (do_op PlusA)
     | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\product" ->
-       self#translate_lambda li l u q t one "product" (do_op Mult)
+       self#translate_lambda l u q t one "product" (do_op Mult)
     | Linteger, [l;u;{term_node=Tlambda([q],t)}], "\\numof" ->
-       self#translate_lambda li l u q t zero "numof" inc_if
+       self#translate_lambda l u q t zero "numof" inc_if
     | Linteger, _, _ -> raise Unsupported
     | Lreal, _, _ -> raise Unsupported
     | _ -> raise Unreachable
@@ -1274,7 +1274,7 @@ class gather_insertions props swd = object(self)
   method! vstmt_aux stmt =
     let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
-    | Loop (_,b,_,_,_) when List.mem stmt.sid swd ->
+    | Loop _ when List.mem stmt.sid swd ->
        let loop_cond = Utils.loop_condition stmt in
        let not_loop_cond =
 	 Cil.new_exp ~loc (UnOp(LNot, loop_cond, Cil.typeOf loop_cond)) in
