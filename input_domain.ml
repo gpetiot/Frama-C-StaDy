@@ -110,7 +110,7 @@ class pl_printer = object(self)
   | PLDim t' -> Format.fprintf fmt "dim(%a)" self#term t'
   | PLContAll t' -> Format.fprintf fmt "cont(%a,_)" self#term t'
   | PLCont (t1,t2) -> Format.fprintf fmt "cont(%a,%a)" self#term t1 self#term t2
-  | PLLVar lv -> Format.fprintf fmt "%s" (String.uppercase lv.lv_name)
+  | PLLVar lv -> Format.fprintf fmt "S_%s" lv.lv_name
   | PLCVar v -> Format.fprintf fmt "'%s'" v.vname
 
   method integer fmt i = Integer.pretty fmt i
@@ -167,7 +167,7 @@ class pl_printer = object(self)
     Format.fprintf fmt "cond(%a,%a,%a,pre)" self#rel r self#term x self#term y
 
   method quantif fmt (lvars, compo_rels, (x,r,y)) =
-    let aux fmt s = Format.fprintf fmt "    %s" (String.uppercase s.lv_name) in
+    let aux fmt s = Format.fprintf fmt "    S_%s" s.lv_name in
     Format.fprintf fmt "uq_cond(\n  [\n%a\n  ],\n  [\n%a\n  ],\n  %a,%a,%a)"
       (Debug.pp_list ~sep:",\n" aux) lvars
       (Debug.pp_list ~sep:",\n" self#cond) compo_rels
