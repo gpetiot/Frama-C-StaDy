@@ -33,15 +33,6 @@ let mk_loop e (v, s, c) =
   let b = {b with blocals = v} in
   Cil.mkStmt (Loop ([], {b with bstmts = i :: b.bstmts}, loc, None, None))
 
-let rec type_of_pointed = function
-  | Ctype (TPtr (ty,_)) -> Ctype ty
-  | Ctype (TArray (ty,_,_,_)) -> Ctype ty
-  | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
-  | ty ->
-     Options.feedback ~current:true ~once:true
-       "unsupported type %a" Printer.pp_logic_type ty;
-    raise Unsupported
-
 module Env = struct
   type t = Cil_types.varinfo list * Cil_types.stmt list * Cil_types.stmt list
   let empty = ([], [], [] : t)
@@ -436,7 +427,7 @@ class gather_insertions props swd = object(self)
     | TCastE (ty,t) -> self#translate_cast ty t
     | TAddrOf (TMem x, TIndex (y, TNoOffset)) ->
        let x' = Cil.mkTermMem ~addr:x ~off:TNoOffset in
-       let ty = type_of_pointed (Cil.typeOfTermLval x') in
+       let ty = Utils.type_of_pointed (Cil.typeOfTermLval x') in
        let x' = Logic_const.term (TLval x') ty in
        self#translate_term_node {t with term_node=(TBinOp(PlusPI,x',y))}
     | TAddrOf tl -> let env, lv = self#translate_lval tl in env, AddrOf lv
@@ -605,7 +596,7 @@ class gather_insertions props swd = object(self)
     | TLval _ -> self#translate_valid_ptr term
     | TAddrOf (TMem x, TIndex (y, TNoOffset)) ->
        let x' = Cil.mkTermMem ~addr:x ~off:TNoOffset in
-       let ty = type_of_pointed (Cil.typeOfTermLval x') in
+       let ty = Utils.type_of_pointed (Cil.typeOfTermLval x') in
        let x' = Logic_const.term (TLval x') ty in
        self#translate_valid {term with term_node=(TBinOp(PlusPI,x',y))}
     | TAddrOf (TVar x, TIndex (y, TNoOffset) as v) ->

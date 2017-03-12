@@ -307,3 +307,9 @@ let rec typename = function
      end
   | TNamed (ty, _) -> typename ty.ttype
   | _ -> assert false
+
+let rec type_of_pointed = function
+  | Ctype (TPtr (ty,_)) -> Ctype ty
+  | Ctype (TArray (ty,_,_,_)) -> Ctype ty
+  | Ctype (TNamed (x,_)) -> type_of_pointed (Ctype x.ttype)
+  | _ -> assert false

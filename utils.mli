@@ -44,3 +44,4 @@ val initialize: unit -> unit
 val finalize: unit -> unit
 
 val typename : Cil_types.typ -> string
+val type_of_pointed : Cil_types.logic_type -> Cil_types.logic_type
