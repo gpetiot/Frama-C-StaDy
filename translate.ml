@@ -376,7 +376,7 @@ class gather_insertions props swd = object(self)
     in
     ([ret], [i_1; mk_block block_env], [i_2]), (Cil.evar ret).enode
 
-  method private translate_app li _ params =
+  method private translate_app li ll params =
     let do_op op r l = self#cbinop op r r l in
     match Extlib.the li.l_type, params, li.l_var_info.lv_name with
     | Linteger, [param], "\\abs" ->
@@ -394,7 +394,17 @@ class gather_insertions props swd = object(self)
        let inc_if r l = mk_if
 	 (cmp Rneq l zero) ([], [self#cbinop_ui PlusA r r one], []) Env.empty in
        self#translate_lambda l u q t zero "numof" inc_if
-    | Linteger, _, _ -> raise Unsupported
+    | Linteger, _, _ ->
+       let app = Logic_const.term (Tapp (li, ll, params)) Linteger in
+       let inlined_app = Inline.term app in
+       begin
+	 match inlined_app.term_node with
+	 | Tapp _ ->
+	  (* cheap equality test *)
+	  (* doesn't work if it yields a \lambda term *)
+	    raise Unsupported
+	 | _ -> self#translate_term_node inlined_app
+       end
     | Lreal, _, _ -> raise Unsupported
     | _ -> raise Unreachable
 

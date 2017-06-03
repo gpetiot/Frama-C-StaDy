@@ -185,3 +185,4 @@ and id_pred env p = {p with ip_content=pred env p.ip_content}
 
 let pred p = pred empty_env p
 let id_pred p = id_pred empty_env p
+let term t = term empty_env t
