@@ -666,7 +666,7 @@ class gather_insertions props swd = object(self)
 	    | None -> Format.fprintf fmt "??"
 	    | Some var -> Format.fprintf fmt "%a" Printer.pp_term var
 	  in
-	  Options.warning ~current:true
+	  Options.warning ~current:true ~once:true
 	    "imprecise bounds for quantified variable %a (%a %a %a %a %a)"
 	    Printer.pp_logic_var lvar
 	    pp_opt_var t1
@@ -746,17 +746,17 @@ class gather_insertions props swd = object(self)
     | Pat (p, LogicLabel(_,"Here")) -> self#translate_predicate p
     | Pvalid (_,t) -> self#translate_valid t
     | Pvalid_read (_,t) ->
-       Options.warning ~current:true
+       Options.warning ~current:true ~once:true
 	 "\\valid_read(%a) is interpreted as \\valid(%a)"
 	 Printer.pp_term t Printer.pp_term t;
       self#translate_valid t
     | Pforall _ as p ->
-       Options.warning ~current:true
+       Options.warning ~current:true ~once:true
 	 "%a not of the form \\forall ...; a ==> b"
 	 Printer.pp_predicate_node p;
       raise Unsupported
     | Pexists _ as p ->
-       Options.warning ~current:true
+       Options.warning ~current:true ~once:true
 	 "%a not of the form \\exists ...; a && b"
 	 Printer.pp_predicate_node p;
       raise Unsupported
@@ -802,7 +802,8 @@ class gather_insertions props swd = object(self)
 	Env.merge env ([], [mk_if e ([], [mk_ret zero], []) Env.empty], [])
       with Unsupported ->
 	Options.warning
-	  ~current:true "%a unsupported" Printer.pp_predicate pred.ip_content;
+	  ~current:true ~once:true
+	  "%a unsupported" Printer.pp_predicate pred.ip_content;
 	Env.empty
     in
     let do_behavior env b =
@@ -1030,7 +1031,7 @@ class gather_insertions props swd = object(self)
       Env.merge env ([], [i_1], [])
     with Unsupported ->
       Options.warning
-	~current:true "%a unsupported" Printer.pp_predicate pred;
+	~current:true ~once:true "%a unsupported" Printer.pp_predicate pred;
       Env.empty
 
   method private pc_assume pred =
@@ -1040,7 +1041,7 @@ class gather_insertions props swd = object(self)
       Env.merge env ([], [mk_if e ([], [self#pc_ass "" 0], []) Env.empty], [])
     with Unsupported ->
       Options.warning
-	~current:true "%a unsupported" Printer.pp_predicate pred;
+	~current:true ~once:true "%a unsupported" Printer.pp_predicate pred;
       Env.empty
 
   method private for_behaviors bhvs env =
@@ -1182,7 +1183,7 @@ class gather_insertions props swd = object(self)
 	 Env.merge env (Env.merge ([], [aff], []) ret)
       | _ ->
 	 Options.warning
-	   ~current:true "term %a in assigns clause unsupported"
+	   ~current:true ~once:true "term %a in assigns clause unsupported"
 	   Printer.pp_term t;
 	 ret
     in
