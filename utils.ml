@@ -113,8 +113,7 @@ let extract_guards var p =
     | Prel(Rgt, t, u) when to_guard u -> None, None, Some Rlt, Some t
     | _ -> None, None, None, None
   in
-  let a,b,c,d = aux p in
-  Extlib.the a, Extlib.the b, Extlib.the c, Extlib.the d
+  aux p
 
 
 let mk_fundec v ~formals ~locals s =

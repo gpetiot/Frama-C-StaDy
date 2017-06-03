@@ -15,7 +15,10 @@ val unname: Cil_types.typ -> Cil_types.typ
 val extract_guards:
   Cil_datatype.Logic_var.t ->
   Cil_types.predicate ->
-  Cil_types.term * Cil_types.relation * Cil_types.relation * Cil_types.term
+  Cil_types.term option
+  * Cil_types.relation option
+  * Cil_types.relation option
+  * Cil_types.term option
 
 val mk_fundec: Cil_types.varinfo -> formals:Cil_types.varinfo list ->
   locals:Cil_types.varinfo list -> Cil_types.stmt list -> Cil_types.fundec

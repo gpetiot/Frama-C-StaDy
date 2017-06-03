@@ -654,6 +654,28 @@ class gather_insertions props swd = object(self)
     let cond = if forall then (Cil.evar var) else negate (Cil.evar var) in
     let on_lvar (i_b,e_c,i_i) lvar =
       let t1,r1,r2,t2 = Utils.extract_guards lvar hyps in
+      let t1,r1,r2,t2 =
+	try
+	  Extlib.the t1, Extlib.the r1, Extlib.the r2, Extlib.the t2
+	with _ ->
+	  let pp_opt_op fmt = function
+	    | None -> Format.fprintf fmt "??"
+	    | Some op -> Format.fprintf fmt "%a" Printer.pp_relation op
+	  in
+	  let pp_opt_var fmt = function
+	    | None -> Format.fprintf fmt "??"
+	    | Some var -> Format.fprintf fmt "%a" Printer.pp_term var
+	  in
+	  Options.warning ~current:true
+	    "imprecise bounds for quantified variable %a (%a %a %a %a %a)"
+	    Printer.pp_logic_var lvar
+	    pp_opt_var t1
+	    pp_opt_op r1
+	    Printer.pp_logic_var lvar
+	    pp_opt_op r2
+	    pp_opt_var t2;
+	  raise Unsupported
+      in
       let iter_name = lvar.lv_name in
       let i_before, e_cond, i_inside = match t1.term_type with
 	| Linteger ->
