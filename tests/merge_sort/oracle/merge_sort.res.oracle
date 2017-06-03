@@ -1,7 +1,5 @@
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/merge_sort/merge_sort.c (with preprocessing)
-tests/merge_sort/merge_sort.c:96:[stady] warning: Native Precondition:
-                 \separated(table, ret) unsupported
 tests/merge_sort/merge_sort.c:96:[stady] warning: \separated(table, ret) unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).

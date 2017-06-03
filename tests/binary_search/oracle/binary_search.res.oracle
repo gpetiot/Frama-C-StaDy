@@ -1,8 +1,5 @@
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/binary_search/binary_search.c (with preprocessing)
-tests/binary_search/binary_search.c:16:[stady] warning: Native Precondition:
-                 ∀ ℤ __q_j;
-                   0 ≤ __q_j < length - 1 ⇒ *(arr + __q_j) ≤ *(arr + (__q_j + 1)) unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.

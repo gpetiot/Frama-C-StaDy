@@ -1,9 +1,5 @@
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/deleteSubstr1a/deleteSubstr1a.c (with preprocessing)
-tests/deleteSubstr1a/deleteSubstr1a.c:60:[stady] warning: Native Precondition:
-                 \separated(dest + (0 .. strlen - 1), str + (0 .. strlen - 1)) unsupported
-tests/deleteSubstr1a/deleteSubstr1a.c:60:[stady] warning: Native Precondition:
-                 \separated(dest + (0 .. strlen - 1), substr + (0 .. sublen - 1)) unsupported
 tests/deleteSubstr1a/deleteSubstr1a.c:60:[stady] warning: \separated(dest + (0 .. strlen - 1), substr + (0 .. sublen - 1)) unsupported
 tests/deleteSubstr1a/deleteSubstr1a.c:60:[stady] warning: \separated(dest + (0 .. strlen - 1), str + (0 .. strlen - 1)) unsupported
 [stady:generated-pl] generated Prolog precondition:

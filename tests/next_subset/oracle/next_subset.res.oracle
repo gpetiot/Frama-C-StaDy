@@ -1,7 +1,5 @@
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/next_subset/next_subset.c (with preprocessing)
-tests/next_subset/next_subset.c:22:[stady] warning: Native Precondition:
-                 ∀ ℤ __q_i; 0 ≤ __q_i < n ⇒ *(s + __q_i) ≡ 0 ∨ *(s + __q_i) ≡ 1 unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.

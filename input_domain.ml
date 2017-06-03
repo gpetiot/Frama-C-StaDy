@@ -454,7 +454,7 @@ let compute_constraints() =
     try requires_to_prolog constraints pnamed
     with
     | _ ->
-      Options.warning ~current:true
+      Options.debug ~current:true ~once:true ~level:2
 	"Native Precondition:@\n%a unsupported"
 	Printer.pp_predicate pnamed;
       (* this predicate has not been translated in Prolog, we must translate it

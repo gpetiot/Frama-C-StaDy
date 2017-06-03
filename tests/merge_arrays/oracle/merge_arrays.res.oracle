@@ -1,9 +1,5 @@
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/merge_arrays/merge_arrays.c (with preprocessing)
-tests/merge_arrays/merge_arrays.c:17:[stady] warning: Native Precondition:
-                 ∀ ℤ __q_i; 0 ≤ __q_i < l2 - 1 ⇒ *(t2 + __q_i) ≤ *(t2 + (__q_i + 1)) unsupported
-tests/merge_arrays/merge_arrays.c:17:[stady] warning: Native Precondition:
-                 ∀ ℤ __q_i; 0 ≤ __q_i < l1 - 1 ⇒ *(t1 + __q_i) ≤ *(t1 + (__q_i + 1)) unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
