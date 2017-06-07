@@ -52,9 +52,18 @@ let register ignore_var kind prop str_tc msg stmts list_entries =
 let pretty fmt (p, f, msg, stmts, var_states) =
   let pp_msg fmt = function "" -> () | x -> Format.fprintf fmt "(%s)" x in
   let pp_loc = Cil_datatype.Location.pretty in
-  let pp_stmt fmt s = match s.skind with
-    | Instr(Call _) -> Printer.pp_stmt fmt s
-    | _ -> Format.fprintf fmt "stmt %i" s.sid
+  let pp_stmt fmt s =
+    let label = match List.hd s.labels with
+      | Label (str,_,_) -> str
+      | _ -> assert false (* unreachable *)
+    in
+    let pp_descr fmt s = match s.skind with
+      | Loop _ -> Format.fprintf fmt "loop"
+      | Instr (Call (_,f,_,_)) ->
+	 Format.fprintf fmt "'%a' call" Printer.pp_exp f
+      | _ -> assert false (* unreachable *)
+    in
+    Format.fprintf fmt "%a at label '%s'" pp_descr s label
   in
   let on_var var (input, con, sym) =
     match con, sym with
@@ -79,12 +88,13 @@ let pretty fmt (p, f, msg, stmts, var_states) =
 	     "%s = %s (in) ; %s (concrete out) ; %s (symbolic out)@\n"
 	     var input x y
   in
-  Format.fprintf
-    fmt "Subcontract Weakness of @[%a@] for @[%a@] %a@\n"
-    (Pretty_utils.pp_list pp_stmt) stmts Property.pretty p pp_msg msg;
+  Format.fprintf fmt "Subcontract Weakness@\n";
   let on_stmt s =
-    Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Cil_datatype.Stmt.loc s)
+    Format.fprintf fmt "of       : @[%a@]@\n" pp_stmt s;
+    Format.fprintf fmt "location : @[%a@]@\n" pp_loc (Cil_datatype.Stmt.loc s)
   in
   List.iter on_stmt stmts;
+  Format.fprintf fmt "for      : @[%a@] %a@\n" Property.pretty p pp_msg msg;
+  Format.fprintf fmt "location : @[%a@]@\n" pp_loc (Property.location p);
   Format.fprintf fmt "TEST DRIVER: %s@\n" f;
   Datatype.String.Hashtbl.iter_sorted on_var var_states

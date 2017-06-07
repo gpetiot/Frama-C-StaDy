@@ -73,8 +73,8 @@ let pretty fmt (p, f, msg, var_states) =
 	     "%s = %s (in) ; %s (concrete out) ; %s (symbolic out)@\n"
 	     var input x y
   in
-  Format.fprintf
-    fmt "Non-Compliance of @[%a@] %a@\n" Property.pretty p pp_msg msg;
-  Format.fprintf fmt "LOCATION: %a@\n" pp_loc (Property.location p);
+  Format.fprintf fmt "Non-Compliance@\n";
+  Format.fprintf fmt "of       : @[%a@] %a@\n" Property.pretty p pp_msg msg;
+  Format.fprintf fmt "location : @[%a@]@\n" pp_loc (Property.location p);
   Format.fprintf fmt "TEST DRIVER: %s@\n" f;
   Datatype.String.Hashtbl.iter_sorted on_var var_states

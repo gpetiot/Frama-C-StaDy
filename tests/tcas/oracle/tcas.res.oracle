@@ -714,8 +714,9 @@ int alt_sep_test(void)
 [pc] Starting lanceur_alt_sep_test (isc version)
 [stady] all-paths: true
 [stady] 170 test cases
-[stady] Non-Compliance of ensures \result ≢ 1 
-        LOCATION: tests/tcas/tcas.c:123
+[stady] Non-Compliance
+        of       : ensures \result ≢ 1 
+        location : tests/tcas/tcas.c:123
         TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_17.c
         Alt_Layer_Value = 3
         Climb_Inhibit = 1

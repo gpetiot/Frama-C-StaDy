@@ -79,8 +79,9 @@ void f(int x)
 [pc] Starting lanceur_f (isc version)
 [stady] all-paths: true
 [stady] 2 test cases
-[stady] Non-Compliance of assert x + 1 ≤ 2147483647; 
-        LOCATION: tests/overflow_should_crash/overflow_should_crash.c:9
+[stady] Non-Compliance
+        of       : assert x + 1 ≤ 2147483647; 
+        location : tests/overflow_should_crash/overflow_should_crash.c:9
         TEST DRIVER: testcases___sd_instru_overflow_should_crash_f/f/testdrivers/TC_2.c
         x = 2147483647
 [report] Computing properties status...

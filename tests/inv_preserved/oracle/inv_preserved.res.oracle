@@ -508,12 +508,14 @@ void f(int n, int *t)
 [pc] Starting lanceur_f (isc version)
 [stady] all-paths: true
 [stady] 264 test cases
-[stady] Subcontract Weakness of stmt 9 for loop invariant
-                                             ∀ ℤ k;
-                                               2 ≤ k < i - 1 ⇒
-                                               *(t + k) ≡ *(t + (k - 1)) ∨
-                                               *(t + k) ≡ *(t + (k - 2)); (not preserved)
-        LOCATION: tests/inv_preserved/inv_preserved.c:28
+[stady] Subcontract Weakness
+        of       : loop at label 'first_loop'
+        location : tests/inv_preserved/inv_preserved.c:28
+        for      : loop invariant
+                     ∀ ℤ k;
+                       2 ≤ k < i - 1 ⇒
+                       *(t + k) ≡ *(t + (k - 1)) ∨ *(t + k) ≡ *(t + (k - 2)); (not preserved)
+        location : tests/inv_preserved/inv_preserved.c:23
         TEST DRIVER: testcases___sd_instru_inv_preserved_f/f/testdrivers/TC_46.c
         n = 5
         nondet_sint_val[0] = -84913

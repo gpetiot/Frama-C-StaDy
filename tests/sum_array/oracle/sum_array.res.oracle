@@ -316,15 +316,17 @@ int sum_array(int *t, int n)
 [pc] Starting lanceur_sum_array (isc version)
 [stady] all-paths: true
 [stady] 147 test cases
-[stady] Non-Compliance of assert rte: signed_overflow: -2147483648 ≤ s + *(t + i); 
-        LOCATION: tests/sum_array/sum_array.c:17
+[stady] Non-Compliance
+        of       : assert rte: signed_overflow: -2147483648 ≤ s + *(t + i); 
+        location : tests/sum_array/sum_array.c:17
         TEST DRIVER: testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_10.c
         n = 3
         t[0] = -10555854
         t[1] = -2139817863
         t[2] = 200408
-[stady] Non-Compliance of assert rte: signed_overflow: s + *(t + i) ≤ 2147483647; 
-        LOCATION: tests/sum_array/sum_array.c:17
+[stady] Non-Compliance
+        of       : assert rte: signed_overflow: s + *(t + i) ≤ 2147483647; 
+        location : tests/sum_array/sum_array.c:17
         TEST DRIVER: testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_7.c
         n = 3
         t[0] = 0

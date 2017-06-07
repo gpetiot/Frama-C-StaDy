@@ -431,8 +431,9 @@ __sd_instru_all4_F7.c:267:[kernel] warning: Floating-point constant 0.1 is not r
 [pc] Starting lanceur_F7 (isc version)
 [stady] all-paths: true
 [stady] 48 test cases
-[stady] Non-Compliance of assert V22 ≢ 0; 
-        LOCATION: tests/all4/all4.c:109
+[stady] Non-Compliance
+        of       : assert V22 ≢ 0; 
+        location : tests/all4/all4.c:109
         TEST DRIVER: testcases___sd_instru_all4_F7/F7/testdrivers/TC_3.c
         G1[0] = -1.7976931348623157e+308
         G1[10] = -1.7976931348623157e+308
