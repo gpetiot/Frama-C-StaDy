@@ -1231,9 +1231,15 @@ class gather_insertions props swd = object(self)
 	 Env.merge env (Env.merge env_assumes ([], [i_bhv; i_assume_cond], []))
        in
        let env_before =
-	 Annotations.fold_behaviors (on_bhv loop_cond) kf Env.empty in
+	 if (Annotations.behaviors kf) = [] then
+	   on_bhv loop_cond false (Cil.mk_behavior ()) Env.empty
+	 else
+	   Annotations.fold_behaviors (on_bhv loop_cond) kf Env.empty in
        let env_after =
-	 Annotations.fold_behaviors (on_bhv not_loop_cond) kf Env.empty in
+	 if (Annotations.behaviors kf) = [] then
+	   on_bhv not_loop_cond false (Cil.mk_behavior ()) Env.empty
+	 else
+	   Annotations.fold_behaviors (on_bhv not_loop_cond) kf Env.empty in
        Cil.DoChildrenPost (fun s ->
 	 self#insert (Symbolic_label.beg_iter stmt.sid) env_before;
 	 self#insert (Symbolic_label.end_stmt stmt.sid) env_after;
