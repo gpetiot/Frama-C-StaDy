@@ -1260,9 +1260,9 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [stady] Non-Compliance of loop invariant 0 ≤ k < strlen; (not preserved)
         LOCATION: tests/deleteSubstr2b/deleteSubstr2b.c:72
         TEST DRIVER: testcases___sd_instru_deleteSubstr2b_delete_substr/delete_substr/testdrivers/TC_2.c
-        dest[0] = -27 -- OUTPUT: 119 (str[0])
-        dest[1] = 100 -- OUTPUT: -80 (str[1])
-        return value =  -- OUTPUT: -1 (-1)
+        dest[0] = -27 (in) ; 119 (concrete out) ; str[0] (symbolic out)
+        dest[1] = 100 (in) ; -80 (concrete out) ; str[1] (symbolic out)
+        return value = -1
         str[0] = 119
         str[1] = -80
         strlen = 2

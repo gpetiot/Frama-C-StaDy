@@ -246,7 +246,7 @@ void f(int *t, int x)
                                               0 ≤ i ≤ 4 ∧ *(t + i) ≡ x); 
         LOCATION: tests/inv_insuf_ko/inv_insuf_ko.c:19
         TEST DRIVER: testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_8.c
-        found = 175617 -- OUTPUT: 85264 (nondet_sint_val[3])
+        found = 175617 (in) ; 85264 (concrete out) ; nondet_sint_val[3] (symbolic out)
         nondet_sint_val[0] = 0
         nondet_sint_val[1] = -37802
         nondet_sint_val[2] = 5

@@ -991,9 +991,9 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [stady] Non-Compliance of ensures \result ≡ 0 
         LOCATION: tests/deleteSubstr1a/deleteSubstr1a.c:59
         TEST DRIVER: testcases___sd_instru_deleteSubstr1a_delete_substr/delete_substr/testdrivers/TC_5.c
-        dest[0] = 96 -- OUTPUT: 2 (dest[1])
+        dest[0] = 96 (in) ; 2 (concrete out) ; dest[1] (symbolic out)
         dest[1] = 2
-        return value =  -- OUTPUT: 0 (0)
+        return value = 0
         str[0] = 2
         str[1] = 2
         strlen = 2
@@ -1005,9 +1005,9 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
                             \old(*(str + k)) ≡ *(\old(dest) + k) 
         LOCATION: tests/deleteSubstr1a/deleteSubstr1a.c:58
         TEST DRIVER: testcases___sd_instru_deleteSubstr1a_delete_substr/delete_substr/testdrivers/TC_4.c
-        dest[0] = 23 -- OUTPUT: 79 (str[0])
+        dest[0] = 23 (in) ; 79 (concrete out) ; str[0] (symbolic out)
         dest[1] = 21
-        return value =  -- OUTPUT: 0 (0)
+        return value = 0
         str[0] = 79
         str[1] = 79
         strlen = 2

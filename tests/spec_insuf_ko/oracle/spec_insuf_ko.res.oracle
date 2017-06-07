@@ -242,10 +242,10 @@ void f(int *t, int k)
         nondet_sint_val[1] = 171583
         nondet_sint_val[2] = 172458
         nondet_sint_val[3] = -144005
-        t[0] = 65712 -- OUTPUT: 174739 (nondet_sint_val[0])
-        t[1] = 198227 -- OUTPUT: 171583 (nondet_sint_val[1])
-        t[2] = 153754 -- OUTPUT: 172458 (nondet_sint_val[2])
-        t[3] = -88465 -- OUTPUT: -144005 (nondet_sint_val[3])
+        t[0] = 65712 (in) ; 174739 (concrete out) ; nondet_sint_val[0] (symbolic out)
+        t[1] = 198227 (in) ; 171583 (concrete out) ; nondet_sint_val[1] (symbolic out)
+        t[2] = 153754 (in) ; 172458 (concrete out) ; nondet_sint_val[2] (symbolic out)
+        t[3] = -88465 (in) ; -144005 (concrete out) ; nondet_sint_val[3] (symbolic out)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

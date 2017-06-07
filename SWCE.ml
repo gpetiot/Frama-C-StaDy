@@ -56,12 +56,28 @@ let pretty fmt (p, f, msg, stmts, var_states) =
     | Instr(Call _) -> Printer.pp_stmt fmt s
     | _ -> Format.fprintf fmt "stmt %i" s.sid
   in
-  let on_var var (inp, con, sym) =
+  let on_var var (input, con, sym) =
     match con, sym with
-    | "", "" -> Format.fprintf fmt "%s = %s@\n" var inp
+    | "", "" -> Format.fprintf fmt "%s = %s@\n" var input
     | "", x
-    | x, "" -> Format.fprintf fmt "%s = %s -- OUTPUT: %s@\n" var inp x
-    | x, y -> Format.fprintf fmt "%s = %s -- OUTPUT: %s (%s)@\n" var inp x y
+    | x, "" ->
+       if input = "" then
+	 Format.fprintf fmt "%s = %s@\n" var x
+       else
+	 Format.fprintf fmt "%s = %s (in) ; %s (out)@\n" var input x
+    | x, y ->
+       if input = "" then
+	 if x = y then
+	   Format.fprintf fmt "%s = %s@\n" var x
+	 else
+	   Format.fprintf fmt "%s = %s (concrete) ; %s (symbolic)@\n" var x y
+       else
+	 if x = y then
+	   Format.fprintf fmt "%s = %s (in) ; %s (out)@\n" var input x
+	 else
+	   Format.fprintf fmt
+	     "%s = %s (in) ; %s (concrete out) ; %s (symbolic out)@\n"
+	     var input x y
   in
   Format.fprintf
     fmt "Subcontract Weakness of @[%a@] for @[%a@] %a@\n"

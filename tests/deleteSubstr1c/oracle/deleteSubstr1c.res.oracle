@@ -1163,9 +1163,9 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
                                \old(*(str + (l + sublen))) ≡ *(\old(dest) + l)) 
         LOCATION: tests/deleteSubstr1c/deleteSubstr1c.c:63
         TEST DRIVER: testcases___sd_instru_deleteSubstr1c_delete_substr/delete_substr/testdrivers/TC_3.c
-        dest[0] = 15 -- OUTPUT: -106 (str[1])
+        dest[0] = 15 (in) ; -106 (concrete out) ; str[1] (symbolic out)
         dest[1] = -61
-        return value =  -- OUTPUT: 0 (0)
+        return value = 0
         str[0] = 62
         str[1] = -106
         strlen = 2

@@ -521,9 +521,9 @@ void f(int n, int *t)
         nondet_sint_val[2] = 4
         t[0] = 0
         t[1] = -1073654096
-        t[2] = 129637 -- OUTPUT: 0 (t[0])
-        t[3] = -147792 -- OUTPUT: -84913 (nondet_sint_val[0])
-        t[4] = 72733 -- OUTPUT: 0 (t[0])
+        t[2] = 129637 (in) ; 0 (concrete out) ; t[0] (symbolic out)
+        t[3] = -147792 (in) ; -84913 (concrete out) ; nondet_sint_val[0] (symbolic out)
+        t[4] = 72733 (in) ; 0 (concrete out) ; t[0] (symbolic out)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

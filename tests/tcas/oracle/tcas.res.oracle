@@ -733,7 +733,7 @@ int alt_sep_test(void)
         Positive_RA_Alt_Thresh[3] = 0
         Two_of_Three_Reports_Valid = 1
         Up_Separation = 0
-        return value =  -- OUTPUT: 0 (0)
+        return value = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------
