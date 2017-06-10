@@ -1203,13 +1203,10 @@ class gather_insertions props swd = object(self)
     let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
     | Loop _ when List.mem stmt.sid swd ->
-       let loop_cond = Utils.loop_condition stmt in
-       let not_loop_cond =
-	 Cil.new_exp ~loc (UnOp(LNot, loop_cond, Cil.typeOf loop_cond)) in
        let kf = Kernel_function.find_englobing_kf stmt in
        let ca_l = Annotations.code_annot stmt in
        let ca_l = List.map (fun x -> x.annot_content) ca_l in
-       let on_bhv cond _ bhv env =
+       let on_bhv _ bhv env =
 	 let bhv_in l =
 	   List.mem bhv.b_name l || (Cil.is_default_behavior bhv && l = []) in
 	 let f_assigns ret = function
@@ -1227,22 +1224,17 @@ class gather_insertions props swd = object(self)
 	 let on_inv ret p = Env.merge ret (self#pc_assume p) in
 	 let env_block = List.fold_left on_inv env_affects linvs in
 	 let i_bhv = mk_if e_assumes env_block Env.empty in
-	 let i_assume_cond = mk_if cond Env.empty ([], [self#pc_ass "" 0],[]) in
-	 Env.merge env (Env.merge env_assumes ([], [i_bhv; i_assume_cond], []))
+	 Env.merge env (Env.merge env_assumes ([], [i_bhv], []))
        in
        let env_before =
 	 if (Annotations.behaviors kf) = [] then
-	   on_bhv loop_cond false (Cil.mk_behavior ()) Env.empty
+	   on_bhv false (Cil.mk_behavior ()) Env.empty
 	 else
-	   Annotations.fold_behaviors (on_bhv loop_cond) kf Env.empty in
-       let env_after =
-	 if (Annotations.behaviors kf) = [] then
-	   on_bhv not_loop_cond false (Cil.mk_behavior ()) Env.empty
-	 else
-	   Annotations.fold_behaviors (on_bhv not_loop_cond) kf Env.empty in
+	   Annotations.fold_behaviors on_bhv kf Env.empty in
+       let env_after = self#pc_assume Logic_const.pfalse in
        Cil.DoChildrenPost (fun s ->
-	 self#insert (Symbolic_label.beg_iter stmt.sid) env_before;
-	 self#insert (Symbolic_label.end_stmt stmt.sid) env_after;
+	 self#insert (Symbolic_label.beg_stmt stmt.sid) env_before;
+	 self#insert (Symbolic_label.end_iter stmt.sid) env_after;
 	 s
        )
 	 
