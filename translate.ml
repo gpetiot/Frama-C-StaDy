@@ -208,17 +208,22 @@ class gather_insertions props swd = object(self)
     | Ctype ty -> my_varinfo ty varname
     | _ -> raise Unreachable
 
-  method private translate_unop op t = match t.term_type with
-    | Linteger ->
-       assert(op = Neg);
-       let env, e = self#translate_term t in
-       let ret = self#fresh_Z_varinfo "neg" in
-       let i_1 = self#cinit (Cil.evar ret) in
-       let i_2 = self#cui_sub (Cil.evar ret) zero e in
-       let i_3 = self#cclear (Cil.evar ret) in
-       Env.merge env ([ret], [i_1; i_2], [i_3]), Lval(Cil.var ret)
-    | Lreal -> raise Unsupported
-    | _ -> let env, e = self#translate_term t in env, UnOp(op,e,(Cil.typeOf e))
+  method private translate_unop op t = match op with
+  | Neg ->
+     begin
+       match t.term_type with
+       | Linteger | Ctype _ ->
+	  let env1, x = self#as_logic_type Linteger (Cil.lzero ()) in
+	  let env2, y = self#as_logic_type Linteger t in
+	  let ret = self#fresh_Z_varinfo "neg" in
+	  let i_1 = self#cinit (Cil.evar ret) in
+	  let i_2 = self#cbinop MinusA (Cil.evar ret) x y in
+	  let i_3 = self#cclear (Cil.evar ret) in
+	  Env.merge env1 (Env.merge env2 ([ret], [i_1; i_2], [i_3])),
+	  (Cil.evar ret).enode
+       | _ -> raise Unsupported
+     end
+  | _ -> raise Unsupported
 
   method private translate_shift ty varname shift a b = match ty with
     | Linteger ->
