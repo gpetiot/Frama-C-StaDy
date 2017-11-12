@@ -1,6 +1,6 @@
 
 /* run.config
-STDOPT: +"-stady -stady-sim-fct sort -stady-msg-key generated-c,generated-pl"
+STDOPT: +"-stady -stady-sim-fct sort -stady-msg-key generated-c,generated-pl -variadic-no-translation"
 */
 
 extern int printf (const char *, ...);
