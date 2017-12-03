@@ -158,23 +158,31 @@ void sort(int *A, int n)
     int position;
     c = 0;
     while (1) {
-      if (! (c < n - 1)) break;{
-                                 int d;
-                                 position = c;
-                                 d = c + 1;
-                                 while (1) {
-                                   if (! (d < n)) break;if (*(A + position) > *(
-                                                            A + d)) position = d;
-                                                        d ++;}
-                                    
-                                 if (position != c) {
-                                   int swap;
-                                   swap = *(A + c);
-                                   *(A + c) = *(A + position);
-                                   *(A + position) = swap;
-                                 }
-                               }
-                               c ++;}
+      
+        if (! (c < n - 1)) break;{
+                                   {
+                                     int d;
+                                     position = c;
+                                     d = c + 1;
+                                     while (1) {
+                                       
+                                         if (! (d < n)) break;{
+                                                                if (*(
+                                                                    A + position) > *(
+                                                                    A + d)) 
+                                                                  position = d;
+                                                                d ++;
+                                                              }}
+                                        
+                                     if (position != c) {
+                                       int swap;
+                                       swap = *(A + c);
+                                       *(A + c) = *(A + position);
+                                       *(A + position) = swap;
+                                     }
+                                   }
+                                   c ++;
+                                 }}
        
     free(old_ptr_A);
     return;
@@ -237,16 +245,16 @@ void f(int *t, int k)
         location : tests/spec_insuf_ko/spec_insuf_ko.c:38
         for      : ensures *(\old(t) + 0) ≤ *(\old(t) + 1) 
         location : tests/spec_insuf_ko/spec_insuf_ko.c:34
-        TEST DRIVER: testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_5.c
+        TEST DRIVER: testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_6.c
         k = 4
-        nondet_sint_val[0] = 174739
-        nondet_sint_val[1] = 171583
-        nondet_sint_val[2] = 172458
-        nondet_sint_val[3] = -144005
-        t[0] = 65712 (in) ; 174739 (concrete out) ; nondet_sint_val[0] (symbolic out)
-        t[1] = 198227 (in) ; 171583 (concrete out) ; nondet_sint_val[1] (symbolic out)
-        t[2] = 153754 (in) ; 172458 (concrete out) ; nondet_sint_val[2] (symbolic out)
-        t[3] = -88465 (in) ; -144005 (concrete out) ; nondet_sint_val[3] (symbolic out)
+        nondet_sint_val[0] = 1073634454
+        nondet_sint_val[1] = 0
+        nondet_sint_val[2] = 0
+        nondet_sint_val[3] = 0
+        t[0] = 0 (in) ; 1073634454 (concrete out) ; nondet_sint_val[0] (symbolic out)
+        t[1] = 0 (in) ; 0 (concrete out) ; nondet_sint_val[1] (symbolic out)
+        t[2] = 0 (in) ; 0 (concrete out) ; nondet_sint_val[2] (symbolic out)
+        t[3] = 0 (in) ; 0 (concrete out) ; nondet_sint_val[3] (symbolic out)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

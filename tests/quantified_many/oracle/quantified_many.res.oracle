@@ -54,36 +54,54 @@ void f(int default_value)
     int j;
     i = 0;
     while (1) {
-      if (! (i < 5)) break;j = 0;
-                           while (1) {
-                             if (! (j < 5)) break;t[i][j] = i + j;
-                                                  j ++;}
-                              
-                           i ++;}
+      
+        if (! (i < 5)) break;{
+                               j = 0;
+                               while (1) {
+                                 
+                                   if (! (j < 5)) break;{
+                                                          t[i][j] = i + j;
+                                                          j ++;
+                                                        }}
+                                  
+                               i ++;
+                             }}
        
     min = t[0][0];
     i = 0;
     while (1) {
-      if (! (i < 5)) break;j = 0;
-                           while (1) {
-                             if (! (j < 5)) break;if (t[i][j] < min) 
-                                                    min = t[i][j];
-                                                  j ++;}
-                              
-                           i ++;}
+      
+        if (! (i < 5)) break;{
+                               j = 0;
+                               while (1) {
+                                 
+                                   if (! (j < 5)) break;{
+                                                          if (t[i][j] < min) 
+                                                            min = t[i][j];
+                                                          j ++;
+                                                        }}
+                                  
+                               i ++;
+                             }}
        
     ;
     ;
     min = default_value;
     i = 0;
     while (1) {
-      if (! (i < 5)) break;j = 0;
-                           while (1) {
-                             if (! (j < 5)) break;if (t[i][j] < min) 
-                                                    min = t[i][j];
-                                                  j ++;}
-                              
-                           i ++;}
+      
+        if (! (i < 5)) break;{
+                               j = 0;
+                               while (1) {
+                                 
+                                   if (! (j < 5)) break;{
+                                                          if (t[i][j] < min) 
+                                                            min = t[i][j];
+                                                          j ++;
+                                                        }}
+                                  
+                               i ++;
+                             }}
        
     {
       int __sd_forall_0;
@@ -197,8 +215,8 @@ void f(int default_value)
                      ∃ ℤ a, ℤ b;
                        0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b]; 
         location : tests/quantified_many/quantified_many.c:39
-        TEST DRIVER: testcases___sd_instru_quantified_many_f/f/testdrivers/TC_1.c
-        default_value = -214739
+        TEST DRIVER: testcases___sd_instru_quantified_many_f/f/testdrivers/TC_2.c
+        default_value = -1073849194
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

@@ -267,50 +267,40 @@ int Non_Crossing_Biased_Climb(void)
     int upward_preferred;
     int result;
     int tmp;
-    {
-      tmp = Inhibit_Biased_Climb();
-      upward_preferred = tmp > Down_Separation;
-    }
+    tmp = Inhibit_Biased_Climb();
+    upward_preferred = tmp > Down_Separation;
     if (upward_preferred) {
       int tmp_3;
       int tmp_0;
-      {
-        tmp_0 = Own_Below_Threat();
-        if (tmp_0) {
-          int tmp_1;
-          tmp_1 = Own_Below_Threat();
-          if (tmp_1) {
-            int tmp_2;
-            {
-              tmp_2 = ALIM();
-              ;
-            }
-            if (Down_Separation >= tmp_2) tmp_3 = 0; else tmp_3 = 1;
-          }
-          else tmp_3 = 0;
+      tmp_0 = Own_Below_Threat();
+      if (tmp_0) {
+        int tmp_1;
+        tmp_1 = Own_Below_Threat();
+        if (tmp_1) {
+          int tmp_2;
+          tmp_2 = ALIM();
+          ;
+          if (Down_Separation >= tmp_2) tmp_3 = 0; else tmp_3 = 1;
         }
-        else tmp_3 = 1;
-        result = tmp_3;
+        else tmp_3 = 0;
       }
+      else tmp_3 = 1;
+      result = tmp_3;
     }
     else {
       int tmp_6;
       int tmp_4;
-      {
-        tmp_4 = Own_Above_Threat();
-        if (tmp_4) 
-          if (Cur_Vertical_Sep >= 300) {
-            int tmp_5;
-            {
-              tmp_5 = ALIM();
-              ;
-            }
-            if (Up_Separation >= tmp_5) tmp_6 = 1; else tmp_6 = 0;
-          }
-          else tmp_6 = 0;
+      tmp_4 = Own_Above_Threat();
+      if (tmp_4) 
+        if (Cur_Vertical_Sep >= 300) {
+          int tmp_5;
+          tmp_5 = ALIM();
+          ;
+          if (Up_Separation >= tmp_5) tmp_6 = 1; else tmp_6 = 0;
+        }
         else tmp_6 = 0;
-        result = tmp_6;
-      }
+      else tmp_6 = 0;
+      result = tmp_6;
     }
     return result;
   }
@@ -350,50 +340,40 @@ int Non_Crossing_Biased_Descend(void)
     int upward_preferred;
     int result;
     int tmp;
-    {
-      tmp = Inhibit_Biased_Climb();
-      upward_preferred = tmp > Down_Separation;
-    }
+    tmp = Inhibit_Biased_Climb();
+    upward_preferred = tmp > Down_Separation;
     if (upward_preferred) {
       int tmp_2;
       int tmp_0;
-      {
-        tmp_0 = Own_Below_Threat();
-        if (tmp_0) 
-          if (Cur_Vertical_Sep >= 300) {
-            int tmp_1;
-            {
-              tmp_1 = ALIM();
-              ;
-            }
-            if (Down_Separation >= tmp_1) tmp_2 = 1; else tmp_2 = 0;
-          }
-          else tmp_2 = 0;
+      tmp_0 = Own_Below_Threat();
+      if (tmp_0) 
+        if (Cur_Vertical_Sep >= 300) {
+          int tmp_1;
+          tmp_1 = ALIM();
+          ;
+          if (Down_Separation >= tmp_1) tmp_2 = 1; else tmp_2 = 0;
+        }
         else tmp_2 = 0;
-        result = tmp_2;
-      }
+      else tmp_2 = 0;
+      result = tmp_2;
     }
     else {
       int tmp_6;
       int tmp_3;
-      {
-        tmp_3 = Own_Above_Threat();
-        if (tmp_3) {
-          int tmp_4;
-          tmp_4 = Own_Above_Threat();
-          if (tmp_4) {
-            int tmp_5;
-            {
-              tmp_5 = ALIM();
-              ;
-            }
-            if (Up_Separation >= tmp_5) tmp_6 = 1; else tmp_6 = 0;
-          }
-          else tmp_6 = 0;
+      tmp_3 = Own_Above_Threat();
+      if (tmp_3) {
+        int tmp_4;
+        tmp_4 = Own_Above_Threat();
+        if (tmp_4) {
+          int tmp_5;
+          tmp_5 = ALIM();
+          ;
+          if (Up_Separation >= tmp_5) tmp_6 = 1; else tmp_6 = 0;
         }
-        else tmp_6 = 1;
-        result = tmp_6;
+        else tmp_6 = 0;
       }
+      else tmp_6 = 1;
+      result = tmp_6;
     }
     return result;
   }
@@ -451,28 +431,22 @@ int alt_sep_test(void)
     int enabled;
     int tcas_equipped;
     int intent_not_known;
-    int need_upward_RA;
-    int need_downward_RA;
     int alt_sep;
     int tmp;
     int tmp_0;
-    need_upward_RA = 0;
-    need_downward_RA = 0;
-    {
-      if (High_Confidence) 
-        if (Own_Tracked_Alt_Rate <= 600) 
-          if (Cur_Vertical_Sep > 600) tmp = 1; else tmp = 0;
-        else tmp = 0;
+    int need_upward_RA = 0;
+    int need_downward_RA = 0;
+    if (High_Confidence) 
+      if (Own_Tracked_Alt_Rate <= 600) 
+        if (Cur_Vertical_Sep > 600) tmp = 1; else tmp = 0;
       else tmp = 0;
-      enabled = tmp;
-    }
+    else tmp = 0;
+    enabled = tmp;
     tcas_equipped = Other_Capability == 1;
-    {
-      if (Two_of_Three_Reports_Valid) 
-        if (Other_RAC == 0) tmp_0 = 1; else tmp_0 = 0;
-      else tmp_0 = 0;
-      intent_not_known = tmp_0;
-    }
+    if (Two_of_Three_Reports_Valid) 
+      if (Other_RAC == 0) tmp_0 = 1; else tmp_0 = 0;
+    else tmp_0 = 0;
+    intent_not_known = tmp_0;
     alt_sep = 0;
     if (enabled) 
       if (tcas_equipped) {
@@ -487,26 +461,22 @@ int alt_sep_test(void)
                 int tmp_1;
                 int tmp_6;
                 int tmp_4;
-                {
-                  tmp_1 = Non_Crossing_Biased_Climb();
-                  if (tmp_1) {
-                    int tmp_2;
-                    tmp_2 = Own_Below_Threat();
-                    if (tmp_2) tmp_3 = 1; else tmp_3 = 0;
-                  }
-                  else tmp_3 = 0;
-                  need_upward_RA = tmp_3;
+                tmp_1 = Non_Crossing_Biased_Climb();
+                if (tmp_1) {
+                  int tmp_2;
+                  tmp_2 = Own_Below_Threat();
+                  if (tmp_2) tmp_3 = 1; else tmp_3 = 0;
                 }
-                {
-                  tmp_4 = Non_Crossing_Biased_Descend();
-                  if (tmp_4) {
-                    int tmp_5;
-                    tmp_5 = Own_Above_Threat();
-                    if (tmp_5) tmp_6 = 1; else tmp_6 = 0;
-                  }
-                  else tmp_6 = 0;
-                  need_downward_RA = tmp_6;
+                else tmp_3 = 0;
+                need_upward_RA = tmp_3;
+                tmp_4 = Non_Crossing_Biased_Descend();
+                if (tmp_4) {
+                  int tmp_5;
+                  tmp_5 = Own_Above_Threat();
+                  if (tmp_5) tmp_6 = 1; else tmp_6 = 0;
                 }
+                else tmp_6 = 0;
+                need_downward_RA = tmp_6;
                 if (need_upward_RA) {
                   if (need_downward_RA) alt_sep = 0; else goto _LAND;
                 }
@@ -712,27 +682,30 @@ int alt_sep_test(void)
 [pc] Starting lanceur_pathcrawler__alt_sep_test_precond (isc version)
 [pc] Starting lanceur_alt_sep_test (isc version)
 [pc] Starting lanceur_alt_sep_test (isc version)
+[pc] Starting lanceur_alt_sep_test (isc version)
+[pc] Starting lanceur_alt_sep_test (isc version)
+[pc] Starting lanceur_alt_sep_test (isc version)
 [stady] all-paths: true
-[stady] 170 test cases
+[stady] 169 test cases
 [stady] Non-Compliance
         of       : ensures \result ≢ 1 
         location : tests/tcas/tcas.c:123
         TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_17.c
-        Alt_Layer_Value = 3
+        Alt_Layer_Value = 0
         Climb_Inhibit = 1
         Cur_Vertical_Sep = 16684
-        Down_Separation = -1073754907
+        Down_Separation = 0
         High_Confidence = 32464
         Other_Capability = 0
-        Other_RAC = 2
-        Other_Tracked_Alt = 520
-        Own_Tracked_Alt = 390
+        Other_RAC = 0
+        Other_Tracked_Alt = 351
+        Own_Tracked_Alt = 309
         Own_Tracked_Alt_Rate = 450
         Positive_RA_Alt_Thresh[0] = 16434
         Positive_RA_Alt_Thresh[1] = 0
         Positive_RA_Alt_Thresh[2] = 0
         Positive_RA_Alt_Thresh[3] = 0
-        Two_of_Three_Reports_Valid = 1
+        Two_of_Three_Reports_Valid = 0
         Up_Separation = 0
         return value = 0
 [report] Computing properties status...

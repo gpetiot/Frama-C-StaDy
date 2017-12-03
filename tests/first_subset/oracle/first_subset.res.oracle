@@ -141,7 +141,8 @@ void firstSubset(int *s, int n)
       __gmpz_clear(__sd_Z_cst_3);
       __gmpz_clear(__sd_Z_to_Z_4);
       while (1) {
-        if (! (k < n)) break;mpz_t __sd_Z_to_Z_12;
+        
+          if (! (k < n)) break;mpz_t __sd_Z_to_Z_12;
         mpz_t __sd_Z_to_Z_13;
         mpz_t __sd_Z_sub_0;
         int __sd_variant_pos_0;
@@ -152,8 +153,10 @@ void firstSubset(int *s, int n)
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_0,0);
         if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
                                                                  4);
-        *(s + k) = 0;
-        k ++;mpz_t __sd_Z_cst_4;
+        {
+          *(s + k) = 0;
+          k ++;
+        }mpz_t __sd_Z_cst_4;
         mpz_t __sd_Z_to_Z_5;
         int __sd_le_1;
         int __sd_and_1;

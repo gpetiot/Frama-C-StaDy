@@ -68,10 +68,10 @@ int main_precond(void) {
 }
 void main(void)
 {
+  int x;
+  int y;
+  int z;
   {
-    int x;
-    int y;
-    int z;
     {
       x = __sd_rand_mod_0();
       
@@ -108,17 +108,17 @@ void main(void)
 [stady] Non-Compliance
         of       : assert x ≡ y; 
         location : tests/simulate_rand/simulate_rand.c:13
-        TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_4.c
-        nondet_sint_val[0] = -133277
-        nondet_sint_val[1] = 168196
-        nondet_sint_val[2] = 200986
+        TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_6.c
+        nondet_sint_val[0] = -1073830938
+        nondet_sint_val[1] = 0
+        nondet_sint_val[2] = 0
 [stady] Non-Compliance
         of       : assert x ≢ z; 
         location : tests/simulate_rand/simulate_rand.c:15
-        TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_6.c
-        nondet_sint_val[0] = -101831
-        nondet_sint_val[1] = -101831
-        nondet_sint_val[2] = -101831
+        TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_4.c
+        nondet_sint_val[0] = 0
+        nondet_sint_val[1] = 0
+        nondet_sint_val[2] = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

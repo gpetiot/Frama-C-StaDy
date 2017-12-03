@@ -232,21 +232,19 @@ void f(int **t, int n)
   }
   old_n = n;
   __gmpz_clear(__sd_Z_to_Z_6);
-  {
-    mpz_t __sd_Z_to_Z_8;
-    unsigned long __sd_to_ctype_7;
-    unsigned long __sd_iter_2;
-    __gmpz_init_set_si(__sd_Z_to_Z_8,n);
-    __sd_to_ctype_7 = __gmpz_get_ui(__sd_Z_to_Z_8);
-    __sd_iter_2 = 0;
-    while (__sd_iter_2 < __sd_to_ctype_7) {
-      free(*(old_ptr_t + __sd_iter_2));
-      __sd_iter_2 ++;
-    }
-    free(old_ptr_t);
-    __gmpz_clear(__sd_Z_to_Z_8);
-    return;
+  mpz_t __sd_Z_to_Z_8;
+  unsigned long __sd_to_ctype_7;
+  unsigned long __sd_iter_2;
+  __gmpz_init_set_si(__sd_Z_to_Z_8,n);
+  __sd_to_ctype_7 = __gmpz_get_ui(__sd_Z_to_Z_8);
+  __sd_iter_2 = 0;
+  while (__sd_iter_2 < __sd_to_ctype_7) {
+    free(*(old_ptr_t + __sd_iter_2));
+    __sd_iter_2 ++;
   }
+  free(old_ptr_t);
+  __gmpz_clear(__sd_Z_to_Z_8);
+  return;
 }
 [kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_quantified_f.c (with preprocessing)

@@ -84,8 +84,7 @@ void f(int n, int *t)
   }
   __gmpz_clear(__sd_Z_to_Z_0);
   {
-    int i;
-    i = 3;
+    int i = 3;
     *(t + 2) = fmax(*(t + 1),*(t + 0));
     first_loop:
       {
@@ -286,8 +285,10 @@ void f(int n, int *t)
           __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_10,0);
           if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("9$non positive",
                                                                    0);
-          *(t + i) = fmax(*(t + (i - 1)),*(t + (i - 2)));
-          i ++;mpz_t __sd_Z_cst_8;
+          {
+            *(t + i) = fmax(*(t + (i - 1)),*(t + (i - 2)));
+            i ++;
+          }mpz_t __sd_Z_cst_8;
           mpz_t __sd_Z_to_Z_5;
           int __sd_le_2;
           int __sd_and_2;
@@ -401,7 +402,7 @@ void f(int n, int *t)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_f (isc version)
 [stady] all-paths: true
-[stady] 179 test cases
+[stady] 172 test cases
 [stady] Subcontract Weakness
         of       : loop at label 'first_loop'
         location : tests/inv_preserved/inv_preserved.c:28
@@ -410,16 +411,16 @@ void f(int n, int *t)
                        2 ≤ k < i - 1 ⇒
                        *(t + k) ≡ *(t + (k - 1)) ∨ *(t + k) ≡ *(t + (k - 2)); (not preserved)
         location : tests/inv_preserved/inv_preserved.c:23
-        TEST DRIVER: testcases___sd_instru_inv_preserved_f/f/testdrivers/TC_28.c
+        TEST DRIVER: testcases___sd_instru_inv_preserved_f/f/testdrivers/TC_27.c
         n = 5
-        nondet_sint_val[0] = 30702
-        nondet_sint_val[1] = -14819
+        nondet_sint_val[0] = 1073822706
+        nondet_sint_val[1] = 0
         nondet_sint_val[2] = 4
         t[0] = 0
-        t[1] = -1073801408
-        t[2] = -126194 (in) ; 0 (concrete out) ; t[0] (symbolic out)
-        t[3] = -165352 (in) ; 30702 (concrete out) ; nondet_sint_val[0] (symbolic out)
-        t[4] = -211632 (in) ; 30702 (concrete out) ; nondet_sint_val[0] (symbolic out)
+        t[1] = 0
+        t[2] = 0 (in) ; 0 (concrete out) ; t[1] (symbolic out)
+        t[3] = 0 (in) ; 1073822706 (concrete out) ; nondet_sint_val[0] (symbolic out)
+        t[4] = 0 (in) ; 1073822706 (concrete out) ; nondet_sint_val[0] (symbolic out)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

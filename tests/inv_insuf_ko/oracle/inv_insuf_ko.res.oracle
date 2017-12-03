@@ -80,8 +80,7 @@ void f(int *t, int x)
   __gmpz_clear(__sd_Z_cst_1);
   __gmpz_clear(__sd_Z_add_0);
   {
-    int i;
-    i = 0;
+    int i = 0;
     found = 0;
     first_loop:
       {
@@ -134,8 +133,10 @@ void f(int *t, int x)
         __gmpz_clear(__sd_Z_cst_4);
         __gmpz_clear(__sd_Z_to_Z_2);
         if (i <= 4) {
-          if (*(t + i) == x) found = 1;
-          i ++;mpz_t __sd_Z_cst_6;
+          {
+            if (*(t + i) == x) found = 1;
+            i ++;
+          }mpz_t __sd_Z_cst_6;
           mpz_t __sd_Z_to_Z_4;
           int __sd_le_4;
           int __sd_and_2;
@@ -211,24 +212,25 @@ void f(int *t, int x)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
 [pc] Starting lanceur_f (isc version)
+[pc] Starting lanceur_f (isc version)
 [stady] all-paths: true
-[stady] 41 test cases
+[stady] 33 test cases
 [stady] Subcontract Weakness
         of       : loop at label 'first_loop'
         location : tests/inv_insuf_ko/inv_insuf_ko.c:19
         for      : assert
                    found ≢ 0 ⇔ (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t + i) ≡ x); 
         location : tests/inv_insuf_ko/inv_insuf_ko.c:24
-        TEST DRIVER: testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_6.c
-        found = 47023 (in) ; -174535 (concrete out) ; nondet_sint_val[1] (symbolic out)
+        TEST DRIVER: testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_5.c
+        found = 0 (in) ; 0 (out)
         nondet_sint_val[0] = 5
-        nondet_sint_val[1] = -174535
-        t[0] = 42756
-        t[1] = -3272
-        t[2] = 117187
-        t[3] = -183970
-        t[4] = 148145
-        x = -29094
+        nondet_sint_val[1] = 0
+        t[0] = 0
+        t[1] = 0
+        t[2] = 0
+        t[3] = 0
+        t[4] = 0
+        x = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

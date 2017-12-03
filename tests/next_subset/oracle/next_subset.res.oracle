@@ -183,11 +183,14 @@ int nextSubset(int *s, int n)
       __gmpz_clear(__sd_Z_neg_4);
       __gmpz_clear(__sd_Z_to_Z_15);
       while (1) {
-        if (! (k >= 0)) break;int __sd_variant_save_0;
+        
+          if (! (k >= 0)) break;int __sd_variant_save_0;
         if (k < 0) pathcrawler_assert_exception("non positive",0);
         __sd_variant_save_0 = k;
-        if (*(s + k) == 0) break;
-        k --;mpz_t __sd_Z_cst_19;
+        {
+          if (*(s + k) == 0) break;
+          k --;
+        }mpz_t __sd_Z_cst_19;
         mpz_t __sd_Z_cst_20;
         mpz_t __sd_Z_neg_5;
         mpz_t __sd_Z_to_Z_18;
@@ -307,7 +310,8 @@ int nextSubset(int *s, int n)
       __gmpz_clear(__sd_Z_add_0);
       __gmpz_clear(__sd_Z_to_Z_22);
       while (1) {
-        if (! (i < n)) break;mpz_t __sd_Z_to_Z_31;
+        
+          if (! (i < n)) break;mpz_t __sd_Z_to_Z_31;
         mpz_t __sd_Z_to_Z_32;
         mpz_t __sd_Z_sub_2;
         int __sd_variant_pos_0;
@@ -318,8 +322,10 @@ int nextSubset(int *s, int n)
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_2,0);
         if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
                                                                  11);
-        *(s + i) = 0;
-        i ++;mpz_t __sd_Z_to_Z_23;
+        {
+          *(s + i) = 0;
+          i ++;
+        }mpz_t __sd_Z_to_Z_23;
         mpz_t __sd_Z_cst_23;
         mpz_t __sd_Z_add_1;
         mpz_t __sd_Z_to_Z_24;

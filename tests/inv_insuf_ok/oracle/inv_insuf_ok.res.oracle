@@ -80,8 +80,7 @@ void f(int *t, int x)
   __gmpz_clear(__sd_Z_cst_1);
   __gmpz_clear(__sd_Z_add_0);
   {
-    int i;
-    i = 0;
+    int i = 0;
     found = 0;
     first_loop:
       {
@@ -206,8 +205,10 @@ void f(int *t, int x)
         __gmpz_clear(__sd_Z_to_Z_8);
         __gmpz_clear(__sd_Z_cst_10);
         if (i <= 4) {
-          if (*(t + i) == x) found = 1;
-          i ++;mpz_t __sd_Z_cst_8;
+          {
+            if (*(t + i) == x) found = 1;
+            i ++;
+          }mpz_t __sd_Z_cst_8;
           mpz_t __sd_Z_to_Z_6;
           int __sd_le_4;
           int __sd_and_2;

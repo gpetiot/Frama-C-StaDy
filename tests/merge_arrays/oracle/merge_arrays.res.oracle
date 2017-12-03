@@ -221,12 +221,9 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
   __gmpz_clear(__sd_Z_to_Z_7);
   __gmpz_clear(__sd_Z_add_4);
   {
-    int i;
-    int j;
-    int k;
-    i = 0;
-    j = 0;
-    k = 0;
+    int i = 0;
+    int j = 0;
+    int k = 0;
     {
       mpz_t __sd_Z_cst_9;
       mpz_t __sd_Z_to_Z_8;
@@ -299,10 +296,11 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       __gmpz_clear(__sd_Z_to_Z_22);
       __gmpz_clear(__sd_Z_add_7);
       while (1) {
-        if (i < l1) {
-          if (! (j < l2)) break;
-        }
-        else break;mpz_t __sd_Z_to_Z_26;
+        
+          if (i < l1) {
+            if (! (j < l2)) break;
+          }
+          else break;mpz_t __sd_Z_to_Z_26;
         mpz_t __sd_Z_to_Z_27;
         mpz_t __sd_Z_add_9;
         mpz_t __sd_Z_to_Z_28;
@@ -318,15 +316,17 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_3,0);
         if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
                                                                  9);
-        if (*(t1 + i) < *(t2 + j)) {
-          *(t3 + k) = *(t1 + i);
-          i ++;
-        }
-        else {
-          *(t3 + k) = *(t2 + j);
-          j ++;
-        }
-        k ++;mpz_t __sd_Z_cst_10;
+        {
+          if (*(t1 + i) < *(t2 + j)) {
+            *(t3 + k) = *(t1 + i);
+            i ++;
+          }
+          else {
+            *(t3 + k) = *(t2 + j);
+            j ++;
+          }
+          k ++;
+        }mpz_t __sd_Z_cst_10;
         mpz_t __sd_Z_to_Z_9;
         int __sd_le_1;
         int __sd_and_1;
@@ -485,7 +485,8 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       __gmpz_clear(__sd_Z_to_Z_44);
       __gmpz_clear(__sd_Z_add_13);
       while (1) {
-        if (! (i < l1)) break;mpz_t __sd_Z_to_Z_48;
+        
+          if (! (i < l1)) break;mpz_t __sd_Z_to_Z_48;
         mpz_t __sd_Z_to_Z_49;
         mpz_t __sd_Z_sub_5;
         int __sd_variant_pos_1;
@@ -496,9 +497,11 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         __sd_variant_pos_1 = __gmpz_cmp_ui(__sd_Z_sub_5,0);
         if (__sd_variant_pos_1 < 0) pathcrawler_assert_exception("non positive",
                                                                  14);
-        *(t3 + k) = *(t1 + i);
-        i ++;
-        k ++;mpz_t __sd_Z_cst_16;
+        {
+          *(t3 + k) = *(t1 + i);
+          i ++;
+          k ++;
+        }mpz_t __sd_Z_cst_16;
         mpz_t __sd_Z_to_Z_33;
         int __sd_le_9;
         int __sd_and_7;
@@ -636,7 +639,8 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
       __gmpz_clear(__sd_Z_to_Z_64);
       __gmpz_clear(__sd_Z_add_17);
       while (1) {
-        if (! (j < l2)) break;mpz_t __sd_Z_to_Z_68;
+        
+          if (! (j < l2)) break;mpz_t __sd_Z_to_Z_68;
         mpz_t __sd_Z_to_Z_69;
         mpz_t __sd_Z_sub_7;
         int __sd_variant_pos_2;
@@ -647,9 +651,11 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
         __sd_variant_pos_2 = __gmpz_cmp_ui(__sd_Z_sub_7,0);
         if (__sd_variant_pos_2 < 0) pathcrawler_assert_exception("non positive",
                                                                  19);
-        *(t3 + k) = *(t2 + j);
-        j ++;
-        k ++;mpz_t __sd_Z_cst_20;
+        {
+          *(t3 + k) = *(t2 + j);
+          j ++;
+          k ++;
+        }mpz_t __sd_Z_cst_20;
         mpz_t __sd_Z_to_Z_53;
         int __sd_le_15;
         int __sd_and_11;
