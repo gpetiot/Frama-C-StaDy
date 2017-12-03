@@ -27,7 +27,7 @@ class print_insertions insertions functions swd = object(self)
     Format.fprintf fmt "@[%t%a@\n@[<v 2>" ignore self#vdecl f.svar;
     Format.fprintf fmt "@[<hov 2>{@\n";
     self#insertions_at fmt (Symbolic_label.beg_func f.svar.vname);
-    self#block ~braces:true fmt f.sbody;
+    self#block fmt f.sbody;
     Format.fprintf fmt "@.}";
     Format.fprintf fmt "@]%t@]@." ignore;
     is_ghost <- old_is_ghost
@@ -53,26 +53,25 @@ class print_insertions insertions functions swd = object(self)
 	 let loop_cond = Utils.loop_condition stmt in
 	 Format.fprintf fmt "%a@[<v 2>if (%a) {@\n" line_directive l
 	   super#exp loop_cond;
-	 let braces = false in
 	 self#insertions_at fmt (Symbolic_label.beg_iter stmt.sid);
 	 let new_b = {b with bstmts = List.tl b.bstmts} in
 	 let new_b = {new_b with blocals = []} in
-	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
+	 Format.fprintf fmt "%a" (fun fmt -> self#block fmt) new_b;
 	 self#insertions_at fmt (Symbolic_label.end_iter stmt.sid);
 	 Format.fprintf fmt "}@\n @]"
       | Loop(_,b,l,_,_) ->
 	 let line_directive fmt = self#line_directive fmt in
 	 Format.fprintf fmt "%a@[<v 2>while (1) {@\n" line_directive l;
 	 let new_b = {b with bstmts = [List.hd b.bstmts]} in
-	 let braces = false in
-	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
+	 Format.fprintf fmt "%a" (fun fmt -> self#block fmt) new_b;
 	 self#insertions_at fmt (Symbolic_label.beg_iter stmt.sid);
 	 let new_b = {b with bstmts = List.tl b.bstmts} in
 	 let new_b = {new_b with blocals = []} in
-	 Format.fprintf fmt "%a" (fun fmt -> self#block ~braces fmt) new_b;
+	 Format.fprintf fmt "%a" (fun fmt -> self#block fmt) new_b;
 	 self#insertions_at fmt (Symbolic_label.end_iter stmt.sid);
 	 Format.fprintf fmt "}@\n @]"
       | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
+      | Instr(Local_init (_, ConsInit (vi, _, _), _))
 	   when List.mem stmt.sid swd
 		|| List.mem vi.vname (Options.Simulate_Functions.get()) -> ()
       | Return _ ->

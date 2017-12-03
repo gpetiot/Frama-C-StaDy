@@ -1204,6 +1204,72 @@ class gather_insertions props swd = object(self)
     in
     List.fold_left on_term Env.empty assigns_terms
 
+  method swd_call stmt ret_lval fct_varinfo args loc init_var =
+    let kf = Globals.Functions.get fct_varinfo in
+    let formals = Kernel_function.get_formals kf in
+    let varname = fct_varinfo.vname ^ "_mod" in
+    let new_f_vi = self#fresh_varinfo fct_varinfo.vtype varname in
+    let on_bhv _ bhv env =
+      let env_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
+	 (* we create variables old_* to save the values of globals and
+	  * formal parameters before function call *)
+      let save v (a, b) =
+	let d, e = self#save_varinfo kf v in
+	Env.merge d a, Env.merge e b
+      in
+      let save_global v _ l = save v l in
+      let save_formal l v = save v l in
+      let i1,i2 =
+	Globals.Vars.fold_in_file_order save_global (Env.empty, Env.empty) in
+      let i1,i2 = List.fold_left save_formal (i1,i2) formals in
+      let env_begin_save = i1 and env_end_save = i2 in
+      let ensures = bhv.b_post_cond in
+      let on_post env (_,{ip_content=p}) =
+	let p = match ret_lval with
+	  | Some r ->
+	     let ty = Cil.typeOfLval r in
+	     result_varinfo <- Some (my_varinfo ty "__retres");
+	     Inline.pred p
+	  | None -> p
+	in
+	Env.merge env (self#pc_assume p)
+      in
+      let env_posts = List.fold_left on_post Env.empty ensures in
+      let env_affects = self#assigns_swd [bhv.b_assigns] in
+      let env_then =
+	Env.merge env_begin_save
+	  (Env.merge env_affects (Env.merge env_posts env_end_save))
+      in
+      let i_bhv = mk_if e_assumes env_then Env.empty in
+      Env.merge env (Env.merge env_assumes ([], [i_bhv], []))
+    in
+    let env_body = Annotations.fold_behaviors on_bhv kf Env.empty in
+    let env_before, env_after = match ret_lval with
+      | Some r ->
+	 let ty = Cil.typeOfLval r in
+	 let retres = my_varinfo ty "__retres" in
+	 let str = "\\return of function '" ^ fct_varinfo.vname ^ "'" in
+	 let aff = self#cnondet ty (Cil.var retres)(Cil.mkString ~loc str) in
+	 ([retres], [aff], []), ([], [mk_ret (Cil.evar retres)], [])
+      | None -> Env.empty, Env.empty
+    in
+    let locals,s1,s2 = Env.merge env_before (Env.merge env_body env_after) in
+    let stmts = List.rev_append (List.rev s1) s2 in
+    let new_f = Utils.mk_fundec new_f_vi ~formals ~locals stmts in
+    functions <- new_f :: functions;
+    let i_call = Cil.mkStmt(Instr(Call(ret_lval,Cil.evar new_f_vi,args,loc))) in
+    let stmt = Extlib.the self#current_stmt in
+    let kf = Kernel_function.find_englobing_kf stmt in
+    let kf_name = Kernel_function.get_name kf in
+    let init_vars =
+      match init_var with
+      | None -> []
+      | Some init_var -> [init_var]
+    in
+    self#insert (Symbolic_label.beg_func kf_name) (init_vars, [], []);
+    self#insert (Symbolic_label.end_stmt stmt.sid) ([], [i_call], []);
+    Cil.SkipChildren
+
   method! vstmt_aux stmt =
     let sim_funcs = Options.Simulate_Functions.get() in
     match stmt.skind with
@@ -1244,62 +1310,12 @@ class gather_insertions props swd = object(self)
        )
 	 
     | Instr (Call(ret,{enode=Lval(Var fct_varinfo,NoOffset)},args,loc))
-	 when List.mem stmt.sid swd || List.mem fct_varinfo.vname sim_funcs ->
-       let kf = Globals.Functions.get fct_varinfo in
-       let formals = Kernel_function.get_formals kf in
-       let varname = fct_varinfo.vname ^ "_mod" in
-       let new_f_vi = self#fresh_varinfo fct_varinfo.vtype varname in
-       let on_bhv _ bhv env =
-	 let env_assumes, e_assumes = self#cond_of_assumes bhv.b_assumes in
-	 (* we create variables old_* to save the values of globals and
-	  * formal parameters before function call *)
-	 let save v (a, b) =
-	   let d, e = self#save_varinfo kf v in
-	   Env.merge d a, Env.merge e b
-	 in
-	 let save_global v _ l = save v l in
-	 let save_formal l v = save v l in
-	 let i1,i2 =
-	   Globals.Vars.fold_in_file_order save_global (Env.empty, Env.empty) in
-	 let i1,i2 = List.fold_left save_formal (i1,i2) formals in
-	 let env_begin_save = i1 and env_end_save = i2 in
-	 let ensures = bhv.b_post_cond in
-	 let on_post env (_,{ip_content=p}) =
-	   let p = match ret with
-	     | Some r ->
-		let ty = Cil.typeOfLval r in
-		result_varinfo <- Some (my_varinfo ty "__retres");
-		Inline.pred p
-	     | None -> p
-	   in
-	   Env.merge env (self#pc_assume p)
-	 in
-	 let env_posts = List.fold_left on_post Env.empty ensures in
-	 let env_affects = self#assigns_swd [bhv.b_assigns] in
-	 let env_then =
-	   Env.merge env_begin_save
-	     (Env.merge env_affects (Env.merge env_posts env_end_save))
-	 in
-	 let i_bhv = mk_if e_assumes env_then Env.empty in
-	 Env.merge env (Env.merge env_assumes ([], [i_bhv], []))
-       in
-       let env_body = Annotations.fold_behaviors on_bhv kf Env.empty in
-       let env_before, env_after = match ret with
-	 | Some r ->
-	    let ty = Cil.typeOfLval r in
-	    let retres = my_varinfo ty "__retres" in
-	    let str = "\\return of function '" ^ fct_varinfo.vname ^ "'" in
-	    let aff = self#cnondet ty (Cil.var retres)(Cil.mkString ~loc str) in
-	    ([retres], [aff], []), ([], [mk_ret (Cil.evar retres)], [])
-	 | None -> Env.empty, Env.empty
-       in
-       let locals,s1,s2 = Env.merge env_before (Env.merge env_body env_after) in
-       let stmts = List.rev_append (List.rev s1) s2 in
-       let new_f = Utils.mk_fundec new_f_vi ~formals ~locals stmts in
-       functions <- new_f :: functions;
-       let i_call = Cil.mkStmt(Instr(Call(ret,Cil.evar new_f_vi,args,loc))) in
-       self#insert (Symbolic_label.end_stmt stmt.sid) ([], [i_call], []);
-       Cil.SkipChildren
+	when List.mem stmt.sid swd || List.mem fct_varinfo.vname sim_funcs ->
+       self#swd_call stmt ret fct_varinfo args loc None
+    | Instr (Local_init (ret, ConsInit (fct_varinfo, args, _), loc))
+	when List.mem stmt.sid swd || List.mem fct_varinfo.vname sim_funcs ->
+       self#swd_call
+	 stmt (Some (Var ret, NoOffset)) fct_varinfo args loc (Some ret)
     | _ -> Cil.DoChildren
 
   method! vglob_aux = function

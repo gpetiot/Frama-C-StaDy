@@ -59,8 +59,10 @@ let pretty fmt (p, f, msg, stmts, var_states) =
     in
     let pp_descr fmt s = match s.skind with
       | Loop _ -> Format.fprintf fmt "loop"
-      | Instr (Call (_,f,_,_)) ->
-	 Format.fprintf fmt "'%a' call" Printer.pp_exp f
+      | Instr (Call (_,e,_,_)) ->
+	 Format.fprintf fmt "'%a' call" Printer.pp_exp e
+      | Instr (Local_init (_,ConsInit (v, _, _),_)) ->
+	 Format.fprintf fmt "'%s' call" v.vname
       | _ -> assert false (* unreachable *)
     in
     Format.fprintf fmt "%a at label '%s'" pp_descr s label

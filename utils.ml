@@ -209,7 +209,8 @@ let loop_condition stmt = match stmt.skind with
   | _ -> assert false
 
 let rec is_stmt_nondet stmt = match stmt.skind with
-  | Instr (Call (_,{enode=Lval(Var v,_)},_,_)) ->
+  | Instr (Call (_,{enode=Lval(Var v,_)},_,_))
+  | Instr (Local_init (_, ConsInit (v, _, _), _)) ->
      begin try (String.sub v.vname 0 7) = "nondet_" with _ -> false end
   | If (_, b1, b2, _) ->
      if List.fold_left (fun acc s -> acc || is_stmt_nondet s) false b1.bstmts

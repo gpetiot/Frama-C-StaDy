@@ -6,7 +6,7 @@ let typically_typer ~typing_context ~loc = function
   | [p] ->
     let type_pred = typing_context.Logic_typing.type_predicate in
     let pre_state = typing_context.Logic_typing.pre_state in
-    Ext_preds [type_pred pre_state p]
+    Ext_preds [type_pred typing_context pre_state p]
   | _ ->
     typing_context.Logic_typing.error loc "predicate expected after 'typically'"
 
@@ -79,10 +79,12 @@ let compute_props ?(props=selected_props()) ?swd () =
 	 try
 	   let stmt = Extlib.the (Globals.Functions.fold on_kf None) in
 	   match stmt.skind with
-	   | Instr(Call _) | Loop _ -> stmt.sid :: acc
+	   | Instr(Call _)
+	   | Instr(Local_init (_, ConsInit _, _))
+	   | Loop _ -> stmt.sid :: acc
 	   | _ ->
 	      Options.failure ~current:true ~once:true
-		"label %s does not refer to a Call nor a Loop" l;
+		"label %s does not refer to a function call nor a loop" l;
 	     acc
 	 with _ ->
 	   Options.failure ~current:true ~once:true "label %s not found" l;

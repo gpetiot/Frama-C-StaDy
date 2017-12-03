@@ -44,7 +44,9 @@ let to_do_on_select
       (compute: ?props:Property.t list -> ?swd:int list -> unit -> unit) =
   match selected with
   | Pretty_source.PStmt(_,({skind=Loop _} as stmt))
-  | Pretty_source.PStmt(_,({skind=Instr(Call _)} as stmt)) when button_nb = 3 ->
+  | Pretty_source.PStmt(_,({skind=Instr(Call _)} as stmt))
+  | Pretty_source.PStmt(_,({skind=Instr(Local_init (_,ConsInit _,_))} as stmt))
+      when button_nb = 3 ->
      let callback() = add_swd stmt.sid in
      let str1 = "Add this contract to the SWD list" in
      ignore (popup_factory#add_item str1 ~callback);
