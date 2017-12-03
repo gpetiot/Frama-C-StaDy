@@ -1,4 +1,7 @@
 
+v0.2.3
+	08/10/2017 G. PETIOT fix translation of unary minus operator
+
 v0.2.2
 	08/03/2017 G. PETIOT add missing mpz_clear calls in translation
 
