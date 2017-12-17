@@ -293,27 +293,21 @@ class gather_insertions props swd = object(self)
     | _ -> raise Unreachable
 
   method private translate_at t = function
-    | LogicLabel(_,stringlabel) ->
-       if stringlabel = "Old" || stringlabel = "Pre" then
-	 let is_ptr =
-	   match t.term_node with TLval(TMem _,_) -> true | _-> false in
-	 if is_ptr then in_old_ptr <- true;
-	 in_old_term <- true;
-	 let env, v = self#translate_term t in
-	 if is_ptr then in_old_ptr <- false;
-	 in_old_term <- false;
-	 env, v.enode
-       else
-	 (* label Post is only encoutered in post-conditions, and \at(t,Post)
-	  * in a post-condition is t *)
-	 if stringlabel = "Post" || stringlabel = "Here" then
-	   let env, v = self#translate_term t in
-	   env, v.enode
-	 else
-	   Options.not_yet_implemented
-	     "Sd_insertions.gather_insertions#term_node \\at(%a,%s)"
-	     Debug.pp_term t stringlabel
-    | _ -> raise Unsupported
+  | BuiltinLabel (Old | Pre) ->
+     let is_ptr =
+       match t.term_node with TLval(TMem _,_) -> true | _-> false in
+     if is_ptr then in_old_ptr <- true;
+     in_old_term <- true;
+     let env, v = self#translate_term t in
+     if is_ptr then in_old_ptr <- false;
+     in_old_term <- false;
+     env, v.enode
+  | BuiltinLabel (Post | Here) ->
+     (* label Post is only encoutered in post-conditions, and \at(t,Post)
+      * in a post-condition is t *)
+     let env, v = self#translate_term t in
+     env, v.enode
+  | _ -> raise Unsupported
 
   (* C type -> logic type *)
   method private translate_logic_coerce lt t = match lt with
@@ -758,7 +752,7 @@ class gather_insertions props swd = object(self)
     | Pforall(vars,{pred_content=Pimplies(h,g)}) ->
        self#translate_forall vars h g
     | Pexists(vars,{pred_content=Pand(h,g)}) -> self#translate_exists vars h g
-    | Pat (p, LogicLabel(_,"Here")) -> self#translate_predicate p
+    | Pat (p, BuiltinLabel Here) -> self#translate_predicate p
     | Pvalid (_,t) -> self#translate_valid t
     | Pvalid_read (_,t) ->
        Options.warning ~current:true ~once:true
@@ -876,15 +870,15 @@ class gather_insertions props swd = object(self)
   (* alloc and dealloc variables for \at terms *)
   method private save_varinfo kf vi =
     let rec dig_type = function
-      | TPtr (ty, _) -> Cil.stripConstLocalType ty
-      | TArray (ty, _, _, _) -> Cil.stripConstLocalType ty
+      | TPtr (ty, _)
+      | TArray (ty, _, _, _) -> ty
       | TNamed (ty, _) -> dig_type ty.ttype
       | _ -> raise Unreachable
     in
     let rec strip_const = function
-      | TPtr (t, att) -> Cil.stripConstLocalType (TPtr(strip_const t, att))
-      | TArray (t,a,b,c) -> Cil.stripConstLocalType(TArray(strip_const t,a,b,c))
-      | ty -> Cil.stripConstLocalType ty
+      | TPtr (t, att) -> TPtr (strip_const t, att)
+      | TArray (t,a,b,c) -> TArray (strip_const t,a,b,c)
+      | ty -> ty
     in
     let addoffset lval exp =
       let ty = Cil.typeOfLval lval in

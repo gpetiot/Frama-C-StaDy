@@ -32,7 +32,7 @@ class debug_ast () = object(self)
   | TStartOf tl -> Format.fprintf fmt "TStartOf(%a)" self#term_lval tl
   | Tapp(li,ll,tl) -> Format.fprintf fmt "Tapp(%a,[%a],[%a])"
     self#logic_info li
-    (pp_list (pp_pair self#logic_label self#logic_label)) ll
+    (pp_list self#logic_label) ll
     (pp_list self#term) tl
   | Tlambda(q,t) -> Format.fprintf fmt "Tlambda(%a,%a)"
     self#quantifiers q self#term t
@@ -86,7 +86,7 @@ class debug_ast () = object(self)
   | Ptrue -> Format.fprintf fmt "Ptrue"
   | Papp(li,ll,tl) -> Format.fprintf fmt "Papp(%a,[%a],[%a])"
     self#logic_info li
-    (pp_list (pp_pair self#logic_label self#logic_label)) ll
+    (pp_list self#logic_label) ll
     (pp_list self#term) tl
   | Pseparated(tl) -> Format.fprintf fmt "Pseparated(%a)" (pp_list self#term) tl
   | Prel(r,t1,t2) -> Format.fprintf fmt "Prel(%a,%a,%a)"

@@ -227,8 +227,7 @@ class to_pl = object(self)
       | PLConst (PLInt i) -> PLConst (PLInt (Integer.neg i))
       | _ -> Utils.error_term t
     end
-  | Tat(t',LogicLabel(_, "Here"))
-  | Tat(t',LogicLabel(_, "Old")) -> self#term t'
+  | Tat (t', BuiltinLabel (Here | Old | Pre)) -> self#term t'
   | _ -> Utils.error_term t
 end
 
@@ -377,7 +376,7 @@ let rec requires_to_prolog constraints pred = match pred.pred_content with
   | Pvalid(_,t)
   | Pvalid_read(_,t) -> List.rev_append (valid_to_prolog t) constraints
   | Prel (rel, pn1, pn2) -> (rel_to_prolog rel pn1 pn2) :: constraints
-  | Pat(p,LogicLabel(_,"Here")) -> requires_to_prolog constraints p
+  | Pat(p, BuiltinLabel Here) -> requires_to_prolog constraints p
   | _ -> assert false
 
 

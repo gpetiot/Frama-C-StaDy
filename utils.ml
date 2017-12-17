@@ -226,9 +226,8 @@ let is_fundec_nondet f =
   List.fold_left is_nondet false f.sbody.bstmts
 
 let pretty_var fmt v =
-  let ty = Cil.stripConstLocalType v.vtype in
   let array_to_ptr = function TArray(t,_,_,a) -> TPtr(t,a) | t -> t in
-  let ty = array_to_ptr ty in
+  let ty = array_to_ptr v.vtype in
   let v' = {v with vtype = ty} in
   Format.fprintf fmt "@[%a;@]@\n" (new Printer.extensible_printer())#vdecl v'
 

@@ -13,18 +13,14 @@ let empty_env = {label_assoc=[]; term_assoc=[]; pred_assoc=[]; var_assoc=[];}
 let label env l =
   if List.mem_assoc l env.label_assoc then List.assoc l env.label_assoc else l
 
-let rec app env li lassoc params =
-  let rec aux_label ret = function
-    | [] -> ret
-    | (x,y)::t -> aux_label ((x, label env y)::ret) t
-  in
-  let rec aux_arg ret = function
+let rec app env li labels params =
+  let rec aux fct_assoc ret = function
     | [], [] -> ret
-    | x::t1, y::t2 -> aux_arg ((x, term env y)::ret) (t1,t2)
+    | x1::t1, x2::t2 -> aux fct_assoc ((x1, fct_assoc env x2)::ret) (t1, t2)
     | _ -> assert false
   in
-  {env with label_assoc=aux_label [] lassoc;
-   term_assoc=aux_arg [] (li.l_profile, params);}
+  {env with label_assoc=aux label [] (li.l_labels, labels);
+   term_assoc=aux term [] (li.l_profile, params);}
 
 and pred env p = { p with pred_content = pred_node env p.pred_content }
 
@@ -33,8 +29,8 @@ and pred_node env = function
   | Ptrue -> Ptrue
   | Papp(l,_,_) when List.mem_assoc l.l_var_info env.pred_assoc ->
      List.assoc l.l_var_info env.pred_assoc
-  | Papp (li,lassoc,params) as pred' ->
-    let new_env = app env li lassoc params in
+  | Papp (li,labels,params) as pred' ->
+    let new_env = app env li labels params in
     begin
       match li.l_body with
       | LBnone -> pred' (* TODO *)
@@ -123,15 +119,15 @@ and tnode env = function
   | TStartOf _ as term' -> term' (* TODO *)
   | Tapp (li,[],[lower;upper;({term_node=Tlambda([_],_)} as lambda)]) ->
     Tapp (li,[],List.map (fun x -> term env x) [lower; upper; lambda])
-  | Tapp (li,lassoc,params) as term' ->
-    let env = app env li lassoc params in
+  | Tapp (li,labels,params) as term' ->
+    let env = app env li labels params in
     let new_terms = List.map (fun t -> term env t) params in
     begin
       match li.l_body with
       | LBnone ->
 	 let s = li.l_var_info.lv_name in
 	 if s = "\\cos" || s = "\\abs" || s = "\\sqrt" || s = "\\pow" then
-	   Tapp(li,env.label_assoc,new_terms)
+	   Tapp (li, List.map snd env.label_assoc, new_terms)
 	 else term' (* TODO *)
       | LBreads _ -> term' (* TODO *)
       | LBterm {term_node = t} -> tnode env t
