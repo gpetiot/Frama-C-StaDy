@@ -681,12 +681,8 @@ int alt_sep_test(void)
 [pc] Starting lanceur_alt_sep_test (isc version)
 [pc] Starting lanceur_pathcrawler__alt_sep_test_precond (isc version)
 [pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
-[pc] Starting lanceur_alt_sep_test (isc version)
 [stady] all-paths: true
-[stady] 169 test cases
+[stady] 127 test cases
 [stady] Non-Compliance
         of       : ensures \result ≢ 1 
         location : tests/tcas/tcas.c:123

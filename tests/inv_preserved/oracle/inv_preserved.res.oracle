@@ -400,9 +400,8 @@ void f(int n, int *t)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
 [pc] Starting lanceur_f (isc version)
-[pc] Starting lanceur_f (isc version)
 [stady] all-paths: true
-[stady] 172 test cases
+[stady] 137 test cases
 [stady] Subcontract Weakness
         of       : loop at label 'first_loop'
         location : tests/inv_preserved/inv_preserved.c:28

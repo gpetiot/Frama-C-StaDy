@@ -430,7 +430,7 @@ __sd_instru_all4_F7.c:267:[kernel] warning: Floating-point constant 0.1 is not r
 [pc] Starting lanceur_pathcrawler__F7_precond (isc version)
 [pc] Starting lanceur_F7 (isc version)
 [stady] all-paths: true
-[stady] 47 test cases
+[stady] 13 test cases
 [stady] Non-Compliance
         of       : assert V22 ≢ 0; 
         location : tests/all4/all4.c:109
