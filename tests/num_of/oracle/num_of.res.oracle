@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/num_of/num_of.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -47,14 +46,6 @@ int num_of_precond(int n, int *t) {
   return 1;
   
 }
-/*@ requires n > 0;
-    requires \valid(t + (0 .. n - 1));
-    ensures
-      \result ==
-      \numof(0, \old(n) - 1, \lambda integer k; *(\old(t) + k) == 0);
-    typically n <= 3;
-    assigns \nothing;
- */
 int num_of(int n, int *t)
 {
   int old_n;
@@ -94,7 +85,7 @@ int num_of(int n, int *t)
       if (__sd_and_1) __sd_and_1 = num <= i;
       __sd_and_0 = __sd_and_1;
       if (__sd_and_0) __sd_and_0 = i <= n;
-      if (! __sd_and_0) pathcrawler_assert_exception("not established",3);
+      if (! __sd_and_0) pathcrawler_assert_exception("not established",2);
       __gmpz_init_set_si(__sd_Z_to_Z_6,num);
       __gmpz_init_set_si(__sd_Z_numof_1,0);
       {
@@ -140,7 +131,7 @@ int num_of(int n, int *t)
       }
       __sd_eq_1 = __gmpz_cmp(__sd_Z_to_Z_6,__sd_Z_numof_1);
       if (! (__sd_eq_1 == 0)) pathcrawler_assert_exception("not established",
-                                                           8);
+                                                           7);
       __gmpz_clear(__sd_Z_cst_3);
       __gmpz_clear(__sd_Z_to_Z_4);
       __gmpz_clear(__sd_Z_to_Z_6);
@@ -157,7 +148,7 @@ int num_of(int n, int *t)
         __gmpz_sub(__sd_Z_sub_3,__sd_Z_to_Z_12,__sd_Z_to_Z_13);
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_3,0);
         if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
-                                                                 0);
+                                                                 5);
         {
           if (*(t + i) == 0) num ++;
           i ++;
@@ -180,7 +171,7 @@ int num_of(int n, int *t)
         if (__sd_and_3) __sd_and_3 = num <= i;
         __sd_and_2 = __sd_and_3;
         if (__sd_and_2) __sd_and_2 = i <= n;
-        if (! __sd_and_2) pathcrawler_assert_exception("not preserved",3);
+        if (! __sd_and_2) pathcrawler_assert_exception("not preserved",2);
         __gmpz_init_set_si(__sd_Z_to_Z_9,num);
         __gmpz_init_set_si(__sd_Z_numof_2,0);
         {
@@ -226,14 +217,14 @@ int num_of(int n, int *t)
         }
         __sd_eq_2 = __gmpz_cmp(__sd_Z_to_Z_9,__sd_Z_numof_2);
         if (! (__sd_eq_2 == 0)) pathcrawler_assert_exception("not preserved",
-                                                             8);
+                                                             7);
         __gmpz_init_set_si(__sd_Z_to_Z_14,n);
         __gmpz_init_set_si(__sd_Z_to_Z_15,i);
         __gmpz_init(__sd_Z_sub_4);
         __gmpz_sub(__sd_Z_sub_4,__sd_Z_to_Z_14,__sd_Z_to_Z_15);
         __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_4,__sd_Z_sub_3);
         if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception("non decreasing",
-                                                                   0);
+                                                                   5);
         __gmpz_clear(__sd_Z_cst_4);
         __gmpz_clear(__sd_Z_to_Z_5);
         __gmpz_clear(__sd_Z_to_Z_9);
@@ -303,9 +294,7 @@ int num_of(int n, int *t)
     return num;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_num_of_num_of.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_num_of_num_of.c (with preprocessing)
 [pc] Starting lanceur_num_of (isc version)
 [pc] Starting lanceur_pathcrawler__num_of_precond (isc version)

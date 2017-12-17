@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/deleteSubstr2b/deleteSubstr2b.c (with preprocessing)
 tests/deleteSubstr2b/deleteSubstr2b.c:68:[stady] warning: \separated(dest + (0 .. strlen - 1), substr + (0 .. sublen - 1)) unsupported
 tests/deleteSubstr2b/deleteSubstr2b.c:68:[stady] warning: \separated(dest + (0 .. strlen - 1), str + (0 .. strlen - 1)) unsupported
@@ -19,11 +18,11 @@ dom('delete_substr', cont('dest',_), [], int([-128..127])).
 dom('pathcrawler__delete_substr_precond',A,B,C) :-
   dom('delete_substr',A,B,C).
 create_input_vals('delete_substr', Ins):-
-  create_input_val(dim('substr'), int([0..4294967295]),Ins),
   create_input_val('strlen', int([-2147483648..2147483647]),Ins),
+  create_input_val(dim('substr'), int([0..4294967295]),Ins),
   create_input_val(dim('str'), int([0..4294967295]),Ins),
-  create_input_val(dim('dest'), int([0..4294967295]),Ins),
   create_input_val('sublen', int([-2147483648..2147483647]),Ins),
+  create_input_val(dim('dest'), int([0..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__delete_substr_precond',Ins) :-
   create_input_vals('delete_substr',Ins).
@@ -58,31 +57,6 @@ int delete_substr_precond(char *str, int strlen, char *substr, int sublen,
   return 1;
   
 }
-/*@ requires 0 < sublen <= strlen;
-    requires \valid(str + (0 .. strlen - 1));
-    requires \valid(substr + (0 .. sublen - 1));
-    assigns \nothing;
-    
-    behavior present:
-      assumes
-        \exists integer i;
-          0 <= i < strlen - sublen &&
-          (\forall integer j;
-             0 <= j < sublen ==> *(str + (i + j)) == *(substr + j));
-      ensures 0 <= \result < \old(strlen) - \old(sublen);
-      ensures
-        \forall integer j;
-          0 <= j < \old(sublen) ==>
-          *(\old(str) + (\result + j)) == *(\old(substr) + j);
-    
-    behavior not_present:
-      assumes
-        \forall integer i;
-          0 <= i < strlen - sublen ==>
-          (\exists integer j;
-             0 <= j < sublen && *(str + (i + j)) != *(substr + j));
-      ensures \result == -1;
- */
 int find_substr(char *str, int strlen, char *substr, int sublen)
 {
   mpz_t __sd_Z_cst_0;
@@ -120,7 +94,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
   __sd_lt_0 = __gmpz_cmp(__sd_Z_cst_0,__sd_Z_to_Z_0);
   __sd_and_0 = __sd_lt_0 < 0;
   if (__sd_and_0) __sd_and_0 = sublen <= strlen;
-  if (! __sd_and_0) pathcrawler_assert_exception("",32);
+  if (! __sd_and_0) pathcrawler_assert_exception("",12);
   __gmpz_init_set_str(__sd_Z_cst_1,"0",10);
   __sd_to_ctype_0 = (int)__gmpz_get_si(__sd_Z_cst_1);
   __gmpz_init_set_si(__sd_Z_to_Z_1,strlen);
@@ -134,7 +108,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
     __sd_valid_0 = __sd_to_ctype_1 >= 0 && __sd_valid_dim_0 > __sd_to_ctype_1;
   }
   else __sd_valid_0 = 1;
-  if (! __sd_valid_0) pathcrawler_assert_exception("",33);
+  if (! __sd_valid_0) pathcrawler_assert_exception("",36);
   __gmpz_init_set_str(__sd_Z_cst_3,"0",10);
   __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_cst_3);
   __gmpz_init_set_si(__sd_Z_to_Z_2,sublen);
@@ -148,7 +122,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
     __sd_valid_1 = __sd_to_ctype_3 >= 0 && __sd_valid_dim_1 > __sd_to_ctype_3;
   }
   else __sd_valid_1 = 1;
-  if (! __sd_valid_1) pathcrawler_assert_exception("",17);
+  if (! __sd_valid_1) pathcrawler_assert_exception("",16);
   old_str = str;
   __gmpz_init_set_si(__sd_Z_to_Z_16,strlen);
   __sd_to_ctype_10 = __gmpz_get_ui(__sd_Z_to_Z_16);
@@ -213,7 +187,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
         __gmpz_clear(__sd_Z_to_Z_31);
         __gmpz_clear(__sd_Z_sub_7);
       }
-      if (! __sd_and_4) pathcrawler_assert_exception("not established",10);
+      if (! __sd_and_4) pathcrawler_assert_exception("not established",8);
       __sd_forall_5 = 1;
       {
         mpz_t __sd_Z_cst_19;
@@ -271,7 +245,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
         __gmpz_clear(__sd_Z_to_Z_36);
         __gmpz_clear(__q_k);
       }
-      if (! __sd_forall_5) pathcrawler_assert_exception("not established",34);
+      if (! __sd_forall_5) pathcrawler_assert_exception("not established",35);
       __gmpz_clear(__sd_Z_cst_17);
       __gmpz_clear(__sd_Z_to_Z_28);
       while (1) {
@@ -291,7 +265,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
         __gmpz_sub(__sd_Z_sub_10,__sd_Z_sub_9,__sd_Z_to_Z_42);
         __sd_variant_pos_1 = __gmpz_cmp_ui(__sd_Z_sub_10,0);
         if (__sd_variant_pos_1 < 0) pathcrawler_assert_exception("non positive",
-                                                                 0);
+                                                                 25);
         {
           {
             int j = 0;
@@ -308,7 +282,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
               __sd_and_2 = __sd_le_1 <= 0;
               if (__sd_and_2) __sd_and_2 = j <= sublen;
               if (! __sd_and_2) pathcrawler_assert_exception("not established",
-                                                             29);
+                                                             26);
               __sd_forall_3 = 1;
               {
                 mpz_t __sd_Z_cst_15;
@@ -347,7 +321,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
                 __gmpz_clear(__q_k);
               }
               if (! __sd_forall_3) pathcrawler_assert_exception("not established",
-                                                                31);
+                                                                27);
               __gmpz_clear(__sd_Z_cst_13);
               __gmpz_clear(__sd_Z_to_Z_18);
               while (1) {
@@ -362,7 +336,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
                 __gmpz_sub(__sd_Z_sub_5,__sd_Z_to_Z_24,__sd_Z_to_Z_25);
                 __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_5,0);
                 if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception
-                                            ("non positive",36);
+                                            ("non positive",0);
                 {
                   if ((int)*(str + (i + j)) != (int)*(substr + j)) break;
                   j ++;
@@ -381,7 +355,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
                 __sd_and_3 = __sd_le_2 <= 0;
                 if (__sd_and_3) __sd_and_3 = j <= sublen;
                 if (! __sd_and_3) pathcrawler_assert_exception("not preserved",
-                                                               29);
+                                                               26);
                 __sd_forall_4 = 1;
                 {
                   mpz_t __sd_Z_cst_16;
@@ -420,14 +394,14 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
                   __gmpz_clear(__q_k);
                 }
                 if (! __sd_forall_4) pathcrawler_assert_exception("not preserved",
-                                                                  31);
+                                                                  27);
                 __gmpz_init_set_si(__sd_Z_to_Z_26,sublen);
                 __gmpz_init_set_si(__sd_Z_to_Z_27,j);
                 __gmpz_init(__sd_Z_sub_6);
                 __gmpz_sub(__sd_Z_sub_6,__sd_Z_to_Z_26,__sd_Z_to_Z_27);
                 __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_6,__sd_Z_sub_5);
                 if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception
-                                              ("non decreasing",36);
+                                              ("non decreasing",0);
                 __gmpz_clear(__sd_Z_cst_14);
                 __gmpz_clear(__sd_Z_to_Z_19);
                 __gmpz_clear(__sd_Z_to_Z_26);
@@ -478,7 +452,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           __gmpz_clear(__sd_Z_to_Z_35);
           __gmpz_clear(__sd_Z_sub_8);
         }
-        if (! __sd_and_5) pathcrawler_assert_exception("not preserved",10);
+        if (! __sd_and_5) pathcrawler_assert_exception("not preserved",8);
         __sd_forall_6 = 1;
         {
           mpz_t __sd_Z_cst_21;
@@ -536,7 +510,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           __gmpz_clear(__sd_Z_to_Z_38);
           __gmpz_clear(__q_k);
         }
-        if (! __sd_forall_6) pathcrawler_assert_exception("not preserved",34);
+        if (! __sd_forall_6) pathcrawler_assert_exception("not preserved",35);
         __gmpz_init_set_si(__sd_Z_to_Z_43,strlen);
         __gmpz_init_set_si(__sd_Z_to_Z_44,sublen);
         __gmpz_init(__sd_Z_sub_11);
@@ -546,7 +520,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
         __gmpz_sub(__sd_Z_sub_12,__sd_Z_sub_11,__sd_Z_to_Z_45);
         __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_12,__sd_Z_sub_10);
         if (__sd_variant_decr_1 >= 0) pathcrawler_assert_exception("non decreasing",
-                                                                   0);
+                                                                   25);
         __gmpz_clear(__sd_Z_cst_18);
         __gmpz_clear(__sd_Z_to_Z_32);
         __gmpz_clear(__sd_Z_to_Z_43);
@@ -659,7 +633,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
             __gmpz_clear(__sd_Z_to_Z_9);
             __gmpz_clear(__sd_Z_sub_3);
           }
-          if (! __sd_and_1) pathcrawler_assert_exception("",9);
+          if (! __sd_and_1) pathcrawler_assert_exception("",11);
           __sd_forall_1 = 1;
           {
             mpz_t __sd_Z_cst_8;
@@ -697,7 +671,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
             __gmpz_clear(__sd_Z_to_Z_10);
             __gmpz_clear(__q_j);
           }
-          if (! __sd_forall_1) pathcrawler_assert_exception("",20);
+          if (! __sd_forall_1) pathcrawler_assert_exception("",32);
           __gmpz_clear(__sd_Z_cst_7);
           __gmpz_clear(__sd_Z_to_Z_6);
         }
@@ -777,7 +751,7 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           __gmpz_init(__sd_Z_neg_0);
           __gmpz_sub(__sd_Z_neg_0,__sd_Z_cst_11,__sd_Z_cst_12);
           __sd_eq_0 = __gmpz_cmp(__sd_Z_to_Z_15,__sd_Z_neg_0);
-          if (! (__sd_eq_0 == 0)) pathcrawler_assert_exception("",19);
+          if (! (__sd_eq_0 == 0)) pathcrawler_assert_exception("",13);
           __gmpz_clear(__sd_Z_to_Z_15);
           __gmpz_clear(__sd_Z_cst_11);
           __gmpz_clear(__sd_Z_cst_12);
@@ -891,7 +865,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
         __sd_le_7 = __gmpz_cmp(__sd_Z_cst_33,__sd_Z_to_Z_65);
         __sd_and_6 = __sd_le_7 <= 0;
         if (__sd_and_6) __sd_and_6 = k < strlen;
-        if (! __sd_and_6) pathcrawler_assert_exception("not established",4);
+        if (! __sd_and_6) pathcrawler_assert_exception("not established",3);
         __gmpz_clear(__sd_Z_cst_33);
         __gmpz_clear(__sd_Z_to_Z_65);
         while (1) {
@@ -906,7 +880,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           __gmpz_sub(__sd_Z_sub_17,__sd_Z_to_Z_67,__sd_Z_to_Z_68);
           __sd_variant_pos_2 = __gmpz_cmp_ui(__sd_Z_sub_17,0);
           if (__sd_variant_pos_2 < 0) pathcrawler_assert_exception("non positive",
-                                                                   1);
+                                                                   23);
           {
             *(dest + k) = *(str + k);
             k ++;
@@ -956,14 +930,14 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
           __sd_le_8 = __gmpz_cmp(__sd_Z_cst_34,__sd_Z_to_Z_66);
           __sd_and_7 = __sd_le_8 <= 0;
           if (__sd_and_7) __sd_and_7 = k < strlen;
-          if (! __sd_and_7) pathcrawler_assert_exception("not preserved",4);
+          if (! __sd_and_7) pathcrawler_assert_exception("not preserved",3);
           __gmpz_init_set_si(__sd_Z_to_Z_69,strlen);
           __gmpz_init_set_si(__sd_Z_to_Z_70,k);
           __gmpz_init(__sd_Z_sub_18);
           __gmpz_sub(__sd_Z_sub_18,__sd_Z_to_Z_69,__sd_Z_to_Z_70);
           __sd_variant_decr_2 = __gmpz_cmp(__sd_Z_sub_18,__sd_Z_sub_17);
           if (__sd_variant_decr_2 >= 0) pathcrawler_assert_exception("non decreasing",
-                                                                    1);
+                                                                    23);
           __gmpz_clear(__sd_Z_cst_34);
           __gmpz_clear(__sd_Z_to_Z_66);
           __gmpz_clear(__sd_Z_to_Z_69);
@@ -1098,11 +1072,11 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
             __gmpz_clear(__sd_Z_to_Z_49);
             __gmpz_clear(__q_k);
           }
-          if (! __sd_forall_8) pathcrawler_assert_exception("",28);
+          if (! __sd_forall_8) pathcrawler_assert_exception("",9);
           __gmpz_init_set_si(__sd_Z_to_Z_50,__retres);
           __gmpz_init_set_str(__sd_Z_cst_26,"0",10);
           __sd_eq_1 = __gmpz_cmp(__sd_Z_to_Z_50,__sd_Z_cst_26);
-          if (! (__sd_eq_1 == 0)) pathcrawler_assert_exception("",14);
+          if (! (__sd_eq_1 == 0)) pathcrawler_assert_exception("",37);
           __gmpz_clear(__sd_Z_to_Z_50);
           __gmpz_clear(__sd_Z_cst_26);
         }
@@ -1246,11 +1220,11 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
             __gmpz_clear(__sd_Z_sub_15);
             __gmpz_clear(__q_i);
           }
-          if (! __sd_exists_6) pathcrawler_assert_exception("",15);
+          if (! __sd_exists_6) pathcrawler_assert_exception("",6);
           __gmpz_init_set_si(__sd_Z_to_Z_59,__retres);
           __gmpz_init_set_str(__sd_Z_cst_30,"1",10);
           __sd_eq_2 = __gmpz_cmp(__sd_Z_to_Z_59,__sd_Z_cst_30);
-          if (! (__sd_eq_2 == 0)) pathcrawler_assert_exception("",25);
+          if (! (__sd_eq_2 == 0)) pathcrawler_assert_exception("",4);
           __gmpz_clear(__sd_Z_to_Z_59);
           __gmpz_clear(__sd_Z_cst_30);
         }
@@ -1261,9 +1235,7 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
       return __retres;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_deleteSubstr2b_delete_substr.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_deleteSubstr2b_delete_substr.c (with preprocessing)
 [pc] Starting lanceur_delete_substr (isc version)
 [pc] Starting lanceur_pathcrawler__delete_substr_precond (isc version)
@@ -1273,17 +1245,17 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
 [stady] all-paths: true
 [stady] 291 test cases
 [stady] Non-Compliance
-        of       : loop invariant 0 ≤ k < strlen; (not preserved)
-        location : tests/deleteSubstr2b/deleteSubstr2b.c:72
-        TEST DRIVER: testcases___sd_instru_deleteSubstr2b_delete_substr/delete_substr/testdrivers/TC_3.c
-        dest[0] = 0 (in) ; 0 (concrete out) ; str[0] (symbolic out)
-        dest[1] = 0 (in) ; 0 (concrete out) ; str[1] (symbolic out)
-        return value = -1
-        str[0] = 0
-        str[1] = 0
-        strlen = 2
-        sublen = 1
-        substr[0] = -128
+    of       : loop invariant 0 ≤ k < strlen; (not preserved)
+    location : tests/deleteSubstr2b/deleteSubstr2b.c:72
+    TEST DRIVER: testcases___sd_instru_deleteSubstr2b_delete_substr/delete_substr/testdrivers/TC_3.c
+    dest[0] = 0 (in) ; 0 (concrete out) ; str[0] (symbolic out)
+    dest[1] = 0 (in) ; 0 (concrete out) ; str[1] (symbolic out)
+    return value = -1
+    str[0] = 0
+    str[1] = 0
+    strlen = 2
+    sublen = 1
+    substr[0] = -128
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

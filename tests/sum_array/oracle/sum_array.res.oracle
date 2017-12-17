@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/sum_array/sum_array.c (with preprocessing)
 [rte] annotating function sum_array
 tests/sum_array/sum_array.c:17:[stady] warning: \valid_read(t + i) is interpreted as \valid(t + i)
@@ -9,11 +8,6 @@ int sum_array_precond(int *t, int n) {
   return 1;
   
 }
-/*@ requires n >= 0 && \valid(t + (0 .. n - 1));
-    ensures
-      \result == \sum(0, \old(n) - 1, \lambda integer k; *(\old(t) + k));
-    typically n <= 3;
- */
 int sum_array(int *t, int n)
 {
   int *old_t;
@@ -50,7 +44,7 @@ int sum_array(int *t, int n)
       __sd_le_3 = __gmpz_cmp(__sd_Z_cst_5,__sd_Z_to_Z_13);
       __sd_and_0 = __sd_le_3 <= 0;
       if (__sd_and_0) __sd_and_0 = i <= n;
-      if (! __sd_and_0) pathcrawler_assert_exception("not established",2);
+      if (! __sd_and_0) pathcrawler_assert_exception("not established",0);
       __gmpz_init_set_si(__sd_Z_to_Z_15,s);
       __gmpz_init_set_si(__sd_Z_sum_1,0);
       {
@@ -88,7 +82,7 @@ int sum_array(int *t, int n)
       }
       __sd_eq_1 = __gmpz_cmp(__sd_Z_to_Z_15,__sd_Z_sum_1);
       if (! (__sd_eq_1 == 0)) pathcrawler_assert_exception("not established",
-                                                           9);
+                                                           8);
       __gmpz_clear(__sd_Z_cst_5);
       __gmpz_clear(__sd_Z_to_Z_13);
       __gmpz_clear(__sd_Z_to_Z_15);
@@ -105,61 +99,61 @@ int sum_array(int *t, int n)
         __gmpz_sub(__sd_Z_sub_3,__sd_Z_to_Z_21,__sd_Z_to_Z_22);
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_3,0);
         if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
-                                                                 0);
+                                                                 4);
         {
           {
-            mpz_t __sd_Z_cst_2;
             mpz_t __sd_Z_to_Z_4;
-            mpz_t __sd_Z_to_Z_5;
             int __sd_to_ctype_2;
+            int __sd_valid_0;
+            int __sd_valid_dim_0;
+            mpz_t __sd_Z_cst_2;
+            mpz_t __sd_Z_to_Z_5;
             mpz_t __sd_Z_to_Z_6;
+            int __sd_to_ctype_3;
+            mpz_t __sd_Z_to_Z_7;
             mpz_t __sd_Z_add_0;
             int __sd_le_0;
-            mpz_t __sd_Z_to_Z_7;
             mpz_t __sd_Z_to_Z_8;
-            int __sd_to_ctype_3;
             mpz_t __sd_Z_to_Z_9;
+            int __sd_to_ctype_4;
+            mpz_t __sd_Z_to_Z_10;
             mpz_t __sd_Z_add_1;
             mpz_t __sd_Z_cst_3;
             int __sd_le_1;
-            mpz_t __sd_Z_to_Z_10;
-            int __sd_to_ctype_4;
-            int __sd_valid_0;
-            int __sd_valid_dim_0;
+            __gmpz_init_set_si(__sd_Z_to_Z_4,i);
+            __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_to_Z_4);
+            __sd_valid_dim_0 = pathcrawler_dimension(t);
+            __sd_valid_0 = __sd_to_ctype_2 >= 0 && __sd_valid_dim_0 > __sd_to_ctype_2;
+            if (! __sd_valid_0) pathcrawler_assert_exception("",3);
             __gmpz_init_set_str(__sd_Z_cst_2,"-2147483648",10);
-            __gmpz_init_set_si(__sd_Z_to_Z_4,s);
-            __gmpz_init_set_si(__sd_Z_to_Z_5,i);
-            __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_to_Z_5);
-            __gmpz_init_set_si(__sd_Z_to_Z_6,*(t + __sd_to_ctype_2));
+            __gmpz_init_set_si(__sd_Z_to_Z_5,s);
+            __gmpz_init_set_si(__sd_Z_to_Z_6,i);
+            __sd_to_ctype_3 = (int)__gmpz_get_si(__sd_Z_to_Z_6);
+            __gmpz_init_set_si(__sd_Z_to_Z_7,*(t + __sd_to_ctype_3));
             __gmpz_init(__sd_Z_add_0);
-            __gmpz_add(__sd_Z_add_0,__sd_Z_to_Z_4,__sd_Z_to_Z_6);
+            __gmpz_add(__sd_Z_add_0,__sd_Z_to_Z_5,__sd_Z_to_Z_7);
             __sd_le_0 = __gmpz_cmp(__sd_Z_cst_2,__sd_Z_add_0);
-            if (! (__sd_le_0 <= 0)) pathcrawler_assert_exception("",4);
-            __gmpz_init_set_si(__sd_Z_to_Z_7,s);
-            __gmpz_init_set_si(__sd_Z_to_Z_8,i);
-            __sd_to_ctype_3 = (int)__gmpz_get_si(__sd_Z_to_Z_8);
-            __gmpz_init_set_si(__sd_Z_to_Z_9,*(t + __sd_to_ctype_3));
+            if (! (__sd_le_0 <= 0)) pathcrawler_assert_exception("",5);
+            __gmpz_init_set_si(__sd_Z_to_Z_8,s);
+            __gmpz_init_set_si(__sd_Z_to_Z_9,i);
+            __sd_to_ctype_4 = (int)__gmpz_get_si(__sd_Z_to_Z_9);
+            __gmpz_init_set_si(__sd_Z_to_Z_10,*(t + __sd_to_ctype_4));
             __gmpz_init(__sd_Z_add_1);
-            __gmpz_add(__sd_Z_add_1,__sd_Z_to_Z_7,__sd_Z_to_Z_9);
+            __gmpz_add(__sd_Z_add_1,__sd_Z_to_Z_8,__sd_Z_to_Z_10);
             __gmpz_init_set_str(__sd_Z_cst_3,"2147483647",10);
             __sd_le_1 = __gmpz_cmp(__sd_Z_add_1,__sd_Z_cst_3);
-            if (! (__sd_le_1 <= 0)) pathcrawler_assert_exception("",5);
-            __gmpz_init_set_si(__sd_Z_to_Z_10,i);
-            __sd_to_ctype_4 = (int)__gmpz_get_si(__sd_Z_to_Z_10);
-            __sd_valid_dim_0 = pathcrawler_dimension(t);
-            __sd_valid_0 = __sd_to_ctype_4 >= 0 && __sd_valid_dim_0 > __sd_to_ctype_4;
-            if (! __sd_valid_0) pathcrawler_assert_exception("",6);
-            __gmpz_clear(__sd_Z_cst_2);
+            if (! (__sd_le_1 <= 0)) pathcrawler_assert_exception("",6);
             __gmpz_clear(__sd_Z_to_Z_4);
+            __gmpz_clear(__sd_Z_cst_2);
             __gmpz_clear(__sd_Z_to_Z_5);
             __gmpz_clear(__sd_Z_to_Z_6);
-            __gmpz_clear(__sd_Z_add_0);
             __gmpz_clear(__sd_Z_to_Z_7);
+            __gmpz_clear(__sd_Z_add_0);
             __gmpz_clear(__sd_Z_to_Z_8);
             __gmpz_clear(__sd_Z_to_Z_9);
+            __gmpz_clear(__sd_Z_to_Z_10);
             __gmpz_clear(__sd_Z_add_1);
             __gmpz_clear(__sd_Z_cst_3);
-            __gmpz_clear(__sd_Z_to_Z_10);
             s += *(t + i);
           }
           {
@@ -174,7 +168,7 @@ int sum_array(int *t, int n)
             __gmpz_add(__sd_Z_add_2,__sd_Z_to_Z_11,__sd_Z_to_Z_12);
             __gmpz_init_set_str(__sd_Z_cst_4,"2147483647",10);
             __sd_le_2 = __gmpz_cmp(__sd_Z_add_2,__sd_Z_cst_4);
-            if (! (__sd_le_2 <= 0)) pathcrawler_assert_exception("",3);
+            if (! (__sd_le_2 <= 0)) pathcrawler_assert_exception("",2);
             __gmpz_clear(__sd_Z_to_Z_11);
             __gmpz_clear(__sd_Z_to_Z_12);
             __gmpz_clear(__sd_Z_add_2);
@@ -197,7 +191,7 @@ int sum_array(int *t, int n)
         __sd_le_4 = __gmpz_cmp(__sd_Z_cst_6,__sd_Z_to_Z_14);
         __sd_and_1 = __sd_le_4 <= 0;
         if (__sd_and_1) __sd_and_1 = i <= n;
-        if (! __sd_and_1) pathcrawler_assert_exception("not preserved",2);
+        if (! __sd_and_1) pathcrawler_assert_exception("not preserved",0);
         __gmpz_init_set_si(__sd_Z_to_Z_18,s);
         __gmpz_init_set_si(__sd_Z_sum_2,0);
         {
@@ -235,14 +229,14 @@ int sum_array(int *t, int n)
         }
         __sd_eq_2 = __gmpz_cmp(__sd_Z_to_Z_18,__sd_Z_sum_2);
         if (! (__sd_eq_2 == 0)) pathcrawler_assert_exception("not preserved",
-                                                             9);
+                                                             8);
         __gmpz_init_set_si(__sd_Z_to_Z_23,n);
         __gmpz_init_set_si(__sd_Z_to_Z_24,i);
         __gmpz_init(__sd_Z_sub_4);
         __gmpz_sub(__sd_Z_sub_4,__sd_Z_to_Z_23,__sd_Z_to_Z_24);
         __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_4,__sd_Z_sub_3);
         if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception("non decreasing",
-                                                                   0);
+                                                                   4);
         __gmpz_clear(__sd_Z_cst_6);
         __gmpz_clear(__sd_Z_to_Z_14);
         __gmpz_clear(__sd_Z_to_Z_18);
@@ -296,7 +290,7 @@ int sum_array(int *t, int n)
         __gmpz_clear(k);
       }
       __sd_eq_0 = __gmpz_cmp(__sd_Z_to_Z_0,__sd_Z_sum_0);
-      if (! (__sd_eq_0 == 0)) pathcrawler_assert_exception("",8);
+      if (! (__sd_eq_0 == 0)) pathcrawler_assert_exception("",9);
       __gmpz_clear(__sd_Z_to_Z_0);
       __gmpz_clear(__sd_Z_sum_0);
     }
@@ -304,9 +298,7 @@ int sum_array(int *t, int n)
     return s;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_sum_array_sum_array.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_sum_array_sum_array.c (with preprocessing)
 [pc] Starting lanceur_sum_array (isc version)
 [pc] Starting lanceur_pathcrawler__sum_array_precond (isc version)
@@ -319,21 +311,21 @@ int sum_array(int *t, int n)
 [stady] all-paths: true
 [stady] 147 test cases
 [stady] Non-Compliance
-        of       : assert rte: signed_overflow: -2147483648 ≤ s + *(t + i); 
-        location : tests/sum_array/sum_array.c:17
-        TEST DRIVER: testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_10.c
-        n = 3
-        t[0] = -1955181277
-        t[1] = -1051819753
-        t[2] = 0
+    of       : assert rte: signed_overflow: -2147483648 ≤ s + *(t + i); 
+    location : tests/sum_array/sum_array.c:17
+    TEST DRIVER: testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_10.c
+    n = 3
+    t[0] = -1955181277
+    t[1] = -1051819753
+    t[2] = 0
 [stady] Non-Compliance
-        of       : assert rte: signed_overflow: s + *(t + i) ≤ 2147483647; 
-        location : tests/sum_array/sum_array.c:17
-        TEST DRIVER: testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_7.c
-        n = 3
-        t[0] = 0
-        t[1] = 2078669042
-        t[2] = 463116862
+    of       : assert rte: signed_overflow: s + *(t + i) ≤ 2147483647; 
+    location : tests/sum_array/sum_array.c:17
+    TEST DRIVER: testcases___sd_instru_sum_array_sum_array/sum_array/testdrivers/TC_7.c
+    n = 3
+    t[0] = 0
+    t[1] = 2078669042
+    t[2] = 463116862
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

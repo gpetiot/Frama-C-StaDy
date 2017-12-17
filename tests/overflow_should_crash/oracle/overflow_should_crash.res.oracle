@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/overflow_should_crash/overflow_should_crash.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -70,9 +69,7 @@ void f(int x)
     return;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_overflow_should_crash_f.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_overflow_should_crash_f.c (with preprocessing)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
@@ -80,10 +77,10 @@ void f(int x)
 [stady] all-paths: true
 [stady] 2 test cases
 [stady] Non-Compliance
-        of       : assert x + 1 ≤ 2147483647; 
-        location : tests/overflow_should_crash/overflow_should_crash.c:9
-        TEST DRIVER: testcases___sd_instru_overflow_should_crash_f/f/testdrivers/TC_2.c
-        x = 2147483647
+    of       : assert x + 1 ≤ 2147483647; 
+    location : tests/overflow_should_crash/overflow_should_crash.c:9
+    TEST DRIVER: testcases___sd_instru_overflow_should_crash_f/f/testdrivers/TC_2.c
+    x = 2147483647
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

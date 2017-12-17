@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/next_subset/next_subset.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -15,8 +14,8 @@ dom('nextSubset', cont('s',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__nextSubset_precond',A,B,C) :-
   dom('nextSubset',A,B,C).
 create_input_vals('nextSubset', Ins):-
-  create_input_val('n', int([-2147483648..2147483647]),Ins),
   create_input_val(dim('s'), int([0..4294967295]),Ins),
+  create_input_val('n', int([-2147483648..2147483647]),Ins),
   true.
 create_input_vals('pathcrawler__nextSubset_precond',Ins) :-
   create_input_vals('nextSubset',Ins).
@@ -112,15 +111,6 @@ int nextSubset_precond(int *s, int n) {
   return 1;
   
 }
-/*@ requires n >= 0 && n <= 3 && \valid(s + (0 .. n - 1));
-    requires is_dset(s, n);
-    ensures is_dset(\old(s), \old(n));
-    ensures -1 <= \result < \old(n);
-    ensures \result == -1 ==> is_eq{Pre, Post}(\old(s), \old(n));
-    ensures \result != -1 ==> is_eq{Pre, Post}(\old(s), \result);
-    ensures \result != -1 ==> lt{Pre, Post}(\old(s), \result);
-    assigns *(s + (0 .. n - 1));
- */
 int nextSubset(int *s, int n)
 {
   int *old_s;
@@ -177,7 +167,7 @@ int nextSubset(int *s, int n)
         __gmpz_clear(__sd_Z_cst_18);
         __gmpz_clear(__sd_Z_sub_0);
       }
-      if (! __sd_and_1) pathcrawler_assert_exception("not established",4);
+      if (! __sd_and_1) pathcrawler_assert_exception("not established",1);
       __gmpz_clear(__sd_Z_cst_16);
       __gmpz_clear(__sd_Z_cst_17);
       __gmpz_clear(__sd_Z_neg_4);
@@ -185,7 +175,7 @@ int nextSubset(int *s, int n)
       while (1) {
         
           if (! (k >= 0)) break;int __sd_variant_save_0;
-        if (k < 0) pathcrawler_assert_exception("non positive",0);
+        if (k < 0) pathcrawler_assert_exception("non positive",3);
         __sd_variant_save_0 = k;
         {
           if (*(s + k) == 0) break;
@@ -221,9 +211,9 @@ int nextSubset(int *s, int n)
           __gmpz_clear(__sd_Z_cst_21);
           __gmpz_clear(__sd_Z_sub_1);
         }
-        if (! __sd_and_2) pathcrawler_assert_exception("not preserved",4);
+        if (! __sd_and_2) pathcrawler_assert_exception("not preserved",1);
         if (k >= __sd_variant_save_0) pathcrawler_assert_exception("non decreasing",
-                                                                   0);
+                                                                   3);
         __gmpz_clear(__sd_Z_cst_19);
         __gmpz_clear(__sd_Z_cst_20);
         __gmpz_clear(__sd_Z_neg_5);
@@ -321,7 +311,7 @@ int nextSubset(int *s, int n)
         __gmpz_sub(__sd_Z_sub_2,__sd_Z_to_Z_31,__sd_Z_to_Z_32);
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_2,0);
         if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
-                                                                 11);
+                                                                 9);
         {
           *(s + i) = 0;
           i ++;
@@ -402,7 +392,7 @@ int nextSubset(int *s, int n)
         __gmpz_sub(__sd_Z_sub_3,__sd_Z_to_Z_33,__sd_Z_to_Z_34);
         __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_3,__sd_Z_sub_2);
         if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception("non decreasing",
-                                                                   11);
+                                                                   9);
         __gmpz_clear(__sd_Z_to_Z_23);
         __gmpz_clear(__sd_Z_cst_23);
         __gmpz_clear(__sd_Z_add_1);
@@ -494,7 +484,7 @@ int nextSubset(int *s, int n)
           __gmpz_clear(__sd_Z_to_Z_3);
           __gmpz_clear(__q_i);
         }
-        if (! __sd_forall_1) pathcrawler_assert_exception("",6);
+        if (! __sd_forall_1) pathcrawler_assert_exception("",7);
         __gmpz_init_set_str(__sd_Z_cst_6,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_7,"1",10);
         __gmpz_init(__sd_Z_neg_0);
@@ -503,7 +493,7 @@ int nextSubset(int *s, int n)
         __sd_le_0 = __gmpz_cmp(__sd_Z_neg_0,__sd_Z_to_Z_6);
         __sd_and_0 = __sd_le_0 <= 0;
         if (__sd_and_0) __sd_and_0 = __retres < old_n;
-        if (! __sd_and_0) pathcrawler_assert_exception("",5);
+        if (! __sd_and_0) pathcrawler_assert_exception("",6);
         __gmpz_init_set_si(__sd_Z_to_Z_7,__retres);
         __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_9,"1",10);
@@ -544,7 +534,7 @@ int nextSubset(int *s, int n)
           }
           __sd_implies_0 = __sd_forall_2;
         }
-        if (! __sd_implies_0) pathcrawler_assert_exception("",3);
+        if (! __sd_implies_0) pathcrawler_assert_exception("",4);
         __gmpz_init_set_si(__sd_Z_to_Z_9,__retres);
         __gmpz_init_set_str(__sd_Z_cst_11,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_12,"1",10);
@@ -585,7 +575,7 @@ int nextSubset(int *s, int n)
           }
           __sd_implies_1 = __sd_forall_3;
         }
-        if (! __sd_implies_1) pathcrawler_assert_exception("",7);
+        if (! __sd_implies_1) pathcrawler_assert_exception("",13);
         __gmpz_init_set_si(__sd_Z_to_Z_11,__retres);
         __gmpz_init_set_str(__sd_Z_cst_14,"0",10);
         __gmpz_init_set_str(__sd_Z_cst_15,"1",10);
@@ -606,7 +596,7 @@ int nextSubset(int *s, int n)
           __gmpz_clear(__sd_Z_to_Z_12);
           __gmpz_clear(__sd_Z_to_Z_13);
         }
-        if (! __sd_implies_2) pathcrawler_assert_exception("",2);
+        if (! __sd_implies_2) pathcrawler_assert_exception("",14);
         __gmpz_clear(__sd_Z_cst_6);
         __gmpz_clear(__sd_Z_cst_7);
         __gmpz_clear(__sd_Z_neg_0);
@@ -628,9 +618,7 @@ int nextSubset(int *s, int n)
       return __retres;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_next_subset_nextSubset.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_next_subset_nextSubset.c (with preprocessing)
 [pc] Starting lanceur_nextSubset (isc version)
 [pc] Starting lanceur_pathcrawler__nextSubset_precond (isc version)

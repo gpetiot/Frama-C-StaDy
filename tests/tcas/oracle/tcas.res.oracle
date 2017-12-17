@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/tcas/tcas.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -15,19 +14,19 @@ dom('alt_sep_test', cont('Positive_RA_Alt_Thresh',_), [], int([-2147483648..2147
 dom('pathcrawler__alt_sep_test_precond',A,B,C) :-
   dom('alt_sep_test',A,B,C).
 create_input_vals('alt_sep_test', Ins):-
-  create_input_val('Other_Capability', int([-2147483648..2147483647]),Ins),
-  create_input_val('Two_of_Three_Reports_Valid', int([-2147483648..2147483647]),Ins),
-  create_input_val('Own_Tracked_Alt_Rate', int([-2147483648..2147483647]),Ins),
-  create_input_val('Own_Tracked_Alt', int([-2147483648..2147483647]),Ins),
   create_input_val('Cur_Vertical_Sep', int([-2147483648..2147483647]),Ins),
+  create_input_val('Other_Capability', int([-2147483648..2147483647]),Ins),
+  create_input_val('Own_Tracked_Alt_Rate', int([-2147483648..2147483647]),Ins),
+  create_input_val('Other_Tracked_Alt', int([-2147483648..2147483647]),Ins),
+  create_input_val('Own_Tracked_Alt', int([-2147483648..2147483647]),Ins),
+  create_input_val('Down_Separation', int([-2147483648..2147483647]),Ins),
+  create_input_val('High_Confidence', int([-2147483648..2147483647]),Ins),
+  create_input_val('Other_RAC', int([-2147483648..2147483647]),Ins),
+  create_input_val(dim('Positive_RA_Alt_Thresh'), int([4..4294967295]),Ins),
+  create_input_val('Two_of_Three_Reports_Valid', int([-2147483648..2147483647]),Ins),
+  create_input_val('Up_Separation', int([-2147483648..2147483647]),Ins),
   create_input_val('Alt_Layer_Value', int([-2147483648..2147483647]),Ins),
   create_input_val('Climb_Inhibit', int([-2147483648..2147483647]),Ins),
-  create_input_val('Up_Separation', int([-2147483648..2147483647]),Ins),
-  create_input_val('High_Confidence', int([-2147483648..2147483647]),Ins),
-  create_input_val('Down_Separation', int([-2147483648..2147483647]),Ins),
-  create_input_val(dim('Positive_RA_Alt_Thresh'), int([4..4294967295]),Ins),
-  create_input_val('Other_Tracked_Alt', int([-2147483648..2147483647]),Ins),
-  create_input_val('Other_RAC', int([-2147483648..2147483647]),Ins),
   true.
 create_input_vals('pathcrawler__alt_sep_test_precond',Ins) :-
   create_input_vals('alt_sep_test',Ins).
@@ -265,6 +264,7 @@ int Non_Crossing_Biased_Climb(void)
   old_Cur_Vertical_Sep = Cur_Vertical_Sep;
   {
     int upward_preferred;
+    int upward_crossing_situation;
     int result;
     int tmp;
     tmp = Inhibit_Biased_Climb();
@@ -338,6 +338,7 @@ int Non_Crossing_Biased_Descend(void)
   old_Cur_Vertical_Sep = Cur_Vertical_Sep;
   {
     int upward_preferred;
+    int upward_crossing_situation;
     int result;
     int tmp;
     tmp = Inhibit_Biased_Climb();
@@ -525,7 +526,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_2,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_0,"2",10);
         __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_2,__sd_Z_cst_0);
-        if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",44);
+        if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",36);
         __gmpz_clear(__sd_Z_to_Z_2);
         __gmpz_clear(__sd_Z_cst_0);
       }
@@ -541,7 +542,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_5,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_1,"1",10);
         __sd_ne_1 = __gmpz_cmp(__sd_Z_to_Z_5,__sd_Z_cst_1);
-        if (! (__sd_ne_1 != 0)) pathcrawler_assert_exception("",40);
+        if (! (__sd_ne_1 != 0)) pathcrawler_assert_exception("",38);
         __gmpz_clear(__sd_Z_to_Z_5);
         __gmpz_clear(__sd_Z_cst_1);
       }
@@ -558,7 +559,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_8,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_2,"2",10);
         __sd_ne_2 = __gmpz_cmp(__sd_Z_to_Z_8,__sd_Z_cst_2);
-        if (! (__sd_ne_2 != 0)) pathcrawler_assert_exception("",11);
+        if (! (__sd_ne_2 != 0)) pathcrawler_assert_exception("",34);
         __gmpz_clear(__sd_Z_to_Z_8);
         __gmpz_clear(__sd_Z_cst_2);
       }
@@ -575,7 +576,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_11,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_3,"1",10);
         __sd_ne_3 = __gmpz_cmp(__sd_Z_to_Z_11,__sd_Z_cst_3);
-        if (! (__sd_ne_3 != 0)) pathcrawler_assert_exception("",28);
+        if (! (__sd_ne_3 != 0)) pathcrawler_assert_exception("",19);
         __gmpz_clear(__sd_Z_to_Z_11);
         __gmpz_clear(__sd_Z_cst_3);
       }
@@ -592,7 +593,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_14,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_4,"2",10);
         __sd_ne_4 = __gmpz_cmp(__sd_Z_to_Z_14,__sd_Z_cst_4);
-        if (! (__sd_ne_4 != 0)) pathcrawler_assert_exception("",46);
+        if (! (__sd_ne_4 != 0)) pathcrawler_assert_exception("",30);
         __gmpz_clear(__sd_Z_to_Z_14);
         __gmpz_clear(__sd_Z_cst_4);
       }
@@ -609,7 +610,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_17,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_5,"1",10);
         __sd_ne_5 = __gmpz_cmp(__sd_Z_to_Z_17,__sd_Z_cst_5);
-        if (! (__sd_ne_5 != 0)) pathcrawler_assert_exception("",55);
+        if (! (__sd_ne_5 != 0)) pathcrawler_assert_exception("",35);
         __gmpz_clear(__sd_Z_to_Z_17);
         __gmpz_clear(__sd_Z_cst_5);
       }
@@ -620,7 +621,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_18,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_6,"2",10);
         __sd_ne_6 = __gmpz_cmp(__sd_Z_to_Z_18,__sd_Z_cst_6);
-        if (! (__sd_ne_6 != 0)) pathcrawler_assert_exception("",2);
+        if (! (__sd_ne_6 != 0)) pathcrawler_assert_exception("",14);
         __gmpz_clear(__sd_Z_to_Z_18);
         __gmpz_clear(__sd_Z_cst_6);
       }
@@ -631,7 +632,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_19,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_7,"1",10);
         __sd_ne_7 = __gmpz_cmp(__sd_Z_to_Z_19,__sd_Z_cst_7);
-        if (! (__sd_ne_7 != 0)) pathcrawler_assert_exception("",4);
+        if (! (__sd_ne_7 != 0)) pathcrawler_assert_exception("",3);
         __gmpz_clear(__sd_Z_to_Z_19);
         __gmpz_clear(__sd_Z_cst_7);
       }
@@ -642,7 +643,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_20,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_8,"2",10);
         __sd_ne_8 = __gmpz_cmp(__sd_Z_to_Z_20,__sd_Z_cst_8);
-        if (! (__sd_ne_8 != 0)) pathcrawler_assert_exception("",35);
+        if (! (__sd_ne_8 != 0)) pathcrawler_assert_exception("",1);
         __gmpz_clear(__sd_Z_to_Z_20);
         __gmpz_clear(__sd_Z_cst_8);
       }
@@ -653,7 +654,7 @@ int alt_sep_test(void)
         __gmpz_init_set_si(__sd_Z_to_Z_21,alt_sep);
         __gmpz_init_set_str(__sd_Z_cst_9,"1",10);
         __sd_ne_9 = __gmpz_cmp(__sd_Z_to_Z_21,__sd_Z_cst_9);
-        if (! (__sd_ne_9 != 0)) pathcrawler_assert_exception("",8);
+        if (! (__sd_ne_9 != 0)) pathcrawler_assert_exception("",23);
         __gmpz_clear(__sd_Z_to_Z_21);
         __gmpz_clear(__sd_Z_cst_9);
       }
@@ -674,9 +675,7 @@ int alt_sep_test(void)
     return alt_sep;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_tcas_alt_sep_test.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_tcas_alt_sep_test.c (with preprocessing)
 [pc] Starting lanceur_alt_sep_test (isc version)
 [pc] Starting lanceur_pathcrawler__alt_sep_test_precond (isc version)
@@ -684,26 +683,26 @@ int alt_sep_test(void)
 [stady] all-paths: true
 [stady] 127 test cases
 [stady] Non-Compliance
-        of       : ensures \result ≢ 1 
-        location : tests/tcas/tcas.c:123
-        TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_17.c
-        Alt_Layer_Value = 0
-        Climb_Inhibit = 1
-        Cur_Vertical_Sep = 16684
-        Down_Separation = 0
-        High_Confidence = 32464
-        Other_Capability = 0
-        Other_RAC = 0
-        Other_Tracked_Alt = 351
-        Own_Tracked_Alt = 309
-        Own_Tracked_Alt_Rate = 450
-        Positive_RA_Alt_Thresh[0] = 16434
-        Positive_RA_Alt_Thresh[1] = 0
-        Positive_RA_Alt_Thresh[2] = 0
-        Positive_RA_Alt_Thresh[3] = 0
-        Two_of_Three_Reports_Valid = 0
-        Up_Separation = 0
-        return value = 0
+    of       : ensures \result ≢ 1 
+    location : tests/tcas/tcas.c:123
+    TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_17.c
+    Alt_Layer_Value = 0
+    Climb_Inhibit = 1
+    Cur_Vertical_Sep = 16684
+    Down_Separation = 0
+    High_Confidence = 32464
+    Other_Capability = 0
+    Other_RAC = 0
+    Other_Tracked_Alt = 351
+    Own_Tracked_Alt = 309
+    Own_Tracked_Alt_Rate = 450
+    Positive_RA_Alt_Thresh[0] = 16434
+    Positive_RA_Alt_Thresh[1] = 0
+    Positive_RA_Alt_Thresh[2] = 0
+    Positive_RA_Alt_Thresh[3] = 0
+    Two_of_Three_Reports_Valid = 0
+    Up_Separation = 0
+    return value = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

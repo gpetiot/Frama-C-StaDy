@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/quantified/quantified.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -16,8 +15,8 @@ dom('f', cont(cont('t',_),_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
-  create_input_val('n', int([-2147483648..2147483647]),Ins),
   create_input_val(dim('t'), int([0..4294967295]),Ins),
+  create_input_val('n', int([-2147483648..2147483647]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
@@ -191,17 +190,6 @@ int f_precond(int **t, int n) {
   return 1;
   
 }
-/*@ requires 0 <= n <= 3;
-    requires \valid(t + (0 .. n - 1));
-    requires
-      \forall integer i; 0 <= i < n ==> \valid(*(t + i) + (0 .. n - 1));
-    requires
-      \forall integer i;
-        0 <= i < n ==>
-        (\exists integer j;
-           0 <= j < n && *(*(t + i) + j) == 1 &&
-           (\forall integer k; 0 <= k < n ==> k != j ==> *(*(t + i) + k) == 0));
- */
 void f(int **t, int n)
 {
   int **old_t;
@@ -246,9 +234,7 @@ void f(int **t, int n)
   __gmpz_clear(__sd_Z_to_Z_8);
   return;
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_quantified_f.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_quantified_f.c (with preprocessing)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)

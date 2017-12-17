@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/simulate_rand/simulate_rand.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -95,9 +94,7 @@ void main(void)
     return;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_simulate_rand_main.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_simulate_rand_main.c (with preprocessing)
 [pc] Starting lanceur_main (isc version)
 [pc] Starting lanceur_pathcrawler__main_precond (isc version)
@@ -106,19 +103,19 @@ void main(void)
 [stady] all-paths: true
 [stady] 6 test cases
 [stady] Non-Compliance
-        of       : assert x ≡ y; 
-        location : tests/simulate_rand/simulate_rand.c:13
-        TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_6.c
-        nondet_sint_val[0] = -1073830938
-        nondet_sint_val[1] = 0
-        nondet_sint_val[2] = 0
+    of       : assert x ≡ y; 
+    location : tests/simulate_rand/simulate_rand.c:13
+    TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_6.c
+    nondet_sint_val[0] = -1073830938
+    nondet_sint_val[1] = 0
+    nondet_sint_val[2] = 0
 [stady] Non-Compliance
-        of       : assert x ≢ z; 
-        location : tests/simulate_rand/simulate_rand.c:15
-        TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_4.c
-        nondet_sint_val[0] = 0
-        nondet_sint_val[1] = 0
-        nondet_sint_val[2] = 0
+    of       : assert x ≢ z; 
+    location : tests/simulate_rand/simulate_rand.c:15
+    TEST DRIVER: testcases___sd_instru_simulate_rand_main/main/testdrivers/TC_4.c
+    nondet_sint_val[0] = 0
+    nondet_sint_val[1] = 0
+    nondet_sint_val[2] = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

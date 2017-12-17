@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/stmt_spec/stmt_spec.c (with preprocessing)
 [stady:generated-c] generated C file:
 #include "/usr/local/share/frama-c/stady/externals.h"
@@ -7,14 +6,6 @@ int f_precond(int x) {
   return 1;
   
 }
-/*@ requires -100 <= x <= 100;
-    
-    behavior pos:
-      assumes 0 <= x <= 100;
-    
-    behavior neg:
-      assumes -100 <= x < 0;
- */
 void f(int x)
 {
   int old_x;
@@ -144,7 +135,7 @@ void f(int x)
                 __gmpz_init_set_si(__sd_Z_to_Z_4,y);
                 __gmpz_init_set_str(__sd_Z_cst_4,"100",10);
                 __sd_le_4 = __gmpz_cmp(__sd_Z_to_Z_4,__sd_Z_cst_4);
-                if (! (__sd_le_4 <= 0)) pathcrawler_assert_exception("",5);
+                if (! (__sd_le_4 <= 0)) pathcrawler_assert_exception("",8);
                 __gmpz_clear(__sd_Z_to_Z_4);
                 __gmpz_clear(__sd_Z_cst_4);
               }
@@ -203,7 +194,7 @@ void f(int x)
               __gmpz_clear(__sd_Z_to_Z_10);
               __gmpz_clear(__sd_Z_cst_12);
             }
-            if (! __sd_and_4) pathcrawler_assert_exception("",13);
+            if (! __sd_and_4) pathcrawler_assert_exception("",2);
             __gmpz_clear(__sd_Z_cst_10);
             __gmpz_clear(__sd_Z_cst_11);
             __gmpz_clear(__sd_Z_neg_1);
@@ -253,7 +244,7 @@ void f(int x)
             __gmpz_clear(__sd_Z_to_Z_16);
             __gmpz_clear(__sd_Z_cst_19);
           }
-          if (! __sd_and_7) pathcrawler_assert_exception("",11);
+          if (! __sd_and_7) pathcrawler_assert_exception("",5);
           __gmpz_clear(__sd_Z_cst_18);
           __gmpz_clear(__sd_Z_to_Z_15);
         }
@@ -316,7 +307,7 @@ void f(int x)
         __gmpz_init_set_si(__sd_Z_to_Z_24,y);
         __gmpz_init_set_str(__sd_Z_cst_27,"0",10);
         __sd_ne_1 = __gmpz_cmp(__sd_Z_to_Z_24,__sd_Z_cst_27);
-        if (! (__sd_ne_1 != 0)) pathcrawler_assert_exception("",1);
+        if (! (__sd_ne_1 != 0)) pathcrawler_assert_exception("",14);
         __gmpz_clear(__sd_Z_to_Z_24);
         __gmpz_clear(__sd_Z_cst_27);
       }
@@ -329,9 +320,7 @@ void f(int x)
     return;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_stmt_spec_f.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_stmt_spec_f.c (with preprocessing)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)

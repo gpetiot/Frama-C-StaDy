@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/struct/struct.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -23,8 +22,8 @@ dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
   create_input_val(dim('s'), int([1..4294967295]),Ins),
-  create_input_val(dim('s2'), int([1..4294967295]),Ins),
   create_input_val('n', int([-2147483648..2147483647]),Ins),
+  create_input_val(dim('s2'), int([1..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
@@ -59,13 +58,6 @@ int f_precond(struct S *s, struct S *s2, int n) {
   return 1;
   
 }
-/*@ requires \valid(s);
-    requires 0 <= n <= 5;
-    requires 0 <= s->i <= 10;
-    requires \valid(s->p);
-    requires \valid(s2);
-    requires \valid(s2->p + (0 .. 9));
- */
 int f(struct S *s, struct S *s2, int n)
 {
   struct S *old_s;
@@ -115,9 +107,7 @@ int f(struct S *s, struct S *s2, int n)
                   return __retres;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_struct_f.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_struct_f.c (with preprocessing)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)

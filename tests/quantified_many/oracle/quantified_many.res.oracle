@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/quantified_many/quantified_many.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -200,9 +199,7 @@ void f(int default_value)
     return;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_quantified_many_f.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_quantified_many_f.c (with preprocessing)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
@@ -210,13 +207,13 @@ void f(int default_value)
 [stady] all-paths: true
 [stady] 295 test cases
 [stady] Non-Compliance
-        of       : assert
-                   A4:
-                     ∃ ℤ a, ℤ b;
-                       0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b]; 
-        location : tests/quantified_many/quantified_many.c:39
-        TEST DRIVER: testcases___sd_instru_quantified_many_f/f/testdrivers/TC_2.c
-        default_value = -1073849194
+    of       : assert
+               A4:
+                 ∃ ℤ a, ℤ b;
+                   0 ≤ a < 5 ∧ 0 ≤ b < 5 ∧ min ≡ t[a][b]; 
+    location : tests/quantified_many/quantified_many.c:39
+    TEST DRIVER: testcases___sd_instru_quantified_many_f/f/testdrivers/TC_2.c
+    default_value = -1073849194
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/quick_sort/quick_sort.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -17,10 +16,10 @@ dom('quick_sort', cont('end',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__quick_sort_precond',A,B,C) :-
   dom('quick_sort',A,B,C).
 create_input_vals('quick_sort', Ins):-
-  create_input_val(dim('arr'), int([0..4294967295]),Ins),
+  create_input_val(dim('end'), int([100..4294967295]),Ins),
   create_input_val('elements', int([-2147483648..2147483647]),Ins),
   create_input_val(dim('beg'), int([100..4294967295]),Ins),
-  create_input_val(dim('end'), int([100..4294967295]),Ins),
+  create_input_val(dim('arr'), int([0..4294967295]),Ins),
   true.
 create_input_vals('pathcrawler__quick_sort_precond',Ins) :-
   create_input_vals('quick_sort',Ins).
@@ -51,17 +50,6 @@ int quick_sort_precond(int *arr, int elements, int *beg, int *end) {
   return 1;
   
 }
-/*@ requires 0 <= elements;
-    requires \valid(arr + (0 .. elements - 1));
-    requires \valid(beg + (0 .. 99));
-    requires \valid(end + (0 .. 99));
-    ensures
-      \forall integer i;
-        0 <= i < \old(elements) - 1 ==>
-        *(\old(arr) + i) <= *(\old(arr) + (i + 1));
-    ensures \result == 0;
-    typically elements <= 3;
- */
 int quick_sort(int *arr, int elements, int *beg, int *end)
 {
   int *old_arr;
@@ -147,7 +135,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                   }
                                   {
                                     if (! (L <= R)) pathcrawler_assert_exception
-                                                    ("not established",3);
+                                                    ("not established",1);
                                     while (1) {
                                       
                                         if (! (L < R)) break;mpz_t __sd_Z_to_Z_11;
@@ -163,12 +151,12 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                       (__sd_Z_sub_5,0);
                                       if (__sd_variant_pos_2 < 0) pathcrawler_assert_exception
                                                                   ("non positive",
-                                                                   9);
+                                                                   6);
                                       {
                                         {
                                           if (! (L <= R)) pathcrawler_assert_exception
                                                           ("not established",
-                                                           1);
+                                                           0);
                                           while (1) {
                                             
                                               if (*(arr + R) >= piv) {
@@ -190,14 +178,14 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                             (__sd_Z_sub_1,0);
                                             if (__sd_variant_pos_0 < 0) 
                                               pathcrawler_assert_exception
-                                              ("non positive",6);
+                                              ("non positive",11);
                                             R --;mpz_t __sd_Z_to_Z_5;
                                             mpz_t __sd_Z_to_Z_6;
                                             mpz_t __sd_Z_sub_2;
                                             int __sd_variant_decr_0;
                                             if (! (L <= R)) pathcrawler_assert_exception
                                                             ("not preserved",
-                                                             1);
+                                                             0);
                                             __gmpz_init_set_si(__sd_Z_to_Z_5,
                                                                R);
                                             __gmpz_init_set_si(__sd_Z_to_Z_6,
@@ -210,7 +198,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                             (__sd_Z_sub_2,__sd_Z_sub_1);
                                             if (__sd_variant_decr_0 >= 0) 
                                               pathcrawler_assert_exception
-                                              ("non decreasing",6);
+                                              ("non decreasing",11);
                                             __gmpz_clear(__sd_Z_to_Z_5);
                                             __gmpz_clear(__sd_Z_to_Z_6);
                                             __gmpz_clear(__sd_Z_sub_2);
@@ -229,7 +217,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                         {
                                           if (! (L <= R)) pathcrawler_assert_exception
                                                           ("not established",
-                                                           10);
+                                                           7);
                                           while (1) {
                                             
                                               if (*(arr + L) <= piv) {
@@ -258,7 +246,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                             int __sd_variant_decr_1;
                                             if (! (L <= R)) pathcrawler_assert_exception
                                                             ("not preserved",
-                                                             10);
+                                                             7);
                                             __gmpz_init_set_si(__sd_Z_to_Z_9,
                                                                R);
                                             __gmpz_init_set_si(__sd_Z_to_Z_10,
@@ -292,7 +280,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                       mpz_t __sd_Z_sub_6;
                                       int __sd_variant_decr_2;
                                       if (! (L <= R)) pathcrawler_assert_exception
-                                                      ("not preserved",3);
+                                                      ("not preserved",1);
                                       __gmpz_init_set_si(__sd_Z_to_Z_13,R);
                                       __gmpz_init_set_si(__sd_Z_to_Z_14,L);
                                       __gmpz_init(__sd_Z_sub_6);
@@ -302,7 +290,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
                                       (__sd_Z_sub_6,__sd_Z_sub_5);
                                       if (__sd_variant_decr_2 >= 0) pathcrawler_assert_exception
                                                                     ("non decreasing",
-                                                                    9);
+                                                                    6);
                                       __gmpz_clear(__sd_Z_to_Z_13);
                                       __gmpz_clear(__sd_Z_to_Z_14);
                                       __gmpz_clear(__sd_Z_sub_6);
@@ -376,7 +364,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
         __gmpz_init_set_si(__sd_Z_to_Z_1,__retres);
         __gmpz_init_set_str(__sd_Z_cst_3,"0",10);
         __sd_eq_0 = __gmpz_cmp(__sd_Z_to_Z_1,__sd_Z_cst_3);
-        if (! (__sd_eq_0 == 0)) pathcrawler_assert_exception("",7);
+        if (! (__sd_eq_0 == 0)) pathcrawler_assert_exception("",9);
         __gmpz_clear(__sd_Z_to_Z_1);
         __gmpz_clear(__sd_Z_cst_3);
       }
@@ -386,9 +374,7 @@ int quick_sort(int *arr, int elements, int *beg, int *end)
       return __retres;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_quick_sort_quick_sort.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_quick_sort_quick_sort.c (with preprocessing)
 [pc] Starting lanceur_quick_sort (isc version)
 [pc] Starting lanceur_pathcrawler__quick_sort_precond (isc version)

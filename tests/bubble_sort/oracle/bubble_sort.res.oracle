@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/bubble_sort/bubble_sort.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -47,13 +46,6 @@ int bubble_sort_precond(int *A, int n) {
   return 1;
   
 }
-/*@ requires 0 < n <= 3;
-    requires \valid(A + (0 .. n - 1));
-    ensures
-      \forall integer i;
-        0 <= i < \old(n) - 1 ==> *(\old(A) + i) <= *(\old(A) + (i + 1));
-    assigns *(A + (0 .. n - 1));
- */
 void bubble_sort(int *A, int n)
 {
   int *old_A;
@@ -89,7 +81,7 @@ void bubble_sort(int *A, int n)
       __sd_le_4 = __gmpz_cmp(__sd_Z_cst_11,__sd_Z_to_Z_20);
       __sd_and_2 = __sd_le_4 <= 0;
       if (__sd_and_2) __sd_and_2 = i <= n;
-      if (! __sd_and_2) pathcrawler_assert_exception("not established",4);
+      if (! __sd_and_2) pathcrawler_assert_exception("not established",2);
       __gmpz_clear(__sd_Z_cst_11);
       __gmpz_clear(__sd_Z_to_Z_20);
       while (1) {
@@ -104,7 +96,7 @@ void bubble_sort(int *A, int n)
         __gmpz_sub(__sd_Z_sub_11,__sd_Z_to_Z_22,__sd_Z_to_Z_23);
         __sd_variant_pos_1 = __gmpz_cmp_ui(__sd_Z_sub_11,0);
         if (__sd_variant_pos_1 < 0) pathcrawler_assert_exception("non positive",
-                                                                 3);
+                                                                 5);
         {
           j = 0;
           {
@@ -143,7 +135,7 @@ void bubble_sort(int *A, int n)
               __gmpz_clear(__sd_Z_sub_2);
             }
             if (! __sd_and_0) pathcrawler_assert_exception("not established",
-                                                           8);
+                                                           6);
             __sd_forall_1 = 1;
             {
               mpz_t __sd_Z_cst_7;
@@ -174,7 +166,7 @@ void bubble_sort(int *A, int n)
               __gmpz_clear(__q_a);
             }
             if (! __sd_forall_1) pathcrawler_assert_exception("not established",
-                                                              9);
+                                                              8);
             __gmpz_clear(__sd_Z_cst_3);
             __gmpz_clear(__sd_Z_to_Z_2);
             while (1) {
@@ -199,7 +191,7 @@ void bubble_sort(int *A, int n)
               __gmpz_sub(__sd_Z_sub_7,__sd_Z_sub_6,__sd_Z_to_Z_16);
               __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_7,0);
               if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception
-                                          ("non positive",6);
+                                          ("non positive",0);
               {
                 if (*(A + j) > *(A + (j + 1))) {
                   int x = *(A + j);
@@ -250,7 +242,7 @@ void bubble_sort(int *A, int n)
                 __gmpz_clear(__sd_Z_sub_4);
               }
               if (! __sd_and_1) pathcrawler_assert_exception("not preserved",
-                                                             8);
+                                                             6);
               __sd_forall_2 = 1;
               {
                 mpz_t __sd_Z_cst_8;
@@ -281,7 +273,7 @@ void bubble_sort(int *A, int n)
                 __gmpz_clear(__q_a);
               }
               if (! __sd_forall_2) pathcrawler_assert_exception("not preserved",
-                                                                9);
+                                                                8);
               __gmpz_init_set_si(__sd_Z_to_Z_17,n);
               __gmpz_init_set_si(__sd_Z_to_Z_18,i);
               __gmpz_init(__sd_Z_sub_8);
@@ -294,7 +286,7 @@ void bubble_sort(int *A, int n)
               __gmpz_sub(__sd_Z_sub_10,__sd_Z_sub_9,__sd_Z_to_Z_19);
               __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_10,__sd_Z_sub_7);
               if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception
-                                            ("non decreasing",6);
+                                            ("non decreasing",0);
               __gmpz_clear(__sd_Z_cst_5);
               __gmpz_clear(__sd_Z_to_Z_6);
               __gmpz_clear(__sd_Z_to_Z_17);
@@ -328,14 +320,14 @@ void bubble_sort(int *A, int n)
         __sd_le_5 = __gmpz_cmp(__sd_Z_cst_12,__sd_Z_to_Z_21);
         __sd_and_3 = __sd_le_5 <= 0;
         if (__sd_and_3) __sd_and_3 = i <= n;
-        if (! __sd_and_3) pathcrawler_assert_exception("not preserved",4);
+        if (! __sd_and_3) pathcrawler_assert_exception("not preserved",2);
         __gmpz_init_set_si(__sd_Z_to_Z_24,n);
         __gmpz_init_set_si(__sd_Z_to_Z_25,i);
         __gmpz_init(__sd_Z_sub_12);
         __gmpz_sub(__sd_Z_sub_12,__sd_Z_to_Z_24,__sd_Z_to_Z_25);
         __sd_variant_decr_1 = __gmpz_cmp(__sd_Z_sub_12,__sd_Z_sub_11);
         if (__sd_variant_decr_1 >= 0) pathcrawler_assert_exception("non decreasing",
-                                                                   3);
+                                                                   5);
         __gmpz_clear(__sd_Z_cst_12);
         __gmpz_clear(__sd_Z_to_Z_21);
         __gmpz_clear(__sd_Z_to_Z_24);
@@ -392,15 +384,13 @@ void bubble_sort(int *A, int n)
         __gmpz_clear(__sd_Z_sub_0);
         __gmpz_clear(__q_i);
       }
-      if (! __sd_forall_0) pathcrawler_assert_exception("",5);
+      if (! __sd_forall_0) pathcrawler_assert_exception("",4);
     }
     free(old_ptr_A);
     return;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_bubble_sort_bubble_sort.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_bubble_sort_bubble_sort.c (with preprocessing)
 [pc] Starting lanceur_bubble_sort (isc version)
 [pc] Starting lanceur_pathcrawler__bubble_sort_precond (isc version)

@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/insertion_sort/insertion_sort.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -15,8 +14,8 @@ dom('insertion_sort', cont('t',_), [], int([-2147483648..2147483647])).
 dom('pathcrawler__insertion_sort_precond',A,B,C) :-
   dom('insertion_sort',A,B,C).
 create_input_vals('insertion_sort', Ins):-
-  create_input_val('n', int([-2147483648..2147483647]),Ins),
   create_input_val(dim('t'), int([0..4294967295]),Ins),
+  create_input_val('n', int([-2147483648..2147483647]),Ins),
   true.
 create_input_vals('pathcrawler__insertion_sort_precond',Ins) :-
   create_input_vals('insertion_sort',Ins).
@@ -47,13 +46,6 @@ int insertion_sort_precond(int *t, int n) {
   return 1;
   
 }
-/*@ requires 1 <= n <= 3;
-    requires \valid(t + (0 .. n - 1));
-    ensures
-      \forall integer x;
-        0 <= x < \old(n) - 1 ==> *(\old(t) + x) <= *(\old(t) + (x + 1));
-    assigns *(t + (0 .. n - 1));
- */
 void insertion_sort(int *t, int n)
 {
   int *old_t;
@@ -88,7 +80,7 @@ void insertion_sort(int *t, int n)
       __sd_le_2 = __gmpz_cmp(__sd_Z_cst_5,__sd_Z_to_Z_8);
       __sd_and_2 = __sd_le_2 <= 0;
       if (__sd_and_2) __sd_and_2 = i <= n;
-      if (! __sd_and_2) pathcrawler_assert_exception("not established",4);
+      if (! __sd_and_2) pathcrawler_assert_exception("not established",1);
       __sd_forall_3 = 1;
       {
         mpz_t __sd_Z_cst_7;
@@ -132,7 +124,7 @@ void insertion_sort(int *t, int n)
         __gmpz_clear(__sd_Z_sub_1);
         __gmpz_clear(__q_x);
       }
-      if (! __sd_forall_3) pathcrawler_assert_exception("not established",12);
+      if (! __sd_forall_3) pathcrawler_assert_exception("not established",11);
       __gmpz_clear(__sd_Z_cst_5);
       __gmpz_clear(__sd_Z_to_Z_8);
       while (1) {
@@ -147,7 +139,7 @@ void insertion_sort(int *t, int n)
         __gmpz_sub(__sd_Z_sub_3,__sd_Z_to_Z_12,__sd_Z_to_Z_13);
         __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_3,0);
         if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
-                                                                 6);
+                                                                 5);
         {
           mv = *(t + i);
           j = i;
@@ -163,7 +155,7 @@ void insertion_sort(int *t, int n)
             __sd_and_0 = __sd_le_0 <= 0;
             if (__sd_and_0) __sd_and_0 = j <= i;
             if (! __sd_and_0) pathcrawler_assert_exception("not established",
-                                                           7);
+                                                           8);
             __sd_forall_1 = 1;
             {
               mpz_t __sd_Z_to_Z_4;
@@ -189,13 +181,13 @@ void insertion_sort(int *t, int n)
               __gmpz_clear(__q_k);
             }
             if (! __sd_forall_1) pathcrawler_assert_exception("not established",
-                                                              8);
+                                                              9);
             __gmpz_clear(__sd_Z_cst_3);
             __gmpz_clear(__sd_Z_to_Z_2);
             while (1) {
               
                 if (! (j > 0)) break;int __sd_variant_save_0;
-              if (j < 0) pathcrawler_assert_exception("non positive",0);
+              if (j < 0) pathcrawler_assert_exception("non positive",6);
               __sd_variant_save_0 = j;
               {
                 if (*(t + (j - 1)) <= mv) break;
@@ -212,7 +204,7 @@ void insertion_sort(int *t, int n)
               __sd_and_1 = __sd_le_1 <= 0;
               if (__sd_and_1) __sd_and_1 = j <= i;
               if (! __sd_and_1) pathcrawler_assert_exception("not preserved",
-                                                             7);
+                                                             8);
               __sd_forall_2 = 1;
               {
                 mpz_t __sd_Z_to_Z_6;
@@ -238,9 +230,9 @@ void insertion_sort(int *t, int n)
                 __gmpz_clear(__q_k);
               }
               if (! __sd_forall_2) pathcrawler_assert_exception("not preserved",
-                                                                8);
+                                                                9);
               if (j >= __sd_variant_save_0) pathcrawler_assert_exception
-                                            ("non decreasing",0);
+                                            ("non decreasing",6);
               __gmpz_clear(__sd_Z_cst_4);
               __gmpz_clear(__sd_Z_to_Z_3);
               }
@@ -262,7 +254,7 @@ void insertion_sort(int *t, int n)
         __sd_le_3 = __gmpz_cmp(__sd_Z_cst_6,__sd_Z_to_Z_9);
         __sd_and_3 = __sd_le_3 <= 0;
         if (__sd_and_3) __sd_and_3 = i <= n;
-        if (! __sd_and_3) pathcrawler_assert_exception("not preserved",4);
+        if (! __sd_and_3) pathcrawler_assert_exception("not preserved",1);
         __sd_forall_4 = 1;
         {
           mpz_t __sd_Z_cst_10;
@@ -306,14 +298,14 @@ void insertion_sort(int *t, int n)
           __gmpz_clear(__sd_Z_sub_2);
           __gmpz_clear(__q_x);
         }
-        if (! __sd_forall_4) pathcrawler_assert_exception("not preserved",12);
+        if (! __sd_forall_4) pathcrawler_assert_exception("not preserved",11);
         __gmpz_init_set_si(__sd_Z_to_Z_14,n);
         __gmpz_init_set_si(__sd_Z_to_Z_15,i);
         __gmpz_init(__sd_Z_sub_4);
         __gmpz_sub(__sd_Z_sub_4,__sd_Z_to_Z_14,__sd_Z_to_Z_15);
         __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_4,__sd_Z_sub_3);
         if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception("non decreasing",
-                                                                   6);
+                                                                   5);
         __gmpz_clear(__sd_Z_cst_6);
         __gmpz_clear(__sd_Z_to_Z_9);
         __gmpz_clear(__sd_Z_to_Z_14);
@@ -370,15 +362,13 @@ void insertion_sort(int *t, int n)
         __gmpz_clear(__sd_Z_sub_0);
         __gmpz_clear(__q_x);
       }
-      if (! __sd_forall_0) pathcrawler_assert_exception("",5);
+      if (! __sd_forall_0) pathcrawler_assert_exception("",4);
     }
     free(old_ptr_t);
     return;
   }
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_insertion_sort_insertion_sort.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_insertion_sort_insertion_sort.c (with preprocessing)
 [pc] Starting lanceur_insertion_sort (isc version)
 [pc] Starting lanceur_pathcrawler__insertion_sort_precond (isc version)

@@ -1,4 +1,3 @@
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing tests/behaviors/behaviors.c (with preprocessing)
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
@@ -14,9 +13,9 @@ dom(0,0,0,0).
 dom('pathcrawler__f_precond',A,B,C) :-
   dom('f',A,B,C).
 create_input_vals('f', Ins):-
-  create_input_val('y', int([-2147483648..2147483647]),Ins),
   create_input_val('z', int([-2147483648..2147483647]),Ins),
   create_input_val('x', int([-2147483648..2147483647]),Ins),
+  create_input_val('y', int([-2147483648..2147483647]),Ins),
   true.
 create_input_vals('pathcrawler__f_precond',Ins) :-
   create_input_vals('f',Ins).
@@ -45,30 +44,6 @@ int f_precond(int x, int y, int z) {
   return 1;
   
 }
-/*@ behavior X:
-      assumes x >= y;
-      assumes x >= z;
-      requires x >= 0;
-      requires y >= 0;
-      requires z >= 0;
-      ensures \old(y) <= \old(x) && \old(z) <= \old(x);
-    
-    behavior Y:
-      assumes y >= x;
-      assumes y >= z;
-      requires x >= 0;
-      requires y >= 0;
-      requires z >= 0;
-      ensures \old(x) <= \old(y) && \old(z) <= \old(y);
-    
-    behavior Z:
-      assumes z >= x;
-      assumes z >= y;
-      requires x >= 0;
-      requires y >= 0;
-      requires z >= 0;
-      ensures \old(x) <= \old(z) && \old(y) <= \old(z);
- */
 void f(int x, int y, int z)
 {
   int old_x;
@@ -81,25 +56,23 @@ void f(int x, int y, int z)
     int __sd_and_0;
     __sd_and_0 = old_y <= old_x;
     if (__sd_and_0) __sd_and_0 = old_z <= old_x;
-    if (! __sd_and_0) pathcrawler_assert_exception("",13);
+    if (! __sd_and_0) pathcrawler_assert_exception("",15);
   }
   if (y >= x && y >= z) {
     int __sd_and_1;
     __sd_and_1 = old_x <= old_y;
     if (__sd_and_1) __sd_and_1 = old_z <= old_y;
-    if (! __sd_and_1) pathcrawler_assert_exception("",19);
+    if (! __sd_and_1) pathcrawler_assert_exception("",0);
   }
   if (z >= x && z >= y) {
     int __sd_and_2;
     __sd_and_2 = old_x <= old_z;
     if (__sd_and_2) __sd_and_2 = old_y <= old_z;
-    if (! __sd_and_2) pathcrawler_assert_exception("",16);
+    if (! __sd_and_2) pathcrawler_assert_exception("",13);
   }
   return;
 }
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_behaviors_f.c (with preprocessing)
-[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
 [kernel] Parsing __sd_instru_behaviors_f.c (with preprocessing)
 [pc] Starting lanceur_f (isc version)
 [pc] Starting lanceur_pathcrawler__f_precond (isc version)
