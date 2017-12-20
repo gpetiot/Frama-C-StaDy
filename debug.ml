@@ -10,8 +10,6 @@ let rec pp_list ?(sep=";") pp_elt fmt = function
   | h::t -> Format.fprintf fmt "%a%s@,%a" pp_elt h sep (pp_list ~sep pp_elt) t
   | [] -> ()
 
-let pp_pair pp1 pp2 fmt (e1, e2) = Format.fprintf fmt "(%a, %a)" pp1 e1 pp2 e2
-
 class debug_ast () = object(self)
   inherit Printer.extensible_printer ()
     
