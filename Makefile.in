@@ -65,6 +65,7 @@ PLUGIN_TESTS_DIRS:= \
 	sum_array \
 	num_of \
 	struct \
+	sqrt_rte \
 	overflow_should_crash \
 	overflow_shouldnt_crash
 PLUGIN_PTESTS_OPTS := -j 1
