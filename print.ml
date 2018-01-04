@@ -40,12 +40,13 @@ class print_insertions insertions functions swd = object(self)
     let insert_something l =
       let v, s, c = Hashtbl.find insertions l in
       not (Queue.is_empty v && Queue.is_empty s && Queue.is_empty c) in
-    let insert_something =
-      (try insert_something (Symbolic_label.beg_stmt stmt.sid) with _ -> false)
-      || (try insert_something(Symbolic_label.end_stmt stmt.sid) with _-> false)
-    in
-    if insert_something then Format.fprintf fmt "@[<hov 2>{@\n";
+    let insert_something_before =
+      try insert_something (Symbolic_label.beg_stmt stmt.sid) with _ -> false in
+    let insert_something_after =
+      try insert_something(Symbolic_label.end_stmt stmt.sid) with _-> false in
+    if insert_something_before then Format.fprintf fmt "@[<hov 2>{@\n";
     self#insertions_at fmt (Symbolic_label.beg_stmt stmt.sid);
+    if insert_something_before then Format.fprintf fmt "@]@\n}@\n";
     begin
       match stmt.skind with
       | Loop (_,b,l,_,_) when List.mem stmt.sid swd ->
@@ -58,7 +59,7 @@ class print_insertions insertions functions swd = object(self)
 	 let new_b = {new_b with blocals = []} in
 	 Format.fprintf fmt "%a" (fun fmt -> self#block fmt) new_b;
 	 self#insertions_at fmt (Symbolic_label.end_iter stmt.sid);
-	 Format.fprintf fmt "}@\n @]"
+	 Format.fprintf fmt "@]@\n}@\n"
       | Loop(_,b,l,_,_) ->
 	 let line_directive fmt = self#line_directive fmt in
 	 Format.fprintf fmt "%a@[<v 2>while (1) {@\n" line_directive l;
@@ -69,7 +70,7 @@ class print_insertions insertions functions swd = object(self)
 	 let new_b = {new_b with blocals = []} in
 	 Format.fprintf fmt "%a" (fun fmt -> self#block fmt) new_b;
 	 self#insertions_at fmt (Symbolic_label.end_iter stmt.sid);
-	 Format.fprintf fmt "}@\n @]"
+	 Format.fprintf fmt "@]@\n}@\n"
       | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
       | Instr(Local_init (_, ConsInit (vi, _, _), _))
 	   when List.mem stmt.sid swd
@@ -80,8 +81,9 @@ class print_insertions insertions functions swd = object(self)
 	 self#stmtkind next fmt stmt.skind
       | _ -> self#stmtkind next fmt stmt.skind
     end;
+    if insert_something_after then Format.fprintf fmt "@[<hov 2>{@\n";
     self#insertions_at fmt (Symbolic_label.end_stmt stmt.sid);
-    if insert_something then Format.fprintf fmt "@]@\n}";
+    if insert_something_after then Format.fprintf fmt "@]@\n}@\n";
     Format.pp_close_box fmt ();
     Format.pp_close_box fmt ()
 
