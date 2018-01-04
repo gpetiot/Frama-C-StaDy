@@ -335,8 +335,9 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
           if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",1);
           __gmpz_clear(__sd_Z_to_Z_0);
           __gmpz_clear(__sd_Z_cst_8);
-          ;
+          
         }
+        ;
       }
     }
     mpz_t __sd_Z_cst_3;
@@ -386,11 +387,13 @@ void F8(void)
       V25 = __sd_Frama_C_interval_mod_0(0,1);
       
     }
+    
     if (V25) V23 = 0.5; else V23 = 5.;
     {
       V26 = __sd_Frama_C_interval_mod_1(0,1);
       
     }
+    
     if (V26) V24 = - 100.0; else V24 = 100.0;
     G1[0] = 0.;
     G1[1] = 1.;

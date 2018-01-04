@@ -75,22 +75,27 @@ void main(void)
       x = __sd_rand_mod_0();
       
     }
+    
     {
       y = __sd_rand_mod_1();
       
     }
+    
     {
       z = __sd_rand_mod_2();
       
     }
+    
     {
       if (! (x == y)) pathcrawler_assert_exception("",0);
-      ;
+      
     }
+    ;
     {
       if (! (x != z)) pathcrawler_assert_exception("",1);
-      ;
+      
     }
+    ;
     return;
   }
 }

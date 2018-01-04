@@ -172,55 +172,57 @@ int nextSubset(int *s, int n)
       __gmpz_clear(__sd_Z_cst_17);
       __gmpz_clear(__sd_Z_neg_4);
       __gmpz_clear(__sd_Z_to_Z_15);
-      while (1) {
-        
-          if (! (k >= 0)) break;int __sd_variant_save_0;
-        if (k < 0) pathcrawler_assert_exception("non positive",3);
-        __sd_variant_save_0 = k;
-        {
-          if (*(s + k) == 0) break;
-          k --;
-        }mpz_t __sd_Z_cst_19;
-        mpz_t __sd_Z_cst_20;
-        mpz_t __sd_Z_neg_5;
-        mpz_t __sd_Z_to_Z_18;
-        int __sd_le_3;
-        int __sd_and_2;
-        __gmpz_init_set_str(__sd_Z_cst_19,"0",10);
-        __gmpz_init_set_str(__sd_Z_cst_20,"1",10);
-        __gmpz_init(__sd_Z_neg_5);
-        __gmpz_sub(__sd_Z_neg_5,__sd_Z_cst_19,__sd_Z_cst_20);
-        __gmpz_init_set_si(__sd_Z_to_Z_18,k);
-        __sd_le_3 = __gmpz_cmp(__sd_Z_neg_5,__sd_Z_to_Z_18);
-        __sd_and_2 = __sd_le_3 <= 0;
-        if (__sd_and_2) {
-          mpz_t __sd_Z_to_Z_19;
-          mpz_t __sd_Z_to_Z_20;
-          mpz_t __sd_Z_cst_21;
-          mpz_t __sd_Z_sub_1;
-          int __sd_le_4;
-          __gmpz_init_set_si(__sd_Z_to_Z_19,k);
-          __gmpz_init_set_si(__sd_Z_to_Z_20,n);
-          __gmpz_init_set_str(__sd_Z_cst_21,"1",10);
-          __gmpz_init(__sd_Z_sub_1);
-          __gmpz_sub(__sd_Z_sub_1,__sd_Z_to_Z_20,__sd_Z_cst_21);
-          __sd_le_4 = __gmpz_cmp(__sd_Z_to_Z_19,__sd_Z_sub_1);
-          __sd_and_2 = __sd_le_4 <= 0;
-          __gmpz_clear(__sd_Z_to_Z_19);
-          __gmpz_clear(__sd_Z_to_Z_20);
-          __gmpz_clear(__sd_Z_cst_21);
-          __gmpz_clear(__sd_Z_sub_1);
-        }
-        if (! __sd_and_2) pathcrawler_assert_exception("not preserved",1);
-        if (k >= __sd_variant_save_0) pathcrawler_assert_exception("non decreasing",
-                                                                   3);
-        __gmpz_clear(__sd_Z_cst_19);
-        __gmpz_clear(__sd_Z_cst_20);
-        __gmpz_clear(__sd_Z_neg_5);
-        __gmpz_clear(__sd_Z_to_Z_18);
-        }
-         
+      
     }
+    while (1) {
+      
+        if (! (k >= 0)) break;int __sd_variant_save_0;
+      if (k < 0) pathcrawler_assert_exception("non positive",3);
+      __sd_variant_save_0 = k;
+      {
+        if (*(s + k) == 0) break;
+        k --;
+      }mpz_t __sd_Z_cst_19;
+      mpz_t __sd_Z_cst_20;
+      mpz_t __sd_Z_neg_5;
+      mpz_t __sd_Z_to_Z_18;
+      int __sd_le_3;
+      int __sd_and_2;
+      __gmpz_init_set_str(__sd_Z_cst_19,"0",10);
+      __gmpz_init_set_str(__sd_Z_cst_20,"1",10);
+      __gmpz_init(__sd_Z_neg_5);
+      __gmpz_sub(__sd_Z_neg_5,__sd_Z_cst_19,__sd_Z_cst_20);
+      __gmpz_init_set_si(__sd_Z_to_Z_18,k);
+      __sd_le_3 = __gmpz_cmp(__sd_Z_neg_5,__sd_Z_to_Z_18);
+      __sd_and_2 = __sd_le_3 <= 0;
+      if (__sd_and_2) {
+        mpz_t __sd_Z_to_Z_19;
+        mpz_t __sd_Z_to_Z_20;
+        mpz_t __sd_Z_cst_21;
+        mpz_t __sd_Z_sub_1;
+        int __sd_le_4;
+        __gmpz_init_set_si(__sd_Z_to_Z_19,k);
+        __gmpz_init_set_si(__sd_Z_to_Z_20,n);
+        __gmpz_init_set_str(__sd_Z_cst_21,"1",10);
+        __gmpz_init(__sd_Z_sub_1);
+        __gmpz_sub(__sd_Z_sub_1,__sd_Z_to_Z_20,__sd_Z_cst_21);
+        __sd_le_4 = __gmpz_cmp(__sd_Z_to_Z_19,__sd_Z_sub_1);
+        __sd_and_2 = __sd_le_4 <= 0;
+        __gmpz_clear(__sd_Z_to_Z_19);
+        __gmpz_clear(__sd_Z_to_Z_20);
+        __gmpz_clear(__sd_Z_cst_21);
+        __gmpz_clear(__sd_Z_sub_1);
+      }
+      if (! __sd_and_2) pathcrawler_assert_exception("not preserved",1);
+      if (k >= __sd_variant_save_0) pathcrawler_assert_exception("non decreasing",
+                                                                 3);
+      __gmpz_clear(__sd_Z_cst_19);
+      __gmpz_clear(__sd_Z_cst_20);
+      __gmpz_clear(__sd_Z_neg_5);
+      __gmpz_clear(__sd_Z_to_Z_18);
+      
+    }
+    
     if (k == -1) {
       __retres = -1;
       goto return_label;
@@ -299,113 +301,115 @@ int nextSubset(int *s, int n)
       __gmpz_clear(__sd_Z_cst_22);
       __gmpz_clear(__sd_Z_add_0);
       __gmpz_clear(__sd_Z_to_Z_22);
-      while (1) {
-        
-          if (! (i < n)) break;mpz_t __sd_Z_to_Z_31;
-        mpz_t __sd_Z_to_Z_32;
-        mpz_t __sd_Z_sub_2;
-        int __sd_variant_pos_0;
-        __gmpz_init_set_si(__sd_Z_to_Z_31,n);
-        __gmpz_init_set_si(__sd_Z_to_Z_32,i);
-        __gmpz_init(__sd_Z_sub_2);
-        __gmpz_sub(__sd_Z_sub_2,__sd_Z_to_Z_31,__sd_Z_to_Z_32);
-        __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_2,0);
-        if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
-                                                                 9);
-        {
-          *(s + i) = 0;
-          i ++;
-        }mpz_t __sd_Z_to_Z_23;
-        mpz_t __sd_Z_cst_23;
-        mpz_t __sd_Z_add_1;
-        mpz_t __sd_Z_to_Z_24;
-        int __sd_le_6;
-        int __sd_and_4;
-        int __sd_forall_5;
-        mpz_t __sd_Z_to_Z_33;
-        mpz_t __sd_Z_to_Z_34;
-        mpz_t __sd_Z_sub_3;
-        int __sd_variant_decr_0;
-        __gmpz_init_set_si(__sd_Z_to_Z_23,k);
-        __gmpz_init_set_str(__sd_Z_cst_23,"1",10);
-        __gmpz_init(__sd_Z_add_1);
-        __gmpz_add(__sd_Z_add_1,__sd_Z_to_Z_23,__sd_Z_cst_23);
-        __gmpz_init_set_si(__sd_Z_to_Z_24,i);
-        __sd_le_6 = __gmpz_cmp(__sd_Z_add_1,__sd_Z_to_Z_24);
-        __sd_and_4 = __sd_le_6 <= 0;
-        if (__sd_and_4) __sd_and_4 = i <= n;
-        if (! __sd_and_4) pathcrawler_assert_exception("not preserved",10);
-        __sd_forall_5 = 1;
-        {
-          mpz_t __sd_Z_cst_27;
-          mpz_t __sd_Z_to_Z_28;
-          mpz_t __q_i;
-          int __sd_forall_cmp_5;
-          __gmpz_init_set_str(__sd_Z_cst_27,"0",10);
-          __gmpz_init_set_si(__sd_Z_to_Z_28,i);
-          __gmpz_init_set(__q_i,__sd_Z_cst_27);
-          __sd_forall_cmp_5 = __gmpz_cmp(__q_i,__sd_Z_to_Z_28);
-          while (__sd_forall_cmp_5 < 0 && __sd_forall_5) {
-            mpz_t __sd_Z_lval_10;
-            int __sd_to_ctype_13;
-            mpz_t __sd_Z_to_Z_29;
-            mpz_t __sd_Z_cst_28;
-            int __sd_eq_7;
-            int __sd_or_3;
-            __gmpz_init_set(__sd_Z_lval_10,__q_i);
-            __sd_to_ctype_13 = (int)__gmpz_get_si(__sd_Z_lval_10);
-            __gmpz_init_set_si(__sd_Z_to_Z_29,*(s + __sd_to_ctype_13));
-            __gmpz_init_set_str(__sd_Z_cst_28,"0",10);
-            __sd_eq_7 = __gmpz_cmp(__sd_Z_to_Z_29,__sd_Z_cst_28);
-            __sd_or_3 = __sd_eq_7 == 0;
-            if (! __sd_or_3) {
-              mpz_t __sd_Z_lval_11;
-              int __sd_to_ctype_14;
-              mpz_t __sd_Z_to_Z_30;
-              mpz_t __sd_Z_cst_29;
-              int __sd_eq_8;
-              __gmpz_init_set(__sd_Z_lval_11,__q_i);
-              __sd_to_ctype_14 = (int)__gmpz_get_si(__sd_Z_lval_11);
-              __gmpz_init_set_si(__sd_Z_to_Z_30,*(s + __sd_to_ctype_14));
-              __gmpz_init_set_str(__sd_Z_cst_29,"1",10);
-              __sd_eq_8 = __gmpz_cmp(__sd_Z_to_Z_30,__sd_Z_cst_29);
-              __sd_or_3 = __sd_eq_8 == 0;
-              __gmpz_clear(__sd_Z_lval_11);
-              __gmpz_clear(__sd_Z_to_Z_30);
-              __gmpz_clear(__sd_Z_cst_29);
-            }
-            __sd_forall_5 = __sd_or_3;
-            __gmpz_add_ui(__q_i,__q_i,1);
-            __sd_forall_cmp_5 = __gmpz_cmp(__q_i,__sd_Z_to_Z_28);
-            __gmpz_clear(__sd_Z_lval_10);
-            __gmpz_clear(__sd_Z_to_Z_29);
-            __gmpz_clear(__sd_Z_cst_28);
-          }
-          __gmpz_clear(__sd_Z_cst_27);
-          __gmpz_clear(__sd_Z_to_Z_28);
-          __gmpz_clear(__q_i);
-        }
-        if (! __sd_forall_5) pathcrawler_assert_exception("not preserved",12);
-        __gmpz_init_set_si(__sd_Z_to_Z_33,n);
-        __gmpz_init_set_si(__sd_Z_to_Z_34,i);
-        __gmpz_init(__sd_Z_sub_3);
-        __gmpz_sub(__sd_Z_sub_3,__sd_Z_to_Z_33,__sd_Z_to_Z_34);
-        __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_3,__sd_Z_sub_2);
-        if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception("non decreasing",
-                                                                   9);
-        __gmpz_clear(__sd_Z_to_Z_23);
-        __gmpz_clear(__sd_Z_cst_23);
-        __gmpz_clear(__sd_Z_add_1);
-        __gmpz_clear(__sd_Z_to_Z_24);
-        __gmpz_clear(__sd_Z_to_Z_33);
-        __gmpz_clear(__sd_Z_to_Z_34);
-        __gmpz_clear(__sd_Z_sub_3);
-        __gmpz_clear(__sd_Z_to_Z_31);
-        __gmpz_clear(__sd_Z_to_Z_32);
-        __gmpz_clear(__sd_Z_sub_2);
-        }
-         
+      
     }
+    while (1) {
+      
+        if (! (i < n)) break;mpz_t __sd_Z_to_Z_31;
+      mpz_t __sd_Z_to_Z_32;
+      mpz_t __sd_Z_sub_2;
+      int __sd_variant_pos_0;
+      __gmpz_init_set_si(__sd_Z_to_Z_31,n);
+      __gmpz_init_set_si(__sd_Z_to_Z_32,i);
+      __gmpz_init(__sd_Z_sub_2);
+      __gmpz_sub(__sd_Z_sub_2,__sd_Z_to_Z_31,__sd_Z_to_Z_32);
+      __sd_variant_pos_0 = __gmpz_cmp_ui(__sd_Z_sub_2,0);
+      if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
+                                                               9);
+      {
+        *(s + i) = 0;
+        i ++;
+      }mpz_t __sd_Z_to_Z_23;
+      mpz_t __sd_Z_cst_23;
+      mpz_t __sd_Z_add_1;
+      mpz_t __sd_Z_to_Z_24;
+      int __sd_le_6;
+      int __sd_and_4;
+      int __sd_forall_5;
+      mpz_t __sd_Z_to_Z_33;
+      mpz_t __sd_Z_to_Z_34;
+      mpz_t __sd_Z_sub_3;
+      int __sd_variant_decr_0;
+      __gmpz_init_set_si(__sd_Z_to_Z_23,k);
+      __gmpz_init_set_str(__sd_Z_cst_23,"1",10);
+      __gmpz_init(__sd_Z_add_1);
+      __gmpz_add(__sd_Z_add_1,__sd_Z_to_Z_23,__sd_Z_cst_23);
+      __gmpz_init_set_si(__sd_Z_to_Z_24,i);
+      __sd_le_6 = __gmpz_cmp(__sd_Z_add_1,__sd_Z_to_Z_24);
+      __sd_and_4 = __sd_le_6 <= 0;
+      if (__sd_and_4) __sd_and_4 = i <= n;
+      if (! __sd_and_4) pathcrawler_assert_exception("not preserved",10);
+      __sd_forall_5 = 1;
+      {
+        mpz_t __sd_Z_cst_27;
+        mpz_t __sd_Z_to_Z_28;
+        mpz_t __q_i;
+        int __sd_forall_cmp_5;
+        __gmpz_init_set_str(__sd_Z_cst_27,"0",10);
+        __gmpz_init_set_si(__sd_Z_to_Z_28,i);
+        __gmpz_init_set(__q_i,__sd_Z_cst_27);
+        __sd_forall_cmp_5 = __gmpz_cmp(__q_i,__sd_Z_to_Z_28);
+        while (__sd_forall_cmp_5 < 0 && __sd_forall_5) {
+          mpz_t __sd_Z_lval_10;
+          int __sd_to_ctype_13;
+          mpz_t __sd_Z_to_Z_29;
+          mpz_t __sd_Z_cst_28;
+          int __sd_eq_7;
+          int __sd_or_3;
+          __gmpz_init_set(__sd_Z_lval_10,__q_i);
+          __sd_to_ctype_13 = (int)__gmpz_get_si(__sd_Z_lval_10);
+          __gmpz_init_set_si(__sd_Z_to_Z_29,*(s + __sd_to_ctype_13));
+          __gmpz_init_set_str(__sd_Z_cst_28,"0",10);
+          __sd_eq_7 = __gmpz_cmp(__sd_Z_to_Z_29,__sd_Z_cst_28);
+          __sd_or_3 = __sd_eq_7 == 0;
+          if (! __sd_or_3) {
+            mpz_t __sd_Z_lval_11;
+            int __sd_to_ctype_14;
+            mpz_t __sd_Z_to_Z_30;
+            mpz_t __sd_Z_cst_29;
+            int __sd_eq_8;
+            __gmpz_init_set(__sd_Z_lval_11,__q_i);
+            __sd_to_ctype_14 = (int)__gmpz_get_si(__sd_Z_lval_11);
+            __gmpz_init_set_si(__sd_Z_to_Z_30,*(s + __sd_to_ctype_14));
+            __gmpz_init_set_str(__sd_Z_cst_29,"1",10);
+            __sd_eq_8 = __gmpz_cmp(__sd_Z_to_Z_30,__sd_Z_cst_29);
+            __sd_or_3 = __sd_eq_8 == 0;
+            __gmpz_clear(__sd_Z_lval_11);
+            __gmpz_clear(__sd_Z_to_Z_30);
+            __gmpz_clear(__sd_Z_cst_29);
+          }
+          __sd_forall_5 = __sd_or_3;
+          __gmpz_add_ui(__q_i,__q_i,1);
+          __sd_forall_cmp_5 = __gmpz_cmp(__q_i,__sd_Z_to_Z_28);
+          __gmpz_clear(__sd_Z_lval_10);
+          __gmpz_clear(__sd_Z_to_Z_29);
+          __gmpz_clear(__sd_Z_cst_28);
+        }
+        __gmpz_clear(__sd_Z_cst_27);
+        __gmpz_clear(__sd_Z_to_Z_28);
+        __gmpz_clear(__q_i);
+      }
+      if (! __sd_forall_5) pathcrawler_assert_exception("not preserved",12);
+      __gmpz_init_set_si(__sd_Z_to_Z_33,n);
+      __gmpz_init_set_si(__sd_Z_to_Z_34,i);
+      __gmpz_init(__sd_Z_sub_3);
+      __gmpz_sub(__sd_Z_sub_3,__sd_Z_to_Z_33,__sd_Z_to_Z_34);
+      __sd_variant_decr_0 = __gmpz_cmp(__sd_Z_sub_3,__sd_Z_sub_2);
+      if (__sd_variant_decr_0 >= 0) pathcrawler_assert_exception("non decreasing",
+                                                                 9);
+      __gmpz_clear(__sd_Z_to_Z_23);
+      __gmpz_clear(__sd_Z_cst_23);
+      __gmpz_clear(__sd_Z_add_1);
+      __gmpz_clear(__sd_Z_to_Z_24);
+      __gmpz_clear(__sd_Z_to_Z_33);
+      __gmpz_clear(__sd_Z_to_Z_34);
+      __gmpz_clear(__sd_Z_sub_3);
+      __gmpz_clear(__sd_Z_to_Z_31);
+      __gmpz_clear(__sd_Z_to_Z_32);
+      __gmpz_clear(__sd_Z_sub_2);
+      
+    }
+    
     __retres = k;
     return_label:
       {

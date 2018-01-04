@@ -64,8 +64,9 @@ void f(int x)
       __gmpz_clear(__sd_Z_cst_0);
       __gmpz_clear(__sd_Z_add_0);
       __gmpz_clear(__sd_Z_cst_1);
-      ;
+      
     }
+    ;
     return;
   }
 }

@@ -167,8 +167,9 @@ void sort(int *A, int n)
                                                                     A + d)) 
                                                                   position = d;
                                                                 d ++;
-                                                              }}
-                                        
+                                                              }
+                                     }
+                                     
                                      if (position != c) {
                                        int swap;
                                        swap = *(A + c);
@@ -177,8 +178,9 @@ void sort(int *A, int n)
                                      }
                                    }
                                    c ++;
-                                 }}
-       
+                                 }
+    }
+    
     free(old_ptr_A);
     return;
   }
@@ -208,6 +210,7 @@ void f(int *t, int k)
                  __sd_sort_mod_0(t,k);
                  
                }
+               
     {
       mpz_t __sd_Z_cst_3;
       int __sd_to_ctype_3;

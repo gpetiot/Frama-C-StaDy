@@ -61,11 +61,13 @@ void f(int default_value)
                                    if (! (j < 5)) break;{
                                                           t[i][j] = i + j;
                                                           j ++;
-                                                        }}
-                                  
+                                                        }
+                               }
+                               
                                i ++;
-                             }}
-       
+                             }
+    }
+    
     min = t[0][0];
     i = 0;
     while (1) {
@@ -78,11 +80,13 @@ void f(int default_value)
                                                           if (t[i][j] < min) 
                                                             min = t[i][j];
                                                           j ++;
-                                                        }}
-                                  
+                                                        }
+                               }
+                               
                                i ++;
-                             }}
-       
+                             }
+    }
+    
     ;
     ;
     min = default_value;
@@ -97,11 +101,13 @@ void f(int default_value)
                                                           if (t[i][j] < min) 
                                                             min = t[i][j];
                                                           j ++;
-                                                        }}
-                                  
+                                                        }
+                               }
+                               
                                i ++;
-                             }}
-       
+                             }
+    }
+    
     {
       int __sd_forall_0;
       __sd_forall_0 = 1;
@@ -147,8 +153,9 @@ void f(int default_value)
         __gmpz_clear(__q_a);
       }
       if (! __sd_forall_0) pathcrawler_assert_exception("",0);
-      ;
+      
     }
+    ;
     {
       int __sd_exists_0;
       __sd_exists_0 = 0;
@@ -194,8 +201,9 @@ void f(int default_value)
         __gmpz_clear(__q_a);
       }
       if (! __sd_exists_0) pathcrawler_assert_exception("",2);
-      ;
+      
     }
+    ;
     return;
   }
 }

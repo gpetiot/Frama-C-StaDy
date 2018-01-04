@@ -203,72 +203,74 @@ void f(int *t, int x)
         __gmpz_clear(__sd_Z_to_Z_4);
         __gmpz_clear(__sd_Z_to_Z_8);
         __gmpz_clear(__sd_Z_cst_10);
-        if (i <= 4) {
-          {
-            if (*(t + i) == x) found = 1;
-            i ++;
-          }mpz_t __sd_Z_cst_8;
-          mpz_t __sd_Z_to_Z_6;
-          int __sd_le_4;
-          int __sd_and_2;
-          mpz_t __sd_Z_to_Z_10;
-          mpz_t __sd_Z_cst_12;
-          int __sd_ne_2;
-          int __sd_exists_2;
-          __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
-          __gmpz_init_set_si(__sd_Z_to_Z_6,i);
-          __sd_le_4 = __gmpz_cmp(__sd_Z_cst_8,__sd_Z_to_Z_6);
-          __sd_and_2 = __sd_le_4 <= 0;
-          if (__sd_and_2) {
-            mpz_t __sd_Z_to_Z_7;
-            mpz_t __sd_Z_cst_9;
-            int __sd_le_5;
-            __gmpz_init_set_si(__sd_Z_to_Z_7,i);
-            __gmpz_init_set_str(__sd_Z_cst_9,"5",10);
-            __sd_le_5 = __gmpz_cmp(__sd_Z_to_Z_7,__sd_Z_cst_9);
-            __sd_and_2 = __sd_le_5 <= 0;
-            __gmpz_clear(__sd_Z_to_Z_7);
-            __gmpz_clear(__sd_Z_cst_9);
-          }
-          if (! __sd_and_2) pathcrawler_assert_exception("3$not preserved",1);
-          __gmpz_init_set_si(__sd_Z_to_Z_10,found);
-          __gmpz_init_set_str(__sd_Z_cst_12,"0",10);
-          __sd_ne_2 = __gmpz_cmp(__sd_Z_to_Z_10,__sd_Z_cst_12);
-          __sd_exists_2 = 0;
-          {
-            mpz_t __sd_Z_cst_13;
-            mpz_t __sd_Z_to_Z_11;
-            mpz_t __q_k;
-            int __sd_exists_cmp_2;
-            __gmpz_init_set_str(__sd_Z_cst_13,"0",10);
-            __gmpz_init_set_si(__sd_Z_to_Z_11,i);
-            __gmpz_init_set(__q_k,__sd_Z_cst_13);
-            __sd_exists_cmp_2 = __gmpz_cmp(__q_k,__sd_Z_to_Z_11);
-            while (__sd_exists_cmp_2 < 0 && ! __sd_exists_2) {
-              mpz_t __sd_Z_lval_2;
-              int __sd_to_ctype_3;
-              __gmpz_init_set(__sd_Z_lval_2,__q_k);
-              __sd_to_ctype_3 = (int)__gmpz_get_si(__sd_Z_lval_2);
-              __sd_exists_2 = *(t + __sd_to_ctype_3) == x;
-              __gmpz_add_ui(__q_k,__q_k,1);
-              __sd_exists_cmp_2 = __gmpz_cmp(__q_k,__sd_Z_to_Z_11);
-              __gmpz_clear(__sd_Z_lval_2);
-            }
-            __gmpz_clear(__sd_Z_cst_13);
-            __gmpz_clear(__sd_Z_to_Z_11);
-            __gmpz_clear(__q_k);
-          }
-          if (! ((! (__sd_ne_2 != 0) || __sd_exists_2) && (! __sd_exists_2 || 
-                                                           __sd_ne_2 != 0))) 
-            pathcrawler_assert_exception("3$not preserved",5);
-          if (! 0) pathcrawler_assume_exception("",0);
-          __gmpz_clear(__sd_Z_cst_8);
-          __gmpz_clear(__sd_Z_to_Z_6);
-          __gmpz_clear(__sd_Z_to_Z_10);
-          __gmpz_clear(__sd_Z_cst_12);
-          }
-           
+        
       }
+      if (i <= 4) {
+        {
+          if (*(t + i) == x) found = 1;
+          i ++;
+        }mpz_t __sd_Z_cst_8;
+        mpz_t __sd_Z_to_Z_6;
+        int __sd_le_4;
+        int __sd_and_2;
+        mpz_t __sd_Z_to_Z_10;
+        mpz_t __sd_Z_cst_12;
+        int __sd_ne_2;
+        int __sd_exists_2;
+        __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
+        __gmpz_init_set_si(__sd_Z_to_Z_6,i);
+        __sd_le_4 = __gmpz_cmp(__sd_Z_cst_8,__sd_Z_to_Z_6);
+        __sd_and_2 = __sd_le_4 <= 0;
+        if (__sd_and_2) {
+          mpz_t __sd_Z_to_Z_7;
+          mpz_t __sd_Z_cst_9;
+          int __sd_le_5;
+          __gmpz_init_set_si(__sd_Z_to_Z_7,i);
+          __gmpz_init_set_str(__sd_Z_cst_9,"5",10);
+          __sd_le_5 = __gmpz_cmp(__sd_Z_to_Z_7,__sd_Z_cst_9);
+          __sd_and_2 = __sd_le_5 <= 0;
+          __gmpz_clear(__sd_Z_to_Z_7);
+          __gmpz_clear(__sd_Z_cst_9);
+        }
+        if (! __sd_and_2) pathcrawler_assert_exception("3$not preserved",1);
+        __gmpz_init_set_si(__sd_Z_to_Z_10,found);
+        __gmpz_init_set_str(__sd_Z_cst_12,"0",10);
+        __sd_ne_2 = __gmpz_cmp(__sd_Z_to_Z_10,__sd_Z_cst_12);
+        __sd_exists_2 = 0;
+        {
+          mpz_t __sd_Z_cst_13;
+          mpz_t __sd_Z_to_Z_11;
+          mpz_t __q_k;
+          int __sd_exists_cmp_2;
+          __gmpz_init_set_str(__sd_Z_cst_13,"0",10);
+          __gmpz_init_set_si(__sd_Z_to_Z_11,i);
+          __gmpz_init_set(__q_k,__sd_Z_cst_13);
+          __sd_exists_cmp_2 = __gmpz_cmp(__q_k,__sd_Z_to_Z_11);
+          while (__sd_exists_cmp_2 < 0 && ! __sd_exists_2) {
+            mpz_t __sd_Z_lval_2;
+            int __sd_to_ctype_3;
+            __gmpz_init_set(__sd_Z_lval_2,__q_k);
+            __sd_to_ctype_3 = (int)__gmpz_get_si(__sd_Z_lval_2);
+            __sd_exists_2 = *(t + __sd_to_ctype_3) == x;
+            __gmpz_add_ui(__q_k,__q_k,1);
+            __sd_exists_cmp_2 = __gmpz_cmp(__q_k,__sd_Z_to_Z_11);
+            __gmpz_clear(__sd_Z_lval_2);
+          }
+          __gmpz_clear(__sd_Z_cst_13);
+          __gmpz_clear(__sd_Z_to_Z_11);
+          __gmpz_clear(__q_k);
+        }
+        if (! ((! (__sd_ne_2 != 0) || __sd_exists_2) && (! __sd_exists_2 || 
+                                                         __sd_ne_2 != 0))) 
+          pathcrawler_assert_exception("3$not preserved",5);
+        if (! 0) pathcrawler_assume_exception("",0);
+        __gmpz_clear(__sd_Z_cst_8);
+        __gmpz_clear(__sd_Z_to_Z_6);
+        __gmpz_clear(__sd_Z_to_Z_10);
+        __gmpz_clear(__sd_Z_cst_12);
+        
+      }
+      
     {
       mpz_t __sd_Z_to_Z_12;
       mpz_t __sd_Z_cst_14;
@@ -306,8 +308,9 @@ void f(int *t, int x)
         pathcrawler_assert_exception("3$",3);
       __gmpz_clear(__sd_Z_to_Z_12);
       __gmpz_clear(__sd_Z_cst_14);
-      ;
+      
     }
+    ;
     free(old_ptr_t);
     return;
   }

@@ -131,36 +131,38 @@ void f(int *t, int x)
         }
         __gmpz_clear(__sd_Z_cst_4);
         __gmpz_clear(__sd_Z_to_Z_2);
-        if (i <= 4) {
-          {
-            if (*(t + i) == x) found = 1;
-            i ++;
-          }mpz_t __sd_Z_cst_6;
-          mpz_t __sd_Z_to_Z_4;
-          int __sd_le_4;
-          int __sd_and_2;
-          __gmpz_init_set_str(__sd_Z_cst_6,"0",10);
-          __gmpz_init_set_si(__sd_Z_to_Z_4,i);
-          __sd_le_4 = __gmpz_cmp(__sd_Z_cst_6,__sd_Z_to_Z_4);
-          __sd_and_2 = __sd_le_4 <= 0;
-          if (__sd_and_2) {
-            mpz_t __sd_Z_to_Z_5;
-            mpz_t __sd_Z_cst_7;
-            int __sd_le_5;
-            __gmpz_init_set_si(__sd_Z_to_Z_5,i);
-            __gmpz_init_set_str(__sd_Z_cst_7,"5",10);
-            __sd_le_5 = __gmpz_cmp(__sd_Z_to_Z_5,__sd_Z_cst_7);
-            __sd_and_2 = __sd_le_5 <= 0;
-            __gmpz_clear(__sd_Z_to_Z_5);
-            __gmpz_clear(__sd_Z_cst_7);
-          }
-          if (! __sd_and_2) pathcrawler_assert_exception("3$not preserved",1);
-          if (! 0) pathcrawler_assume_exception("",0);
-          __gmpz_clear(__sd_Z_cst_6);
-          __gmpz_clear(__sd_Z_to_Z_4);
-          }
-           
+        
       }
+      if (i <= 4) {
+        {
+          if (*(t + i) == x) found = 1;
+          i ++;
+        }mpz_t __sd_Z_cst_6;
+        mpz_t __sd_Z_to_Z_4;
+        int __sd_le_4;
+        int __sd_and_2;
+        __gmpz_init_set_str(__sd_Z_cst_6,"0",10);
+        __gmpz_init_set_si(__sd_Z_to_Z_4,i);
+        __sd_le_4 = __gmpz_cmp(__sd_Z_cst_6,__sd_Z_to_Z_4);
+        __sd_and_2 = __sd_le_4 <= 0;
+        if (__sd_and_2) {
+          mpz_t __sd_Z_to_Z_5;
+          mpz_t __sd_Z_cst_7;
+          int __sd_le_5;
+          __gmpz_init_set_si(__sd_Z_to_Z_5,i);
+          __gmpz_init_set_str(__sd_Z_cst_7,"5",10);
+          __sd_le_5 = __gmpz_cmp(__sd_Z_to_Z_5,__sd_Z_cst_7);
+          __sd_and_2 = __sd_le_5 <= 0;
+          __gmpz_clear(__sd_Z_to_Z_5);
+          __gmpz_clear(__sd_Z_cst_7);
+        }
+        if (! __sd_and_2) pathcrawler_assert_exception("3$not preserved",1);
+        if (! 0) pathcrawler_assume_exception("",0);
+        __gmpz_clear(__sd_Z_cst_6);
+        __gmpz_clear(__sd_Z_to_Z_4);
+        
+      }
+      
     {
       mpz_t __sd_Z_to_Z_6;
       mpz_t __sd_Z_cst_8;
@@ -198,8 +200,9 @@ void f(int *t, int x)
         pathcrawler_assert_exception("3$",0);
       __gmpz_clear(__sd_Z_to_Z_6);
       __gmpz_clear(__sd_Z_cst_8);
-      ;
+      
     }
+    ;
     free(old_ptr_t);
     return;
   }
