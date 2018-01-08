@@ -1,3 +1,7 @@
+v0.4.1
+	08/01/2018 G. PETIOT put brackets around code generated before a stmt,
+	                     and around code generated after a stmt, always put
+	                     brackets around if/else instructions
 v0.4.0
 	17/12/2017 G. PETIOT Frama-C Sulfur compliant
 
