@@ -71,6 +71,38 @@ class print_insertions insertions functions swd = object(self)
 	 Format.fprintf fmt "%a" (fun fmt -> self#block fmt) new_b;
 	 self#insertions_at fmt (Symbolic_label.end_iter stmt.sid);
 	 Format.fprintf fmt "@]@\n}@\n"
+      | If (e, b1, b2, l) ->
+	 if b1.bstmts = [] then
+	   if b2.bstmts = [] then
+	     ()
+	   else
+	     begin
+	       let line_directive fmt = self#line_directive fmt in
+	       Format.fprintf fmt "%a@[<v 2>if (! (%a)) {@\n" line_directive l
+		 self#exp e;
+	       Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b2;
+	       Format.fprintf fmt "@]@\n}@\n"
+	     end
+	 else
+	   if b2.bstmts = [] then
+	     begin
+	       let line_directive fmt = self#line_directive fmt in
+	       Format.fprintf fmt "%a@[<v 2>if (%a) {@\n" line_directive l
+		 self#exp e;
+	       Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b1;
+	       Format.fprintf fmt "@]@\n}@\n"
+	     end
+	   else
+	     begin
+	       let line_directive fmt = self#line_directive fmt in
+	       Format.fprintf fmt "%a@[<v 2>if (%a) {@\n" line_directive l
+		 self#exp e;
+	       Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b1;
+	       Format.fprintf fmt "@]@\n}@\n";
+	       Format.fprintf fmt "%a@[<v 2>else {@\n" line_directive l;
+	       Format.fprintf fmt "%a" (fun fmt -> self#block fmt) b2;
+	       Format.fprintf fmt "@]@\n}@\n"
+	     end
       | Instr(Call(_,{enode=Lval(Var vi,NoOffset)},_,_))
       | Instr(Local_init (_, ConsInit (vi, _, _), _))
 	   when List.mem stmt.sid swd
