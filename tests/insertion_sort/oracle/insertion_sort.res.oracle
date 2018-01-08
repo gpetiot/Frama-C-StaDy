@@ -131,7 +131,10 @@ void insertion_sort(int *t, int n)
     }
     while (1) {
       
-        if (! (i < n)) break;mpz_t __sd_Z_to_Z_12;
+        if (! (i < n)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_12;
       mpz_t __sd_Z_to_Z_13;
       mpz_t __sd_Z_sub_3;
       int __sd_variant_pos_0;
@@ -189,11 +192,17 @@ void insertion_sort(int *t, int n)
         }
         while (1) {
           
-            if (! (j > 0)) break;int __sd_variant_save_0;
+            if (! (j > 0)) {
+              break;
+            }
+            int __sd_variant_save_0;
           if (j < 0) pathcrawler_assert_exception("non positive",6);
           __sd_variant_save_0 = j;
           {
-            if (*(t + (j - 1)) <= mv) break;
+            if (*(t + (j - 1)) <= mv) {
+              break;
+            }
+            
             *(t + j) = *(t + (j - 1));
             j --;
           }mpz_t __sd_Z_cst_4;

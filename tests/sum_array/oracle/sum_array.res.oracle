@@ -91,7 +91,10 @@ int sum_array(int *t, int n)
     }
     while (1) {
       
-        if (! (i < n)) break;mpz_t __sd_Z_to_Z_21;
+        if (! (i < n)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_21;
       mpz_t __sd_Z_to_Z_22;
       mpz_t __sd_Z_sub_3;
       int __sd_variant_pos_0;

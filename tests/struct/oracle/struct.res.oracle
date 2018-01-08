@@ -95,13 +95,18 @@ int f(struct S *s, struct S *s2, int n)
   {
     int __retres;
     if (s->i) {
-      __retres = 1;
-      goto return_label;
+      {
+        __retres = 1;
+        goto return_label;
+      }
     }
     else {
-      __retres = -1;
-      goto return_label;
+      {
+        __retres = -1;
+        goto return_label;
+      }
     }
+    
     return_label: free(old_ptr_s);
                   free(old_ptr_s2);
                   return __retres;

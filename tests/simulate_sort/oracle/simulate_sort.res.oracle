@@ -265,11 +265,14 @@ void main(void)
     i = 0;
     while (1) {
       
-        if (! (i < n)) break;{
-                               t[i] = (13 - i) * ((i % 2) * 2 - 1);
-                               t_before[i] = t[i];
-                               i ++;
-                             }
+        if (! (i < n)) {
+          break;
+        }
+        {
+          t[i] = (13 - i) * ((i % 2) * 2 - 1);
+          t_before[i] = t[i];
+          i ++;
+        }
     }
     
     {
@@ -281,10 +284,13 @@ void main(void)
     i = 0;
     while (1) {
       
-        if (! (i < n)) break;{
-                               printf("%i \t %i\n",t_before[i],t[i]);
-                               i ++;
-                             }
+        if (! (i < n)) {
+          break;
+        }
+        {
+          printf("%i \t %i\n",t_before[i],t[i]);
+          i ++;
+        }
     }
     
     printf("\n");

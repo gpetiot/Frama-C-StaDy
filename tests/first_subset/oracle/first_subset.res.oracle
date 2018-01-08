@@ -137,7 +137,10 @@ void firstSubset(int *s, int n)
     }
     while (1) {
       
-        if (! (k < n)) break;mpz_t __sd_Z_to_Z_12;
+        if (! (k < n)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_12;
       mpz_t __sd_Z_to_Z_13;
       mpz_t __sd_Z_sub_0;
       int __sd_variant_pos_0;

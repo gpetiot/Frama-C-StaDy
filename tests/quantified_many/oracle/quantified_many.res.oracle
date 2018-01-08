@@ -54,37 +54,51 @@ void f(int default_value)
     i = 0;
     while (1) {
       
-        if (! (i < 5)) break;{
-                               j = 0;
-                               while (1) {
-                                 
-                                   if (! (j < 5)) break;{
-                                                          t[i][j] = i + j;
-                                                          j ++;
-                                                        }
-                               }
-                               
-                               i ++;
-                             }
+        if (! (i < 5)) {
+          break;
+        }
+        {
+          j = 0;
+          while (1) {
+            
+              if (! (j < 5)) {
+                break;
+              }
+              {
+                t[i][j] = i + j;
+                j ++;
+              }
+          }
+          
+          i ++;
+        }
     }
     
     min = t[0][0];
     i = 0;
     while (1) {
       
-        if (! (i < 5)) break;{
-                               j = 0;
-                               while (1) {
-                                 
-                                   if (! (j < 5)) break;{
-                                                          if (t[i][j] < min) 
-                                                            min = t[i][j];
-                                                          j ++;
-                                                        }
-                               }
-                               
-                               i ++;
-                             }
+        if (! (i < 5)) {
+          break;
+        }
+        {
+          j = 0;
+          while (1) {
+            
+              if (! (j < 5)) {
+                break;
+              }
+              {
+                if (t[i][j] < min) {
+                  min = t[i][j];
+                }
+                
+                j ++;
+              }
+          }
+          
+          i ++;
+        }
     }
     
     ;
@@ -93,19 +107,27 @@ void f(int default_value)
     i = 0;
     while (1) {
       
-        if (! (i < 5)) break;{
-                               j = 0;
-                               while (1) {
-                                 
-                                   if (! (j < 5)) break;{
-                                                          if (t[i][j] < min) 
-                                                            min = t[i][j];
-                                                          j ++;
-                                                        }
-                               }
-                               
-                               i ++;
-                             }
+        if (! (i < 5)) {
+          break;
+        }
+        {
+          j = 0;
+          while (1) {
+            
+              if (! (j < 5)) {
+                break;
+              }
+              {
+                if (t[i][j] < min) {
+                  min = t[i][j];
+                }
+                
+                j ++;
+              }
+          }
+          
+          i ++;
+        }
     }
     
     {

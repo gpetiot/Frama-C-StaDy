@@ -187,7 +187,10 @@ int binary_search(int *arr, int length, int query)
     }
     while (1) {
       
-        if (! (low <= high)) break;mpz_t __sd_Z_to_Z_25;
+        if (! (low <= high)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_25;
       mpz_t __sd_Z_to_Z_26;
       mpz_t __sd_Z_sub_5;
       int __sd_variant_pos_0;
@@ -282,10 +285,19 @@ int binary_search(int *arr, int length, int query)
           }
           ;
           if (*(arr + mean) == query) {
-            __retres = mean;
-            goto return_label;
+            {
+              __retres = mean;
+              goto return_label;
+            }
           }
-          if (*(arr + mean) < query) low = mean + 1; else high = mean - 1;
+          
+          if (*(arr + mean) < query) {
+            low = mean + 1;
+          }
+          else {
+            high = mean - 1;
+          }
+          
         }
       }mpz_t __sd_Z_cst_13;
       mpz_t __sd_Z_to_Z_14;
@@ -465,9 +477,9 @@ int binary_search(int *arr, int length, int query)
   }
 }
 [kernel] Parsing __sd_instru_binary_search_binary_search.c (with preprocessing)
-__sd_instru_binary_search_binary_search.c:185:[kernel] warning: expected 'long' but got argument of type '__mpz_struct *': __q_x
+__sd_instru_binary_search_binary_search.c:188:[kernel] warning: expected 'long' but got argument of type '__mpz_struct *': __q_x
 [kernel] Parsing __sd_instru_binary_search_binary_search.c (with preprocessing)
-__sd_instru_binary_search_binary_search.c:185:[kernel] warning: expected 'long' but got argument of type '__mpz_struct *': __q_x
+__sd_instru_binary_search_binary_search.c:188:[kernel] warning: expected 'long' but got argument of type '__mpz_struct *': __q_x
 [pc] Starting lanceur_binary_search (isc version)
 [pc] Starting lanceur_pathcrawler__binary_search_precond (isc version)
 [stady] all-paths: true

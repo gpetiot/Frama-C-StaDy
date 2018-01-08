@@ -140,7 +140,10 @@ int num_of(int n, int *t)
     }
     while (1) {
       
-        if (! (i < n)) break;mpz_t __sd_Z_to_Z_12;
+        if (! (i < n)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_12;
       mpz_t __sd_Z_to_Z_13;
       mpz_t __sd_Z_sub_3;
       int __sd_variant_pos_0;
@@ -152,7 +155,10 @@ int num_of(int n, int *t)
       if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
                                                                5);
       {
-        if (*(t + i) == 0) num ++;
+        if (*(t + i) == 0) {
+          num ++;
+        }
+        
         i ++;
       }mpz_t __sd_Z_cst_4;
       mpz_t __sd_Z_to_Z_5;

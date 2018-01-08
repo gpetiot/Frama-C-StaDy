@@ -135,7 +135,10 @@ void f(int *t, int x)
       }
       if (i <= 4) {
         {
-          if (*(t + i) == x) found = 1;
+          if (*(t + i) == x) {
+            found = 1;
+          }
+          
           i ++;
         }mpz_t __sd_Z_cst_6;
         mpz_t __sd_Z_to_Z_4;

@@ -176,11 +176,17 @@ int nextSubset(int *s, int n)
     }
     while (1) {
       
-        if (! (k >= 0)) break;int __sd_variant_save_0;
+        if (! (k >= 0)) {
+          break;
+        }
+        int __sd_variant_save_0;
       if (k < 0) pathcrawler_assert_exception("non positive",3);
       __sd_variant_save_0 = k;
       {
-        if (*(s + k) == 0) break;
+        if (*(s + k) == 0) {
+          break;
+        }
+        
         k --;
       }mpz_t __sd_Z_cst_19;
       mpz_t __sd_Z_cst_20;
@@ -224,9 +230,12 @@ int nextSubset(int *s, int n)
     }
     
     if (k == -1) {
-      __retres = -1;
-      goto return_label;
+      {
+        __retres = -1;
+        goto return_label;
+      }
     }
+    
     *(s + k) = 1;
     i = k + 1;
     {
@@ -305,7 +314,10 @@ int nextSubset(int *s, int n)
     }
     while (1) {
       
-        if (! (i < n)) break;mpz_t __sd_Z_to_Z_31;
+        if (! (i < n)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_31;
       mpz_t __sd_Z_to_Z_32;
       mpz_t __sd_Z_sub_2;
       int __sd_variant_pos_0;

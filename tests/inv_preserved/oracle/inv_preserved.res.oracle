@@ -58,7 +58,13 @@ int fmax(int x, int y)
   old_y = y;
   {
     int tmp;
-    if (x >= y) tmp = x; else tmp = y;
+    if (x >= y) {
+      tmp = x;
+    }
+    else {
+      tmp = y;
+    }
+    
     return tmp;
   }
 }

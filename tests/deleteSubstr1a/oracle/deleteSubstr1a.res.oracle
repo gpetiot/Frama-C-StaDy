@@ -252,7 +252,10 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
     }
     while (1) {
       
-        if (! (i < strlen - sublen)) break;mpz_t __sd_Z_to_Z_40;
+        if (! (i < strlen - sublen)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_40;
       mpz_t __sd_Z_to_Z_41;
       mpz_t __sd_Z_sub_9;
       mpz_t __sd_Z_to_Z_42;
@@ -330,7 +333,10 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           }
           while (1) {
             
-              if (! (j < sublen)) break;mpz_t __sd_Z_to_Z_24;
+              if (! (j < sublen)) {
+                break;
+              }
+              mpz_t __sd_Z_to_Z_24;
             mpz_t __sd_Z_to_Z_25;
             mpz_t __sd_Z_sub_5;
             int __sd_variant_pos_0;
@@ -342,7 +348,10 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
             if (__sd_variant_pos_0 < 0) pathcrawler_assert_exception("non positive",
                                                                     0);
             {
-              if ((int)*(str + (i + j)) != (int)*(substr + j)) break;
+              if ((int)*(str + (i + j)) != (int)*(substr + j)) {
+                break;
+              }
+              
               j ++;
             }mpz_t __sd_Z_cst_14;
             mpz_t __sd_Z_to_Z_19;
@@ -418,9 +427,12 @@ int find_substr(char *str, int strlen, char *substr, int sublen)
           }
           
           if (j == sublen) {
-            __retres = i;
-            goto return_label;
+            {
+              __retres = i;
+              goto return_label;
+            }
           }
+          
         }
         i ++;
       }mpz_t __sd_Z_cst_18;
@@ -825,34 +837,46 @@ int delete_substr(char *str, int strlen, char *substr, int sublen, char *dest)
     int k;
     int start = find_substr(str,strlen,substr,sublen);
     if (start == -1) {
-      k = 0;
-      while (1) {
+      {
+        k = 0;
+        while (1) {
+          
+            if (! (k < strlen)) {
+              break;
+            }
+            {
+              *(dest + k) = *(str + k);
+              k ++;
+            }
+        }
         
-          if (! (k < strlen)) break;{
-                                      *(dest + k) = *(str + k);
-                                      k ++;
-                                    }
+        __retres = 0;
+        goto return_label;
       }
-      
-      __retres = 0;
-      goto return_label;
     }
+    
     j = 0;
     while (1) {
       
-        if (! (j < start)) break;{
-                                   *(dest + j) = *(str + j);
-                                   j ++;
-                                 }
+        if (! (j < start)) {
+          break;
+        }
+        {
+          *(dest + j) = *(str + j);
+          j ++;
+        }
     }
     
     j = start;
     while (1) {
       
-        if (! (j < strlen - sublen)) break;{
-                                             *(dest + j) = *(str + (j + sublen));
-                                             j ++;
-                                           }
+        if (! (j < strlen - sublen)) {
+          break;
+        }
+        {
+          *(dest + j) = *(str + (j + sublen));
+          j ++;
+        }
     }
     
     __retres = 1;

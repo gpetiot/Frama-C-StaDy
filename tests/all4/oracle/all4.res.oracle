@@ -180,11 +180,22 @@ T1 F2(T1 f3, T5 *f4, T5 *f5)
     T3 V5;
     T1 V6;
     V5 = f3 < (*f4)[0];
-    if (V5) V6 = (*f5)[0];
-    else {
-      V4 = f3 > (*f4)[11];
-      if (V4) V6 = (*f5)[11]; else V6 = F6(f3,f4,f5);
+    if (V5) {
+      V6 = (*f5)[0];
     }
+    else {
+      {
+        V4 = f3 > (*f4)[11];
+        if (V4) {
+          V6 = (*f5)[11];
+        }
+        else {
+          V6 = F6(f3,f4,f5);
+        }
+        
+      }
+    }
+    
     return V6;
   }
 }
@@ -197,7 +208,13 @@ T1 F4(T1 f11)
     T3 V7;
     T1 V8;
     V7 = f11 >= 0.;
-    if (V7) V8 = f11; else V8 = - f11;
+    if (V7) {
+      V8 = f11;
+    }
+    else {
+      V8 = - f11;
+    }
+    
     return V8;
   }
 }
@@ -223,8 +240,20 @@ T1 F6(T1 f14, T5 *f15, T5 *f16)
     T2 V14;
     T1 V15;
     V13 = F5(f14,f15);
-    if (V13 == 0) V14 = 1; else V14 = V13;
-    if (V14 == 12) V13 = 11; else V13 = V14;
+    if (V13 == 0) {
+      V14 = 1;
+    }
+    else {
+      V14 = V13;
+    }
+    
+    if (V14 == 12) {
+      V13 = 11;
+    }
+    else {
+      V13 = V14;
+    }
+    
     V14 = V13 - 1;
     V9 = (*f15)[V13];
     V11 = (*f16)[V13];
@@ -320,26 +349,32 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
     V20 = F2(V19,f19,f20);
     V18 = f18 < - V20;
     if (! V18) {
-      V16 = f18 < V20;
-      if (V16) {
-        V17[0] = - V20;
-        V17[1] = V20;
-        V22 = V17[0] + 1. <= V17[1];
-        {
-          mpz_t __sd_Z_to_Z_0;
-          mpz_t __sd_Z_cst_8;
-          int __sd_ne_0;
-          __gmpz_init_set_si(__sd_Z_to_Z_0,V22);
-          __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
-          __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_0,__sd_Z_cst_8);
-          if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",1);
-          __gmpz_clear(__sd_Z_to_Z_0);
-          __gmpz_clear(__sd_Z_cst_8);
-          
+      {
+        V16 = f18 < V20;
+        if (V16) {
+          {
+            V17[0] = - V20;
+            V17[1] = V20;
+            V22 = V17[0] + 1. <= V17[1];
+            {
+              mpz_t __sd_Z_to_Z_0;
+              mpz_t __sd_Z_cst_8;
+              int __sd_ne_0;
+              __gmpz_init_set_si(__sd_Z_to_Z_0,V22);
+              __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
+              __sd_ne_0 = __gmpz_cmp(__sd_Z_to_Z_0,__sd_Z_cst_8);
+              if (! (__sd_ne_0 != 0)) pathcrawler_assert_exception("",1);
+              __gmpz_clear(__sd_Z_to_Z_0);
+              __gmpz_clear(__sd_Z_cst_8);
+              
+            }
+            ;
+          }
         }
-        ;
+        
       }
     }
+    
     mpz_t __sd_Z_cst_3;
     unsigned long __sd_to_ctype_2;
     unsigned long __sd_iter_2;
@@ -388,13 +423,25 @@ void F8(void)
       
     }
     
-    if (V25) V23 = 0.5; else V23 = 5.;
+    if (V25) {
+      V23 = 0.5;
+    }
+    else {
+      V23 = 5.;
+    }
+    
     {
       V26 = __sd_Frama_C_interval_mod_1(0,1);
       
     }
     
-    if (V26) V24 = - 100.0; else V24 = 100.0;
+    if (V26) {
+      V24 = - 100.0;
+    }
+    else {
+      V24 = 100.0;
+    }
+    
     G1[0] = 0.;
     G1[1] = 1.;
     G1[2] = 2.;
@@ -424,7 +471,7 @@ void F8(void)
   }
 }
 [kernel] Parsing __sd_instru_all4_F7.c (with preprocessing)
-__sd_instru_all4_F7.c:267:[kernel] warning: Floating-point constant 0.1 is not represented exactly. Will use 0x1.999999999999ap-4. See documentation for option -warn-decimal-float
+__sd_instru_all4_F7.c:296:[kernel] warning: Floating-point constant 0.1 is not represented exactly. Will use 0x1.999999999999ap-4. See documentation for option -warn-decimal-float
 [kernel] Parsing __sd_instru_all4_F7.c (with preprocessing)
 [pc] Starting lanceur_F7 (isc version)
 [pc] Starting lanceur_pathcrawler__F7_precond (isc version)

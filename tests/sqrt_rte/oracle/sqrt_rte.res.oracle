@@ -293,7 +293,10 @@ int sqrt_rte(int n)
       }
       while (1) {
         
-          if (! (y > n)) break;mpz_t __sd_Z_cst_29;
+          if (! (y > n)) {
+            break;
+          }
+          mpz_t __sd_Z_cst_29;
         mpz_t __sd_Z_to_Z_44;
         mpz_t __sd_Z_cst_30;
         mpz_t __sd_Z_sub_1;

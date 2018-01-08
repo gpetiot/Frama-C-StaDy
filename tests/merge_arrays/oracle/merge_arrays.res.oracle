@@ -283,9 +283,16 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
     while (1) {
       
         if (i < l1) {
-          if (! (j < l2)) break;
+          
+            if (! (j < l2)) {
+              break;
+            }
+            
         }
-        else break;mpz_t __sd_Z_to_Z_26;
+        else {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_26;
       mpz_t __sd_Z_to_Z_27;
       mpz_t __sd_Z_add_9;
       mpz_t __sd_Z_to_Z_28;
@@ -303,13 +310,18 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
                                                                4);
       {
         if (*(t1 + i) < *(t2 + j)) {
-          *(t3 + k) = *(t1 + i);
-          i ++;
+          {
+            *(t3 + k) = *(t1 + i);
+            i ++;
+          }
         }
         else {
-          *(t3 + k) = *(t2 + j);
-          j ++;
+          {
+            *(t3 + k) = *(t2 + j);
+            j ++;
+          }
         }
+        
         k ++;
       }mpz_t __sd_Z_cst_10;
       mpz_t __sd_Z_to_Z_9;
@@ -473,7 +485,10 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
     }
     while (1) {
       
-        if (! (i < l1)) break;mpz_t __sd_Z_to_Z_48;
+        if (! (i < l1)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_48;
       mpz_t __sd_Z_to_Z_49;
       mpz_t __sd_Z_sub_5;
       int __sd_variant_pos_1;
@@ -629,7 +644,10 @@ void merge_arrays(int *t1, int *t2, int *t3, int l1, int l2)
     }
     while (1) {
       
-        if (! (j < l2)) break;mpz_t __sd_Z_to_Z_68;
+        if (! (j < l2)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_68;
       mpz_t __sd_Z_to_Z_69;
       mpz_t __sd_Z_sub_7;
       int __sd_variant_pos_2;

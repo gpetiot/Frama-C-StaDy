@@ -188,7 +188,10 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
     }
     while (1) {
       
-        if (! (j < iEnd)) break;mpz_t __sd_Z_to_Z_16;
+        if (! (j < iEnd)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_16;
       mpz_t __sd_Z_to_Z_17;
       mpz_t __sd_Z_sub_8;
       int __sd_variant_pos_0;
@@ -201,18 +204,32 @@ void BottomUpMerge(int *A, int iLeft, int iRight, int iEnd, int *B)
                                                                7);
       {
         if (i0 < iRight) {
-          if (i1 >= iEnd) goto _LOR;
-          else 
-            if (*(A + i0) <= *(A + i1)) {
-              _LOR: *(B + j) = *(A + i0);
-                    i0 ++;
+          
+            if (i1 >= iEnd) {
+              goto _LOR;
             }
-            else goto _LAND;
+            else {
+              
+                if (*(A + i0) <= *(A + i1)) {
+                  {
+                    _LOR: *(B + j) = *(A + i0);
+                          i0 ++;
+                  }
+                }
+                else {
+                  goto _LAND;
+                }
+                
+            }
+            
         }
         else {
-          _LAND: *(B + j) = *(A + i1);
-                 i1 ++;
+          {
+            _LAND: *(B + j) = *(A + i1);
+                   i1 ++;
+          }
         }
+        
         j ++;
       }int __sd_and_1;
       int __sd_and_3;
@@ -394,7 +411,10 @@ void CopyArray(int *A, int *B, int n)
     }
     while (1) {
       
-        if (! (i < n)) break;mpz_t __sd_Z_to_Z_26;
+        if (! (i < n)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_26;
       mpz_t __sd_Z_to_Z_27;
       mpz_t __sd_Z_sub_12;
       int __sd_variant_pos_1;
@@ -454,7 +474,13 @@ int min(int x, int y)
   old_y = y;
   {
     int tmp;
-    if (x <= y) tmp = x; else tmp = y;
+    if (x <= y) {
+      tmp = x;
+    }
+    else {
+      tmp = y;
+    }
+    
     return tmp;
   }
 }
@@ -587,7 +613,10 @@ void BottomUpSort(int n, int *A, int *B)
     }
     while (1) {
       
-        if (! (width < n)) break;mpz_t __sd_Z_to_Z_52;
+        if (! (width < n)) {
+          break;
+        }
+        mpz_t __sd_Z_to_Z_52;
       mpz_t __sd_Z_to_Z_53;
       mpz_t __sd_Z_sub_22;
       int __sd_variant_pos_3;
@@ -651,7 +680,10 @@ void BottomUpSort(int n, int *A, int *B)
           }
           while (1) {
             
-              if (! (i < n)) break;mpz_t __sd_Z_to_Z_42;
+              if (! (i < n)) {
+                break;
+              }
+              mpz_t __sd_Z_to_Z_42;
             mpz_t __sd_Z_to_Z_43;
             mpz_t __sd_Z_sub_18;
             int __sd_variant_pos_2;
