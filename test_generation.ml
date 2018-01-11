@@ -46,11 +46,6 @@ let process_test_case s =
 let process_nb_test_cases s = States.Nb_test_cases.set (int_of_string s)
 
 let process_final_status () = States.All_Paths.set true
-
-let process_var_desc s =
-  let cut_sep sep x = Extlib.string_split x (String.index x sep) in
-  let s1, s2 = cut_sep ':' s in
-  States.Var_Descriptions.add s1 s2
     
 
 (* le mot-clé au début de la chaîne permet de savoir que faire des données
@@ -64,11 +59,8 @@ let process_string s =
       let s1, s2 = Extlib.string_split s 4 in
       if s1 = "NbTC" then process_nb_test_cases s2
       else
-	let s1, s2 = Extlib.string_split s 7 in
-	if s1 = "VarDesc" then process_var_desc s2
-	else
-	  if s = "FinalStatus|OK" then process_final_status ()
-	  else assert false
+        if s = "FinalStatus|OK" then process_final_status ()
+	else assert false
   with _ -> Options.debug ~dkey:Options.dkey_socket "'%s' not processed" s
 
 

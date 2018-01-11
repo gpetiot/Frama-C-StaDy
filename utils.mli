@@ -7,9 +7,6 @@ val to_id: States.Property_To_Id.key -> States.Property_To_Id.data
 
 val to_prop: States.Id_To_Property.key -> States.Id_To_Property.data
 
-val get_var_desc:
-  States.Var_Descriptions.key -> States.Var_Descriptions.data
-
 val unname: Cil_types.typ -> Cil_types.typ
 
 val extract_guards:
