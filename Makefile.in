@@ -30,6 +30,7 @@ PLUGIN_CMO := \
 	input_domain \
 	print \
 	infer \
+	env \
 	translate \
 	register
 PLUGIN_GUI_CMO 	:= register_gui 
