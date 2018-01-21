@@ -24,21 +24,16 @@ AC_MSG_RESULT($FRAMAC_VERSION)
 
 DEV_VERSION_NUMBER=`echo $FRAMAC_VERSION | sed -e 's/.*-\(.*\)/\1/' `
 VERSION_NUMBER=`echo $DEV_VERSION_NUMBER | sed -e 's/\(.*\)+dev/\1/' `
-REQUIRED_NUMBER=20151002
+REQUIRED_NUMBER=20171101
 
-case $FRAMAC_VERSION in
-  Magnesium-$REQUIRED_NUMBER*) ;;
-  Magnesium-$REQUIRED_NUMBER+dev*)
-    # at the time being, must use the Frama-C development version
-    ;;
-  *)
-    if test $VERSION_NUMBER -lt $REQUIRED_NUMBER; then
-      AC_MSG_ERROR(Frama-C version must be at least Magnesium-$REQUIRED_NUMBER.)
-    else
-      AC_MSG_WARN(Frama-C version is more recent than Sodium: \
-use it at your own risk)
-    fi;;
-esac
+if test $VERSION_NUMBER -lt $REQUIRED_NUMBER; then
+  AC_MSG_ERROR(Frama-C version must be at least Sulfur-$REQUIRED_NUMBER.)
+fi;
+
+if test $VERSION_NUMBER -gt $REQUIRED_NUMBER; then
+  AC_MSG_WARN(Frama-C version is more recent than Sulfur-$REQUIRED_NUMBER, \
+use it at your own risk.)
+fi;
 
 # OCaml version
 ###############
