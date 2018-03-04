@@ -1,6 +1,6 @@
 
 /* run.config
-STDOPT: +"-main relational_wrapper_1 -stady -stady-msg-key generated-c,generated-pl -then -report"
+STDOPT: +"-main relational_wrapper_1 -stady -stady-msg-key generated-c,generated-pl -stady-stop-when-assert-violated -then -report"
 */
 
 struct MyClass {
@@ -27,8 +27,7 @@ int IntCompare(int x, int y)
   return_label: return __retres;
 }
 
-/*@ requires \valid(t + (0 .. 2));
-    requires \valid(t + (0 .. 2)); */
+/*@ requires \valid(t + (0 .. 2)); */
 void relational_wrapper_1(struct MyClass x1, struct MyClass x2, int *t)
 {
   int return_variable_relational_2 = 0;
