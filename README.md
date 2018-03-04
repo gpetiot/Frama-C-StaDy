@@ -10,7 +10,7 @@ Here are the corresponding versions of Frama-C and PathCrawler for each version 
 | -------------- | -------- | ---------------------------------------- |
 | v14 Silicon    |  v0.2.3  | bbb76c32b22e2eb4f5777196ade9e2eba2c2ad66 |
 | v15 Phosphorus |  v0.3.0  | 3be1d9f39982f4ce05c243096020025b5c1d0aec |
-| v16 Sulfur     |  v0.4.x  | 7924006e3c928fed2bdb20c5459f28bd82ee812f |
+| v16 Sulfur     |  v0.4.x  | 62dd256d2a4225a7507287019ae5b11ca9d02075 |
 
 [Here](https://github.com/gpetiot/StaDy) are the programs used for benchmarking StaDy.
 
