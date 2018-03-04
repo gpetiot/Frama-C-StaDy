@@ -67,6 +67,7 @@ PLUGIN_TESTS_DIRS:= \
 	num_of \
 	struct \
 	struct_rpp \
+	struct_rpp_2 \
 	sqrt_rte \
 	overflow_should_crash \
 	overflow_shouldnt_crash
