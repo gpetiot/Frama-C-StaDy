@@ -1,3 +1,5 @@
+v0.4.2 	04/03/2018 G. PETIOT fix #3, #4 (issues on structures)
+
 v0.4.1
 	08/01/2018 G. PETIOT put brackets around code generated before a stmt,
 	                     and around code generated after a stmt, always put
