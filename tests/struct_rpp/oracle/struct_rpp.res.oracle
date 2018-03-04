@@ -1,38 +1,572 @@
 [kernel] Parsing tests/struct_rpp/struct_rpp.c (with preprocessing)
-[kernel] Current source was: tests/struct_rpp/struct_rpp.c:32
-    The full backtrace is:
-    Raised at file "translate.ml", line 861, characters 19-30
-    Called from file "translate.ml", line 885, characters 13-24
-    Called from file "translate.ml", line 893, characters 20-60
-    Called from file "translate.ml", line 906, characters 11-65
-    Called from file "translate.ml", line 910, characters 21-34
-    Called from file "translate.ml", line 972, characters 34-56
-    Called from file "list.ml", line 77, characters 12-15
-    Called from file "translate.ml", line 979, characters 4-57
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 2239, characters 15-31
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 3723, characters 5-91
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 3814, characters 16-38
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 2278, characters 13-16
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 2323, characters 24-57
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 3808, characters 5-53
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 6463, characters 17-37
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 6470, characters 3-20
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 2254, characters 21-41
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 6487, characters 15-39
-    Called from file "src/kernel_services/visitors/visitor.ml", line 849, characters 28-60
-    Called from file "register.ml", line 102, characters 4-60
-    Called from file "register.ml", line 142, characters 6-21
-    Called from file "src/libraries/project/state_builder.ml", line 994, characters 9-13
-    Re-raised at file "src/libraries/project/state_builder.ml", line 1002, characters 15-18
-    Called from file "queue.ml", line 105, characters 6-15
-    Called from file "src/kernel_internals/runtime/boot.ml", line 37, characters 4-20
-    Called from file "src/kernel_services/cmdline_parameters/cmdline.ml", line 789, characters 2-9
-    Called from file "src/kernel_services/cmdline_parameters/cmdline.ml", line 819, characters 18-64
-    Called from file "src/kernel_services/cmdline_parameters/cmdline.ml", line 228, characters 4-8
+[stady:generated-pl] generated Prolog precondition:
+:- module(test_parameters).
+:- import create_input_val/3 from substitution.
+:- export dom/4.
+:- export create_input_vals/2.
+:- export unquantif_preconds/2.
+:- export quantif_preconds/2.
+:- export strategy/2.
+:- export precondition_of/2.
+
+dom(0,0,0,0).
+dom('relational_wrapper_1', cont('x1',0), [], int([-2147483648..2147483647])).
+dom('relational_wrapper_1', cont('x2',0), [], int([-2147483648..2147483647])).
+dom('relational_wrapper_1', cont('t',_), [], int([-2147483648..2147483647])).
+dom('pathcrawler__relational_wrapper_1_precond',A,B,C) :-
+  dom('relational_wrapper_1',A,B,C).
+create_input_vals('relational_wrapper_1', Ins):-
+  create_input_val(dim('t'), int([3..4294967295]),Ins),
+  true.
+create_input_vals('pathcrawler__relational_wrapper_1_precond',Ins) :-
+  create_input_vals('relational_wrapper_1',Ins).
+quantif_preconds('relational_wrapper_1',
+  [
+
+  ]
+).
+quantif_preconds('pathcrawler__relational_wrapper_1_precond',A) :-
+  quantif_preconds('relational_wrapper_1',A).
+unquantif_preconds('relational_wrapper_1',
+  [
+
+  ]
+).
+unquantif_preconds('pathcrawler__relational_wrapper_1_precond',A) :-
+  unquantif_preconds('relational_wrapper_1',A).
+strategy('relational_wrapper_1',[]).
+strategy('pathcrawler__relational_wrapper_1_precond',A) :-
+  strategy('relational_wrapper_1',A).
+precondition_of('relational_wrapper_1','pathcrawler__relational_wrapper_1_precond').
+[stady:generated-c] generated C file:
+#include "/usr/local/share/frama-c/stady/externals.h"
+
+struct MyClass {
+   int Name ;
+};
+int relational_wrapper_1_precond(struct MyClass x1, struct MyClass x2, int *t) {
+  return 1;
+  
+}
+int IntCompare(int x, int y)
+{
+  int old_x;
+  int old_y;
+  old_x = x;
+  old_y = y;
+  {
+    int __retres;
+    if (x < y) {
+      {
+        __retres = -1;
+        goto return_label;
+      }
+    }
     
-    Unexpected error (StaDy.Translate.Unreachable).
-    Please report as 'crash' at http://bts.frama-c.com/.
-    Your Frama-C version is Sulfur-20171101.
-    Note that a version and a backtrace alone often do not contain enough
-    information to understand the bug. Guidelines for reporting bugs are at:
-    http://bts.frama-c.com/dokuwiki/doku.php?id=mantis:frama-c:bug_reporting_guidelines
+    if (x > y) {
+      {
+        __retres = 1;
+        goto return_label;
+      }
+    }
+    
+    __retres = 0;
+    return_label: ;
+    {
+      int __sd_implies_0;
+      int __sd_implies_1;
+      int __sd_implies_2;
+      __sd_implies_0 = 1;
+      if (old_x < old_y) {
+        mpz_t __sd_Z_to_Z_0;
+        mpz_t __sd_Z_cst_0;
+        mpz_t __sd_Z_cst_1;
+        mpz_t __sd_Z_neg_0;
+        int __sd_eq_0;
+        __gmpz_init_set_si(__sd_Z_to_Z_0,__retres);
+        __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
+        __gmpz_init_set_str(__sd_Z_cst_1,"1",10);
+        __gmpz_init(__sd_Z_neg_0);
+        __gmpz_sub(__sd_Z_neg_0,__sd_Z_cst_0,__sd_Z_cst_1);
+        __sd_eq_0 = __gmpz_cmp(__sd_Z_to_Z_0,__sd_Z_neg_0);
+        __sd_implies_0 = __sd_eq_0 == 0;
+        __gmpz_clear(__sd_Z_to_Z_0);
+        __gmpz_clear(__sd_Z_cst_0);
+        __gmpz_clear(__sd_Z_cst_1);
+        __gmpz_clear(__sd_Z_neg_0);
+      }
+      if (! __sd_implies_0) pathcrawler_assert_exception("",3);
+      __sd_implies_1 = 1;
+      if (old_x > old_y) {
+        mpz_t __sd_Z_to_Z_1;
+        mpz_t __sd_Z_cst_2;
+        int __sd_eq_1;
+        __gmpz_init_set_si(__sd_Z_to_Z_1,__retres);
+        __gmpz_init_set_str(__sd_Z_cst_2,"1",10);
+        __sd_eq_1 = __gmpz_cmp(__sd_Z_to_Z_1,__sd_Z_cst_2);
+        __sd_implies_1 = __sd_eq_1 == 0;
+        __gmpz_clear(__sd_Z_to_Z_1);
+        __gmpz_clear(__sd_Z_cst_2);
+      }
+      if (! __sd_implies_1) pathcrawler_assert_exception("",14);
+      __sd_implies_2 = 1;
+      if (old_x == old_y) {
+        mpz_t __sd_Z_to_Z_2;
+        mpz_t __sd_Z_cst_3;
+        int __sd_eq_2;
+        __gmpz_init_set_si(__sd_Z_to_Z_2,__retres);
+        __gmpz_init_set_str(__sd_Z_cst_3,"0",10);
+        __sd_eq_2 = __gmpz_cmp(__sd_Z_to_Z_2,__sd_Z_cst_3);
+        __sd_implies_2 = __sd_eq_2 == 0;
+        __gmpz_clear(__sd_Z_to_Z_2);
+        __gmpz_clear(__sd_Z_cst_3);
+      }
+      if (! __sd_implies_2) pathcrawler_assert_exception("",6);
+    }
+    return __retres;
+  }
+}
+
+void relational_wrapper_1(struct MyClass x1, struct MyClass x2, int *t)
+{
+  struct MyClass old_x1;
+  struct MyClass old_x2;
+  int *old_t;
+  int *old_ptr_t;
+  mpz_t __sd_Z_cst_4;
+  mpz_t __sd_Z_cst_5;
+  mpz_t __sd_Z_add_0;
+  unsigned long __sd_to_ctype_0;
+  unsigned long __sd_iter_0;
+  old_x1 = x1;
+  old_x2 = x2;
+  old_t = t;
+  __gmpz_init_set_str(__sd_Z_cst_4,"2",10);
+  __gmpz_init_set_str(__sd_Z_cst_5,"1",10);
+  __gmpz_init(__sd_Z_add_0);
+  __gmpz_add(__sd_Z_add_0,__sd_Z_cst_4,__sd_Z_cst_5);
+  __sd_to_ctype_0 = __gmpz_get_ui(__sd_Z_add_0);
+  old_ptr_t = (int *)malloc(__sd_to_ctype_0 * (unsigned long)sizeof(int));
+  __sd_iter_0 = 0;
+  while (__sd_iter_0 < __sd_to_ctype_0) {
+    *(old_ptr_t + __sd_iter_0) = *(t + __sd_iter_0);
+    __sd_iter_0 ++;
+  }
+  __gmpz_clear(__sd_Z_cst_4);
+  __gmpz_clear(__sd_Z_cst_5);
+  __gmpz_clear(__sd_Z_add_0);
+  {
+    int return_variable_relational_2 = 0;
+    int return_variable_relational_1 = 0;
+    {
+      int __retres_1;
+      int tmp_1;
+      {
+        mpz_t __sd_Z_cst_6;
+        int __sd_to_ctype_1;
+        mpz_t __sd_Z_cst_7;
+        int __sd_to_ctype_2;
+        int __sd_valid_0;
+        __gmpz_init_set_str(__sd_Z_cst_6,"0",10);
+        __sd_to_ctype_1 = (int)__gmpz_get_si(__sd_Z_cst_6);
+        __gmpz_init_set_str(__sd_Z_cst_7,"2",10);
+        __sd_to_ctype_2 = (int)__gmpz_get_si(__sd_Z_cst_7);
+        if (__sd_to_ctype_1 <= __sd_to_ctype_2) {
+          int __sd_valid_dim_0;
+          __sd_valid_dim_0 = pathcrawler_dimension(t);
+          __sd_valid_0 = __sd_to_ctype_2 >= 0 && __sd_valid_dim_0 > __sd_to_ctype_2;
+        }
+        else __sd_valid_0 = 1;
+        if (! __sd_valid_0) pathcrawler_assert_exception("",2);
+        __gmpz_clear(__sd_Z_cst_6);
+        __gmpz_clear(__sd_Z_cst_7);
+        
+      }
+      ;
+      int x_1 = x1.Name;
+      int y_1 = x2.Name;
+      int i_1 = 0;
+      {
+        mpz_t __sd_Z_cst_8;
+        mpz_t __sd_Z_to_Z_3;
+        int __sd_le_0;
+        int __sd_and_0;
+        int __sd_forall_0;
+        __gmpz_init_set_str(__sd_Z_cst_8,"0",10);
+        __gmpz_init_set_si(__sd_Z_to_Z_3,i_1);
+        __sd_le_0 = __gmpz_cmp(__sd_Z_cst_8,__sd_Z_to_Z_3);
+        __sd_and_0 = __sd_le_0 <= 0;
+        if (__sd_and_0) {
+          mpz_t __sd_Z_to_Z_4;
+          mpz_t __sd_Z_cst_9;
+          int __sd_le_1;
+          __gmpz_init_set_si(__sd_Z_to_Z_4,i_1);
+          __gmpz_init_set_str(__sd_Z_cst_9,"3",10);
+          __sd_le_1 = __gmpz_cmp(__sd_Z_to_Z_4,__sd_Z_cst_9);
+          __sd_and_0 = __sd_le_1 <= 0;
+          __gmpz_clear(__sd_Z_to_Z_4);
+          __gmpz_clear(__sd_Z_cst_9);
+        }
+        if (! __sd_and_0) pathcrawler_assert_exception("not established",13);
+        __sd_forall_0 = 1;
+        {
+          mpz_t __sd_Z_cst_12;
+          mpz_t __sd_Z_to_Z_7;
+          mpz_t __q_k;
+          int __sd_forall_cmp_0;
+          __gmpz_init_set_str(__sd_Z_cst_12,"0",10);
+          __gmpz_init_set_si(__sd_Z_to_Z_7,i_1);
+          __gmpz_init_set(__q_k,__sd_Z_cst_12);
+          __sd_forall_cmp_0 = __gmpz_cmp(__q_k,__sd_Z_to_Z_7);
+          while (__sd_forall_cmp_0 < 0 && __sd_forall_0) {
+            mpz_t __sd_Z_lval_0;
+            int __sd_to_ctype_3;
+            int __sd_and_2;
+            __gmpz_init_set(__sd_Z_lval_0,__q_k);
+            __sd_to_ctype_3 = (int)__gmpz_get_si(__sd_Z_lval_0);
+            __sd_and_2 = *(t + __sd_to_ctype_3) != x_1;
+            if (__sd_and_2) {
+              mpz_t __sd_Z_lval_1;
+              int __sd_to_ctype_4;
+              __gmpz_init_set(__sd_Z_lval_1,__q_k);
+              __sd_to_ctype_4 = (int)__gmpz_get_si(__sd_Z_lval_1);
+              __sd_and_2 = *(t + __sd_to_ctype_4) != y_1;
+              __gmpz_clear(__sd_Z_lval_1);
+            }
+            __sd_forall_0 = __sd_and_2;
+            __gmpz_add_ui(__q_k,__q_k,1);
+            __sd_forall_cmp_0 = __gmpz_cmp(__q_k,__sd_Z_to_Z_7);
+            __gmpz_clear(__sd_Z_lval_0);
+          }
+          __gmpz_clear(__sd_Z_cst_12);
+          __gmpz_clear(__sd_Z_to_Z_7);
+          __gmpz_clear(__q_k);
+        }
+        if (! __sd_forall_0) pathcrawler_assert_exception("not established",
+                                                          1);
+        __gmpz_clear(__sd_Z_cst_8);
+        __gmpz_clear(__sd_Z_to_Z_3);
+        
+      }
+      while (1) {
+        
+          if (! (i_1 < 3)) {
+            break;
+          }
+          {
+            if (*(t + i_1) == x_1) {
+              {
+                __retres_1 = 1;
+                goto return_label_label_1;
+              }
+            }
+            
+            if (*(t + i_1) == y_1) {
+              {
+                __retres_1 = -1;
+                goto return_label_label_1;
+              }
+            }
+            
+            i_1 ++;
+          }mpz_t __sd_Z_cst_10;
+        mpz_t __sd_Z_to_Z_5;
+        int __sd_le_2;
+        int __sd_and_1;
+        int __sd_forall_1;
+        __gmpz_init_set_str(__sd_Z_cst_10,"0",10);
+        __gmpz_init_set_si(__sd_Z_to_Z_5,i_1);
+        __sd_le_2 = __gmpz_cmp(__sd_Z_cst_10,__sd_Z_to_Z_5);
+        __sd_and_1 = __sd_le_2 <= 0;
+        if (__sd_and_1) {
+          mpz_t __sd_Z_to_Z_6;
+          mpz_t __sd_Z_cst_11;
+          int __sd_le_3;
+          __gmpz_init_set_si(__sd_Z_to_Z_6,i_1);
+          __gmpz_init_set_str(__sd_Z_cst_11,"3",10);
+          __sd_le_3 = __gmpz_cmp(__sd_Z_to_Z_6,__sd_Z_cst_11);
+          __sd_and_1 = __sd_le_3 <= 0;
+          __gmpz_clear(__sd_Z_to_Z_6);
+          __gmpz_clear(__sd_Z_cst_11);
+        }
+        if (! __sd_and_1) pathcrawler_assert_exception("not preserved",13);
+        __sd_forall_1 = 1;
+        {
+          mpz_t __sd_Z_cst_13;
+          mpz_t __sd_Z_to_Z_8;
+          mpz_t __q_k;
+          int __sd_forall_cmp_1;
+          __gmpz_init_set_str(__sd_Z_cst_13,"0",10);
+          __gmpz_init_set_si(__sd_Z_to_Z_8,i_1);
+          __gmpz_init_set(__q_k,__sd_Z_cst_13);
+          __sd_forall_cmp_1 = __gmpz_cmp(__q_k,__sd_Z_to_Z_8);
+          while (__sd_forall_cmp_1 < 0 && __sd_forall_1) {
+            mpz_t __sd_Z_lval_2;
+            int __sd_to_ctype_5;
+            int __sd_and_3;
+            __gmpz_init_set(__sd_Z_lval_2,__q_k);
+            __sd_to_ctype_5 = (int)__gmpz_get_si(__sd_Z_lval_2);
+            __sd_and_3 = *(t + __sd_to_ctype_5) != x_1;
+            if (__sd_and_3) {
+              mpz_t __sd_Z_lval_3;
+              int __sd_to_ctype_6;
+              __gmpz_init_set(__sd_Z_lval_3,__q_k);
+              __sd_to_ctype_6 = (int)__gmpz_get_si(__sd_Z_lval_3);
+              __sd_and_3 = *(t + __sd_to_ctype_6) != y_1;
+              __gmpz_clear(__sd_Z_lval_3);
+            }
+            __sd_forall_1 = __sd_and_3;
+            __gmpz_add_ui(__q_k,__q_k,1);
+            __sd_forall_cmp_1 = __gmpz_cmp(__q_k,__sd_Z_to_Z_8);
+            __gmpz_clear(__sd_Z_lval_2);
+          }
+          __gmpz_clear(__sd_Z_cst_13);
+          __gmpz_clear(__sd_Z_to_Z_8);
+          __gmpz_clear(__q_k);
+        }
+        if (! __sd_forall_1) pathcrawler_assert_exception("not preserved",1);
+        __gmpz_clear(__sd_Z_cst_10);
+        __gmpz_clear(__sd_Z_to_Z_5);
+        
+      }
+      
+      tmp_1 = IntCompare(x_1,y_1);
+      __retres_1 = tmp_1;
+      return_label_label_1: return_variable_relational_1 = __retres_1;
+    }
+    {
+      int __retres_2;
+      int tmp_2;
+      {
+        mpz_t __sd_Z_cst_14;
+        int __sd_to_ctype_7;
+        mpz_t __sd_Z_cst_15;
+        int __sd_to_ctype_8;
+        int __sd_valid_1;
+        __gmpz_init_set_str(__sd_Z_cst_14,"0",10);
+        __sd_to_ctype_7 = (int)__gmpz_get_si(__sd_Z_cst_14);
+        __gmpz_init_set_str(__sd_Z_cst_15,"2",10);
+        __sd_to_ctype_8 = (int)__gmpz_get_si(__sd_Z_cst_15);
+        if (__sd_to_ctype_7 <= __sd_to_ctype_8) {
+          int __sd_valid_dim_1;
+          __sd_valid_dim_1 = pathcrawler_dimension(t);
+          __sd_valid_1 = __sd_to_ctype_8 >= 0 && __sd_valid_dim_1 > __sd_to_ctype_8;
+        }
+        else __sd_valid_1 = 1;
+        if (! __sd_valid_1) pathcrawler_assert_exception("",9);
+        __gmpz_clear(__sd_Z_cst_14);
+        __gmpz_clear(__sd_Z_cst_15);
+        
+      }
+      ;
+      int x_2 = x2.Name;
+      int y_2 = x1.Name;
+      int i_2 = 0;
+      {
+        mpz_t __sd_Z_cst_16;
+        mpz_t __sd_Z_to_Z_9;
+        int __sd_le_4;
+        int __sd_and_4;
+        int __sd_forall_2;
+        __gmpz_init_set_str(__sd_Z_cst_16,"0",10);
+        __gmpz_init_set_si(__sd_Z_to_Z_9,i_2);
+        __sd_le_4 = __gmpz_cmp(__sd_Z_cst_16,__sd_Z_to_Z_9);
+        __sd_and_4 = __sd_le_4 <= 0;
+        if (__sd_and_4) {
+          mpz_t __sd_Z_to_Z_10;
+          mpz_t __sd_Z_cst_17;
+          int __sd_le_5;
+          __gmpz_init_set_si(__sd_Z_to_Z_10,i_2);
+          __gmpz_init_set_str(__sd_Z_cst_17,"3",10);
+          __sd_le_5 = __gmpz_cmp(__sd_Z_to_Z_10,__sd_Z_cst_17);
+          __sd_and_4 = __sd_le_5 <= 0;
+          __gmpz_clear(__sd_Z_to_Z_10);
+          __gmpz_clear(__sd_Z_cst_17);
+        }
+        if (! __sd_and_4) pathcrawler_assert_exception("not established",10);
+        __sd_forall_2 = 1;
+        {
+          mpz_t __sd_Z_cst_20;
+          mpz_t __sd_Z_to_Z_13;
+          mpz_t __q_k;
+          int __sd_forall_cmp_2;
+          __gmpz_init_set_str(__sd_Z_cst_20,"0",10);
+          __gmpz_init_set_si(__sd_Z_to_Z_13,i_2);
+          __gmpz_init_set(__q_k,__sd_Z_cst_20);
+          __sd_forall_cmp_2 = __gmpz_cmp(__q_k,__sd_Z_to_Z_13);
+          while (__sd_forall_cmp_2 < 0 && __sd_forall_2) {
+            mpz_t __sd_Z_lval_4;
+            int __sd_to_ctype_9;
+            int __sd_and_6;
+            __gmpz_init_set(__sd_Z_lval_4,__q_k);
+            __sd_to_ctype_9 = (int)__gmpz_get_si(__sd_Z_lval_4);
+            __sd_and_6 = *(t + __sd_to_ctype_9) != x_2;
+            if (__sd_and_6) {
+              mpz_t __sd_Z_lval_5;
+              int __sd_to_ctype_10;
+              __gmpz_init_set(__sd_Z_lval_5,__q_k);
+              __sd_to_ctype_10 = (int)__gmpz_get_si(__sd_Z_lval_5);
+              __sd_and_6 = *(t + __sd_to_ctype_10) != y_2;
+              __gmpz_clear(__sd_Z_lval_5);
+            }
+            __sd_forall_2 = __sd_and_6;
+            __gmpz_add_ui(__q_k,__q_k,1);
+            __sd_forall_cmp_2 = __gmpz_cmp(__q_k,__sd_Z_to_Z_13);
+            __gmpz_clear(__sd_Z_lval_4);
+          }
+          __gmpz_clear(__sd_Z_cst_20);
+          __gmpz_clear(__sd_Z_to_Z_13);
+          __gmpz_clear(__q_k);
+        }
+        if (! __sd_forall_2) pathcrawler_assert_exception("not established",
+                                                          7);
+        __gmpz_clear(__sd_Z_cst_16);
+        __gmpz_clear(__sd_Z_to_Z_9);
+        
+      }
+      while (1) {
+        
+          if (! (i_2 < 3)) {
+            break;
+          }
+          {
+            if (*(t + i_2) == x_2) {
+              {
+                __retres_2 = 1;
+                goto return_label_label_2;
+              }
+            }
+            
+            if (*(t + i_2) == y_2) {
+              {
+                __retres_2 = -1;
+                goto return_label_label_2;
+              }
+            }
+            
+            i_2 ++;
+          }mpz_t __sd_Z_cst_18;
+        mpz_t __sd_Z_to_Z_11;
+        int __sd_le_6;
+        int __sd_and_5;
+        int __sd_forall_3;
+        __gmpz_init_set_str(__sd_Z_cst_18,"0",10);
+        __gmpz_init_set_si(__sd_Z_to_Z_11,i_2);
+        __sd_le_6 = __gmpz_cmp(__sd_Z_cst_18,__sd_Z_to_Z_11);
+        __sd_and_5 = __sd_le_6 <= 0;
+        if (__sd_and_5) {
+          mpz_t __sd_Z_to_Z_12;
+          mpz_t __sd_Z_cst_19;
+          int __sd_le_7;
+          __gmpz_init_set_si(__sd_Z_to_Z_12,i_2);
+          __gmpz_init_set_str(__sd_Z_cst_19,"3",10);
+          __sd_le_7 = __gmpz_cmp(__sd_Z_to_Z_12,__sd_Z_cst_19);
+          __sd_and_5 = __sd_le_7 <= 0;
+          __gmpz_clear(__sd_Z_to_Z_12);
+          __gmpz_clear(__sd_Z_cst_19);
+        }
+        if (! __sd_and_5) pathcrawler_assert_exception("not preserved",10);
+        __sd_forall_3 = 1;
+        {
+          mpz_t __sd_Z_cst_21;
+          mpz_t __sd_Z_to_Z_14;
+          mpz_t __q_k;
+          int __sd_forall_cmp_3;
+          __gmpz_init_set_str(__sd_Z_cst_21,"0",10);
+          __gmpz_init_set_si(__sd_Z_to_Z_14,i_2);
+          __gmpz_init_set(__q_k,__sd_Z_cst_21);
+          __sd_forall_cmp_3 = __gmpz_cmp(__q_k,__sd_Z_to_Z_14);
+          while (__sd_forall_cmp_3 < 0 && __sd_forall_3) {
+            mpz_t __sd_Z_lval_6;
+            int __sd_to_ctype_11;
+            int __sd_and_7;
+            __gmpz_init_set(__sd_Z_lval_6,__q_k);
+            __sd_to_ctype_11 = (int)__gmpz_get_si(__sd_Z_lval_6);
+            __sd_and_7 = *(t + __sd_to_ctype_11) != x_2;
+            if (__sd_and_7) {
+              mpz_t __sd_Z_lval_7;
+              int __sd_to_ctype_12;
+              __gmpz_init_set(__sd_Z_lval_7,__q_k);
+              __sd_to_ctype_12 = (int)__gmpz_get_si(__sd_Z_lval_7);
+              __sd_and_7 = *(t + __sd_to_ctype_12) != y_2;
+              __gmpz_clear(__sd_Z_lval_7);
+            }
+            __sd_forall_3 = __sd_and_7;
+            __gmpz_add_ui(__q_k,__q_k,1);
+            __sd_forall_cmp_3 = __gmpz_cmp(__q_k,__sd_Z_to_Z_14);
+            __gmpz_clear(__sd_Z_lval_6);
+          }
+          __gmpz_clear(__sd_Z_cst_21);
+          __gmpz_clear(__sd_Z_to_Z_14);
+          __gmpz_clear(__q_k);
+        }
+        if (! __sd_forall_3) pathcrawler_assert_exception("not preserved",7);
+        __gmpz_clear(__sd_Z_cst_18);
+        __gmpz_clear(__sd_Z_to_Z_11);
+        
+      }
+      
+      tmp_2 = IntCompare(x_2,y_2);
+      __retres_2 = tmp_2;
+      return_label_label_2: return_variable_relational_2 = __retres_2;
+    }
+    {
+      mpz_t __sd_Z_to_Z_15;
+      mpz_t __sd_Z_cst_22;
+      mpz_t __sd_Z_to_Z_16;
+      mpz_t __sd_Z_neg_1;
+      int __sd_eq_3;
+      __gmpz_init_set_si(__sd_Z_to_Z_15,return_variable_relational_1);
+      __gmpz_init_set_str(__sd_Z_cst_22,"0",10);
+      __gmpz_init_set_si(__sd_Z_to_Z_16,return_variable_relational_2);
+      __gmpz_init(__sd_Z_neg_1);
+      __gmpz_sub(__sd_Z_neg_1,__sd_Z_cst_22,__sd_Z_to_Z_16);
+      __sd_eq_3 = __gmpz_cmp(__sd_Z_to_Z_15,__sd_Z_neg_1);
+      if (! (__sd_eq_3 == 0)) pathcrawler_assert_exception("",15);
+      __gmpz_clear(__sd_Z_to_Z_15);
+      __gmpz_clear(__sd_Z_cst_22);
+      __gmpz_clear(__sd_Z_to_Z_16);
+      __gmpz_clear(__sd_Z_neg_1);
+      
+    }
+    ;
+    free(old_ptr_t);
+    return;
+  }
+}
+[kernel] Parsing __sd_instru_struct_rpp_relational_wrapper_1.c (with preprocessing)
+[kernel] Parsing __sd_instru_struct_rpp_relational_wrapper_1.c (with preprocessing)
+[pc] Starting lanceur_relational_wrapper_1 (isc version)
+[pc] Starting lanceur_pathcrawler__relational_wrapper_1_precond (isc version)
+[pc] Starting lanceur_relational_wrapper_1 (isc version)
+[stady] all-paths: true
+[stady] 1 test cases
+[stady] Non-Compliance
+    of       : assert
+               Rpp:
+                 return_variable_relational_1 ≡ -return_variable_relational_2; 
+    location : tests/struct_rpp/struct_rpp.c:90
+    TEST DRIVER: testcases___sd_instru_struct_rpp_relational_wrapper_1/relational_wrapper_1/testdrivers/TC_1.c
+    t[0] = 0
+    t[1] = 0
+    t[2] = 0
+    x1[0] = 0
+    x2[0] = 0
+[report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'relational_wrapper_1'
+--------------------------------------------------------------------------------
+
+[   Bug   ] Assertion 'Rpp' (file tests/struct_rpp/struct_rpp.c, line 90)
+            by StaDy.
+[  Valid  ] Default behavior
+            by Frama-C kernel.
+
+--------------------------------------------------------------------------------
+--- Status Report Summary
+--------------------------------------------------------------------------------
+     1 Completely validated
+     1 Bugs found
+     2 Total
+--------------------------------------------------------------------------------

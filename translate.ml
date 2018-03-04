@@ -865,8 +865,7 @@ class gather_insertions props swd = object(self)
       | TArray (t,a,b,c) -> TArray (strip_const t,a,b,c)
       | ty -> ty
     in
-    let addoffset lval exp =
-      let ty = Cil.typeOfLval lval in
+    let addoffset ty lval exp =
       if Cil.isPointerType ty then
 	let base = Cil.new_exp ~loc (Lval lval) in
 	Mem(Cil.new_exp ~loc (BinOp(IndexPI, base, exp, ty))), NoOffset
@@ -888,8 +887,9 @@ class gather_insertions props swd = object(self)
 	   let e1 = Cil.new_exp ~loc (SizeOf ty) in
 	   let e2 = Cil.mkBinOp ~loc Mult h' e1 in
 	   let i_1 = self#cmalloc my_old_ptr e2 in
-	   let my_new_old_ptr = addoffset my_old_ptr (Cil.evar my_iterator) in
-	   let my_new_ptr = addoffset my_ptr (Cil.evar my_iterator) in
+	   let my_new_old_ptr =
+	     addoffset vtype my_old_ptr (Cil.evar my_iterator) in
+	   let my_new_ptr = addoffset vtype my_ptr (Cil.evar my_iterator) in
 	   let env_block = alloc_aux my_new_old_ptr my_new_ptr ty t in
 	   let i_2 = mk_affect (Cil.var my_iterator) zero in
 	   let cond = cmp Rlt (Cil.evar my_iterator) h' in
@@ -917,7 +917,7 @@ class gather_insertions props swd = object(self)
 	| h :: t ->
 	   let my_iterator = self#fresh_varinfo Cil.ulongType "iter" in
 	   let env, h' = self#as_c_type Cil.ulongType h in
-	   let aux = addoffset my_old_ptr (Cil.evar my_iterator) in
+	   let aux = addoffset vtype my_old_ptr (Cil.evar my_iterator) in
 	   let env_block = dealloc_aux aux t in
 	   let cond = cmp Rlt (Cil.evar my_iterator) h' in
 	   let e1 = Cil.mkBinOp ~loc PlusA (Cil.evar my_iterator) one in

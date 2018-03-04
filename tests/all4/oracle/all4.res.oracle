@@ -299,7 +299,7 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
     *(old_ptr_f19 + __sd_iter_0) = (double *)malloc(__sd_to_ctype_1 * (unsigned long)sizeof(double));
     __sd_iter_1 = 0;
     while (__sd_iter_1 < __sd_to_ctype_1) {
-      *(*(old_ptr_f19 + __sd_iter_0) + __sd_iter_1) = (*(f19 + __sd_iter_0))[__sd_iter_1];
+      *(*(old_ptr_f19 + __sd_iter_0) + __sd_iter_1) = *(*(f19 + __sd_iter_0) + __sd_iter_1);
       __sd_iter_1 ++;
     }
     __sd_iter_0 ++;
@@ -326,7 +326,7 @@ void F7(T1 f17, T1 f18, T5 *f19, T5 *f20)
     *(old_ptr_f20 + __sd_iter_3) = (double *)malloc(__sd_to_ctype_4 * (unsigned long)sizeof(double));
     __sd_iter_4 = 0;
     while (__sd_iter_4 < __sd_to_ctype_4) {
-      *(*(old_ptr_f20 + __sd_iter_3) + __sd_iter_4) = (*(f20 + __sd_iter_3))[__sd_iter_4];
+      *(*(old_ptr_f20 + __sd_iter_3) + __sd_iter_4) = *(*(f20 + __sd_iter_3) + __sd_iter_4);
       __sd_iter_4 ++;
     }
     __sd_iter_3 ++;
