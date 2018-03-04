@@ -66,6 +66,7 @@ PLUGIN_TESTS_DIRS:= \
 	sum_array \
 	num_of \
 	struct \
+	struct_rpp \
 	sqrt_rte \
 	overflow_should_crash \
 	overflow_shouldnt_crash
