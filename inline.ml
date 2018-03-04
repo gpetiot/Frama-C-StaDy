@@ -101,7 +101,11 @@ and tnode env = function
        let t' = List.assoc v env.term_assoc in
        match t'.term_node with
        | TLval v' -> TLval (Logic_const.addTermOffsetLval off v')
-       | whatever -> assert (off = TNoOffset); whatever
+       | Tat ({term_node = TLval v'} as t, l) ->
+	  Tat ({t with term_node =
+	      TLval (Logic_const.addTermOffsetLval off v')}, l)
+       | whatever when off = TNoOffset -> whatever
+       | _ -> assert false (* TODO *)
      else
        TLval (TVar (if List.mem_assoc v env.var_assoc then
 		      List.assoc v env.var_assoc else v), off)

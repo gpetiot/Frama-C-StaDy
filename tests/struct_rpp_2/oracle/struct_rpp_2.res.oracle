@@ -1,40 +1,123 @@
 [kernel] Parsing tests/struct_rpp_2/struct_rpp_2.c (with preprocessing)
-[kernel] Current source was: tests/struct_rpp_2/struct_rpp_2.c:11
-    The full backtrace is:
-    Raised at file "inline.ml", line 104, characters 21-45
-    Called from file "inline.ml", line 176, characters 35-56
-    Called from file "inline.ml", line 43, characters 46-57
-    Called from file "inline.ml", line 25, characters 41-69
-    Called from file "translate.ml", line 1022, characters 46-64
-    Called from file "translate.ml", line 842, characters 15-65
-    Called from file "list.ml", line 88, characters 24-34
-    Called from file "translate.ml", line 850, characters 20-63
-    Called from file "list.ml", line 88, characters 24-34
-    Called from file "translate.ml", line 967, characters 11-41
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 2239, characters 15-31
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 3723, characters 5-91
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 3814, characters 16-38
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 2278, characters 13-16
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 2323, characters 24-57
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 3808, characters 5-53
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 6463, characters 17-37
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 6470, characters 3-20
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 2254, characters 21-41
-    Called from file "src/kernel_services/ast_queries/cil.ml", line 6487, characters 15-39
-    Called from file "src/kernel_services/visitors/visitor.ml", line 849, characters 28-60
-    Called from file "register.ml", line 102, characters 4-60
-    Called from file "register.ml", line 142, characters 6-21
-    Called from file "src/libraries/project/state_builder.ml", line 994, characters 9-13
-    Re-raised at file "src/libraries/project/state_builder.ml", line 1002, characters 15-18
-    Called from file "queue.ml", line 105, characters 6-15
-    Called from file "src/kernel_internals/runtime/boot.ml", line 37, characters 4-20
-    Called from file "src/kernel_services/cmdline_parameters/cmdline.ml", line 789, characters 2-9
-    Called from file "src/kernel_services/cmdline_parameters/cmdline.ml", line 819, characters 18-64
-    Called from file "src/kernel_services/cmdline_parameters/cmdline.ml", line 228, characters 4-8
-    
-    Unexpected error (File "inline.ml", line 104, characters 21-27: Assertion failed).
-    Please report as 'crash' at http://bts.frama-c.com/.
-    Your Frama-C version is Sulfur-20171101.
-    Note that a version and a backtrace alone often do not contain enough
-    information to understand the bug. Guidelines for reporting bugs are at:
-    http://bts.frama-c.com/dokuwiki/doku.php?id=mantis:frama-c:bug_reporting_guidelines
+[stady:generated-pl] generated Prolog precondition:
+:- module(test_parameters).
+:- import create_input_val/3 from substitution.
+:- export dom/4.
+:- export create_input_vals/2.
+:- export unquantif_preconds/2.
+:- export quantif_preconds/2.
+:- export strategy/2.
+:- export precondition_of/2.
+
+dom(0,0,0,0).
+dom('main', cont(cont('a',0),_), [], int([-2147483648..2147483647])).
+dom('pathcrawler__main_precond',A,B,C) :-
+  dom('main',A,B,C).
+create_input_vals('main', Ins):-
+  true.
+create_input_vals('pathcrawler__main_precond',Ins) :-
+  create_input_vals('main',Ins).
+quantif_preconds('main',
+  [
+
+  ]
+).
+quantif_preconds('pathcrawler__main_precond',A) :-
+  quantif_preconds('main',A).
+unquantif_preconds('main',
+  [
+
+  ]
+).
+unquantif_preconds('pathcrawler__main_precond',A) :-
+  unquantif_preconds('main',A).
+strategy('main',[]).
+strategy('pathcrawler__main_precond',A) :-
+  strategy('main',A).
+precondition_of('main','pathcrawler__main_precond').
+[stady:generated-c] generated C file:
+#include "/usr/local/share/frama-c/stady/externals.h"
+
+struct s {
+   int t[10] ;
+};
+int main_precond(struct s a) {
+  return 1;
+  
+}
+int f(struct s a)
+{
+  struct s old_a;
+  old_a = a;
+  {
+    int __retres;
+    __retres = a.t[0];
+    {
+      mpz_t __sd_Z_cst_0;
+      int __sd_to_ctype_0;
+      __gmpz_init_set_str(__sd_Z_cst_0,"0",10);
+      __sd_to_ctype_0 = (int)__gmpz_get_si(__sd_Z_cst_0);
+      if (! (__retres == old_a.t[__sd_to_ctype_0])) pathcrawler_assert_exception
+                                                    ("",1);
+      __gmpz_clear(__sd_Z_cst_0);
+    }
+    return __retres;
+  }
+}
+
+void main(struct s a)
+{
+  struct s old_a;
+  old_a = a;
+  {
+    int b;
+    b = f(a);
+    {
+      mpz_t __sd_Z_cst_1;
+      int __sd_to_ctype_1;
+      __gmpz_init_set_str(__sd_Z_cst_1,"1",10);
+      __sd_to_ctype_1 = (int)__gmpz_get_si(__sd_Z_cst_1);
+      if (! (b == a.t[__sd_to_ctype_1])) pathcrawler_assert_exception("",0);
+      __gmpz_clear(__sd_Z_cst_1);
+      
+    }
+    ;
+    return;
+  }
+}
+[kernel] Parsing __sd_instru_struct_rpp_2_main.c (with preprocessing)
+[kernel] Parsing __sd_instru_struct_rpp_2_main.c (with preprocessing)
+[pc] Starting lanceur_main (isc version)
+[pc] Starting lanceur_pathcrawler__main_precond (isc version)
+[pc] Starting lanceur_main (isc version)
+[stady] all-paths: true
+[stady] 2 test cases
+[stady] Non-Compliance
+    of       : assert b ≡ a.t[1]; 
+    location : tests/struct_rpp_2/struct_rpp_2.c:18
+    TEST DRIVER: testcases___sd_instru_struct_rpp_2_main/main/testdrivers/TC_2.c
+    a[0][0] = 0
+    a[0][1] = -1073849194
+    a[0][2] = 0
+    a[0][3] = 0
+    a[0][4] = 0
+    a[0][5] = 0
+    a[0][6] = 0
+    a[0][7] = 0
+    a[0][8] = 0
+    a[0][9] = 0
+[report] Computing properties status...
+
+--------------------------------------------------------------------------------
+--- Properties of Function 'main'
+--------------------------------------------------------------------------------
+
+[   Bug   ] Assertion (file tests/struct_rpp_2/struct_rpp_2.c, line 18)
+            by StaDy.
+
+--------------------------------------------------------------------------------
+--- Status Report Summary
+--------------------------------------------------------------------------------
+     1 Bugs found
+     1 Total
+--------------------------------------------------------------------------------
