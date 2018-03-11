@@ -356,7 +356,8 @@ class gather_insertions props swd = object(self)
 
   method private translate_app li ll params =
     let do_op op r l = self#cbinop op r r l in
-    match Extlib.the li.l_type, params, li.l_var_info.lv_name with
+    let fname = li.l_var_info.lv_name in
+    match Extlib.the li.l_type, params, fname with
     | Linteger, [param], "\\abs" ->
        let env, x = self#translate_term param in
        let ret = self#fresh_Z_varinfo "abs" in
@@ -386,7 +387,32 @@ class gather_insertions props swd = object(self)
 	 | _ -> self#translate_term_node inlined_app
        end
     | Lreal, _, _ -> raise Unsupported
-    | _ -> raise Unreachable
+    | Ctype ty,_,_ ->
+       let rpl_functions =
+	 Options.Replace_Functions.get() |>
+	     Utils.split ',' |> List.map (Utils.split '/')
+       in
+       let rec aux = function
+	 | (h1 :: h2 :: _) :: t ->
+	    if h1 = fname then
+	      let args_env, args_var =
+		List.map self#translate_term params |> List.split in
+	      let env = List.fold_left Env.merge Env.empty args_env in
+	      let ret = self#fresh_varinfo Cil.intType ("call_" ^ fname) in
+	      let fct = Cil.evar (Cil.makeVarinfo false false h2 ty) in
+	      let ret_lval = Var ret, NoOffset in
+	      let call =
+		Cil.mkStmt (Instr(Call(Some ret_lval, fct, args_var, loc))) in
+	      Env.merge env (Env.make [ret] [call] []), (Cil.evar ret).enode
+	    else
+	      aux t
+	 | [] ->
+	    Options.failure ~current:true ~once:true
+	      "call of logic function %s unsupported, you may replace it with a C function" fname;
+	   raise Unsupported
+       in
+       aux rpl_functions
+    | _ -> raise Unsupported
 
   method private translate_cast ty t = match t.term_type with (* source type *)
     | Linteger ->

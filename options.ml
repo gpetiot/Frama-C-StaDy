@@ -94,6 +94,15 @@ module Precondition =
       let default = ""
      end)
 
+module Replace_Functions =
+  Self.String
+    (struct
+      let option_name = "-stady-rpl-fct"
+      let help = "replace ACSL logic functions with C functions"
+      let arg_name = "ACSL_fct/C_fct,..."
+      let default = ""
+     end)
+
 (* Debug Keys *)
 
 let dkey_input_domain = Self.register_category "input_domain"
