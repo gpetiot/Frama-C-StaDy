@@ -8,6 +8,18 @@ let machdep() = match Kernel.Machdep.get() with
 let to_id = States.Property_To_Id.find
 let to_prop = States.Id_To_Property.find
 
+let split char str =
+  let rec aux acc str =
+    if str = "" then acc
+    else if String.contains str char then
+      let idx = String.index str char in
+      let str1 = String.sub str 0 idx in
+      let str2 = String.sub str (idx+1) ((String.length str)-idx-1) in
+      aux (str1 :: acc) str2
+    else str :: acc
+  in
+  List.rev (aux [] str)
+
 
 open Cil_types
 

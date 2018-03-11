@@ -7,6 +7,9 @@ val to_id: States.Property_To_Id.key -> States.Property_To_Id.data
 
 val to_prop: States.Id_To_Property.key -> States.Id_To_Property.data
 
+(* for OCaml < 4.04.0 *)
+val split: char -> string -> string list
+
 val unname: Cil_types.typ -> Cil_types.typ
 
 val extract_guards:
