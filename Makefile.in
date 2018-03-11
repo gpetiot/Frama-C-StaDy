@@ -69,6 +69,7 @@ PLUGIN_TESTS_DIRS:= \
 	struct_rpp \
 	struct_rpp_2 \
 	sqrt_rte \
+	replace_count \
 	overflow_should_crash \
 	overflow_shouldnt_crash
 PLUGIN_PTESTS_OPTS := -j 1
