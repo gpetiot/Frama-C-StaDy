@@ -27,12 +27,19 @@ Here are the corresponding versions of Frama-C and PathCrawler for each version 
 
 ### Non-compliance detection
 
-    frama-c FILE -main FUNCTION -stady
+StaDy tries to exhibit a test case whose execution provokes an annotation violation. Non-compliance detection is the default mode of StaDy. One can detect non-compliances between the code and its specification in file F, starting with function M, using the command:
+
+    frama-c F -main M -stady
+
+In the user interface of Frama-C, an annotation violation is pictured with a red bullet.
 
 ### Subcontract weakness detection
 
-    frama-c FILE -main FUNCTION -stady -stady-swd some_loop,some_function_call
+StaDy tries to exhibit a test case whose execution does not provoke an annotation violation but that is not proved by deductive verification because of a too weak subcontract (loop invariant or called function contract). The subcontract weakness detection in file F starting with function M is done with:
+
+    frama-c F -main M -stady -stady-swd some_loop,some_function_call
 
 where 'some_loop' and 'some_function_call' are labels referring to loops or
 function calls, and you want to replace their code with their specification to
 exhibit a contract weakness.
+For now, there is no strategy or heuristic implemented in StaDy to automatically submit a set of subcontract identifiers.
