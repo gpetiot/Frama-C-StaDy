@@ -25,6 +25,10 @@ Here are the corresponding versions of Frama-C and PathCrawler for each version 
 
 ## Using StaDy
 
+The two main features of StaDy are the non-compliance detection (NCD) and the
+subcontract weakness detection (SWD).
+See the [documentation](doc/README.md) for more details.
+
 ### Non-compliance detection
 
 StaDy tries to exhibit a test case whose execution provokes an annotation violation. Non-compliance detection is the default mode of StaDy. One can detect non-compliances between the code and its specification in file F, starting with function M, using the command:
