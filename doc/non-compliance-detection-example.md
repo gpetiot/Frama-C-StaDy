@@ -1,5 +1,7 @@
 # Example: Non-compliance detection
 
+**Warning: this example is not up to date with StaDy v0.4.x**
+
 Let us consider a small example of an array access:
 
       

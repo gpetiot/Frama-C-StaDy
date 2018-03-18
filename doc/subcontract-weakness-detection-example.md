@@ -1,5 +1,7 @@
 # Example: Subcontract weakness detection
 
+**Warning: this example is not up to date with StaDy v0.4.x**
+
 Let us now consider a more complex program. The function all_zeros below returns a non-zero value if and only if, all the elements of the array t of size n are non-zero.
 
       
