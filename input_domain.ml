@@ -524,8 +524,7 @@ let translate precond_file_name constraints =
   let dkey = Options.dkey_generated_pl in
   let out_file = open_out precond_file_name in
   Options.debug ~dkey "generated Prolog precondition:";
-  let dkeys = Options.Debug_category.get() in
-  if Datatype.String.Set.mem "generated-pl" dkeys then
+  if Options.is_debug_key_enabled Options.dkey_generated_pl then
     Buffer.output_buffer stdout buf;
   Buffer.output_buffer out_file buf;
   Format.pp_print_flush fmt();

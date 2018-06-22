@@ -105,8 +105,8 @@ module Replace_Functions =
 
 (* Debug Keys *)
 
-let dkey_input_domain = Self.register_category "input_domain"
-let dkey_generated_pl = Self.register_category "generated-pl"
-let dkey_socket = Self.register_category "socket"
-let dkey_generated_c = Self.register_category "generated-c"
-let dkey_insertions = Self.register_category "insertions"
+let dkey_input_domain = register_category "input_domain"
+let dkey_generated_pl = register_category "generated-pl"
+let dkey_socket = register_category "socket"
+let dkey_generated_c = register_category "generated-c"
+let dkey_insertions = register_category "insertions"

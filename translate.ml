@@ -1358,8 +1358,7 @@ let translate props swd precond_fname instru_fname =
   let dkey = Options.dkey_generated_c in
   let out_file = open_out instru_fname in
   Options.debug ~dkey "generated C file:";
-  let dkeys = Options.Debug_category.get() in
-  if Datatype.String.Set.mem "generated-c" dkeys then
+  if Options.is_debug_key_enabled Options.dkey_generated_c then
     Buffer.output_buffer stdout buf;
   Buffer.output_buffer out_file buf;
   Format.pp_print_flush fmt();

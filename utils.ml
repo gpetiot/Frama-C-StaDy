@@ -47,6 +47,8 @@ let type_str_precond kf pred_as_string =
     let remove_logic_function = Logic_env.remove_logic_function
     let remove_logic_type = Logic_env.remove_logic_type
     let remove_logic_ctor = Logic_env.remove_logic_ctor
+    let remove_logic_info =
+      Logic_env.remove_logic_info_gen Logic_utils.is_same_logic_profile
     let add_logic_function = Logic_utils.add_logic_function
     let add_logic_type = Logic_env.add_logic_type
     let add_logic_ctor = Logic_env.add_logic_ctor
@@ -61,11 +63,13 @@ let type_str_precond kf pred_as_string =
 	   Printer.pp_logic_type Linteger Printer.pp_typ ty)
     exception Error of Cil_types.location * string
     let error loc = Pretty_utils.ksfprintf (fun e -> raise (Error (loc, e)))
+    let on_error f _ x = f x
   end)
   in
   let lenv = Logic_typing.Lenv.empty() in
-  let _, lexpr = Logic_lexer.lexpr (Lexing.dummy_pos, pred_as_string) in
-  M.predicate lenv lexpr
+  let lexpr =
+    Extlib.opt_map snd (Logic_lexer.lexpr (Lexing.dummy_pos, pred_as_string)) in
+  M.predicate lenv (Extlib.the lexpr)
     
 let typically_preds_memo = ref []
 let typically_preds_computed = ref false
@@ -74,7 +78,7 @@ let typically_preds bhv =
   if !typically_preds_computed then
     !typically_preds_memo
   else
-    let get_ext_preds acc (str, kind) = match kind with
+    let get_ext_preds acc (_, str, kind) = match kind with
       | Ext_preds p when str = "typically" -> List.rev_append p acc
       | _ -> acc
     in
