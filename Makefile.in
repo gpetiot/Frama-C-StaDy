@@ -21,7 +21,7 @@ PLUGIN_CMO := \
 	options \
 	debug \
 	states \
-	inline \
+	inline_spec \
 	utils \
 	NCCE \
 	SWCE \

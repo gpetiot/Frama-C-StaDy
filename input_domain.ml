@@ -449,7 +449,7 @@ let compute_constraints() =
   let typically_preds = accumulate Utils.typically_preds in
   let f constraints id_pred =
     let pnamed = Logic_const.pred_of_id_pred id_pred in
-    let pnamed = Inline.pred pnamed in
+    let pnamed = Inline_spec.pred pnamed in
     try requires_to_prolog constraints pnamed
     with
     | _ ->

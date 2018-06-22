@@ -377,7 +377,7 @@ class gather_insertions props swd = object(self)
        self#translate_lambda l u q t zero "numof" inc_if
     | Linteger, _, _ ->
        let app = Logic_const.term (Tapp (li, ll, params)) Linteger in
-       let inlined_app = Inline.term app in
+       let inlined_app = Inline_spec.term app in
        begin
 	 match inlined_app.term_node with
 	 | Tapp _ ->
@@ -817,7 +817,8 @@ class gather_insertions props swd = object(self)
     in
     let translate_as_return pred =
       try
-	let env, v = self#translate_predicate (Inline.pred pred.ip_content) in
+	let env, v =
+	  self#translate_predicate (Inline_spec.pred pred.ip_content) in
 	let e = Cil.new_exp ~loc (UnOp (LNot, v, Cil.intType)) in
 	let env_ret = Env.make [] [mk_ret zero] [] in
 	Env.merge env (Env.make [] [Env.mk_if e env_ret Env.empty] [])
@@ -1009,7 +1010,7 @@ class gather_insertions props swd = object(self)
     let rec aux acc ret = function
       | [] -> acc, ret
       | h :: t ->
-	 let env, v = self#translate_predicate (Inline.pred h.ip_content) in
+	 let env,v = self#translate_predicate (Inline_spec.pred h.ip_content) in
 	 let e = Cil.mkBinOp ~loc LAnd ret v in
 	 aux (Env.merge acc env) e t
     in
@@ -1045,7 +1046,7 @@ class gather_insertions props swd = object(self)
 
   method private pc_assert_exception pred msg prop =
     try
-      let env, var = self#translate_predicate (Inline.pred pred) in
+      let env, var = self#translate_predicate (Inline_spec.pred pred) in
       let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
       let id = Utils.to_id prop in
       let i_1 = Env.mk_if e (Env.make [] [self#pc_exc msg id] []) Env.empty in
@@ -1058,7 +1059,7 @@ class gather_insertions props swd = object(self)
 
   method private pc_assume pred =
     try
-      let env, var = self#translate_predicate (Inline.pred pred) in
+      let env, var = self#translate_predicate (Inline_spec.pred pred) in
       let e = Cil.new_exp ~loc (UnOp(LNot, var, Cil.intType)) in
       let env_assert = Env.make [] [self#pc_ass "" 0] [] in
       Env.merge env (Env.make [] [Env.mk_if e env_assert Env.empty] [])
@@ -1239,7 +1240,7 @@ class gather_insertions props swd = object(self)
 	  | Some r ->
 	     let ty = Cil.typeOfLval r in
 	     result_varinfo <- Some (my_varinfo ty "__retres");
-	     Inline.pred p
+	     Inline_spec.pred p
 	  | None -> p
 	in
 	Env.merge env (self#pc_assume p)
