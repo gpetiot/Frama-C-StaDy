@@ -127,16 +127,6 @@ $(PLUGIN_DIR)/local_config.ml: $(PLUGIN_DIR)/Makefile.in $(PLUGIN_DIR)/VERSION
 	$(ECHO) "let version = \""$(STADY_VERSION)"\"" >> $@
 	$(CHMOD_RO) $@
 
-##########
-# Header #
-##########
-
-headers::
-	@echo "Applying Headers..."
-	headache -c licence/headache_config.txt -h licence/CEA_PROPRIETARY \
-		*.ml *.mli \
-		Makefile.in configure.ac
-
 #####################################
 # Regenerating the Makefile on need #
 #####################################
