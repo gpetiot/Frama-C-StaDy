@@ -65,7 +65,7 @@ strategy('pathcrawler__alt_sep_test_precond',A) :-
   strategy('alt_sep_test',A).
 precondition_of('alt_sep_test','pathcrawler__alt_sep_test_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 int Cur_Vertical_Sep;
 int High_Confidence;
@@ -849,26 +849,26 @@ int alt_sep_test(void)
 [stady] all-paths: true
 [stady] 127 test cases
 [stady] Non-Compliance
-    of       : ensures \result ≢ 1 
-    location : tests/tcas/tcas.c:123
-    TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_17.c
-    Alt_Layer_Value = 0
-    Climb_Inhibit = 1
-    Cur_Vertical_Sep = 16684
-    Down_Separation = 0
-    High_Confidence = 32464
-    Other_Capability = 0
-    Other_RAC = 0
-    Other_Tracked_Alt = 351
-    Own_Tracked_Alt = 309
-    Own_Tracked_Alt_Rate = 450
-    Positive_RA_Alt_Thresh[0] = 16434
-    Positive_RA_Alt_Thresh[1] = 0
-    Positive_RA_Alt_Thresh[2] = 0
-    Positive_RA_Alt_Thresh[3] = 0
-    Two_of_Three_Reports_Valid = 0
-    Up_Separation = 0
-    return value = 0
+  of       : ensures \result ≢ 1 
+  location : tests/tcas/tcas.c:123
+  TEST DRIVER: testcases___sd_instru_tcas_alt_sep_test/alt_sep_test/testdrivers/TC_17.c
+  Alt_Layer_Value = 0
+  Climb_Inhibit = 1
+  Cur_Vertical_Sep = 16684
+  Down_Separation = 0
+  High_Confidence = 32464
+  Other_Capability = 0
+  Other_RAC = 0
+  Other_Tracked_Alt = 351
+  Own_Tracked_Alt = 309
+  Own_Tracked_Alt_Rate = 450
+  Positive_RA_Alt_Thresh[0] = 16434
+  Positive_RA_Alt_Thresh[1] = 0
+  Positive_RA_Alt_Thresh[2] = 0
+  Positive_RA_Alt_Thresh[3] = 0
+  Two_of_Three_Reports_Valid = 0
+  Up_Separation = 0
+  return value = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

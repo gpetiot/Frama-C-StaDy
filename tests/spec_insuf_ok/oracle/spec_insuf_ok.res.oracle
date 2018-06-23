@@ -42,8 +42,8 @@ strategy('pathcrawler__f_precond',A) :-
   strategy('f',A).
 precondition_of('f','pathcrawler__f_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
-#include "/usr/local/share/frama-c/stady/nondet.c"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/nondet.c"
 
 void __sd_sort_mod_0(int *A, int n) {
   if (1) {
@@ -181,7 +181,7 @@ void sort(int *A, int n)
     __sd_valid_0 = __sd_to_ctype_1 >= 0 && __sd_valid_dim_0 > __sd_to_ctype_1;
   }
   else __sd_valid_0 = 1;
-  if (! __sd_valid_0) pathcrawler_assert_exception("28$",8);
+  if (! __sd_valid_0) pathcrawler_assert_exception("28$",9);
   old_A = A;
   __gmpz_init_set_si(__sd_Z_to_Z_4,n);
   __sd_to_ctype_4 = __gmpz_get_ui(__sd_Z_to_Z_4);

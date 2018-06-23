@@ -38,8 +38,8 @@ strategy('pathcrawler__main_precond',A) :-
   strategy('main',A).
 precondition_of('main','pathcrawler__main_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
-#include "/usr/local/share/frama-c/stady/nondet.c"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/nondet.c"
 
 extern int printf(char const * , ...);
 

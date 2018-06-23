@@ -40,7 +40,7 @@ strategy('pathcrawler__bubble_sort_precond',A) :-
   strategy('bubble_sort',A).
 precondition_of('bubble_sort','pathcrawler__bubble_sort_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 int bubble_sort_precond(int *A, int n) {
   return 1;

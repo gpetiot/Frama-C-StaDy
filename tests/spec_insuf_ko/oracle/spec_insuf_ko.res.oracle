@@ -42,8 +42,8 @@ strategy('pathcrawler__f_precond',A) :-
   strategy('f',A).
 precondition_of('f','pathcrawler__f_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
-#include "/usr/local/share/frama-c/stady/nondet.c"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/nondet.c"
 
 void __sd_sort_mod_0(int *A, int n) {
   if (1) {
@@ -246,20 +246,20 @@ void f(int *t, int k)
 [stady] all-paths: true
 [stady] 21 test cases
 [stady] Subcontract Weakness
-    of       : 'sort' call at label 'call_sort'
-    location : tests/spec_insuf_ko/spec_insuf_ko.c:38
-    for      : ensures *(\old(t) + 0) ≤ *(\old(t) + 1) 
-    location : tests/spec_insuf_ko/spec_insuf_ko.c:34
-    TEST DRIVER: testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_6.c
-    k = 4
-    nondet_sint_val[0] = 1073634454
-    nondet_sint_val[1] = 0
-    nondet_sint_val[2] = 0
-    nondet_sint_val[3] = 0
-    t[0] = 0 (in) ; 1073634454 (concrete out) ; nondet_sint_val[0] (symbolic out)
-    t[1] = 0 (in) ; 0 (concrete out) ; nondet_sint_val[1] (symbolic out)
-    t[2] = 0 (in) ; 0 (concrete out) ; nondet_sint_val[2] (symbolic out)
-    t[3] = 0 (in) ; 0 (concrete out) ; nondet_sint_val[3] (symbolic out)
+  of       : 'sort' call at label 'call_sort'
+  location : tests/spec_insuf_ko/spec_insuf_ko.c:38
+  for      : ensures *(\old(t) + 0) ≤ *(\old(t) + 1) 
+  location : tests/spec_insuf_ko/spec_insuf_ko.c:34
+  TEST DRIVER: testcases___sd_instru_spec_insuf_ko_f/f/testdrivers/TC_6.c
+  k = 4
+  nondet_sint_val[0] = 1073634454
+  nondet_sint_val[1] = 0
+  nondet_sint_val[2] = 0
+  nondet_sint_val[3] = 0
+  t[0] = 0 (in) ; 1073634454 (concrete out) ; nondet_sint_val[0] (symbolic out)
+  t[1] = 0 (in) ; 0 (concrete out) ; nondet_sint_val[1] (symbolic out)
+  t[2] = 0 (in) ; 0 (concrete out) ; nondet_sint_val[2] (symbolic out)
+  t[3] = 0 (in) ; 0 (concrete out) ; nondet_sint_val[3] (symbolic out)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

@@ -36,7 +36,7 @@ strategy('pathcrawler__f_precond',A) :-
   strategy('f',A).
 precondition_of('f','pathcrawler__f_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 int f_precond(int x) {
   return 1;
@@ -78,10 +78,10 @@ void f(int x)
 [stady] all-paths: true
 [stady] 2 test cases
 [stady] Non-Compliance
-    of       : assert x + 1 ≤ 2147483647; 
-    location : tests/overflow_should_crash/overflow_should_crash.c:9
-    TEST DRIVER: testcases___sd_instru_overflow_should_crash_f/f/testdrivers/TC_2.c
-    x = 2147483647
+  of       : assert x + 1 ≤ 2147483647; 
+  location : tests/overflow_should_crash/overflow_should_crash.c:9
+  TEST DRIVER: testcases___sd_instru_overflow_should_crash_f/f/testdrivers/TC_2.c
+  x = 2147483647
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

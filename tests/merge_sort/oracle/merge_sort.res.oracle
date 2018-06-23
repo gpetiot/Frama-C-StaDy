@@ -1,5 +1,6 @@
 [kernel] Parsing tests/merge_sort/merge_sort.c (with preprocessing)
-tests/merge_sort/merge_sort.c:96:[stady] warning: \separated(table, ret) unsupported
+[stady] tests/merge_sort/merge_sort.c:96: Warning: 
+  \separated(table, ret) unsupported
 [stady:generated-pl] generated Prolog precondition:
 :- module(test_parameters).
 :- import create_input_val/3 from substitution.
@@ -44,7 +45,7 @@ strategy('pathcrawler__merge_sort_precond',A) :-
   strategy('merge_sort',A).
 precondition_of('merge_sort','pathcrawler__merge_sort_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 int merge_sort_precond(int *table, int l, int *ret) {
   return 1;

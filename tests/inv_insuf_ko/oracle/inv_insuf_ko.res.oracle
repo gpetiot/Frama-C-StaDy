@@ -42,8 +42,8 @@ strategy('pathcrawler__f_precond',A) :-
   strategy('f',A).
 precondition_of('f','pathcrawler__f_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
-#include "/usr/local/share/frama-c/stady/nondet.c"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/nondet.c"
 
 int found;
 int f_precond(int *t, int x) {
@@ -218,21 +218,21 @@ void f(int *t, int x)
 [stady] all-paths: true
 [stady] 15 test cases
 [stady] Subcontract Weakness
-    of       : loop at label 'first_loop'
-    location : tests/inv_insuf_ko/inv_insuf_ko.c:19
-    for      : assert
-               found ≢ 0 ⇔ (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t + i) ≡ x); 
-    location : tests/inv_insuf_ko/inv_insuf_ko.c:24
-    TEST DRIVER: testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_5.c
-    found = 0 (in) ; 0 (out)
-    nondet_sint_val[0] = 5
-    nondet_sint_val[1] = 0
-    t[0] = 0
-    t[1] = 0
-    t[2] = 0
-    t[3] = 0
-    t[4] = 0
-    x = 0
+  of       : loop at label 'first_loop'
+  location : tests/inv_insuf_ko/inv_insuf_ko.c:19
+  for      : assert
+             found ≢ 0 ⇔ (∃ ℤ i; 0 ≤ i ≤ 4 ∧ *(t + i) ≡ x); 
+  location : tests/inv_insuf_ko/inv_insuf_ko.c:24
+  TEST DRIVER: testcases___sd_instru_inv_insuf_ko_f/f/testdrivers/TC_5.c
+  found = 0 (in) ; 0 (out)
+  nondet_sint_val[0] = 5
+  nondet_sint_val[1] = 0
+  t[0] = 0
+  t[1] = 0
+  t[2] = 0
+  t[3] = 0
+  t[4] = 0
+  x = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

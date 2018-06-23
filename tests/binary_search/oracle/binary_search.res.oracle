@@ -41,7 +41,7 @@ strategy('pathcrawler__binary_search_precond',A) :-
   strategy('binary_search',A).
 precondition_of('binary_search','pathcrawler__binary_search_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 int binary_search_precond(int *arr, int length, int query) {
   int __sd_forall_0;
@@ -477,9 +477,11 @@ int binary_search(int *arr, int length, int query)
   }
 }
 [kernel] Parsing __sd_instru_binary_search_binary_search.c (with preprocessing)
-__sd_instru_binary_search_binary_search.c:188:[kernel] warning: expected 'long' but got argument of type '__mpz_struct *': __q_x
+[kernel:typing:incompatible-types-call] __sd_instru_binary_search_binary_search.c:188: Warning: 
+  expected 'long' but got argument of type '__mpz_struct *': __q_x
 [kernel] Parsing __sd_instru_binary_search_binary_search.c (with preprocessing)
-__sd_instru_binary_search_binary_search.c:188:[kernel] warning: expected 'long' but got argument of type '__mpz_struct *': __q_x
+[kernel:typing:incompatible-types-call] __sd_instru_binary_search_binary_search.c:188: Warning: 
+  expected 'long' but got argument of type '__mpz_struct *': __q_x
 [pc] Starting lanceur_binary_search (isc version)
 [pc] Starting lanceur_pathcrawler__binary_search_precond (isc version)
 [stady] all-paths: true

@@ -48,7 +48,7 @@ strategy('pathcrawler__f_precond',A) :-
   strategy('f',A).
 precondition_of('f','pathcrawler__f_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 struct S {
    int i ;

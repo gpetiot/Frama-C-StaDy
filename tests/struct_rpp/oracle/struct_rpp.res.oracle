@@ -39,7 +39,7 @@ strategy('pathcrawler__relational_wrapper_1_precond',A) :-
   strategy('relational_wrapper_1',A).
 precondition_of('relational_wrapper_1','pathcrawler__relational_wrapper_1_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 struct MyClass {
    int Name ;
@@ -542,16 +542,16 @@ void relational_wrapper_1(struct MyClass x1, struct MyClass x2, int *t)
 [stady] all-paths: true
 [stady] 1 test cases
 [stady] Non-Compliance
-    of       : assert
-               Rpp:
-                 return_variable_relational_1 ≡ -return_variable_relational_2; 
-    location : tests/struct_rpp/struct_rpp.c:90
-    TEST DRIVER: testcases___sd_instru_struct_rpp_relational_wrapper_1/relational_wrapper_1/testdrivers/TC_1.c
-    t[0] = 0
-    t[1] = 0
-    t[2] = 0
-    x1[0] = 0
-    x2[0] = 0
+  of       : assert
+             Rpp:
+               return_variable_relational_1 ≡ -return_variable_relational_2; 
+  location : tests/struct_rpp/struct_rpp.c:90
+  TEST DRIVER: testcases___sd_instru_struct_rpp_relational_wrapper_1/relational_wrapper_1/testdrivers/TC_1.c
+  t[0] = 0
+  t[1] = 0
+  t[2] = 0
+  x1[0] = 0
+  x2[0] = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

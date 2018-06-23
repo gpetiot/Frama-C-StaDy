@@ -36,7 +36,7 @@ strategy('pathcrawler__main_precond',A) :-
   strategy('main',A).
 precondition_of('main','pathcrawler__main_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 struct s {
    int t[10] ;
@@ -93,19 +93,19 @@ void main(struct s a)
 [stady] all-paths: true
 [stady] 2 test cases
 [stady] Non-Compliance
-    of       : assert b ≡ a.t[1]; 
-    location : tests/struct_rpp_2/struct_rpp_2.c:18
-    TEST DRIVER: testcases___sd_instru_struct_rpp_2_main/main/testdrivers/TC_2.c
-    a[0][0] = 0
-    a[0][1] = -1073849194
-    a[0][2] = 0
-    a[0][3] = 0
-    a[0][4] = 0
-    a[0][5] = 0
-    a[0][6] = 0
-    a[0][7] = 0
-    a[0][8] = 0
-    a[0][9] = 0
+  of       : assert b ≡ a.t[1]; 
+  location : tests/struct_rpp_2/struct_rpp_2.c:18
+  TEST DRIVER: testcases___sd_instru_struct_rpp_2_main/main/testdrivers/TC_2.c
+  a[0][0] = 0
+  a[0][1] = -1073849194
+  a[0][2] = 0
+  a[0][3] = 0
+  a[0][4] = 0
+  a[0][5] = 0
+  a[0][6] = 0
+  a[0][7] = 0
+  a[0][8] = 0
+  a[0][9] = 0
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

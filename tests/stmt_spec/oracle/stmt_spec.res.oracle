@@ -1,6 +1,6 @@
 [kernel] Parsing tests/stmt_spec/stmt_spec.c (with preprocessing)
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 int f_precond(int x) {
   return 1;

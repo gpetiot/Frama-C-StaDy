@@ -39,7 +39,7 @@ strategy('pathcrawler__sqrt_rte_precond',A) :-
   strategy('sqrt_rte',A).
 precondition_of('sqrt_rte','pathcrawler__sqrt_rte_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 int sqrt_rte_precond(int n) {
   return 1;
@@ -68,14 +68,14 @@ int sqrt_rte(int n)
       __gmpz_init(__sd_Z_mul_2);
       __gmpz_mul(__sd_Z_mul_2,__sd_Z_to_Z_6,__sd_Z_to_Z_7);
       __sd_le_1 = __gmpz_cmp(__sd_Z_cst_2,__sd_Z_mul_2);
-      if (! (__sd_le_1 <= 0)) pathcrawler_assert_exception("",6);
+      if (! (__sd_le_1 <= 0)) pathcrawler_assert_exception("",7);
       __gmpz_init_set_si(__sd_Z_to_Z_8,n);
       __gmpz_init_set_si(__sd_Z_to_Z_9,n);
       __gmpz_init(__sd_Z_mul_3);
       __gmpz_mul(__sd_Z_mul_3,__sd_Z_to_Z_8,__sd_Z_to_Z_9);
       __gmpz_init_set_str(__sd_Z_cst_3,"2147483647",10);
       __sd_le_2 = __gmpz_cmp(__sd_Z_mul_3,__sd_Z_cst_3);
-      if (! (__sd_le_2 <= 0)) pathcrawler_assert_exception("",7);
+      if (! (__sd_le_2 <= 0)) pathcrawler_assert_exception("",8);
       __gmpz_clear(__sd_Z_cst_2);
       __gmpz_clear(__sd_Z_to_Z_6);
       __gmpz_clear(__sd_Z_to_Z_7);
@@ -130,7 +130,7 @@ int sqrt_rte(int n)
       __gmpz_init(__sd_Z_mul_4);
       __gmpz_mul(__sd_Z_mul_4,__sd_Z_to_Z_10,__sd_Z_to_Z_11);
       __sd_le_3 = __gmpz_cmp(__sd_Z_cst_4,__sd_Z_mul_4);
-      if (! (__sd_le_3 <= 0)) pathcrawler_assert_exception("",8);
+      if (! (__sd_le_3 <= 0)) pathcrawler_assert_exception("",9);
       __gmpz_init_set_str(__sd_Z_cst_7,"0",10);
       __gmpz_init_set_str(__sd_Z_cst_8,"2",10);
       __gmpz_init(__sd_Z_neg_1);
@@ -159,7 +159,7 @@ int sqrt_rte(int n)
       __gmpz_add(__sd_Z_add_2,__sd_Z_to_Z_16,__sd_Z_to_Z_17);
       __gmpz_init_set_str(__sd_Z_cst_12,"2147483647",10);
       __sd_le_5 = __gmpz_cmp(__sd_Z_add_2,__sd_Z_cst_12);
-      if (! (__sd_le_5 <= 0)) pathcrawler_assert_exception("",9);
+      if (! (__sd_le_5 <= 0)) pathcrawler_assert_exception("",10);
       __gmpz_clear(__sd_Z_cst_4);
       __gmpz_clear(__sd_Z_cst_5);
       __gmpz_clear(__sd_Z_cst_6);
@@ -330,7 +330,7 @@ int sqrt_rte(int n)
             __gmpz_init(__sd_Z_add_3);
             __gmpz_add(__sd_Z_add_3,__sd_Z_to_Z_18,__sd_Z_to_Z_19);
             __sd_le_6 = __gmpz_cmp(__sd_Z_cst_13,__sd_Z_add_3);
-            if (! (__sd_le_6 <= 0)) pathcrawler_assert_exception("",13);
+            if (! (__sd_le_6 <= 0)) pathcrawler_assert_exception("",14);
             __gmpz_init_set_si(__sd_Z_to_Z_20,y);
             __gmpz_init_set_si(__sd_Z_to_Z_21,z);
             __gmpz_init(__sd_Z_add_4);
@@ -381,7 +381,7 @@ int sqrt_rte(int n)
             __gmpz_init(__sd_Z_sub_0);
             __gmpz_sub(__sd_Z_sub_0,__sd_Z_to_Z_24,__sd_Z_to_Z_25);
             __sd_le_9 = __gmpz_cmp(__sd_Z_cst_16,__sd_Z_sub_0);
-            if (! (__sd_le_9 <= 0)) pathcrawler_assert_exception("",11);
+            if (! (__sd_le_9 <= 0)) pathcrawler_assert_exception("",12);
             __gmpz_clear(__sd_Z_cst_16);
             __gmpz_clear(__sd_Z_to_Z_24);
             __gmpz_clear(__sd_Z_to_Z_25);
@@ -564,7 +564,7 @@ int sqrt_rte(int n)
         __gmpz_clear(__sd_Z_add_1);
         __gmpz_clear(__sd_Z_mul_1);
       }
-      if (! __sd_and_0) pathcrawler_assert_exception("",12);
+      if (! __sd_and_0) pathcrawler_assert_exception("",13);
       __gmpz_clear(__sd_Z_to_Z_0);
       __gmpz_clear(__sd_Z_to_Z_1);
       __gmpz_clear(__sd_Z_mul_0);
@@ -581,10 +581,10 @@ int sqrt_rte(int n)
 [stady] all-paths: true
 [stady] 37 test cases
 [stady] Non-Compliance
-    of       : loop variant -(r - 10); (non decreasing)
-    location : tests/sqrt_rte/sqrt_rte.c:19
-    TEST DRIVER: testcases___sd_instru_sqrt_rte_sqrt_rte/sqrt_rte/testdrivers/TC_2.c
-    n = 2
+  of       : loop variant -(r - 10); (non decreasing)
+  location : tests/sqrt_rte/sqrt_rte.c:19
+  TEST DRIVER: testcases___sd_instru_sqrt_rte_sqrt_rte/sqrt_rte/testdrivers/TC_2.c
+  n = 2
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

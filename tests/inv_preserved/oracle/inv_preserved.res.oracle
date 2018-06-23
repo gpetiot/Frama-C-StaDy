@@ -43,8 +43,8 @@ strategy('pathcrawler__f_precond',A) :-
   strategy('f',A).
 precondition_of('f','pathcrawler__f_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
-#include "/usr/local/share/frama-c/stady/nondet.c"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/nondet.c"
 
 int f_precond(int n, int *t) {
   return 1;
@@ -170,7 +170,7 @@ void f(int n, int *t)
           __gmpz_clear(__q_k);
         }
         if (! __sd_forall_1) pathcrawler_assert_exception("9$not established",
-                                                          6);
+                                                          7);
         if (1) {
           mpz_t __sd_Z_cst_0;
           int __sd_to_ctype_1;
@@ -376,7 +376,7 @@ void f(int n, int *t)
           __gmpz_clear(__q_k);
         }
         if (! __sd_forall_2) pathcrawler_assert_exception("9$not preserved",
-                                                          6);
+                                                          7);
         __gmpz_init_set_si(__sd_Z_to_Z_10,n);
         __gmpz_init_set_si(__sd_Z_to_Z_11,i);
         __gmpz_init(__sd_Z_sub_11);
@@ -408,23 +408,23 @@ void f(int n, int *t)
 [stady] all-paths: true
 [stady] 137 test cases
 [stady] Subcontract Weakness
-    of       : loop at label 'first_loop'
-    location : tests/inv_preserved/inv_preserved.c:28
-    for      : loop invariant
-                 ∀ ℤ k;
-                   2 ≤ k < i - 1 ⇒
-                   *(t + k) ≡ *(t + (k - 1)) ∨ *(t + k) ≡ *(t + (k - 2)); (not preserved)
-    location : tests/inv_preserved/inv_preserved.c:23
-    TEST DRIVER: testcases___sd_instru_inv_preserved_f/f/testdrivers/TC_27.c
-    n = 5
-    nondet_sint_val[0] = 1073822706
-    nondet_sint_val[1] = 0
-    nondet_sint_val[2] = 4
-    t[0] = 0
-    t[1] = 0
-    t[2] = 0 (in) ; 0 (concrete out) ; t[1] (symbolic out)
-    t[3] = 0 (in) ; 1073822706 (concrete out) ; nondet_sint_val[0] (symbolic out)
-    t[4] = 0 (in) ; 1073822706 (concrete out) ; nondet_sint_val[0] (symbolic out)
+  of       : loop at label 'first_loop'
+  location : tests/inv_preserved/inv_preserved.c:28
+  for      : loop invariant
+               ∀ ℤ k;
+                 2 ≤ k < i - 1 ⇒
+                 *(t + k) ≡ *(t + (k - 1)) ∨ *(t + k) ≡ *(t + (k - 2)); (not preserved)
+  location : tests/inv_preserved/inv_preserved.c:23
+  TEST DRIVER: testcases___sd_instru_inv_preserved_f/f/testdrivers/TC_27.c
+  n = 5
+  nondet_sint_val[0] = 1073822706
+  nondet_sint_val[1] = 0
+  nondet_sint_val[2] = 4
+  t[0] = 0
+  t[1] = 0
+  t[2] = 0 (in) ; 0 (concrete out) ; t[1] (symbolic out)
+  t[3] = 0 (in) ; 1073822706 (concrete out) ; nondet_sint_val[0] (symbolic out)
+  t[4] = 0 (in) ; 1073822706 (concrete out) ; nondet_sint_val[0] (symbolic out)
 [report] Computing properties status...
 
 --------------------------------------------------------------------------------

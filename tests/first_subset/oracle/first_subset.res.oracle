@@ -40,7 +40,7 @@ strategy('pathcrawler__firstSubset_precond',A) :-
   strategy('firstSubset',A).
 precondition_of('firstSubset','pathcrawler__firstSubset_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 int firstSubset_precond(int *s, int n) {
   return 1;

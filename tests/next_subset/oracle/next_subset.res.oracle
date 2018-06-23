@@ -40,7 +40,7 @@ strategy('pathcrawler__nextSubset_precond',A) :-
   strategy('nextSubset',A).
 precondition_of('nextSubset','pathcrawler__nextSubset_precond').
 [stady:generated-c] generated C file:
-#include "/usr/local/share/frama-c/stady/externals.h"
+#include "/home/gpe/.opam/4.04.2/share/frama-c/stady/externals.h"
 
 /*@
 predicate is_dset{L}(int *a, integer n) =
