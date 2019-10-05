@@ -85,7 +85,6 @@ and pred_node env = function
   | Pfreeable (l, t) -> Pfreeable (label env l, term env t)
   | Pfresh (l1, l2, t1, t2) ->
       Pfresh (label env l1, label env l2, term env t1, term env t2)
-  | Psubtype (t1, t2) -> Psubtype (term env t1, term env t2)
 
 and tnode env = function
   | TConst c -> TConst c
@@ -146,8 +145,6 @@ and tnode env = function
   | Tblock_length (l, t) -> Tblock_length (label env l, term env t)
   | Tnull -> Tnull
   | TLogic_coerce (y, t) -> TLogic_coerce (y, term env t)
-  | TCoerce (t, ty) -> TCoerce (term env t, ty)
-  | TCoerceE (t1, t2) -> TCoerceE (term env t1, term env t2)
   | TUpdate (t1, o, t2) -> TUpdate (term env t1, toffset env o, term env t2)
   | Ttypeof t -> Ttypeof (term env t)
   | Ttype t -> Ttype t

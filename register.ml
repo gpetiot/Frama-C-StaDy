@@ -9,7 +9,8 @@ let typically_typer ~typing_context ~loc = function
       typing_context.Logic_typing.error loc
         "predicate expected after 'typically'"
 
-let () = Logic_typing.register_behavior_extension "typically" typically_typer
+let () =
+  Logic_typing.register_behavior_extension "typically" false typically_typer
 
 let emitter =
   Emitter.create "StaDy"

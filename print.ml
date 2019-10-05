@@ -105,8 +105,8 @@ class print_insertions insertions functions swd =
       | Return _ ->
           let f = Kernel_function.get_name kf in
           self#insertions_at fmt (Symbolic_label.end_func f) ;
-          self#stmtkind next fmt stmt.skind
-      | _ -> self#stmtkind next fmt stmt.skind ) ;
+          self#stmtkind stmt.sattr next fmt stmt.skind
+      | _ -> self#stmtkind stmt.sattr next fmt stmt.skind ) ;
       if insert_something_after then Format.fprintf fmt "@[<hov 2>{@\n" ;
       self#insertions_at fmt (Symbolic_label.end_stmt stmt.sid) ;
       if insert_something_after then Format.fprintf fmt "@]@\n}@\n" ;

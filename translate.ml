@@ -475,7 +475,7 @@ class gather_insertions props swd =
                   ( Env.merge env (Env.make [ret] [call] [])
                   , (Cil.evar ret).enode )
                 else aux t
-            | [] ->
+            | [_]::_ | []::_ | [] ->
                 Options.failure ~current:true ~once:true
                   "call of logic function %s unsupported, you may replace it \
                    with a C function"
@@ -538,9 +538,6 @@ class gather_insertions props swd =
       | Tat (t, l) -> self#translate_at t l
       | Tnull -> (Env.empty, zero.enode)
       | TLogic_coerce (lt, t) -> self#translate_logic_coerce lt t
-      | TCoerce (t, ty) -> self#translate_coerce t ty
-      | TCoerceE (t, {term_type= Ctype ty}) -> self#translate_coerce t ty
-      | TCoerceE (t, {term_type= lt}) -> self#translate_logic_coerce lt t
       | Tlambda _ | TDataCons _ | Tbase_addr _ | Toffset _ | Tblock_length _
        |TUpdate _ | Ttypeof _ | Ttype _ | Tempty_set | Tunion _ | Tinter _
        |Tcomprehension _ | Trange _ | Tlet _ ->
@@ -885,7 +882,7 @@ class gather_insertions props swd =
           raise Unsupported
       | Papp _ | Pseparated _ | Pxor _ | Plet _ | Pat _ | Pinitialized _
        |Pfresh _ | Pdangling _ | Pallocable _ | Pfreeable _
-       |Pvalid_function _ | Psubtype _ ->
+       |Pvalid_function _ ->
           raise Unsupported
 
     (* modify result_varinfo when the function returns something *)
@@ -1274,7 +1271,7 @@ class gather_insertions props swd =
       let kf = Kernel_function.find_englobing_kf stmt in
       let bhv_names =
         match ca.annot_content with
-        | AAssert (b, _) | AStmtSpec (b, _) | AInvariant (b, _, _) -> b
+        | AAssert (b, _,_) | AStmtSpec (b, _) | AInvariant (b, _, _) -> b
         | _ -> []
       in
       let on_behavior s _ b ret = if b.b_name = s then b.b_assumes else ret in
@@ -1285,7 +1282,7 @@ class gather_insertions props swd =
       let ins =
         match ca.annot_content with
         | AStmtSpec (_, spec) -> self#translate_stmt_spec kf stmt bhvs spec
-        | AAssert (_, pred) -> self#translate_assert kf stmt ca bhvs pred
+        | AAssert (_, _, pred) -> self#translate_assert kf stmt ca bhvs pred
         | AInvariant (_, true, pred) ->
             self#translate_invariant kf stmt ca bhvs pred
         | AVariant (term, _) -> self#translate_variant kf stmt ca term
@@ -1352,7 +1349,7 @@ class gather_insertions props swd =
       in
       List.fold_left on_term Env.empty assigns_terms
 
-    method swd_call stmt ret_lval fct_varinfo args loc init_var =
+    method swd_call _stmt ret_lval fct_varinfo args loc init_var =
       let kf = Globals.Functions.get fct_varinfo in
       let formals = Kernel_function.get_formals kf in
       let varname = fct_varinfo.vname ^ "_mod" in
@@ -1510,8 +1507,7 @@ let translate props swd precond_fname instru_fname =
   let dkey = Options.dkey_generated_c in
   let out_file = open_out instru_fname in
   Options.debug ~dkey "generated C file:" ;
-  let dkeys = Options.Debug_category.get () in
-  if Datatype.String.Set.mem "generated-c" dkeys then
+  if Options.is_debug_key_enabled dkey then
     Buffer.output_buffer stdout buf ;
   Buffer.output_buffer out_file buf ;
   Format.pp_print_flush fmt () ;

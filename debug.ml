@@ -55,10 +55,6 @@ class debug_ast () =
       | TLogic_coerce (ty, t) ->
           Format.fprintf fmt "TLogic_coerce(%a,%a)" (self#logic_type None) ty
             self#term t
-      | TCoerce (t, ty) ->
-          Format.fprintf fmt "TCoerce(%a,%a)" self#term t (self#typ None) ty
-      | TCoerceE (t, u) ->
-          Format.fprintf fmt "TCoerceE(%a,%a)" self#term t self#term u
       | TUpdate (t1, tof, t2) ->
           Format.fprintf fmt "TUpdate(%a,%a,%a)" self#term t1 self#term_offset
             tof self#term t2
@@ -158,8 +154,6 @@ class debug_ast () =
       | Pfresh (l1, l2, t1, t2) ->
           Format.fprintf fmt "Pfresh(%a,%a,%a,%a)" self#logic_label l1
             self#logic_label l2 self#term t1 self#term t2
-      | Psubtype (t, u) ->
-          Format.fprintf fmt "Psubtype(%a,%a)" self#term t self#term u
 
     method predicate_named = self#predicate
   end

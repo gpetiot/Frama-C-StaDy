@@ -25,6 +25,9 @@ open Cil_types
 
 (* interpreting string as precondition predicates *)
 let type_str_precond kf pred_as_string =
+  let module E =
+  struct exception Error of Cil_types.location * string end
+  in
   let module M = Logic_typing.Make (struct
     let is_loop () = false
 
@@ -34,11 +37,11 @@ let type_str_precond kf pred_as_string =
 
     let find_macro _ = raise Not_found
 
-    let find_var x =
+    let find_var ?label:_ ~var =
       let vi =
-        try Globals.Vars.find_from_astinfo x (VLocal kf) with Not_found -> (
-          try Globals.Vars.find_from_astinfo x (VFormal kf) with Not_found ->
-            Globals.Vars.find_from_astinfo x VGlobal )
+        try Globals.Vars.find_from_astinfo var (VLocal kf) with Not_found -> (
+          try Globals.Vars.find_from_astinfo var (VFormal kf) with Not_found ->
+            Globals.Vars.find_from_astinfo var VGlobal )
       in
       Cil.cvar_to_lvar vi
 
@@ -58,6 +61,9 @@ let type_str_precond kf pred_as_string =
 
     let remove_logic_ctor = Logic_env.remove_logic_ctor
 
+    let remove_logic_info =
+      Logic_env.remove_logic_info_gen Logic_utils.is_same_logic_info
+
     let add_logic_function = Logic_utils.add_logic_function
 
     let add_logic_type = Logic_env.add_logic_type
@@ -75,13 +81,17 @@ let type_str_precond kf pred_as_string =
         (Pretty_utils.sfprintf "term %a has type %a, but %a is expected."
            Printer.pp_term t Printer.pp_logic_type Linteger Printer.pp_typ ty)
 
-    exception Error of Cil_types.location * string
+    let error loc = Pretty_utils.ksfprintf (fun e -> raise (E.Error (loc, e)))
 
-    let error loc = Pretty_utils.ksfprintf (fun e -> raise (Error (loc, e)))
+    let on_error f rollback x =
+      try f x with E.Error _ as exn -> rollback (); raise exn
   end) in
   let lenv = Logic_typing.Lenv.empty () in
-  let _, lexpr = Logic_lexer.lexpr (Lexing.dummy_pos, pred_as_string) in
-  M.predicate lenv lexpr
+  let loc = Cil_datatype.Location.unknown in
+  match Logic_lexer.lexpr (fst loc, pred_as_string)
+  with
+  | None -> raise (E.Error(loc, "Syntax error"))
+  | Some(_, lexpr) -> M.predicate lenv lexpr
 
 let typically_preds_memo = ref []
 
@@ -90,12 +100,14 @@ let typically_preds_computed = ref false
 let typically_preds bhv =
   if !typically_preds_computed then !typically_preds_memo
   else
-    let get_ext_preds acc (str, kind) =
+    let get_ext_preds acc (_, str,_, _, kind) =
       match kind with
       | Ext_preds p when str = "typically" -> List.rev_append p acc
       | _ -> acc
     in
-    let typically = List.fold_left get_ext_preds [] bhv.Cil_types.b_extended in
+    let typically =
+      List.fold_left get_ext_preds [] bhv.Cil_types.b_extended
+    in
     let typically =
       if not (Options.Precondition.is_default ()) then
         try
@@ -281,7 +293,7 @@ let setup_props_bijection () =
   let fc_builtin = "__fc_builtin_for_normalization.i" in
   let on_property property =
     let pos1, _ = Property.location property in
-    if Filename.basename pos1.Lexing.pos_fname <> fc_builtin then (
+    if Filename.basename (pos1.Filepath.pos_path:>string) <> fc_builtin then (
       States.Property_To_Id.add property !property_id ;
       States.Id_To_Property.add !property_id property ;
       property_id := !property_id + 1 )

@@ -255,7 +255,7 @@ let _long_double_bounds =
 
 (******* constraints creation ******)
 
-let rec input_from_type constraints ty t is_cont =
+let rec input_from_type known_structs constraints ty t is_cont =
   match Cil.unrollType ty with
   | TVoid _ ->
       if is_cont then
@@ -285,32 +285,40 @@ let rec input_from_type constraints ty t is_cont =
             let b_min, b_max = double_bounds in
             PLInput (PLDoubleInput (t, Some b_min, Some b_max)) :: constraints
         | FLongDouble -> assert false )
-  | TComp (ci, _, _) -> input_from_fields constraints Integer.zero t ci.cfields
+  | TComp (ci, _, _) ->
+    if Cil_datatype.Compinfo.Set.mem ci known_structs then constraints
+    else begin
+      let known_structs = Cil_datatype.Compinfo.Set.add ci known_structs in
+      input_from_fields known_structs constraints Integer.zero t ci.cfields
+    end
   | TPtr (ty', _) ->
       let d =
         if is_cont then
           PLDomain (PLIntDom (PLDim t, Some Integer.zero, Some maxuint))
         else PLInput (PLIntInput (PLDim t, Some Integer.zero, Some maxuint))
       in
-      input_from_type (d :: constraints) ty' (PLContAll t) true
+      input_from_type known_structs (d :: constraints) ty' (PLContAll t) true
   | TArray (ty', _, _, _) ->
       (* attribute "arraylen" may contain the static size of the array but we do
       * not need it for the precondition *)
-      input_from_type constraints ty' (PLContAll t) true
+      input_from_type known_structs constraints ty' (PLContAll t) true
   | _ ->
       Options.warning ~current:true "unsupported input_from_type (%a) (%a)"
         Printer.pp_typ ty (new pl_printer)#term t ;
       constraints
 
-and input_from_fields constraints i t = function
+and input_from_fields known_structs constraints i t = function
   | [] -> constraints
   | f :: fields ->
       let d =
-        input_from_type constraints f.ftype
+        input_from_type known_structs constraints f.ftype
           (PLCont (t, PLConst (PLInt i)))
           true
       in
-      input_from_fields d (Integer.succ i) t fields
+      input_from_fields known_structs d (Integer.succ i) t fields
+
+let input_from_type constraints i t =
+  input_from_type Cil_datatype.Compinfo.Set.empty constraints i t
 
 let rec valid_to_prolog term =
   let maxuint = Cil.max_unsigned_number (Utils.machdep ()) in
@@ -511,8 +519,7 @@ let translate precond_file_name constraints =
   let dkey = Options.dkey_generated_pl in
   let out_file = open_out precond_file_name in
   Options.debug ~dkey "generated Prolog precondition:" ;
-  let dkeys = Options.Debug_category.get () in
-  if Datatype.String.Set.mem "generated-pl" dkeys then
+  if Options.is_debug_key_enabled dkey then
     Buffer.output_buffer stdout buf ;
   Buffer.output_buffer out_file buf ;
   Format.pp_print_flush fmt () ;

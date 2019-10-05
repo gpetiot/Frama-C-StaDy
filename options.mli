@@ -29,12 +29,12 @@ module SWD : Parameter_sig.String_list
 module Simulate_Functions : Parameter_sig.String_list
 
 (* Debug Keys *)
-val dkey_input_domain : Log.category
+val dkey_input_domain : category
 
-val dkey_generated_pl : Log.category
+val dkey_generated_pl : category
 
-val dkey_socket : Log.category
+val dkey_socket : category
 
-val dkey_generated_c : Log.category
+val dkey_generated_c : category
 
-val dkey_insertions : Log.category
+val dkey_insertions : category

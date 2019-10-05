@@ -1,3 +1,5 @@
+open Cil_types
+
 type t = Cil_types.varinfo list * Cil_types.stmt list * Cil_types.stmt list
 
 let empty = ([], [], [])

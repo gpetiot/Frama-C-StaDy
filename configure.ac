@@ -22,16 +22,15 @@ check_plugin_dependencies
 AC_MSG_CHECKING(for Frama-C version)
 AC_MSG_RESULT($FRAMAC_VERSION)
 
-DEV_VERSION_NUMBER=`echo $FRAMAC_VERSION | sed -e 's/.*-\(.*\)/\1/' `
-VERSION_NUMBER=`echo $DEV_VERSION_NUMBER | sed -e 's/\(.*\)+dev/\1/' `
-REQUIRED_NUMBER=20171101
+VERSION_NUMBER=`echo $FRAMAC_VERSION | sed -e 's/^\([[0-9]]*\).*$/\1/'`
+REQUIRED_NUMBER=19
 
-if test $VERSION_NUMBER -lt $REQUIRED_NUMBER; then
-  AC_MSG_ERROR(Frama-C version must be at least Sulfur-$REQUIRED_NUMBER.)
+if test -z "$VERSION_NUMBER" -o "$VERSION_NUMBER" -lt "$REQUIRED_NUMBER"; then
+  AC_MSG_ERROR(Frama-C version must be at least $REQUIRED_NUMBER.)
 fi;
 
 if test $VERSION_NUMBER -gt $REQUIRED_NUMBER; then
-  AC_MSG_WARN(Frama-C version is more recent than Sulfur-$REQUIRED_NUMBER, \
+  AC_MSG_WARN(Frama-C version is more recent than $REQUIRED_NUMBER, \
 use it at your own risk.)
 fi;
 

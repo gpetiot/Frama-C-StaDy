@@ -102,9 +102,10 @@ let run ~entry_point ~precondition_filename ~instrumented_filename =
   in
   let cmd =
     Printf.sprintf
-      "frama-c %s -main %s -lib-entry -variadic-no-translation -pc -pc-gmp \
+      "%s %s -main %s -lib-entry -variadic-no-translation -pc -pc-gmp \
        -pc-validate-asserts -pc-test-params %s -pc-com %s -pc-no-xml \
        -pc-deter -pc-session-timeout=%i %s -pc-verbose 0 %s"
+      Sys.argv.(0)
       instrumented_filename entry_point precondition_filename
       (Options.Socket_Type.get ())
       (Options.Timeout.get ()) stop_when_assert_violated
